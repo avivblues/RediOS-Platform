@@ -1,6 +1,101 @@
+# Technology Stack Contract
 # RediOS Platform
 # Product Requirement Document
 # Prototype v0.1
+
+# 0. Technology Stack Contract
+
+
+Technology stack ini wajib digunakan untuk membangun RediOS Runtime Kernel.
+
+
+Backend:
+
+- Node.js
+- TypeScript
+- NestJS
+
+
+Database:
+
+- MongoDB
+- Mongoose
+
+
+Architecture:
+
+- Modular Monolith
+- Metadata Driven Runtime
+- Engine Based Architecture
+
+
+Web Renderer:
+
+- Next.js
+- React
+- TypeScript
+
+
+Mobile Renderer:
+
+- React Native
+- TypeScript
+
+
+UI Architecture:
+
+- Atomic Design System
+
+
+==================================================
+
+
+# 2. Kernel Execution Flow
+
+
+Semua request wajib melalui:
+
+
+Client
+
+↓
+
+Runtime API
+
+↓
+
+Context Engine
+
+↓
+
+Application Engine
+
+↓
+
+Metadata Engine
+
+↓
+
+Security Engine
+
+↓
+
+Action Engine
+
+↓
+
+Process Engine
+
+↓
+
+Business Engine
+
+↓
+
+Storage / Ledger
+
+
+==================================================
 
 
 # 1. Product Definition
