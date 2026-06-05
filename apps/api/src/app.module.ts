@@ -10,6 +10,7 @@ import { EventModule } from './core/event/event.module';
 import { LedgerModule } from './core/ledger/ledger.module';
 import { MetadataModule } from './core/metadata/metadata.module';
 import { ProcessModule } from './core/process/process.module';
+import { RuntimeModule } from './core/runtime/runtime.module';
 import { SecurityModule } from './core/security/security.module';
 import { StorageModule } from './core/storage/storage.module';
 import { WorkflowModule } from './core/workflow/workflow.module';
@@ -33,6 +34,7 @@ import { KernelLoggerModule } from './logger/kernel-logger.module';
     MetadataModule,
     SecurityModule,
     ActionModule,
+    RuntimeModule,
     WorkflowModule,
     ProcessModule,
     BusinessModule,

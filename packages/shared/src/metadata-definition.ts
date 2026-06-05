@@ -10,7 +10,7 @@ export type MetadataType =
   | 'EXPERIENCE'
   | 'RULE';
 
-export interface MetadataDefinition<TDefinition extends Record<string, unknown> = Record<string, unknown>> {
+export interface MetadataDefinition<TDefinition = unknown> {
   id?: string;
   tenantId: string;
   domainCode?: string;

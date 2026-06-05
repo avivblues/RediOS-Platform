@@ -1,0 +1,74 @@
+import { Injectable, NotFoundException, UnprocessableEntityException } from '@nestjs/common';
+import type {
+  ActionDefinition,
+  ApplicationDefinition,
+  EntityDefinition,
+  FieldDefinition,
+  MetadataDefinition,
+  MetadataType,
+  ProcessDefinition,
+  RuntimeContext,
+  WorkflowDefinition,
+} from '@redios/shared';
+import { MetadataRegistry } from './metadata-registry.service';
+import { MetadataValidator } from './metadata-validator.service';
+
+@Injectable()
+export class MetadataResolver {
+  constructor(
+    private readonly registry: MetadataRegistry,
+    private readonly validator: MetadataValidator,
+  ) {}
+
+  resolveApplication(context: RuntimeContext): Promise<MetadataDefinition<ApplicationDefinition>> {
+    return this.resolveOne<ApplicationDefinition>(context, 'APPLICATION', context.applicationCode);
+  }
+
+  resolveEntity(context: RuntimeContext, entityCode: string): Promise<MetadataDefinition<EntityDefinition>> {
+    return this.resolveOne<EntityDefinition>(context, 'ENTITY', entityCode);
+  }
+
+  resolveFields(context: RuntimeContext, fieldCodes: string[]): Promise<MetadataDefinition<FieldDefinition>[]> {
+    return this.resolveMany<FieldDefinition>(context, 'FIELD', fieldCodes);
+  }
+
+  resolveAction(context: RuntimeContext, actionCode: string): Promise<MetadataDefinition<ActionDefinition>> {
+    return this.resolveOne<ActionDefinition>(context, 'ACTION', actionCode);
+  }
+
+  resolveWorkflow(context: RuntimeContext, workflowCode: string): Promise<MetadataDefinition<WorkflowDefinition>> {
+    return this.resolveOne<WorkflowDefinition>(context, 'WORKFLOW', workflowCode);
+  }
+
+  resolveProcess(context: RuntimeContext, processCode: string): Promise<MetadataDefinition<ProcessDefinition>> {
+    return this.resolveOne<ProcessDefinition>(context, 'PROCESS', processCode);
+  }
+
+  private async resolveMany<TDefinition>(
+    context: RuntimeContext,
+    type: MetadataType,
+    codes: string[],
+  ): Promise<MetadataDefinition<TDefinition>[]> {
+    const definitions = await Promise.all(codes.map((code) => this.resolveOne<TDefinition>(context, type, code)));
+    return definitions;
+  }
+
+  private async resolveOne<TDefinition>(
+    context: RuntimeContext,
+    type: MetadataType,
+    code: string,
+  ): Promise<MetadataDefinition<TDefinition>> {
+    const definition = await this.registry.findOne(context, type, code);
+    const validation = this.validator.validate(definition);
+
+    if (!definition) {
+      throw new NotFoundException(`Metadata ${type}:${code} was not found.`);
+    }
+
+    if (!validation.valid) {
+      throw new UnprocessableEntityException(validation.errors);
+    }
+
+    return definition as MetadataDefinition<TDefinition>;
+  }
+}
