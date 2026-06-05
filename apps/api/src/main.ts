@@ -11,8 +11,6 @@ async function bootstrap(): Promise<void> {
   const logger = new Logger('RediOS');
   const port = configService.get<number>('PORT', 3000);
 
-  app.setGlobalPrefix('api');
-
   await app.listen(port);
   logger.log(`Runtime kernel API listening on port ${port}`);
 }

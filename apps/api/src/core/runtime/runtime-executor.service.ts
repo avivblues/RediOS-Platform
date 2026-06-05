@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import type {
   ActionDefinition,
   ApplicationDefinition,
@@ -17,7 +17,6 @@ import { StorageEngine } from '../storage/storage.engine';
 export interface RuntimeExecutionInput {
   context: RuntimeContext;
   entityCode: string;
-  actionCode: string;
   payload: unknown;
 }
 
@@ -27,6 +26,34 @@ export interface RuntimeExecutionResult {
   application: MetadataDefinition<ApplicationDefinition>;
   entity: MetadataDefinition<EntityDefinition>;
   fields: MetadataDefinition<FieldDefinition>[];
+  action: MetadataDefinition<ActionDefinition>;
+  actionPlan: RuntimeActionPlan;
+  document: RuntimeDocument;
+}
+
+export interface RuntimeReadInput {
+  context: RuntimeContext;
+  entityCode: string;
+  id?: string;
+  query?: Record<string, unknown>;
+}
+
+export interface RuntimeUpdateInput extends RuntimeExecutionInput {
+  id: string;
+}
+
+export interface RuntimeActionInput {
+  context: RuntimeContext;
+  entityCode: string;
+  id: string;
+  actionCode: string;
+  payload: unknown;
+}
+
+export interface RuntimeActionResult {
+  stage: 'ACTION_READY';
+  context: RuntimeContext;
+  entity: MetadataDefinition<EntityDefinition>;
   action: MetadataDefinition<ActionDefinition>;
   actionPlan: RuntimeActionPlan;
   document: RuntimeDocument;
@@ -42,19 +69,9 @@ export class RuntimeExecutor {
     private readonly storageEngine: StorageEngine,
   ) {}
 
-  async execute(input: RuntimeExecutionInput): Promise<RuntimeExecutionResult> {
-    const { context, entityCode, actionCode, payload } = input;
-
-    this.securityEngine.validateContext(context);
-
-    const application = await this.applicationEngine.resolve(context);
-    const entity = await this.metadataResolver.resolveEntity(context, entityCode);
-    const fields = await this.metadataResolver.resolveFields(context, entity.definition.fieldCodes);
-    const action = await this.actionEngine.resolve(context, actionCode);
-
-    this.securityEngine.validateActionAccess(context, action);
-
-    const actionPlan = this.actionEngine.prepare(action, payload);
+  async create(input: RuntimeExecutionInput): Promise<RuntimeExecutionResult> {
+    const { context, entityCode, payload } = input;
+    const { application, entity, fields } = await this.resolveRuntimeTarget(context, entityCode);
     const document = await this.storageEngine.create(context, entityCode, {
       status: 'DRAFT',
       data: this.toData(payload),
@@ -67,9 +84,94 @@ export class RuntimeExecutor {
       application,
       entity,
       fields,
-      action,
-      actionPlan,
+      action: this.placeholderAction(entityCode),
+      actionPlan: {
+        actionCode: 'CREATE',
+        payload,
+      },
       document,
+    };
+  }
+
+  async findMany(input: RuntimeReadInput): Promise<RuntimeDocument[]> {
+    const { context, entityCode, query } = input;
+    await this.resolveRuntimeTarget(context, entityCode);
+    return this.storageEngine.findMany(context, entityCode, query);
+  }
+
+  async findOne(input: RuntimeReadInput): Promise<RuntimeDocument | null> {
+    const { context, entityCode, id } = input;
+    await this.resolveRuntimeTarget(context, entityCode);
+    return id ? this.storageEngine.findOne(context, entityCode, id) : null;
+  }
+
+  async update(input: RuntimeUpdateInput): Promise<RuntimeDocument | null> {
+    const { context, entityCode, id, payload } = input;
+    const { entity } = await this.resolveRuntimeTarget(context, entityCode);
+    return this.storageEngine.update(context, entityCode, id, {
+      data: this.toData(payload),
+      metadataVersion: entity.version,
+    });
+  }
+
+  async prepareAction(input: RuntimeActionInput): Promise<RuntimeActionResult> {
+    const { context, entityCode, id, actionCode, payload } = input;
+    const { entity } = await this.resolveRuntimeTarget(context, entityCode);
+    const document = await this.storageEngine.findOne(context, entityCode, id);
+
+    if (!document) {
+      throw new NotFoundException('Runtime document was not found.');
+    }
+
+    const action = await this.actionEngine.resolve(context, actionCode);
+    this.securityEngine.validateActionAccess(context, action);
+
+    return {
+      stage: 'ACTION_READY',
+      context,
+      entity,
+      action,
+      actionPlan: this.actionEngine.prepare(action, payload),
+      document,
+    };
+  }
+
+  private async resolveRuntimeTarget(
+    context: RuntimeContext,
+    entityCode: string,
+  ): Promise<{
+    application: MetadataDefinition<ApplicationDefinition>;
+    entity: MetadataDefinition<EntityDefinition>;
+    fields: MetadataDefinition<FieldDefinition>[];
+  }> {
+    this.securityEngine.validateContext(context);
+
+    const application = await this.applicationEngine.resolve(context);
+    const entity = await this.metadataResolver.resolveEntity(context, entityCode);
+    const fields = await this.metadataResolver.resolveFields(context, entity.definition.fieldCodes);
+
+    return {
+      application,
+      entity,
+      fields,
+    };
+  }
+
+  private placeholderAction(entityCode: string): MetadataDefinition<ActionDefinition> {
+    return {
+      tenantId: '',
+      applicationCode: '',
+      type: 'ACTION',
+      code: 'CREATE',
+      name: 'Create',
+      version: 1,
+      enabled: true,
+      definition: {
+        code: 'CREATE',
+        name: 'Create',
+        entityCode,
+        enabled: true,
+      },
     };
   }
 
