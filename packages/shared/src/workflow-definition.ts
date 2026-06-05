@@ -1,21 +1,20 @@
 export interface WorkflowStateDefinition {
   code: string;
-  name: string;
+  label: string;
   initial?: boolean;
-  terminal?: boolean;
+  final?: boolean;
 }
 
 export interface WorkflowTransitionDefinition {
   code: string;
-  fromState: string;
-  toState: string;
+  from: string;
+  to: string;
   actionCode: string;
-  permissionCode?: string;
+  conditions?: Record<string, unknown>;
 }
 
 export interface WorkflowDefinition {
   code: string;
-  name: string;
   entityCode: string;
   states: WorkflowStateDefinition[];
   transitions: WorkflowTransitionDefinition[];

@@ -4,12 +4,14 @@ import type {
   EntityDefinition,
   FieldDefinition,
   MetadataDefinition,
+  WorkflowDefinition,
 } from '@redios/shared';
 
 const tenantId = '1';
 const domainCode = '1.26.1.0';
 const applicationCode = 'MAINTENANCE';
 const entityCode = 'ASSET';
+const workflowCode = 'MAINTENANCE_LIFECYCLE';
 
 export const metadataSeedRecords: MetadataDefinition[] = [
   {
@@ -44,6 +46,7 @@ export const metadataSeedRecords: MetadataDefinition[] = [
       type: 'MASTER',
       fieldCodes: ['assetName', 'serialNo', 'location', 'status'],
       actionCodes: ['CREATE', 'READ', 'UPDATE', 'APPROVE', 'CANCEL'],
+      workflowCode,
       enabled: true,
     } satisfies EntityDefinition,
   },
@@ -92,4 +95,49 @@ export const metadataSeedRecords: MetadataDefinition[] = [
       },
     }),
   ),
+  {
+    tenantId,
+    domainCode,
+    applicationCode,
+    type: 'WORKFLOW',
+    code: workflowCode,
+    name: 'Maintenance Lifecycle',
+    version: 1,
+    enabled: true,
+    definition: {
+      code: workflowCode,
+      entityCode,
+      states: [
+        {
+          code: 'DRAFT',
+          label: 'Draft',
+          initial: true,
+        },
+        {
+          code: 'APPROVED',
+          label: 'Approved',
+        },
+        {
+          code: 'CANCELLED',
+          label: 'Cancelled',
+          final: true,
+        },
+      ],
+      transitions: [
+        {
+          code: 'APPROVE',
+          from: 'DRAFT',
+          to: 'APPROVED',
+          actionCode: 'APPROVE',
+        },
+        {
+          code: 'CANCEL',
+          from: 'DRAFT',
+          to: 'CANCELLED',
+          actionCode: 'CANCEL',
+        },
+      ],
+      enabled: true,
+    } satisfies WorkflowDefinition,
+  },
 ];

@@ -26,7 +26,7 @@ export class MongodbStorageProvider implements StorageProvider {
     const created = await this.model.create({
       ...this.createScope(context, entityCode),
       documentNo: payload.documentNo,
-      status: payload.status ?? 'DRAFT',
+      status: payload.status,
       data: payload.data,
       metadataVersion: payload.metadataVersion,
       createdBy: context.userId,

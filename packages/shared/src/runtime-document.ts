@@ -1,4 +1,4 @@
-export type RuntimeDocumentStatus = 'DRAFT' | 'ACTIVE' | 'APPROVED' | 'CLOSED' | 'CANCELLED';
+export type RuntimeDocumentStatus = string;
 
 export interface RuntimeDocument<TData extends Record<string, unknown> = Record<string, unknown>> {
   id?: string;
@@ -7,7 +7,7 @@ export interface RuntimeDocument<TData extends Record<string, unknown> = Record<
   applicationCode: string;
   entityCode: string;
   documentNo?: string;
-  status: RuntimeDocumentStatus;
+  status?: RuntimeDocumentStatus;
   data: TData;
   metadataVersion: number;
   createdBy: string;

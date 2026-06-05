@@ -13,6 +13,7 @@ import { ApplicationEngine } from '../application/application-engine.service';
 import { MetadataResolver } from '../metadata/metadata-resolver.service';
 import { SecurityEngine } from '../security/security-engine.service';
 import { StorageEngine } from '../storage/storage.engine';
+import { WorkflowEngine, type WorkflowTransitionResult } from '../workflow/workflow-engine.service';
 
 export interface RuntimeExecutionInput {
   context: RuntimeContext;
@@ -51,11 +52,10 @@ export interface RuntimeActionInput {
 }
 
 export interface RuntimeActionResult {
-  stage: 'ACTION_READY';
+  stage: 'WORKFLOW_READY';
   actionCode: string;
-  allowed: true;
-  next: 'WORKFLOW_ENGINE';
-  timestamp: string;
+  workflow: WorkflowTransitionResult;
+  next: 'PROCESS_ENGINE';
 }
 
 @Injectable()
@@ -65,6 +65,7 @@ export class RuntimeExecutor {
     private readonly metadataResolver: MetadataResolver,
     private readonly securityEngine: SecurityEngine,
     private readonly actionEngine: ActionEngine,
+    private readonly workflowEngine: WorkflowEngine,
     private readonly storageEngine: StorageEngine,
   ) {}
 
@@ -74,8 +75,9 @@ export class RuntimeExecutor {
     const action = await this.actionEngine.resolve(context, entityCode, 'CREATE');
     this.securityEngine.validateActionAccess(context, action);
     const actionPlan = this.actionEngine.prepare(action, payload);
+    const initialStatus = await this.workflowEngine.resolveInitialStatus(context, entityCode);
     const document = await this.storageEngine.create(context, entityCode, {
-      status: 'DRAFT',
+      ...(initialStatus ? { status: initialStatus } : {}),
       data: this.toData(payload),
       metadataVersion: entity.version,
     });
@@ -128,14 +130,19 @@ export class RuntimeExecutor {
 
     const action = await this.actionEngine.resolve(context, entityCode, actionCode);
     this.securityEngine.validateActionAccess(context, action);
-    const actionPlan = this.actionEngine.prepare(action, payload);
+    const workflow = await this.workflowEngine.transition(context, entityCode, document.status, actionCode);
+
+    if (workflow.transitioned) {
+      await this.storageEngine.update(context, entityCode, id, {
+        status: workflow.to,
+      });
+    }
 
     return {
-      stage: 'ACTION_READY',
-      actionCode: actionPlan.actionCode,
-      allowed: actionPlan.allowed,
-      next: actionPlan.next,
-      timestamp: actionPlan.timestamp,
+      stage: 'WORKFLOW_READY',
+      actionCode,
+      workflow,
+      next: 'PROCESS_ENGINE',
     };
   }
 

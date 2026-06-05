@@ -27,8 +27,7 @@ export const RuntimeDocumentSchema = new Schema(
     },
     status: {
       type: String,
-      required: true,
-      default: 'DRAFT',
+      required: false,
     },
     data: {
       type: Schema.Types.Mixed,
