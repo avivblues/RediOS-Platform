@@ -10,10 +10,12 @@ export class SecurityEngine {
   }
 
   validateActionAccess(context: RuntimeContext, action: MetadataDefinition<ActionDefinition>): void {
-    const permissionCode = action.definition.permissionCode;
+    const missingPermissions = action.definition.permissions.filter(
+      (permissionCode) => !context.permissions.includes(permissionCode),
+    );
 
-    if (permissionCode && !context.permissions.includes(permissionCode)) {
-      throw new ForbiddenException(`Missing permission: ${permissionCode}`);
+    if (missingPermissions.length > 0) {
+      throw new ForbiddenException(`Missing permissions: ${missingPermissions.join(', ')}`);
     }
   }
 }

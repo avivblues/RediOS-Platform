@@ -32,8 +32,27 @@ export class MetadataResolver {
     return this.resolveMany<FieldDefinition>(context, 'FIELD', fieldCodes);
   }
 
-  resolveAction(context: RuntimeContext, actionCode: string): Promise<MetadataDefinition<ActionDefinition>> {
-    return this.resolveOne<ActionDefinition>(context, 'ACTION', actionCode);
+  async resolveAction(
+    context: RuntimeContext,
+    entityCode: string,
+    actionCode: string,
+  ): Promise<MetadataDefinition<ActionDefinition>> {
+    const definitions = await this.registry.findByType(context, 'ACTION');
+    const definition = definitions.find((candidate) => {
+      const action = candidate.definition as ActionDefinition;
+      return candidate.code === actionCode && action.entityCode === entityCode;
+    });
+    const validation = this.validator.validate(definition ?? null);
+
+    if (!definition) {
+      throw new NotFoundException(`Metadata ACTION:${entityCode}:${actionCode} was not found.`);
+    }
+
+    if (!validation.valid) {
+      throw new UnprocessableEntityException(validation.errors);
+    }
+
+    return definition as MetadataDefinition<ActionDefinition>;
   }
 
   resolveWorkflow(context: RuntimeContext, workflowCode: string): Promise<MetadataDefinition<WorkflowDefinition>> {

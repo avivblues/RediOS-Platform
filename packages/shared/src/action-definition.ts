@@ -1,9 +1,16 @@
+export type ActionType = 'CREATE' | 'UPDATE' | 'APPROVE' | 'CANCEL' | 'CUSTOM';
+
+export interface ActionBehaviorDefinition {
+  requiresApproval: boolean;
+  confirmation: boolean;
+}
+
 export interface ActionDefinition {
   code: string;
-  name: string;
   entityCode: string;
-  permissionCode?: string;
-  workflowTransitionCode?: string;
-  processCode?: string;
+  label: string;
+  type: ActionType;
   enabled: boolean;
+  permissions: string[];
+  behavior: ActionBehaviorDefinition;
 }
