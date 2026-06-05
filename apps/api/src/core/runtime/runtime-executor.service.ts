@@ -55,6 +55,7 @@ export interface RuntimeActionResult {
   actionCode: string;
   allowed: true;
   next: 'WORKFLOW_ENGINE';
+  timestamp: string;
 }
 
 @Injectable()
@@ -132,6 +133,7 @@ export class RuntimeExecutor {
       actionCode: actionPlan.actionCode,
       allowed: actionPlan.allowed,
       next: actionPlan.next,
+      timestamp: actionPlan.timestamp,
     };
   }
 

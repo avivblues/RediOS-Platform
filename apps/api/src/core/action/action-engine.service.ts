@@ -9,6 +9,7 @@ export interface RuntimeActionPlan {
   allowed: true;
   next: 'WORKFLOW_ENGINE';
   behavior: ActionDefinition['behavior'];
+  timestamp: string;
   payload: unknown;
 }
 
@@ -38,6 +39,7 @@ export class ActionEngine {
       allowed: true,
       next: 'WORKFLOW_ENGINE',
       behavior: action.definition.behavior,
+      timestamp: new Date().toISOString(),
       payload,
     };
   }

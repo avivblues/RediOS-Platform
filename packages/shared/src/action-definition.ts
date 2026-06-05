@@ -11,6 +11,6 @@ export interface ActionDefinition {
   label: string;
   type: ActionType;
   enabled: boolean;
-  permissions: string[];
+  permissions?: string[];
   behavior: ActionBehaviorDefinition;
 }
