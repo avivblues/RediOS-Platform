@@ -11,6 +11,7 @@ import type {
 import { ActionEngine, type RuntimeActionPlan } from '../action/action-engine.service';
 import { ApplicationEngine } from '../application/application-engine.service';
 import { MetadataResolver } from '../metadata/metadata-resolver.service';
+import { ProcessEngine, type ProcessExecutionPlan } from '../process/process-engine.service';
 import { SecurityEngine } from '../security/security-engine.service';
 import { StorageEngine } from '../storage/storage.engine';
 import { WorkflowEngine, type WorkflowTransitionResult } from '../workflow/workflow-engine.service';
@@ -52,10 +53,11 @@ export interface RuntimeActionInput {
 }
 
 export interface RuntimeActionResult {
-  stage: 'WORKFLOW_READY';
+  stage: 'PROCESS_READY';
   actionCode: string;
   workflow: WorkflowTransitionResult;
-  next: 'PROCESS_ENGINE';
+  process: ProcessExecutionPlan;
+  next: 'BUSINESS_ENGINE';
 }
 
 @Injectable()
@@ -66,6 +68,7 @@ export class RuntimeExecutor {
     private readonly securityEngine: SecurityEngine,
     private readonly actionEngine: ActionEngine,
     private readonly workflowEngine: WorkflowEngine,
+    private readonly processEngine: ProcessEngine,
     private readonly storageEngine: StorageEngine,
   ) {}
 
@@ -131,18 +134,22 @@ export class RuntimeExecutor {
     const action = await this.actionEngine.resolve(context, entityCode, actionCode);
     this.securityEngine.validateActionAccess(context, action);
     const workflow = await this.workflowEngine.transition(context, entityCode, document.status, actionCode);
+    let workflowDocument = document;
 
     if (workflow.transitioned) {
-      await this.storageEngine.update(context, entityCode, id, {
-        status: workflow.to,
-      });
+      workflowDocument =
+        (await this.storageEngine.update(context, entityCode, id, {
+          status: workflow.to,
+        })) ?? document;
     }
+    const process = await this.processEngine.execute(context, entityCode, actionCode, workflow, workflowDocument);
 
     return {
-      stage: 'WORKFLOW_READY',
+      stage: 'PROCESS_READY',
       actionCode,
       workflow,
-      next: 'PROCESS_ENGINE',
+      process,
+      next: 'BUSINESS_ENGINE',
     };
   }
 

@@ -78,8 +78,35 @@ export class MetadataResolver {
     return definition as MetadataDefinition<WorkflowDefinition>;
   }
 
-  resolveProcess(context: RuntimeContext, processCode: string): Promise<MetadataDefinition<ProcessDefinition>> {
-    return this.resolveOne<ProcessDefinition>(context, 'PROCESS', processCode);
+  async resolveProcess(
+    context: RuntimeContext,
+    entityCode: string,
+    actionCode: string,
+    workflowState?: string,
+  ): Promise<MetadataDefinition<ProcessDefinition> | null> {
+    const definitions = await this.registry.findByType(context, 'PROCESS');
+    const definition = definitions.find((candidate) => {
+      const process = candidate.definition as ProcessDefinition;
+      const workflowStateMatches = !process.trigger.workflowState || process.trigger.workflowState === workflowState;
+      return (
+        process.entityCode === entityCode &&
+        process.trigger.actionCode === actionCode &&
+        workflowStateMatches &&
+        process.enabled
+      );
+    });
+
+    if (!definition) {
+      return null;
+    }
+
+    const validation = this.validator.validate(definition);
+
+    if (!validation.valid) {
+      throw new UnprocessableEntityException(validation.errors);
+    }
+
+    return definition as MetadataDefinition<ProcessDefinition>;
   }
 
   private async resolveMany<TDefinition>(

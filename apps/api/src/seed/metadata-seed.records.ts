@@ -4,6 +4,7 @@ import type {
   EntityDefinition,
   FieldDefinition,
   MetadataDefinition,
+  ProcessDefinition,
   WorkflowDefinition,
 } from '@redios/shared';
 
@@ -12,6 +13,7 @@ const domainCode = '1.26.1.0';
 const applicationCode = 'MAINTENANCE';
 const entityCode = 'ASSET';
 const workflowCode = 'MAINTENANCE_LIFECYCLE';
+const processCode = 'APPROVE_PROCESS';
 
 export const metadataSeedRecords: MetadataDefinition[] = [
   {
@@ -139,5 +141,44 @@ export const metadataSeedRecords: MetadataDefinition[] = [
       ],
       enabled: true,
     } satisfies WorkflowDefinition,
+  },
+  {
+    tenantId,
+    domainCode,
+    applicationCode,
+    type: 'PROCESS',
+    code: processCode,
+    name: 'Approve Process',
+    version: 1,
+    enabled: true,
+    definition: {
+      code: processCode,
+      entityCode,
+      trigger: {
+        actionCode: 'APPROVE',
+        workflowState: 'APPROVED',
+      },
+      steps: [
+        {
+          code: 'VALIDATE',
+          type: 'VALIDATION',
+          order: 1,
+          enabled: true,
+        },
+        {
+          code: 'BUSINESS_ENGINE',
+          type: 'BUSINESS',
+          order: 2,
+          enabled: true,
+        },
+        {
+          code: 'EVENT_ENGINE',
+          type: 'EVENT',
+          order: 3,
+          enabled: true,
+        },
+      ],
+      enabled: true,
+    } satisfies ProcessDefinition,
   },
 ];

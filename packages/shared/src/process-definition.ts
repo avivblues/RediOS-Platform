@@ -1,14 +1,22 @@
+export type ProcessStepType = 'VALIDATION' | 'BUSINESS' | 'EVENT' | 'CUSTOM';
+
+export interface ProcessTriggerDefinition {
+  actionCode: string;
+  workflowState?: string;
+}
+
 export interface ProcessStepDefinition {
   code: string;
+  type: ProcessStepType;
   order: number;
-  engineCode: string;
-  operation: string;
-  configuration?: Record<string, unknown>;
+  enabled: boolean;
+  config?: Record<string, unknown>;
 }
 
 export interface ProcessDefinition {
   code: string;
-  name: string;
+  entityCode: string;
+  trigger: ProcessTriggerDefinition;
   steps: ProcessStepDefinition[];
   enabled: boolean;
 }
