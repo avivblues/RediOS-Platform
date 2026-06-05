@@ -95,12 +95,14 @@ export class RuntimeExecutor {
   async findMany(input: RuntimeReadInput): Promise<RuntimeDocument[]> {
     const { context, entityCode, query } = input;
     await this.resolveRuntimeTarget(context, entityCode);
+    await this.validateReadAccess(context, entityCode);
     return this.storageEngine.findMany(context, entityCode, query);
   }
 
   async findOne(input: RuntimeReadInput): Promise<RuntimeDocument | null> {
     const { context, entityCode, id } = input;
     await this.resolveRuntimeTarget(context, entityCode);
+    await this.validateReadAccess(context, entityCode);
     return id ? this.storageEngine.findOne(context, entityCode, id) : null;
   }
 
@@ -156,6 +158,11 @@ export class RuntimeExecutor {
       entity,
       fields,
     };
+  }
+
+  private async validateReadAccess(context: RuntimeContext, entityCode: string): Promise<void> {
+    const action = await this.actionEngine.resolve(context, entityCode, 'READ');
+    this.securityEngine.validateActionAccess(context, action);
   }
 
   private toData(payload: unknown): Record<string, unknown> {

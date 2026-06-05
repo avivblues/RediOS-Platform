@@ -1,4 +1,4 @@
-export type ActionType = 'CREATE' | 'UPDATE' | 'APPROVE' | 'CANCEL' | 'CUSTOM';
+export type ActionType = 'CREATE' | 'READ' | 'UPDATE' | 'APPROVE' | 'CANCEL' | 'CUSTOM';
 
 export interface ActionBehaviorDefinition {
   requiresApproval: boolean;

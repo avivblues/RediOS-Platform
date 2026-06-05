@@ -43,7 +43,7 @@ export const metadataSeedRecords: MetadataDefinition[] = [
       name: 'Asset',
       type: 'MASTER',
       fieldCodes: ['assetName', 'serialNo', 'location', 'status'],
-      actionCodes: ['CREATE', 'UPDATE', 'APPROVE', 'CANCEL'],
+      actionCodes: ['CREATE', 'READ', 'UPDATE', 'APPROVE', 'CANCEL'],
       enabled: true,
     } satisfies EntityDefinition,
   },
@@ -68,7 +68,7 @@ export const metadataSeedRecords: MetadataDefinition[] = [
       },
     }),
   ),
-  ...['CREATE', 'UPDATE', 'APPROVE', 'CANCEL'].map(
+  ...['CREATE', 'READ', 'UPDATE', 'APPROVE', 'CANCEL'].map(
     (actionCode): MetadataDefinition<ActionDefinition> => ({
       tenantId,
       domainCode,
