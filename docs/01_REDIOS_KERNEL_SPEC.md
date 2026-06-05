@@ -825,3 +825,274 @@ Tidak menggunakan parent relationship.
 
 
 ==================================================
+# Engine Contract Summary
+
+
+All engines are independent modules.
+
+
+Each engine exposes:
+
+
+resolve()
+
+validate()
+
+execute()
+
+
+
+==================================================
+
+
+# Security Engine Contract
+
+
+Responsibility:
+
+
+- validate user context
+- validate permission
+- validate action access
+
+
+
+v0.1:
+
+
+Application Permission
+
+Entity Permission
+
+Action Permission
+
+
+
+Future:
+
+
+Field Permission
+
+Data Masking
+
+
+
+==================================================
+
+
+# Workflow Engine Contract
+
+
+Responsibility:
+
+
+Control document lifecycle.
+
+
+
+Example:
+
+
+DRAFT
+
+APPROVE
+
+CLOSE
+
+
+
+Workflow does not execute business calculation.
+
+
+
+==================================================
+
+
+# Process Engine Contract
+
+
+Responsibility:
+
+
+Execute ordered steps.
+
+
+
+Example:
+
+
+APPROVE_WORK_ORDER:
+
+
+1 Validate
+
+2 Reserve Inventory
+
+3 Calculate Cost
+
+4 Create Ledger
+
+
+
+==================================================
+
+
+# Business Engine Contract
+
+
+Responsibility:
+
+
+Enterprise calculation.
+
+
+
+Example:
+
+
+Inventory Engine
+
+Cost Engine
+
+Finance Engine
+
+Pricing Engine
+
+
+
+Business Engine never knows UI.
+
+
+
+==================================================
+
+
+# Ledger Engine Contract
+
+
+Responsibility:
+
+
+Store transaction impact.
+
+
+
+Rules:
+
+
+Immutable
+
+Append only
+
+
+
+Used by:
+
+
+Finance
+
+Inventory
+
+Costing
+
+Audit
+
+
+
+==================================================
+
+
+# Data View Engine Contract
+
+
+Report never query runtime document directly.
+
+
+
+Data View handles:
+
+
+join
+
+aggregation
+
+calculation
+
+projection
+
+
+
+Used for:
+
+
+Costing Report
+
+Finance Report
+
+Dashboard
+
+
+
+==================================================
+
+
+# Event Engine Contract
+
+
+Responsibility:
+
+
+Publish after transaction event.
+
+
+
+Used for:
+
+
+Notification
+
+Webhook
+
+IoT
+
+Integration
+
+
+
+==================================================
+
+
+# Experience Engine Contract
+
+
+Metadata
+
+↓
+
+Renderer
+
+
+
+Support:
+
+
+Next.js
+
+React Native
+
+
+
+Atomic Structure:
+
+
+Design Token
+
+Atom
+
+Molecule
+
+Organism
+
+Template
+
+Page
