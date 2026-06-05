@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ActionModule } from '../action/action.module';
 import { ApplicationModule } from '../application/application.module';
+import { BusinessModule } from '../business/business.module';
 import { MetadataModule } from '../metadata/metadata.module';
 import { ProcessModule } from '../process/process.module';
 import { SecurityModule } from '../security/security.module';
@@ -9,7 +10,16 @@ import { WorkflowModule } from '../workflow/workflow.module';
 import { RuntimeExecutor } from './runtime-executor.service';
 
 @Module({
-  imports: [ApplicationModule, MetadataModule, SecurityModule, ActionModule, WorkflowModule, ProcessModule, StorageModule],
+  imports: [
+    ApplicationModule,
+    MetadataModule,
+    SecurityModule,
+    ActionModule,
+    WorkflowModule,
+    ProcessModule,
+    BusinessModule,
+    StorageModule,
+  ],
   providers: [RuntimeExecutor],
   exports: [RuntimeExecutor],
 })

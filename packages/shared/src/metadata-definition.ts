@@ -5,6 +5,7 @@ export type MetadataType =
   | 'ACTION'
   | 'WORKFLOW'
   | 'PROCESS'
+  | 'BUSINESS'
   | 'FORM'
   | 'REPORT'
   | 'EXPERIENCE'

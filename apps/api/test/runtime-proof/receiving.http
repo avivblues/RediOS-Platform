@@ -1,0 +1,29 @@
+@baseUrl = http://localhost:3001/api
+@documentId = replace-with-runtime-document-id
+
+### Create RECEIVING metadata document
+POST {{baseUrl}}/runtime/RECEIVING
+x-tenant-id: 1
+x-domain-code: 1.26.1.0
+x-application-code: WAREHOUSE
+x-user-id: admin
+x-permissions: RECEIVING.CREATE,RECEIVING.READ,RECEIVING.UPDATE,RECEIVING.RECEIVE
+Content-Type: application/json
+
+{
+  "data": {
+    "itemName": "Bearing",
+    "quantity": 10
+  }
+}
+
+### Receive document through metadata workflow, process, and business rules
+POST {{baseUrl}}/runtime/RECEIVING/{{documentId}}/actions/RECEIVE
+x-tenant-id: 1
+x-domain-code: 1.26.1.0
+x-application-code: WAREHOUSE
+x-user-id: admin
+x-permissions: RECEIVING.RECEIVE
+Content-Type: application/json
+
+{}

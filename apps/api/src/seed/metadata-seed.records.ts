@@ -2,6 +2,7 @@ import type {
   ActionDefinition,
   ActionType,
   ApplicationDefinition,
+  BusinessDefinition,
   EntityType,
   EntityDefinition,
   FieldDataType,
@@ -28,6 +29,7 @@ type EntitySeed = {
   actions: string[];
   workflow?: WorkflowDefinition;
   processes?: ProcessDefinition[];
+  businesses?: BusinessDefinition[];
 };
 
 type ApplicationSeed = {
@@ -145,6 +147,74 @@ const applications: ApplicationSeed[] = [
       },
     ],
   },
+  {
+    code: 'WAREHOUSE',
+    name: 'Warehouse',
+    entities: [
+      {
+        code: 'RECEIVING',
+        name: 'Receiving',
+        type: 'DOCUMENT',
+        fields: [{ code: 'itemName', required: true }, { code: 'quantity' }, { code: 'status' }],
+        actions: ['CREATE', 'READ', 'UPDATE', 'RECEIVE'],
+        workflow: {
+          code: 'RECEIVING_LIFECYCLE',
+          entityCode: 'RECEIVING',
+          states: [
+            { code: 'DRAFT', label: 'Draft', initial: true },
+            { code: 'RECEIVED', label: 'Received', final: true },
+          ],
+          transitions: [{ code: 'RECEIVE', from: 'DRAFT', to: 'RECEIVED', actionCode: 'RECEIVE' }],
+          enabled: true,
+        },
+        processes: [
+          {
+            code: 'RECEIVE_PROCESS',
+            entityCode: 'RECEIVING',
+            trigger: {
+              actionCode: 'RECEIVE',
+              workflowState: 'RECEIVED',
+            },
+            steps: [
+              { code: 'VALIDATE', type: 'VALIDATION', order: 1, enabled: true },
+              { code: 'BUSINESS_RULE', type: 'BUSINESS', order: 2, enabled: true },
+            ],
+            enabled: true,
+          },
+        ],
+        businesses: [
+          {
+            code: 'RECEIVE_BUSINESS',
+            entityCode: 'RECEIVING',
+            trigger: {
+              processCode: 'RECEIVE_PROCESS',
+              stepCode: 'BUSINESS_RULE',
+            },
+            rules: [
+              {
+                code: 'VALIDATE_QUANTITY_REQUIRED',
+                type: 'VALIDATE_REQUIRED_FIELD',
+                enabled: true,
+                config: {
+                  field: 'quantity',
+                },
+              },
+              {
+                code: 'SET_RECEIVED_STATUS',
+                type: 'SET_FIELD_VALUE',
+                enabled: true,
+                config: {
+                  field: 'status',
+                  value: 'RECEIVED',
+                },
+              },
+            ],
+            enabled: true,
+          },
+        ],
+      },
+    ],
+  },
 ];
 
 export const metadataSeedRecords: MetadataDefinition[] = applications.flatMap((application) => [
@@ -179,6 +249,7 @@ function createEntityRecords(application: ApplicationSeed, entity: EntitySeed): 
     ...entity.actions.map((actionCode) => createActionRecord(application, entity, actionCode)),
     ...(entity.workflow ? [createWorkflowRecord(application, entity.workflow)] : []),
     ...(entity.processes ?? []).map((process) => createProcessRecord(application, process)),
+    ...(entity.businesses ?? []).map((business) => createBusinessRecord(application, business)),
   ];
 }
 
@@ -293,6 +364,23 @@ function createProcessRecord(
     version: 1,
     enabled: true,
     definition: process,
+  };
+}
+
+function createBusinessRecord(
+  application: ApplicationSeed,
+  business: BusinessDefinition,
+): MetadataDefinition<BusinessDefinition> {
+  return {
+    tenantId,
+    domainCode,
+    applicationCode: application.code,
+    type: 'BUSINESS',
+    code: business.code,
+    name: toLabel(business.code),
+    version: 1,
+    enabled: true,
+    definition: business,
   };
 }
 

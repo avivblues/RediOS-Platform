@@ -2,6 +2,7 @@ import { Injectable, NotFoundException, UnprocessableEntityException } from '@ne
 import type {
   ActionDefinition,
   ApplicationDefinition,
+  BusinessDefinition,
   EntityDefinition,
   FieldDefinition,
   MetadataDefinition,
@@ -107,6 +108,36 @@ export class MetadataResolver {
     }
 
     return definition as MetadataDefinition<ProcessDefinition>;
+  }
+
+  async resolveBusiness(
+    context: RuntimeContext,
+    entityCode: string,
+    processCode: string,
+    stepCode: string,
+  ): Promise<MetadataDefinition<BusinessDefinition> | null> {
+    const definitions = await this.registry.findByType(context, 'BUSINESS');
+    const definition = definitions.find((candidate) => {
+      const business = candidate.definition as BusinessDefinition;
+      return (
+        business.entityCode === entityCode &&
+        business.trigger.processCode === processCode &&
+        business.trigger.stepCode === stepCode &&
+        business.enabled
+      );
+    });
+
+    if (!definition) {
+      return null;
+    }
+
+    const validation = this.validator.validate(definition);
+
+    if (!validation.valid) {
+      throw new UnprocessableEntityException(validation.errors);
+    }
+
+    return definition as MetadataDefinition<BusinessDefinition>;
   }
 
   private async resolveMany<TDefinition>(

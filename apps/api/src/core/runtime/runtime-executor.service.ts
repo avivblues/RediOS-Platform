@@ -10,6 +10,7 @@ import type {
 } from '@redios/shared';
 import { ActionEngine, type RuntimeActionPlan } from '../action/action-engine.service';
 import { ApplicationEngine } from '../application/application-engine.service';
+import { BusinessEngine, type BusinessExecutionResult } from '../business/business-engine.service';
 import { MetadataResolver } from '../metadata/metadata-resolver.service';
 import { ProcessEngine, type ProcessExecutionPlan } from '../process/process-engine.service';
 import { SecurityEngine } from '../security/security-engine.service';
@@ -53,11 +54,12 @@ export interface RuntimeActionInput {
 }
 
 export interface RuntimeActionResult {
-  stage: 'PROCESS_READY';
+  stage: 'BUSINESS_READY';
   actionCode: string;
   workflow: WorkflowTransitionResult;
   process: ProcessExecutionPlan;
-  next: 'BUSINESS_ENGINE';
+  business: BusinessExecutionResult;
+  next: 'EVENT_ENGINE';
 }
 
 @Injectable()
@@ -69,6 +71,7 @@ export class RuntimeExecutor {
     private readonly actionEngine: ActionEngine,
     private readonly workflowEngine: WorkflowEngine,
     private readonly processEngine: ProcessEngine,
+    private readonly businessEngine: BusinessEngine,
     private readonly storageEngine: StorageEngine,
   ) {}
 
@@ -143,13 +146,21 @@ export class RuntimeExecutor {
         })) ?? document;
     }
     const process = await this.processEngine.execute(context, entityCode, actionCode, workflow, workflowDocument);
+    const business = await this.businessEngine.execute(context, entityCode, workflowDocument, process);
+
+    if (business.executedRules.some((rule) => rule.type === 'SET_FIELD_VALUE' && rule.status === 'EXECUTED')) {
+      await this.storageEngine.update(context, entityCode, id, {
+        data: workflowDocument.data,
+      });
+    }
 
     return {
-      stage: 'PROCESS_READY',
+      stage: 'BUSINESS_READY',
       actionCode,
       workflow,
       process,
-      next: 'BUSINESS_ENGINE',
+      business,
+      next: 'EVENT_ENGINE',
     };
   }
 
