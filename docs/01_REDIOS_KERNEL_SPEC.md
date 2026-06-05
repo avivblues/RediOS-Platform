@@ -4,13 +4,135 @@
 
 
 
-# 1. Kernel Execution Flow
+# 1. Technology Stack Contract
 
 
-Semua request wajib melalui:
+Backend:
 
 
-Request
+Node.js
+
+TypeScript
+
+NestJS
+
+
+
+Database:
+
+
+MongoDB
+
+Mongoose
+
+
+
+Architecture:
+
+
+Modular Monolith
+
+Metadata Driven Runtime
+
+Engine Based Architecture
+
+
+
+Web Renderer:
+
+
+Next.js
+
+React
+
+TypeScript
+
+
+
+Mobile Renderer:
+
+
+React Native
+
+TypeScript
+
+
+
+UI:
+
+
+Atomic Design System
+
+
+
+==================================================
+
+
+# 2. Repository Structure
+
+
+Gunakan monorepo.
+
+
+
+apps/
+
+
+api/
+
+NestJS Runtime Kernel
+
+
+
+web/
+
+Next.js Experience Renderer
+
+
+
+mobile/
+
+React Native Renderer
+
+
+
+
+
+packages/
+
+
+shared/
+
+metadata contract
+
+
+
+engine-sdk/
+
+engine interface
+
+
+
+ui-schema/
+
+experience schema
+
+
+
+==================================================
+
+
+# 3. Runtime Request Pipeline
+
+
+Semua request wajib melewati:
+
+
+Client
+
+↓
+
+Runtime API
 
 ↓
 
@@ -22,15 +144,19 @@ Application Engine
 
 ↓
 
-Metadata Resolver
+Metadata Engine
 
 ↓
 
-Security Resolver
+Security Engine
 
 ↓
 
-Action Executor
+Action Engine
+
+↓
+
+Workflow Engine
 
 ↓
 
@@ -42,24 +168,96 @@ Business Engine
 
 ↓
 
-Storage / Ledger
+Storage Engine
+
+↓
+
+Ledger Engine
 
 
 
-Tidak boleh bypass engine.
+Tidak boleh bypass.
 
 
 
 ==================================================
 
 
-# 2. Context Engine
+# 4. API Contract
 
 
-Membuat runtime context.
+Hanya membuat:
 
 
-Output:
+runtimeController
+
+
+
+Tidak membuat:
+
+
+assetController
+
+itemController
+
+workOrderController
+
+
+
+Endpoint:
+
+
+POST
+
+/api/runtime/:entityCode
+
+
+
+GET
+
+/api/runtime/:entityCode
+
+
+
+GET
+
+/api/runtime/:entityCode/:id
+
+
+
+PATCH
+
+/api/runtime/:entityCode/:id
+
+
+
+POST
+
+/api/runtime/:entityCode/:id/actions/:actionCode
+
+
+
+==================================================
+
+
+# 5. Context Engine
+
+
+Prototype v0.1 menggunakan header:
+
+
+
+x-user-id
+
+x-tenant-id
+
+x-domain-code
+
+x-application-code
+
+
+
+Output context:
 
 
 {
@@ -78,86 +276,24 @@ Output:
 
 
 
-Semua engine menerima context.
+Future:
+
+
+JWT
+
+OAuth
+
+SSO
 
 
 
 ==================================================
 
 
-# 3. Application Engine
+# 6. Metadata Engine
 
 
-Application bukan folder.
-
-
-Application adalah metadata composition.
-
-
-Example:
-
-
-{
- application:"ERP",
-
- capabilities:[
-
- "FINANCE",
-
- "INVENTORY",
-
- "PURCHASE"
-
- ]
-
-}
-
-
-
-{
- application:"POS",
-
- capabilities:[
-
- "SALES",
-
- "PAYMENT"
-
- ]
-
-}
-
-
-
-==================================================
-
-
-# 4. Capability Engine
-
-
-Mengatur:
-
-- module availability
-- subscription
-- feature access
-
-
-Example:
-
-
-WORK_ORDER enabled
-
-FINANCE disabled
-
-
-
-==================================================
-
-
-# 5. Metadata Engine
-
-
-Metadata Type:
+Metadata Types:
 
 
 APPLICATION
@@ -172,79 +308,102 @@ WORKFLOW
 
 PROCESS
 
-REPORT
+FORM
 
-RULE
+REPORT
 
 EXPERIENCE
 
+RULE
 
 
-Metadata tidak berisi business calculation.
+
+Metadata hanya definisi.
+
+
+Tidak berisi kalkulasi bisnis.
 
 
 
 ==================================================
 
 
-# 6. Entity Contract
+# 7. Entity Contract
 
 
 Entity menggantikan static model.
 
 
-Entity Class:
+
+Entity Type:
 
 
 MASTER
 
-DOCUMENT
 
-LEDGER
-
-SNAPSHOT
-
-CONFIGURATION
-
-
-
-Example:
-
+contoh:
 
 ITEM
 
-=
-
-MASTER
+ASSET
 
 
 
-WORK_ORDER
-
-=
 
 DOCUMENT
 
 
+contoh:
+
+WORK_ORDER
+
+SALES_ORDER
+
+
+
+
+LEDGER
+
+
+contoh:
 
 STOCK_MOVEMENT
 
-=
+COST_LEDGER
 
-LEDGER
+
+
+
+SNAPSHOT
+
+
+contoh:
+
+MONTHLY_STOCK
+
+ITEM_COST
+
+
+
+
+CONFIGURATION
 
 
 
 ==================================================
 
 
-# 7. Runtime Document Contract
+# 8. Runtime Document Storage
 
 
-Document mengikuti ERP pattern.
+Semua transaksi masuk:
 
 
-Structure:
+runtime_documents
+
+
+
+Format:
 
 
 {
@@ -256,344 +415,82 @@ Structure:
 
  entityCode,
 
-
  documentNo,
-
- documentDate,
-
 
  status,
 
- workflowState,
-
-
  header:{},
-
 
  lines:[],
 
-
  attributes:{},
 
-
- references:[],
-
-
- audit:{}
-
+ references:[]
 }
 
 
 
-header:
-
-single document information
-
-
-
-lines:
-
-transaction detail
-
-
-
-attributes:
-
-dynamic/custom field
-
-
-
-references:
-
-document flow
-
-
-
-Example:
-
-
-Purchase Order
-
-↓
-
-Goods Receipt
-
-↓
-
-Invoice
-
-
-
 ==================================================
 
 
-# 8. Relationship & Query Engine
+# 9. Relationship & Query Engine
 
 
-Relationship bukan untuk ERP calculation.
+Tidak menggunakan hardcoded join.
 
 
-Relationship Type:
 
+Untuk kebutuhan ERP complex query:
 
-1. Reference
 
+costing
 
-Untuk:
+finance
 
-lookup
+report
 
-validation
 
 
+gunakan:
 
-Example:
-
-
-WO → Asset
-
-
-
---------------------------------
-
-
-2. Document Flow
-
-
-Untuk:
-
-transaction chain
-
-
-
-Example:
-
-
-SO
-
-↓
-
-Delivery
-
-↓
-
-Invoice
-
-
-
---------------------------------
-
-
-3. Ledger Relation
-
-
-Untuk business impact.
-
-
-Transaction
-
-↓
-
-Engine
-
-↓
-
-Ledger
-
-
-
---------------------------------
-
-
-4. Data View
-
-
-Untuk:
-
-- costing
-
-- finance report
-
-- dashboard
-
-- analytic
-
-
-
-Report tidak join runtime document langsung.
-
-
-
-==================================================
-
-
-# 9. Data View Engine
-
-
-Menggantikan complex hardcoded query.
-
-
-Flow:
-
-
-Request Report
-
-↓
 
 Data View Definition
 
-↓
 
-Source Resolver
 
-↓
+Data View menentukan:
 
-Aggregation Pipeline
 
-↓
+source
 
-Calculation Engine
+relation
 
-↓
+aggregation
 
-Result
+filter
 
 
 
-Example:
-
-
-ITEM_COST_VIEW
-
-
-Sources:
-
-
-Inventory Ledger
-
-Cost Ledger
-
-Production Ledger
-
-
-
-Pipeline:
-
-
-Material Cost
-
-+
-
-Labor Cost
-
-+
-
-Overhead
-
-+
-
-Variance
+Report tidak query database langsung.
 
 
 
 ==================================================
 
 
-# 10. Field Engine
+# 10. Workflow Engine
 
 
-Handle:
+Workflow mengatur:
 
 
-- validation
+state
 
-- visibility
+transition
 
-- readonly
+approval
 
-- required
-
-- default value
-
-- calculation resolver
-
-
-
-Security field runtime.
-
-
-
-==================================================
-
-
-# 11. Numbering Engine
-
-
-Generate document number.
-
-
-Example:
-
-
-WO/{YEAR}/{DOMAIN}/{SEQ}
-
-
-
-==================================================
-
-
-# 12. Action Engine
-
-
-Button adalah metadata.
-
-
-SAVE:
-
-
-validate
-
-↓
-
-save
-
-↓
-
-event
-
-
-
-APPROVE:
-
-
-validate
-
-↓
-
-workflow
-
-↓
-
-process
-
-
-
-==================================================
-
-
-# 13. Workflow Engine
-
-
-Control:
-
-
-STATE
-
-ACTION
-
-PERMISSION
-
-PIPELINE
+action availability
 
 
 
@@ -615,240 +512,202 @@ CLOSED
 ==================================================
 
 
-# 14. Process Engine
+# 11. Action Engine
 
 
-Evolution from appProcess.
+Satu form dapat memiliki banyak action.
 
-
-Menentukan business execution.
 
 
 Example:
 
 
-POST_WORK_ORDER
+SAVE
+
+
+APPROVE
+
+
+CANCEL
+
+
+
+Setiap action memiliki:
+
+
+permission
+
+workflow
+
+process target
+
+
+
+==================================================
+
+
+# 12. Process Engine
+
+
+Process adalah orchestration.
+
+
+
+Example:
+
+
+APPROVE_WORK_ORDER
 
 
 Steps:
 
 
-Inventory.reserve()
+Validate
 
+↓
 
-Cost.calculate()
+Reserve Stock
 
+↓
 
-Ledger.create()
+Calculate Cost
+
+↓
+
+Create Ledger
 
 
 
 ==================================================
 
 
-# 15. Business Engine
+# 13. Business Engine
 
 
-Berisi enterprise logic.
+Tempat enterprise logic.
 
 
-Prototype:
+
+Example engine:
 
 
 Inventory Engine
 
-
 Costing Engine
 
-
 Finance Engine
-
 
 Pricing Engine
 
 
-IoT Engine
+
+Tidak boleh ditaruh di metadata.
 
 
 
 ==================================================
 
 
-# 16. Ledger Engine
+# 14. Ledger Engine
 
 
 Semua impact transaksi masuk ledger.
 
 
-Document
 
-↓
-
-Business Engine
-
-↓
-
-Ledger
-
-↓
-
-Report
+Immutable.
 
 
 
-Ledger:
+Digunakan untuk:
 
-- inventory ledger
-- cost ledger
-- finance ledger
+
+audit
+
+report
+
+finance
+
+costing
 
 
 
 ==================================================
 
 
-# 17. Closing Engine
+# 15. Report Engine
 
 
-Untuk fast reporting.
+Report Flow:
 
 
-Ledger
-
-↓
-
-Period Snapshot
-
-
-
-Example:
-
-
-itemInvStock
-
-itemFaAmount
-
-
-
-==================================================
-
-
-# 18. Rule Engine
-
-
-Dynamic business rule.
-
-
-Example:
-
-
-discount
-
-pricing
-
-approval limit
-
-validation
-
-
-
-==================================================
-
-
-# 19. Scheduler Engine
-
-
-Runtime scheduler.
-
-
-Menggantikan cron manual.
-
-
-Example:
-
-
-PRICE_UPDATE
+Report Request
 
 ↓
 
-Process Engine
+Data View Engine
 
-
-
-==================================================
-
-
-# 20. Report Engine
-
-
-Report memakai:
-
-
-Data View
-
-+
+↓
 
 Aggregation
 
-+
+↓
 
-Calculation
+JSON Response
 
 
 
-Bukan direct database query.
+Prototype:
+
+
+JSON API dulu.
 
 
 
 ==================================================
 
 
-# 21. Integration Engine
+# 16. Experience Engine
 
 
-Support:
-
-
-REST API
-
-Webhook
-
-MQTT
-
-PLC
-
-Arduino
-
-IoT Device
+Frontend bukan halaman hardcoded.
 
 
 
-Flow:
-
-
-External
+Experience Metadata
 
 ↓
 
-Adapter
+Component Resolver
 
 ↓
 
-Event
+Renderer
 
-↓
 
-Process
+
+Renderer:
+
+
+Web:
+
+Next.js
+
+
+
+Mobile:
+
+React Native
 
 
 
 ==================================================
 
 
-# 22. Atomic Experience Engine
+# 17. Atomic Design Contract
 
 
-UI Runtime:
+Structure:
 
 
 Design Token
@@ -875,128 +734,92 @@ Page
 
 
 
-Satu metadata dapat render:
-
-- Web
-
-- Mobile
-
-- POS
-
-- Dashboard
+Page adalah runtime result.
 
 
 
-==================================================
+Tidak membuat:
 
 
-# 23. Build Sequence
+work-order.tsx
 
 
-PHASE 0
-Foundation
+
+Membuat:
 
 
-PHASE 1
-Context
-
-
-PHASE 2
-Metadata
-
-
-PHASE 3
-Application
-
-
-PHASE 4
-Runtime Document
-
-
-PHASE 5
-Field + Security
-
-
-PHASE 6
-Action
-
-
-PHASE 7
-Workflow
-
-
-PHASE 8
-Process
-
-
-PHASE 9
-Business Engine
-
-
-PHASE 10
-Ledger
-
-
-PHASE 11
-Data View
-
-
-PHASE 12
-Report
-
-
-PHASE 13
-Closing
-
-
-PHASE 14
-Rule
-
-
-PHASE 15
-Scheduler
-
-
-PHASE 16
-Integration
-
-
-PHASE 17
-Experience
+runtime-page.tsx
 
 
 
 ==================================================
 
 
-# 24. Cursor Development Rules
+# 18. Prototype Execution Rule
 
 
-DO NOT CREATE:
+v0.1 focus:
 
 
-customerController
-
-itemController
-
-workOrderController
-
-
-DO NOT:
-
-
-hardcode workflow
-
-hardcode form
-
-hardcode report query
+Backend Kernel Vertical Slice
 
 
 
-CREATE:
+Build order:
 
 
-runtimeController
+1 Context Engine
+
+
+2 Metadata Engine
+
+
+3 Runtime API
+
+
+4 Workflow Engine
+
+
+5 Process Engine
+
+
+6 Business Engine
+
+
+7 Ledger Engine
+
+
+8 Report Engine
+
+
+9 Experience Renderer
+
+
+
+==================================================
+
+
+# 19. Cursor Development Rules
+
+
+Cursor wajib menjaga:
+
+
+NO business controller
+
+
+NO entity service
+
+
+NO hardcoded module
+
+
+NO direct database query from feature
+
+
+
+Build:
+
 
 resolver
 
@@ -1008,16 +831,33 @@ adapter
 
 
 
-Every feature:
+==================================================
 
 
-Metadata
+# 20. Definition Of Done
 
-↓
 
-Runtime
+Selesai jika:
 
-↓
 
-Engine
+Tambah entity baru:
 
+tanpa coding.
+
+
+
+Tambah field:
+
+tanpa migration.
+
+
+
+Tambah workflow:
+
+tanpa deploy.
+
+
+
+Satu kernel:
+
+multi application.

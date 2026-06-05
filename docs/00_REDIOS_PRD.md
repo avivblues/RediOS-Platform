@@ -1,223 +1,211 @@
-# Technology Stack Contract
 # RediOS Platform
 # Product Requirement Document
 # Prototype v0.1
 
-# 0. Technology Stack Contract
 
-
-Technology stack ini wajib digunakan untuk membangun RediOS Runtime Kernel.
-
-
-Backend:
-
-- Node.js
-- TypeScript
-- NestJS
-
-
-Database:
-
-- MongoDB
-- Mongoose
-
-
-Architecture:
-
-- Modular Monolith
-- Metadata Driven Runtime
-- Engine Based Architecture
-
-
-Web Renderer:
-
-- Next.js
-- React
-- TypeScript
-
-
-Mobile Renderer:
-
-- React Native
-- TypeScript
-
-
-UI Architecture:
-
-- Atomic Design System
-
-
-==================================================
-
-
-# 2. Kernel Execution Flow
-
-
-Semua request wajib melalui:
-
-
-Client
-
-↓
-
-Runtime API
-
-↓
-
-Context Engine
-
-↓
-
-Application Engine
-
-↓
-
-Metadata Engine
-
-↓
-
-Security Engine
-
-↓
-
-Action Engine
-
-↓
-
-Process Engine
-
-↓
-
-Business Engine
-
-↓
-
-Storage / Ledger
-
-
-==================================================
-
-
-# 1. Product Definition
+# 1. Product Vision
 
 
 RediOS adalah ERP Runtime Operating Platform berbasis metadata.
 
-RediOS menyediakan kernel untuk membangun dynamic business application:
 
-- multi tenant
-- multi application
-- multi company
-- multi branch
-- multi module
-- multi workflow
-- multi interface
-- multi experience
+RediOS bukan aplikasi ERP.
 
 
-RediOS bukan kumpulan aplikasi ERP.
-
-RediOS adalah runtime kernel untuk membuat aplikasi bisnis.
+RediOS adalah kernel untuk membuat aplikasi bisnis secara dinamis.
 
 
-Application bukan source code folder.
-
-Application adalah metadata composition.
-
-
-Application:
-
-- Entity
-- Capability
-- Workflow
-- Process
-- Rule
-- Form
-- Report
-- Experience
-
-
-Satu kernel dapat menghasilkan:
-
-- POS
-- ERP
-- WMS
-- HRIS
-- Ticketing
-- IoT Portal
-- Custom Business Application
-
-
-==================================================
-
-
-# 2. Platform Goal
-
-
-Tujuan RediOS:
-
-Membuat platform dimana perubahan bisnis dapat dilakukan melalui konfigurasi metadata.
-
-
-Developer membuat:
+Developer membangun:
 
 ENGINE
 
 
-User/Consultant mengatur:
+Consultant / User melakukan:
 
-METADATA
+CONFIGURATION & METADATA
 
 
 
 ==================================================
 
 
-# 3. Core Concept
+# 2. Platform Capability
 
 
-Application
+Satu RediOS Kernel harus mampu menjalankan:
 
-=
 
-Metadata
+- Multi Tenant
+
+- Multi Application
+
+- Multi Company
+
+- Multi Branch
+
+- Multi Module
+
+- Multi Workflow
+
+- Multi Interface
+
+- Multi Experience
+
+
+
+Contoh aplikasi yang bisa dibuat:
+
+
+- ERP
+
+- POS
+
+- Warehouse Management System
+
+- HRIS
+
+- Ticketing System
+
+- IoT Portal
+
+- Custom Enterprise Application
+
+
+
+==================================================
+
+
+# 3. Application Concept
+
+
+Application bukan folder source code.
+
+
+Application adalah metadata composition.
+
+
+
+Application terdiri dari:
+
+
+Entity
 
 +
 
-Runtime Engine
+Field
 
 +
 
-Business Engine
+Form
 
++
+
+Workflow
+
++
+
+Process
+
++
+
+Rule
+
++
+
+Report
+
++
+
+Experience
+
+
+
+Aplikasi baru dibuat dengan konfigurasi metadata.
+
+Bukan membuat ulang source code.
+
+
+
+==================================================
+
+
+# 4. Metadata Driven Concept
 
 
 Metadata menentukan:
 
+
 WHAT
 
 
-Runtime menentukan:
 
-HOW
+Runtime Engine menentukan:
+
+
+HOW TO EXECUTE
+
 
 
 Business Engine menentukan:
+
 
 BUSINESS IMPACT
 
 
 
+Contoh:
+
+
+Metadata:
+
+
+WORK_ORDER mempunyai action APPROVE
+
+
+
+Runtime:
+
+
+Menjalankan action
+
+
+
+Business Engine:
+
+
+Menghasilkan:
+
+- inventory movement
+
+- cost impact
+
+- ledger
+
+
+
 ==================================================
 
 
-# 4. Tenant & Domain Concept
+# 5. Tenant & Domain Concept
 
 
-domainCode adalah business namespace.
+Tenant:
+
+Pemilik environment.
 
 
-Example:
+
+Domain:
+
+Business namespace di dalam tenant.
+
+
+
+domainCode bukan parent child relation.
+
+
+
+Format example:
 
 
 1.26.1.0
@@ -225,38 +213,61 @@ Example:
 Head Office
 
 
+
 1.26.1.1
 
-Branch
+Branch 1
+
+
+
+1.26.1.2
+
+Branch 2
+
 
 
 domainCode digunakan untuk:
 
 
-- ownership
-- isolation
-- security scope
+- data ownership
+
+- access scope
+
 - reporting
+
 - consolidation
+
 - numbering
-
-
-
-Tidak menggunakan parent relation.
 
 
 
 ==================================================
 
 
-# 5. Prototype Scope
+# 6. Prototype Goal v0.1
 
 
 Prototype pertama:
 
 
-Asset Maintenance System
+Asset Maintenance Runtime
 
+
+
+Tujuan:
+
+
+Bukan membuat aplikasi maintenance.
+
+
+Tujuan membuktikan RediOS Kernel.
+
+
+
+==================================================
+
+
+# 7. Prototype Scenario
 
 
 Flow:
@@ -270,11 +281,15 @@ Work Order
 
 ↓
 
-Approval Workflow
+Approval
 
 ↓
 
-Inventory Usage
+Sparepart Usage
+
+↓
+
+Inventory Impact
 
 ↓
 
@@ -290,46 +305,85 @@ Dynamic Report
 
 
 
-Tujuan bukan membuat maintenance apps.
+==================================================
 
-Tujuan membuktikan kernel bisa membuat aplikasi.
+
+# 8. Prototype Success Criteria
+
+
+Prototype berhasil jika:
+
+
+✓ Entity dibuat tanpa membuat model baru
+
+
+✓ Field dibuat tanpa migration database
+
+
+✓ API otomatis membaca metadata
+
+
+✓ Tidak ada controller per module
+
+
+✓ Workflow configurable
+
+
+✓ Action configurable
+
+
+✓ Process configurable
+
+
+✓ Business impact masuk engine
+
+
+✓ Ledger otomatis tercipta
+
+
+✓ Report menggunakan Data View Engine
+
+
+✓ UI bisa dibangun dari Experience Metadata
+
+
+✓ Kernel sama bisa membuat aplikasi lain
 
 
 
 ==================================================
 
 
-# 6. Prototype Acceptance Criteria
+# 9. Long Term Vision
 
 
-Prototype selesai jika:
+RediOS menjadi:
 
 
-✓ create entity tanpa coding controller
+Enterprise Runtime Operating Platform
 
 
-✓ create field tanpa migration
+untuk membangun:
 
 
-✓ generate API dari metadata
+Business Application
+
++
+
+Workflow
+
++
+
+Data
+
++
+
+Automation
+
++
+
+AI Assistant
 
 
-✓ dynamic form runtime
 
-
-✓ workflow configurable
-
-
-✓ action configurable
-
-
-✓ business process masuk engine
-
-
-✓ ledger tercipta dari transaksi
-
-
-✓ report dari Data View Engine
-
-
-✓ multi application dari kernel sama
+berbasis metadata.
