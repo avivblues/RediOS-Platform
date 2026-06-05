@@ -19,7 +19,7 @@ export class MongoMetadataProvider implements MetadataProvider {
   }
 
   async saveMetadata(context: RuntimeContext, definition: MetadataDefinition): Promise<MetadataDefinition> {
-    const scope = this.createScope(context);
+    const scope = this.createScope(context, definition.applicationCode);
     const persisted = await this.model
       .findOneAndUpdate(
         {

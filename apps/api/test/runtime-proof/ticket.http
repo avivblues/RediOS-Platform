@@ -1,0 +1,68 @@
+@baseUrl = http://localhost:3001/api
+@documentId = replace-with-runtime-document-id
+
+### 1. Create Ticket
+POST {{baseUrl}}/runtime/TICKET
+x-tenant-id: 1
+x-domain-code: 1.26.1.0
+x-application-code: HELPDESK
+x-user-id: admin
+x-permissions: TICKET.CREATE,TICKET.READ,TICKET.UPDATE,TICKET.ASSIGN,TICKET.START,TICKET.RESOLVE,TICKET.CLOSE,TICKET.REOPEN
+Content-Type: application/json
+
+{
+  "data": {
+    "title": "Internet down",
+    "description": "Customer cannot connect",
+    "priority": "HIGH",
+    "category": "NETWORK"
+  }
+}
+
+### 2. Assign Ticket: OPEN -> ASSIGNED
+POST {{baseUrl}}/runtime/TICKET/{{documentId}}/actions/ASSIGN
+x-tenant-id: 1
+x-domain-code: 1.26.1.0
+x-application-code: HELPDESK
+x-user-id: admin
+x-permissions: TICKET.ASSIGN
+Content-Type: application/json
+
+{
+  "assignee": "technician01"
+}
+
+### 3. Start Work: ASSIGNED -> IN_PROGRESS
+POST {{baseUrl}}/runtime/TICKET/{{documentId}}/actions/START
+x-tenant-id: 1
+x-domain-code: 1.26.1.0
+x-application-code: HELPDESK
+x-user-id: admin
+x-permissions: TICKET.START
+Content-Type: application/json
+
+{}
+
+### 4. Resolve Ticket: IN_PROGRESS -> RESOLVED
+POST {{baseUrl}}/runtime/TICKET/{{documentId}}/actions/RESOLVE
+x-tenant-id: 1
+x-domain-code: 1.26.1.0
+x-application-code: HELPDESK
+x-user-id: admin
+x-permissions: TICKET.RESOLVE
+Content-Type: application/json
+
+{
+  "resolution": "Cable replaced"
+}
+
+### 5. Close Ticket: RESOLVED -> CLOSED
+POST {{baseUrl}}/runtime/TICKET/{{documentId}}/actions/CLOSE
+x-tenant-id: 1
+x-domain-code: 1.26.1.0
+x-application-code: HELPDESK
+x-user-id: admin
+x-permissions: TICKET.CLOSE
+Content-Type: application/json
+
+{}

@@ -145,10 +145,24 @@ export class RuntimeExecutor {
           status: workflow.to,
         })) ?? document;
     }
+
+    const actionData = this.toActionData(payload);
+    const hasActionData = Object.keys(actionData).length > 0;
+
+    if (hasActionData) {
+      workflowDocument.data = {
+        ...workflowDocument.data,
+        ...actionData,
+      };
+    }
+
     const process = await this.processEngine.execute(context, entityCode, actionCode, workflow, workflowDocument);
     const business = await this.businessEngine.execute(context, entityCode, workflowDocument, process);
 
-    if (business.executedRules.some((rule) => rule.type === 'SET_FIELD_VALUE' && rule.status === 'EXECUTED')) {
+    if (
+      hasActionData ||
+      business.executedRules.some((rule) => rule.type === 'SET_FIELD_VALUE' && rule.status === 'EXECUTED')
+    ) {
       await this.storageEngine.update(context, entityCode, id, {
         data: workflowDocument.data,
       });
@@ -198,5 +212,13 @@ export class RuntimeExecutor {
     return {
       value: payload,
     };
+  }
+
+  private toActionData(payload: unknown): Record<string, unknown> {
+    if (payload && typeof payload === 'object' && !Array.isArray(payload)) {
+      return payload as Record<string, unknown>;
+    }
+
+    return {};
   }
 }

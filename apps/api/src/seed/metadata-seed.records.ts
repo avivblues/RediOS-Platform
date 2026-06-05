@@ -215,6 +215,157 @@ const applications: ApplicationSeed[] = [
       },
     ],
   },
+  {
+    code: 'HELPDESK',
+    name: 'Helpdesk Ticket Management',
+    entities: [
+      {
+        code: 'TICKET',
+        name: 'Ticket',
+        type: 'DOCUMENT',
+        fields: [
+          { code: 'title', required: true },
+          { code: 'description' },
+          { code: 'priority' },
+          { code: 'category' },
+          { code: 'requester' },
+          { code: 'assignee' },
+          { code: 'resolution' },
+          { code: 'status' },
+        ],
+        actions: ['CREATE', 'READ', 'UPDATE', 'ASSIGN', 'START', 'RESOLVE', 'CLOSE', 'REOPEN'],
+        workflow: {
+          code: 'TICKET_LIFECYCLE',
+          entityCode: 'TICKET',
+          states: [
+            { code: 'OPEN', label: 'Open', initial: true },
+            { code: 'ASSIGNED', label: 'Assigned' },
+            { code: 'IN_PROGRESS', label: 'In Progress' },
+            { code: 'RESOLVED', label: 'Resolved' },
+            { code: 'CLOSED', label: 'Closed', final: true },
+          ],
+          transitions: [
+            { code: 'ASSIGN', from: 'OPEN', to: 'ASSIGNED', actionCode: 'ASSIGN' },
+            { code: 'START', from: 'ASSIGNED', to: 'IN_PROGRESS', actionCode: 'START' },
+            { code: 'RESOLVE', from: 'IN_PROGRESS', to: 'RESOLVED', actionCode: 'RESOLVE' },
+            { code: 'CLOSE', from: 'RESOLVED', to: 'CLOSED', actionCode: 'CLOSE' },
+            { code: 'REOPEN', from: 'RESOLVED', to: 'IN_PROGRESS', actionCode: 'REOPEN' },
+          ],
+          enabled: true,
+        },
+        processes: [
+          {
+            code: 'TICKET_ASSIGN_PROCESS',
+            entityCode: 'TICKET',
+            trigger: {
+              actionCode: 'ASSIGN',
+              workflowState: 'ASSIGNED',
+            },
+            steps: [
+              { code: 'VALIDATE', type: 'VALIDATION', order: 1, enabled: true },
+              { code: 'BUSINESS', type: 'BUSINESS', order: 2, enabled: true },
+            ],
+            enabled: true,
+          },
+          {
+            code: 'TICKET_START_PROCESS',
+            entityCode: 'TICKET',
+            trigger: {
+              actionCode: 'START',
+              workflowState: 'IN_PROGRESS',
+            },
+            steps: [
+              { code: 'VALIDATE', type: 'VALIDATION', order: 1, enabled: true },
+              { code: 'BUSINESS', type: 'BUSINESS', order: 2, enabled: true },
+            ],
+            enabled: true,
+          },
+          {
+            code: 'TICKET_RESOLVE_PROCESS',
+            entityCode: 'TICKET',
+            trigger: {
+              actionCode: 'RESOLVE',
+              workflowState: 'RESOLVED',
+            },
+            steps: [
+              { code: 'VALIDATE', type: 'VALIDATION', order: 1, enabled: true },
+              { code: 'BUSINESS', type: 'BUSINESS', order: 2, enabled: true },
+            ],
+            enabled: true,
+          },
+        ],
+        businesses: [
+          {
+            code: 'TICKET_ASSIGN_BUSINESS',
+            entityCode: 'TICKET',
+            trigger: {
+              processCode: 'TICKET_ASSIGN_PROCESS',
+              stepCode: 'BUSINESS',
+            },
+            rules: [
+              {
+                code: 'VALIDATE_ASSIGNEE_REQUIRED',
+                type: 'VALIDATE_REQUIRED_FIELD',
+                enabled: true,
+                config: {
+                  field: 'assignee',
+                },
+              },
+            ],
+            enabled: true,
+          },
+          {
+            code: 'TICKET_START_BUSINESS',
+            entityCode: 'TICKET',
+            trigger: {
+              processCode: 'TICKET_START_PROCESS',
+              stepCode: 'BUSINESS',
+            },
+            rules: [
+              {
+                code: 'SET_IN_PROGRESS_STATUS',
+                type: 'SET_FIELD_VALUE',
+                enabled: true,
+                config: {
+                  field: 'status',
+                  value: 'IN_PROGRESS',
+                },
+              },
+            ],
+            enabled: true,
+          },
+          {
+            code: 'TICKET_RESOLVE_BUSINESS',
+            entityCode: 'TICKET',
+            trigger: {
+              processCode: 'TICKET_RESOLVE_PROCESS',
+              stepCode: 'BUSINESS',
+            },
+            rules: [
+              {
+                code: 'VALIDATE_RESOLUTION_REQUIRED',
+                type: 'VALIDATE_REQUIRED_FIELD',
+                enabled: true,
+                config: {
+                  field: 'resolution',
+                },
+              },
+              {
+                code: 'SET_RESOLVED_AT',
+                type: 'SET_FIELD_VALUE',
+                enabled: true,
+                config: {
+                  field: 'resolvedAt',
+                  value: 'now',
+                },
+              },
+            ],
+            enabled: true,
+          },
+        ],
+      },
+    ],
+  },
 ];
 
 export const metadataSeedRecords: MetadataDefinition[] = applications.flatMap((application) => [
