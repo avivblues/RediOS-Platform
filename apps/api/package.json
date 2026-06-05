@@ -5,9 +5,9 @@
   "description": "RediOS Runtime Kernel API.",
   "scripts": {
     "build": "nest build",
-    "start": "nest start",
-    "start:dev": "nest start --watch",
-    "seed:metadata": "nest start --entryFile seed/main",
+    "start": "nest start --entryFile apps/api/src/main",
+    "start:dev": "nest start --watch --entryFile apps/api/src/main",
+    "seed:metadata": "nest start --entryFile apps/api/src/seed/main",
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {

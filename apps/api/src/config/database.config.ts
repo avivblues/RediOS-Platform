@@ -5,5 +5,5 @@ export interface DatabaseConfig {
 }
 
 export const databaseConfig = registerAs<DatabaseConfig>('database', () => ({
-  uri: process.env.MONGODB_URI ?? 'mongodb://localhost:27017/redios',
+  uri: process.env.MONGODB_URI ?? process.env.DATABASE_URL ?? 'mongodb://localhost:27017/redios',
 }));

@@ -22,6 +22,14 @@ import { RuntimeModule as RuntimeApiModule } from './runtime/runtime.module';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
+      envFilePath: [
+        `.env.${process.env.NODE_ENV ?? 'dev'}`,
+        `../../.env.${process.env.NODE_ENV ?? 'dev'}`,
+        '.env.dev',
+        '../../.env.dev',
+        '.env',
+        '../../.env',
+      ],
       load: [databaseConfig],
     }),
     MongooseModule.forRootAsync({
