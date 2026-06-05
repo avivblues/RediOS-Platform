@@ -14,6 +14,7 @@ import { RuntimeModule as CoreRuntimeModule } from './core/runtime/runtime.modul
 import { SecurityModule } from './core/security/security.module';
 import { StorageModule } from './core/storage/storage.module';
 import { WorkflowModule } from './core/workflow/workflow.module';
+import { HealthModule } from './health/health.module';
 import { KernelLoggerModule } from './logger/kernel-logger.module';
 import { RuntimeModule as RuntimeApiModule } from './runtime/runtime.module';
 
@@ -30,6 +31,7 @@ import { RuntimeModule as RuntimeApiModule } from './runtime/runtime.module';
       }),
     }),
     KernelLoggerModule,
+    HealthModule,
     RuntimeApiModule,
     ContextModule,
     ApplicationModule,

@@ -6,6 +6,8 @@ import {
   type RuntimeActionResult,
   type RuntimeExecutionResult,
 } from '../core/runtime/runtime-executor.service';
+import { RuntimeCreateDto } from './dto/runtime-create.dto';
+import { RuntimeUpdateDto } from './dto/runtime-update.dto';
 
 @Injectable()
 export class RuntimeService {
@@ -14,12 +16,12 @@ export class RuntimeService {
     private readonly runtimeExecutor: RuntimeExecutor,
   ) {}
 
-  create(headers: RuntimeHeaders, entityCode: string, payload: unknown): Promise<RuntimeExecutionResult> {
+  create(headers: RuntimeHeaders, entityCode: string, payload: RuntimeCreateDto): Promise<RuntimeExecutionResult> {
     const context = this.contextEngine.resolve(headers);
     return this.runtimeExecutor.create({
       context,
       entityCode,
-      payload,
+      payload: payload.data,
     });
   }
 
@@ -49,14 +51,14 @@ export class RuntimeService {
     headers: RuntimeHeaders,
     entityCode: string,
     id: string,
-    payload: unknown,
+    payload: RuntimeUpdateDto,
   ): Promise<RuntimeDocument | null> {
     const context = this.contextEngine.resolve(headers);
     return this.runtimeExecutor.update({
       context,
       entityCode,
       id,
-      payload,
+      payload: payload.data,
     });
   }
 
