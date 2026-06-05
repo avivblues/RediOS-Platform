@@ -20,132 +20,103 @@ RediOS menyediakan kernel untuk membangun dynamic business application:
 - multi experience
 
 
-RediOS bukan kumpulan aplikasi.
+RediOS bukan kumpulan aplikasi ERP.
 
-RediOS adalah runtime kernel.
+RediOS adalah runtime kernel untuk membuat aplikasi bisnis.
 
 
-Application dibuat dari komposisi metadata:
+Application bukan source code folder.
+
+Application adalah metadata composition.
+
+
+Application:
+
+- Entity
+- Capability
+- Workflow
+- Process
+- Rule
+- Form
+- Report
+- Experience
+
+
+Satu kernel dapat menghasilkan:
+
+- POS
+- ERP
+- WMS
+- HRIS
+- Ticketing
+- IoT Portal
+- Custom Business Application
+
+
+==================================================
+
+
+# 2. Platform Goal
+
+
+Tujuan RediOS:
+
+Membuat platform dimana perubahan bisnis dapat dilakukan melalui konfigurasi metadata.
+
+
+Developer membuat:
+
+ENGINE
+
+
+User/Consultant mengatur:
+
+METADATA
+
+
+
+==================================================
+
+
+# 3. Core Concept
+
 
 Application
 
-    |
-    + Entity
-    + Capability
-    + Workflow
-    + Process
-    + Rule
-    + Form
-    + Report
-    + Experience
+=
+
+Metadata
+
++
+
+Runtime Engine
+
++
+
+Business Engine
 
 
-Kernel tetap sama.
 
-Metadata berbeda menghasilkan aplikasi berbeda.
+Metadata menentukan:
 
-
-Example:
+WHAT
 
 
-POS
+Runtime menentukan:
 
-ERP
+HOW
 
-Clinic
 
-IoT Portal
+Business Engine menentukan:
 
-Ticketing
-
-WMS
+BUSINESS IMPACT
 
 
 
 ==================================================
 
 
-# 2. Core Principle
-
-
-Application = Metadata + Runtime + Business Engine
-
-
-
-Metadata:
-
-WHAT EXISTS
-
-
-
-Runtime:
-
-HOW TO EXECUTE
-
-
-
-Business Engine:
-
-WHAT BUSINESS IMPACT HAPPENS
-
-
-
-==================================================
-
-
-# 3. Platform Layer
-
-
-## Metadata Layer
-
-
-Menyimpan definisi:
-
-- application
-- entity
-- field
-- form
-- workflow
-- process
-- report
-- security
-- experience
-
-
-
-## Runtime Layer
-
-
-Menjalankan:
-
-- context resolving
-- metadata resolving
-- validation
-- permission
-- action
-- workflow
-- process
-
-
-
-## Business Engine Layer
-
-
-Menjalankan enterprise logic:
-
-- inventory
-- costing
-- finance
-- pricing
-- integration
-- IoT
-
-
-
-==================================================
-
-
-# 4. Domain Concept
+# 4. Tenant & Domain Concept
 
 
 domainCode adalah business namespace.
@@ -156,32 +127,24 @@ Example:
 
 1.26.1.0
 
-
-Meaning:
-
-Client 1
-
-Join 2026
-
-Business 1
-
 Head Office
-
 
 
 1.26.1.1
 
-Branch 1
+Branch
 
 
+domainCode digunakan untuk:
 
-Digunakan untuk:
 
 - ownership
-- security
-- consolidation
+- isolation
+- security scope
 - reporting
+- consolidation
 - numbering
+
 
 
 Tidak menggunakan parent relation.
@@ -191,13 +154,14 @@ Tidak menggunakan parent relation.
 ==================================================
 
 
-# 5. Prototype Scenario
+# 5. Prototype Scope
 
 
-Prototype menggunakan:
+Prototype pertama:
 
 
-Asset Maintenance Runtime
+Asset Maintenance System
+
 
 
 Flow:
@@ -211,7 +175,7 @@ Work Order
 
 ↓
 
-Approval
+Approval Workflow
 
 ↓
 
@@ -227,44 +191,50 @@ Ledger
 
 ↓
 
-Report
+Dynamic Report
+
+
+
+Tujuan bukan membuat maintenance apps.
+
+Tujuan membuktikan kernel bisa membuat aplikasi.
 
 
 
 ==================================================
 
 
-# 6. Success Criteria
+# 6. Prototype Acceptance Criteria
 
 
-Prototype berhasil jika:
+Prototype selesai jika:
 
 
-✓ membuat aplikasi baru dari metadata
+✓ create entity tanpa coding controller
 
 
-✓ membuat entity tanpa coding
+✓ create field tanpa migration
 
 
-✓ tambah field tanpa migration
+✓ generate API dari metadata
 
 
-✓ API berjalan tanpa controller baru
+✓ dynamic form runtime
 
 
-✓ workflow berubah tanpa deploy
+✓ workflow configurable
 
 
-✓ form berubah tanpa frontend coding
+✓ action configurable
 
 
-✓ report tanpa hardcoded query
+✓ business process masuk engine
 
 
-✓ business process execute engine
+✓ ledger tercipta dari transaksi
 
 
-✓ multi tenant berbeda konfigurasi
+✓ report dari Data View Engine
 
 
 ✓ multi application dari kernel sama
