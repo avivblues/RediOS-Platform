@@ -1,0 +1,6 @@
+{
+  "name": "@redios/web",
+  "version": "0.1.0",
+  "private": true,
+  "description": "RediOS web experience renderer placeholder for Phase 0."
+}

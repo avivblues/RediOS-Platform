@@ -1,0 +1,44 @@
+import { Module } from '@nestjs/common';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { MongooseModule } from '@nestjs/mongoose';
+import { databaseConfig } from './config/database.config';
+import { ActionModule } from './core/action/action.module';
+import { ApplicationModule } from './core/application/application.module';
+import { BusinessModule } from './core/business/business.module';
+import { ContextModule } from './core/context/context.module';
+import { EventModule } from './core/event/event.module';
+import { LedgerModule } from './core/ledger/ledger.module';
+import { MetadataModule } from './core/metadata/metadata.module';
+import { ProcessModule } from './core/process/process.module';
+import { SecurityModule } from './core/security/security.module';
+import { StorageModule } from './core/storage/storage.module';
+import { WorkflowModule } from './core/workflow/workflow.module';
+import { KernelLoggerModule } from './logger/kernel-logger.module';
+
+@Module({
+  imports: [
+    ConfigModule.forRoot({
+      isGlobal: true,
+      load: [databaseConfig],
+    }),
+    MongooseModule.forRootAsync({
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => ({
+        uri: configService.getOrThrow<string>('database.uri'),
+      }),
+    }),
+    KernelLoggerModule,
+    ContextModule,
+    ApplicationModule,
+    MetadataModule,
+    SecurityModule,
+    ActionModule,
+    WorkflowModule,
+    ProcessModule,
+    BusinessModule,
+    StorageModule,
+    LedgerModule,
+    EventModule,
+  ],
+})
+export class AppModule {}

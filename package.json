@@ -1,0 +1,23 @@
+{
+  "name": "redios-platform",
+  "version": "0.1.0",
+  "private": true,
+  "description": "RediOS metadata-driven ERP runtime platform monorepo.",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "npm run build --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "start:api": "npm run start --workspace @redios/api",
+    "start:api:dev": "npm run start:dev --workspace @redios/api"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "typescript": "^5.7.2"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
