@@ -3,248 +3,560 @@
 # Prototype v0.1
 
 
+==================================================
+
+
 # 1. Product Vision
 
 
-RediOS adalah ERP Runtime Operating Platform berbasis metadata.
+RediOS adalah Enterprise Runtime Operating Platform
+untuk membangun aplikasi bisnis berbasis metadata.
 
 
-RediOS bukan aplikasi ERP.
+RediOS bukan satu aplikasi ERP.
 
 
-RediOS adalah kernel untuk membuat aplikasi bisnis secara dinamis.
+RediOS adalah kernel yang menjalankan banyak aplikasi bisnis
+dengan runtime engine yang sama.
 
 
-Developer membangun:
+
+Developer membuat:
+
 
 ENGINE
 
 
-Consultant / User melakukan:
 
-CONFIGURATION & METADATA
-
+Consultant / Implementor / User melakukan:
 
 
-==================================================
+CONFIGURATION
 
++
 
-# 2. Platform Capability
-
-
-Satu RediOS Kernel harus mampu menjalankan:
-
-
-- Multi Tenant
-
-- Multi Application
-
-- Multi Company
-
-- Multi Branch
-
-- Multi Module
-
-- Multi Workflow
-
-- Multi Interface
-
-- Multi Experience
+METADATA DEFINITION
 
 
 
-Contoh aplikasi yang bisa dibuat:
-
-
-- ERP
-
-- POS
-
-- Warehouse Management System
-
-- HRIS
-
-- Ticketing System
-
-- IoT Portal
-
-- Custom Enterprise Application
+Perubahan bisnis harus dilakukan melalui metadata
+selama tidak mengubah core business engine.
 
 
 
 ==================================================
 
 
-# 3. Application Concept
+# 2. Platform Objective
 
 
-Application bukan folder source code.
+RediOS dibuat untuk mengubah konsep:
+
+
+Application Development
+
+
+menjadi:
+
+
+Application Configuration
+
+
+
+Aplikasi tidak dibangun dengan membuat ulang:
+
+- database table
+- controller
+- service
+- form
+- report
+
+
+
+Aplikasi dibangun melalui:
+
+
+Metadata
+
++
+
+Runtime Engine
+
++
+
+Business Engine
+
+
+
+==================================================
+
+
+# 3. Platform Capability
+
+
+Satu RediOS Kernel mendukung:
+
+
+
+## Multi Tenant
+
+
+Satu platform melayani banyak customer.
+
+
+
+## Multi Application
+
+
+Satu kernel dapat menjalankan banyak aplikasi.
+
+
+
+Example:
+
+
+ERP
+
+POS
+
+WMS
+
+HRIS
+
+Ticketing
+
+Maintenance
+
+IoT Portal
+
+Custom Application
+
+
+
+Application bukan source code.
 
 
 Application adalah metadata composition.
 
 
 
-Application terdiri dari:
+## Multi Company / Branch
 
 
-Entity
-
-+
-
-Field
-
-+
-
-Form
-
-+
-
-Workflow
-
-+
-
-Process
-
-+
-
-Rule
-
-+
-
-Report
-
-+
-
-Experience
+Menggunakan domainCode sebagai business namespace.
 
 
 
-Aplikasi baru dibuat dengan konfigurasi metadata.
+## Multi Module
 
-Bukan membuat ulang source code.
+
+Module adalah capability metadata.
+
+
+
+Example:
+
+
+Inventory
+
+Finance
+
+Maintenance
+
+Sales
+
+Purchasing
+
+
+
+Module dapat:
+
+- enable
+- disable
+- package based
+- subscription based
+
+
+
+## Multi Workflow
+
+
+Business flow dapat berubah tanpa coding.
+
+
+
+## Multi Experience
+
+
+Satu metadata dapat berjalan di:
+
+
+Web
+
+Mobile
+
+Device
+
+Future Interface
 
 
 
 ==================================================
 
 
-# 4. Metadata Driven Concept
+# 4. Core Philosophy
 
 
-Metadata menentukan:
-
-
-WHAT
+RediOS dipisah menjadi:
 
 
 
-Runtime Engine menentukan:
+METADATA
+
+
+menjawab:
+
+
+WHAT EXISTS
+
+
+
+contoh:
+
+
+- entity
+- field
+- form
+- workflow
+- report
+
+
+
+--------------------------------------------------
+
+
+
+RUNTIME ENGINE
+
+
+menjawab:
 
 
 HOW TO EXECUTE
 
 
 
-Business Engine menentukan:
+contoh:
 
 
-BUSINESS IMPACT
-
-
-
-Contoh:
-
-
-Metadata:
-
-
-WORK_ORDER mempunyai action APPROVE
+- resolve metadata
+- execute action
+- execute process
 
 
 
-Runtime:
-
-
-Menjalankan action
+--------------------------------------------------
 
 
 
-Business Engine:
+BUSINESS ENGINE
 
 
-Menghasilkan:
+menjawab:
 
-- inventory movement
 
-- cost impact
+WHAT BUSINESS IMPACT HAPPENS
 
-- ledger
+
+
+contoh:
+
+
+- stock movement
+- costing
+- finance impact
+- pricing calculation
 
 
 
 ==================================================
 
 
-# 5. Tenant & Domain Concept
+# 5. Metadata Concept
 
 
-Tenant:
-
-Pemilik environment.
+Metadata bukan business logic.
 
 
-
-Domain:
-
-Business namespace di dalam tenant.
+Metadata hanya definisi.
 
 
 
-domainCode bukan parent child relation.
+Example:
 
 
 
-Format example:
+WORK_ORDER
+
+
+memiliki:
+
+
+Action:
+
+APPROVE
+
+
+
+Workflow:
+
+DRAFT -> APPROVED
+
+
+
+Process:
+
+CREATE_COST
+
+
+
+Business Engine yang menentukan impact.
+
+
+
+==================================================
+
+
+# 6. Domain Code Concept
+
+
+domainCode adalah identitas area bisnis.
+
+
+
+domainCode bukan relational hierarchy.
+
+
+
+Tidak menggunakan:
+
+
+parentId
+
+
+
+Example:
+
 
 
 1.26.1.0
+
+
+artinya:
+
+
+Client 1
+
+Join Year 2026
 
 Head Office
 
 
 
+--------------------------------------------------
+
+
+
 1.26.1.1
+
+
+artinya:
+
+
+Client 1
+
+Join Year 2026
 
 Branch 1
 
 
 
-1.26.1.2
-
-Branch 2
+--------------------------------------------------
 
 
 
-domainCode digunakan untuk:
+Digunakan untuk:
 
 
-- data ownership
-
+- ownership
 - access scope
-
-- reporting
-
-- consolidation
-
 - numbering
+- consolidation
+- reporting
 
 
 
 ==================================================
 
 
-# 6. Prototype Goal v0.1
+# 7. Data Philosophy
+
+
+Data business tidak bergantung kepada module.
+
+
+
+Entity:
+
+hanya definisi.
+
+
+
+Document:
+
+menyimpan transaksi.
+
+
+
+Ledger:
+
+menyimpan impact.
+
+
+
+Snapshot:
+
+menyimpan hasil closing.
+
+
+
+Example:
+
+
+
+Transaction
+
+↓
+
+Ledger
+
+↓
+
+Monthly Snapshot
+
+↓
+
+Fast Reporting
+
+
+
+Digunakan untuk:
+
+
+inventory closing
+
+asset amount
+
+finance balance
+
+cost calculation
+
+
+
+==================================================
+
+
+# 8. Dynamic Experience Concept
+
+
+UI bukan dibuat manual per aplikasi.
+
+
+
+Tidak membuat:
+
+
+Asset Page
+
+Work Order Page
+
+
+
+Membuat:
+
+
+Experience Renderer
+
+
+
+Metadata menentukan:
+
+
+- field
+- layout
+- component
+- validation
+- visibility
+
+
+
+Renderer menghasilkan:
+
+
+Web
+
+Mobile
+
+
+
+==================================================
+
+
+# 9. IoT & Integration Vision
+
+
+RediOS dapat menjadi portal integrasi.
+
+
+
+External:
+
+
+PLC
+
+Arduino
+
+Sensor
+
+Machine
+
+External API
+
+
+
+Integration masuk melalui:
+
+
+Adapter
+
+↓
+
+Event
+
+↓
+
+Process
+
+↓
+
+Business Engine
+
+
+
+==================================================
+
+
+# 10. Prototype v0.1 Goal
 
 
 Prototype pertama:
@@ -257,104 +569,149 @@ Asset Maintenance Runtime
 Tujuan:
 
 
+Membuktikan RediOS Kernel.
+
+
+
 Bukan membuat aplikasi maintenance.
-
-
-Tujuan membuktikan RediOS Kernel.
 
 
 
 ==================================================
 
 
-# 7. Prototype Scenario
+# 11. Prototype Scenario
 
 
 Flow:
 
 
+
 Asset Master
+
 
 ↓
 
 Work Order
 
+
 ↓
 
 Approval
+
 
 ↓
 
 Sparepart Usage
 
+
 ↓
 
 Inventory Impact
+
 
 ↓
 
 Cost Calculation
 
+
 ↓
 
 Ledger
 
+
 ↓
 
-Dynamic Report
+Report
 
 
 
 ==================================================
 
 
-# 8. Prototype Success Criteria
+# 12. Prototype Boundary
+
+
+Implement:
+
+
+- metadata runtime
+
+- runtime API
+
+- workflow
+
+- process
+
+- business engine
+
+- ledger
+
+- report
+
+
+
+Tidak fokus:
+
+
+- full ERP
+
+- full accounting
+
+- advanced UI builder
+
+
+
+==================================================
+
+
+# 13. Success Criteria
 
 
 Prototype berhasil jika:
 
 
-✓ Entity dibuat tanpa membuat model baru
+
+✓ membuat aplikasi baru tanpa source code baru
 
 
-✓ Field dibuat tanpa migration database
+
+✓ membuat entity baru tanpa controller
 
 
-✓ API otomatis membaca metadata
+
+✓ membuat field baru tanpa database migration
 
 
-✓ Tidak ada controller per module
+
+✓ workflow berubah dari metadata
 
 
-✓ Workflow configurable
+
+✓ action berubah dari metadata
 
 
-✓ Action configurable
+
+✓ report membaca Data View Engine
 
 
-✓ Process configurable
+
+✓ business impact masuk ledger
 
 
-✓ Business impact masuk engine
+
+✓ UI dapat dirender dari metadata
 
 
-✓ Ledger otomatis tercipta
 
-
-✓ Report menggunakan Data View Engine
-
-
-✓ UI bisa dibangun dari Experience Metadata
-
-
-✓ Kernel sama bisa membuat aplikasi lain
+✓ satu kernel menjalankan banyak aplikasi
 
 
 
 ==================================================
 
 
-# 9. Long Term Vision
+# 14. Long Term Vision
 
 
 RediOS menjadi:
@@ -363,27 +720,28 @@ RediOS menjadi:
 Enterprise Runtime Operating Platform
 
 
-untuk membangun:
+yang menggabungkan:
 
 
-Business Application
 
-+
-
-Workflow
+Metadata Engine
 
 +
 
-Data
+Business Engine
 
 +
 
-Automation
+Experience Engine
 
 +
 
-AI Assistant
+Integration Engine
+
++
+
+AI Engine
 
 
 
-berbasis metadata.
+untuk membangun aplikasi enterprise masa depan.
