@@ -1,7 +1,10 @@
 import type {
   ActionDefinition,
+  ActionType,
   ApplicationDefinition,
+  EntityType,
   EntityDefinition,
+  FieldDataType,
   FieldDefinition,
   MetadataDefinition,
   ProcessDefinition,
@@ -10,175 +13,300 @@ import type {
 
 const tenantId = '1';
 const domainCode = '1.26.1.0';
-const applicationCode = 'MAINTENANCE';
-const entityCode = 'ASSET';
-const workflowCode = 'MAINTENANCE_LIFECYCLE';
-const processCode = 'APPROVE_PROCESS';
 
-export const metadataSeedRecords: MetadataDefinition[] = [
+type FieldSeed = {
+  code: string;
+  dataType?: FieldDataType;
+  required?: boolean;
+};
+
+type EntitySeed = {
+  code: string;
+  name: string;
+  type: EntityType;
+  fields: FieldSeed[];
+  actions: string[];
+  workflow?: WorkflowDefinition;
+  processes?: ProcessDefinition[];
+};
+
+type ApplicationSeed = {
+  code: string;
+  name: string;
+  entities: EntitySeed[];
+};
+
+const applications: ApplicationSeed[] = [
   {
-    tenantId,
-    domainCode,
-    applicationCode,
-    type: 'APPLICATION',
-    code: applicationCode,
-    name: 'Maintenance',
-    version: 1,
-    enabled: true,
-    definition: {
-      code: applicationCode,
-      name: 'Maintenance',
-      capabilities: [],
-      entityCodes: [entityCode],
-      enabled: true,
-    } satisfies ApplicationDefinition,
-  },
-  {
-    tenantId,
-    domainCode,
-    applicationCode,
-    type: 'ENTITY',
-    code: entityCode,
-    name: 'Asset',
-    version: 1,
-    enabled: true,
-    definition: {
-      code: entityCode,
-      name: 'Asset',
-      type: 'MASTER',
-      fieldCodes: ['assetName', 'serialNo', 'location', 'status'],
-      actionCodes: ['CREATE', 'READ', 'UPDATE', 'APPROVE', 'CANCEL'],
-      workflowCode,
-      enabled: true,
-    } satisfies EntityDefinition,
-  },
-  ...['assetName', 'serialNo', 'location', 'status'].map(
-    (fieldCode): MetadataDefinition<FieldDefinition> => ({
-      tenantId,
-      domainCode,
-      applicationCode,
-      type: 'FIELD',
-      code: fieldCode,
-      name: fieldCode,
-      version: 1,
-      enabled: true,
-      definition: {
-        code: fieldCode,
-        name: fieldCode,
-        entityCode,
-        dataType: 'string',
-        required: fieldCode === 'assetName',
-        visible: true,
-        readonly: false,
-      },
-    }),
-  ),
-  ...['CREATE', 'READ', 'UPDATE', 'APPROVE', 'CANCEL'].map(
-    (actionCode): MetadataDefinition<ActionDefinition> => ({
-      tenantId,
-      domainCode,
-      applicationCode,
-      type: 'ACTION',
-      code: actionCode,
-      name: actionCode,
-      version: 1,
-      enabled: true,
-      definition: {
-        code: actionCode,
-        entityCode,
-        label: actionCode.charAt(0) + actionCode.slice(1).toLowerCase(),
-        type: actionCode as ActionDefinition['type'],
-        enabled: true,
-        permissions: [`${entityCode}.${actionCode}`],
-        behavior: {
-          requiresApproval: actionCode === 'APPROVE',
-          confirmation: actionCode === 'CANCEL',
-        },
-      },
-    }),
-  ),
-  {
-    tenantId,
-    domainCode,
-    applicationCode,
-    type: 'WORKFLOW',
-    code: workflowCode,
-    name: 'Maintenance Lifecycle',
-    version: 1,
-    enabled: true,
-    definition: {
-      code: workflowCode,
-      entityCode,
-      states: [
-        {
-          code: 'DRAFT',
-          label: 'Draft',
-          initial: true,
-        },
-        {
-          code: 'APPROVED',
-          label: 'Approved',
-        },
-        {
-          code: 'CANCELLED',
-          label: 'Cancelled',
-          final: true,
-        },
-      ],
-      transitions: [
-        {
-          code: 'APPROVE',
-          from: 'DRAFT',
-          to: 'APPROVED',
-          actionCode: 'APPROVE',
-        },
-        {
-          code: 'CANCEL',
-          from: 'DRAFT',
-          to: 'CANCELLED',
-          actionCode: 'CANCEL',
-        },
-      ],
-      enabled: true,
-    } satisfies WorkflowDefinition,
-  },
-  {
-    tenantId,
-    domainCode,
-    applicationCode,
-    type: 'PROCESS',
-    code: processCode,
-    name: 'Approve Process',
-    version: 1,
-    enabled: true,
-    definition: {
-      code: processCode,
-      entityCode,
-      trigger: {
-        actionCode: 'APPROVE',
-        workflowState: 'APPROVED',
-      },
-      steps: [
-        {
-          code: 'VALIDATE',
-          type: 'VALIDATION',
-          order: 1,
+    code: 'ASSET_MAINTENANCE',
+    name: 'Asset Maintenance',
+    entities: [
+      {
+        code: 'ASSET',
+        name: 'Asset',
+        type: 'MASTER',
+        fields: [
+          { code: 'assetName', required: true },
+          { code: 'serialNumber' },
+          { code: 'location' },
+          { code: 'status' },
+        ],
+        actions: ['CREATE', 'READ', 'UPDATE', 'ACTIVATE', 'DISABLE'],
+        workflow: {
+          code: 'ASSET_LIFECYCLE',
+          entityCode: 'ASSET',
+          states: [
+            { code: 'NEW', label: 'New', initial: true },
+            { code: 'ACTIVE', label: 'Active' },
+            { code: 'INACTIVE', label: 'Inactive', final: true },
+          ],
+          transitions: [
+            { code: 'ACTIVATE', from: 'NEW', to: 'ACTIVE', actionCode: 'ACTIVATE' },
+            { code: 'DISABLE', from: 'ACTIVE', to: 'INACTIVE', actionCode: 'DISABLE' },
+          ],
           enabled: true,
         },
-        {
-          code: 'BUSINESS_ENGINE',
-          type: 'BUSINESS',
-          order: 2,
+      },
+      {
+        code: 'WORK_ORDER',
+        name: 'Work Order',
+        type: 'DOCUMENT',
+        fields: [
+          { code: 'title', required: true },
+          { code: 'description' },
+          { code: 'priority' },
+          { code: 'assignedTo' },
+        ],
+        actions: ['CREATE', 'READ', 'UPDATE', 'START', 'COMPLETE', 'CANCEL'],
+        workflow: {
+          code: 'WORK_ORDER_LIFECYCLE',
+          entityCode: 'WORK_ORDER',
+          states: [
+            { code: 'OPEN', label: 'Open', initial: true },
+            { code: 'IN_PROGRESS', label: 'In Progress' },
+            { code: 'DONE', label: 'Done', final: true },
+            { code: 'CANCELLED', label: 'Cancelled', final: true },
+          ],
+          transitions: [
+            { code: 'START', from: 'OPEN', to: 'IN_PROGRESS', actionCode: 'START' },
+            { code: 'COMPLETE', from: 'IN_PROGRESS', to: 'DONE', actionCode: 'COMPLETE' },
+            { code: 'CANCEL', from: 'OPEN', to: 'CANCELLED', actionCode: 'CANCEL' },
+          ],
           enabled: true,
         },
-        {
-          code: 'EVENT_ENGINE',
-          type: 'EVENT',
-          order: 3,
+        processes: [
+          {
+            code: 'WORK_ORDER_START_PROCESS',
+            entityCode: 'WORK_ORDER',
+            trigger: {
+              actionCode: 'START',
+              workflowState: 'IN_PROGRESS',
+            },
+            steps: [
+              { code: 'VALIDATE', type: 'VALIDATION', order: 1, enabled: true },
+              { code: 'EVENT_ENGINE', type: 'EVENT', order: 2, enabled: true },
+            ],
+            enabled: true,
+          },
+          {
+            code: 'WORK_ORDER_COMPLETE_PROCESS',
+            entityCode: 'WORK_ORDER',
+            trigger: {
+              actionCode: 'COMPLETE',
+              workflowState: 'DONE',
+            },
+            steps: [
+              { code: 'VALIDATE', type: 'VALIDATION', order: 1, enabled: true },
+              { code: 'EVENT_ENGINE', type: 'EVENT', order: 2, enabled: true },
+            ],
+            enabled: true,
+          },
+        ],
+      },
+    ],
+  },
+  {
+    code: 'CRM',
+    name: 'CRM',
+    entities: [
+      {
+        code: 'CUSTOMER',
+        name: 'Customer',
+        type: 'MASTER',
+        fields: [{ code: 'customerName', required: true }, { code: 'email' }, { code: 'phone' }],
+        actions: ['CREATE', 'READ', 'UPDATE'],
+        workflow: {
+          code: 'CUSTOMER_LIFECYCLE',
+          entityCode: 'CUSTOMER',
+          states: [{ code: 'ACTIVE', label: 'Active', initial: true }],
+          transitions: [],
           enabled: true,
         },
-      ],
-      enabled: true,
-    } satisfies ProcessDefinition,
+      },
+    ],
   },
 ];
+
+export const metadataSeedRecords: MetadataDefinition[] = applications.flatMap((application) => [
+  createApplicationRecord(application),
+  ...application.entities.flatMap((entity) => createEntityRecords(application, entity)),
+]);
+
+function createApplicationRecord(application: ApplicationSeed): MetadataDefinition<ApplicationDefinition> {
+  return {
+    tenantId,
+    domainCode,
+    applicationCode: application.code,
+    type: 'APPLICATION',
+    code: application.code,
+    name: application.name,
+    version: 1,
+    enabled: true,
+    definition: {
+      code: application.code,
+      name: application.name,
+      capabilities: [],
+      entityCodes: application.entities.map((entity) => entity.code),
+      enabled: true,
+    },
+  };
+}
+
+function createEntityRecords(application: ApplicationSeed, entity: EntitySeed): MetadataDefinition[] {
+  return [
+    createEntityRecord(application, entity),
+    ...entity.fields.map((field) => createFieldRecord(application, entity, field)),
+    ...entity.actions.map((actionCode) => createActionRecord(application, entity, actionCode)),
+    ...(entity.workflow ? [createWorkflowRecord(application, entity.workflow)] : []),
+    ...(entity.processes ?? []).map((process) => createProcessRecord(application, process)),
+  ];
+}
+
+function createEntityRecord(
+  application: ApplicationSeed,
+  entity: EntitySeed,
+): MetadataDefinition<EntityDefinition> {
+  return {
+    tenantId,
+    domainCode,
+    applicationCode: application.code,
+    type: 'ENTITY',
+    code: entity.code,
+    name: entity.name,
+    version: 1,
+    enabled: true,
+    definition: {
+      code: entity.code,
+      name: entity.name,
+      type: entity.type,
+      fieldCodes: entity.fields.map((field) => field.code),
+      actionCodes: entity.actions,
+      workflowCode: entity.workflow?.code,
+      enabled: true,
+    },
+  };
+}
+
+function createFieldRecord(
+  application: ApplicationSeed,
+  entity: EntitySeed,
+  field: FieldSeed,
+): MetadataDefinition<FieldDefinition> {
+  return {
+    tenantId,
+    domainCode,
+    applicationCode: application.code,
+    type: 'FIELD',
+    code: field.code,
+    name: field.code,
+    version: 1,
+    enabled: true,
+    definition: {
+      code: field.code,
+      name: field.code,
+      entityCode: entity.code,
+      dataType: field.dataType ?? 'string',
+      required: field.required ?? false,
+      visible: true,
+      readonly: false,
+    },
+  };
+}
+
+function createActionRecord(
+  application: ApplicationSeed,
+  entity: EntitySeed,
+  actionCode: string,
+): MetadataDefinition<ActionDefinition> {
+  return {
+    tenantId,
+    domainCode,
+    applicationCode: application.code,
+    type: 'ACTION',
+    code: actionCode,
+    name: actionCode,
+    version: 1,
+    enabled: true,
+    definition: {
+      code: actionCode,
+      entityCode: entity.code,
+      label: toLabel(actionCode),
+      type: toActionType(actionCode),
+      enabled: true,
+      permissions: [`${entity.code}.${actionCode}`],
+      behavior: {
+        requiresApproval: false,
+        confirmation: ['CANCEL', 'DISABLE'].includes(actionCode),
+      },
+    },
+  };
+}
+
+function createWorkflowRecord(
+  application: ApplicationSeed,
+  workflow: WorkflowDefinition,
+): MetadataDefinition<WorkflowDefinition> {
+  return {
+    tenantId,
+    domainCode,
+    applicationCode: application.code,
+    type: 'WORKFLOW',
+    code: workflow.code,
+    name: toLabel(workflow.code),
+    version: 1,
+    enabled: true,
+    definition: workflow,
+  };
+}
+
+function createProcessRecord(
+  application: ApplicationSeed,
+  process: ProcessDefinition,
+): MetadataDefinition<ProcessDefinition> {
+  return {
+    tenantId,
+    domainCode,
+    applicationCode: application.code,
+    type: 'PROCESS',
+    code: process.code,
+    name: toLabel(process.code),
+    version: 1,
+    enabled: true,
+    definition: process,
+  };
+}
+
+function toActionType(actionCode: string): ActionType {
+  if (['CREATE', 'READ', 'UPDATE', 'APPROVE', 'CANCEL'].includes(actionCode)) {
+    return actionCode as ActionType;
+  }
+
+  return 'CUSTOM';
+}
+
+function toLabel(code: string): string {
+  return code
+    .split('_')
+    .map((part) => part.charAt(0) + part.slice(1).toLowerCase())
+    .join(' ');
+}

@@ -1,0 +1,26 @@
+@baseUrl = http://localhost:3000/api
+
+### Create CUSTOMER metadata document
+POST {{baseUrl}}/runtime/CUSTOMER
+x-tenant-id: 1
+x-domain-code: 1.26.1.0
+x-application-code: CRM
+x-user-id: admin
+x-permissions: CUSTOMER.CREATE,CUSTOMER.READ,CUSTOMER.UPDATE
+Content-Type: application/json
+
+{
+  "data": {
+    "customerName": "ABC Company",
+    "email": "test@mail.com",
+    "phone": "+62000000000"
+  }
+}
+
+### Read CUSTOMER documents from CRM metadata
+GET {{baseUrl}}/runtime/CUSTOMER
+x-tenant-id: 1
+x-domain-code: 1.26.1.0
+x-application-code: CRM
+x-user-id: admin
+x-permissions: CUSTOMER.READ

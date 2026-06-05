@@ -60,7 +60,7 @@ export class RuntimeController {
   }
 
   @Post(':entityCode/:id/actions/:actionCode')
-  @ApiOperation({ summary: 'Prepare action execution without running workflow or business engine.' })
+  @ApiOperation({ summary: 'Run metadata action through workflow and process planning.' })
   @ApiParam({ name: 'entityCode', description: 'Metadata entity code.' })
   @ApiParam({ name: 'id', description: 'Runtime document id.' })
   @ApiParam({ name: 'actionCode', description: 'Metadata action code.' })

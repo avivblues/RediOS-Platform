@@ -43,6 +43,13 @@ async function bootstrap(): Promise<void> {
         required: true,
         schema: { type: 'string' },
       },
+      {
+        name: 'x-permissions',
+        in: 'header',
+        required: false,
+        schema: { type: 'string' },
+        description: 'Comma-separated metadata permission codes resolved by the Security Engine.',
+      },
     )
     .build();
   const swaggerDocument = SwaggerModule.createDocument(app, swaggerConfig);

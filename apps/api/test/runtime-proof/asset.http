@@ -1,0 +1,30 @@
+@baseUrl = http://localhost:3000/api
+@documentId = replace-with-runtime-document-id
+
+### Create ASSET metadata document
+POST {{baseUrl}}/runtime/ASSET
+x-tenant-id: 1
+x-domain-code: 1.26.1.0
+x-application-code: ASSET_MAINTENANCE
+x-user-id: admin
+x-permissions: ASSET.CREATE,ASSET.READ,ASSET.UPDATE,ASSET.ACTIVATE,ASSET.DISABLE
+Content-Type: application/json
+
+{
+  "data": {
+    "assetName": "Machine CNC",
+    "serialNumber": "ABC123",
+    "location": "Factory 1"
+  }
+}
+
+### Activate ASSET through metadata workflow
+POST {{baseUrl}}/runtime/ASSET/{{documentId}}/actions/ACTIVATE
+x-tenant-id: 1
+x-domain-code: 1.26.1.0
+x-application-code: ASSET_MAINTENANCE
+x-user-id: admin
+x-permissions: ASSET.ACTIVATE
+Content-Type: application/json
+
+{}
