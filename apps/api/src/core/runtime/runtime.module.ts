@@ -3,10 +3,11 @@ import { ActionModule } from '../action/action.module';
 import { ApplicationModule } from '../application/application.module';
 import { MetadataModule } from '../metadata/metadata.module';
 import { SecurityModule } from '../security/security.module';
+import { StorageModule } from '../storage/storage.module';
 import { RuntimeExecutor } from './runtime-executor.service';
 
 @Module({
-  imports: [ApplicationModule, MetadataModule, SecurityModule, ActionModule],
+  imports: [ApplicationModule, MetadataModule, SecurityModule, ActionModule, StorageModule],
   providers: [RuntimeExecutor],
   exports: [RuntimeExecutor],
 })

@@ -7,17 +7,10 @@ export class MetadataRegistry {
   constructor(@Inject(METADATA_PROVIDER) private readonly provider: MetadataProvider) {}
 
   findByType(context: RuntimeContext, type: MetadataType): Promise<MetadataDefinition[]> {
-    return this.provider.find(context, {
-      type,
-      enabledOnly: true,
-    });
+    return this.provider.getByType(context, type);
   }
 
   findOne(context: RuntimeContext, type: MetadataType, code: string): Promise<MetadataDefinition | null> {
-    return this.provider.findOne(context, {
-      type,
-      code,
-      enabledOnly: true,
-    });
+    return this.provider.getByCode(context, type, code);
   }
 }
