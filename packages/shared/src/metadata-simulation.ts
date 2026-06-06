@@ -33,6 +33,7 @@ export interface SimulationStep {
 
 export interface SimulationResult {
   success: boolean;
+  traceId?: string;
   validation: ValidationResult;
   steps: SimulationStep[];
   predicted: {

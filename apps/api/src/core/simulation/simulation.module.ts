@@ -5,11 +5,12 @@ import { EventModule } from '../event/event.module';
 import { MetadataModule } from '../metadata/metadata.module';
 import { ProcessModule } from '../process/process.module';
 import { SecurityModule } from '../security/security.module';
+import { TraceModule } from '../trace/trace.module';
 import { WorkflowModule } from '../workflow/workflow.module';
 import { SimulationEngine } from './simulation-engine.service';
 
 @Module({
-  imports: [MetadataModule, ActionModule, SecurityModule, WorkflowModule, ProcessModule, BusinessModule, EventModule],
+  imports: [MetadataModule, ActionModule, SecurityModule, WorkflowModule, ProcessModule, BusinessModule, EventModule, TraceModule],
   providers: [SimulationEngine],
   exports: [SimulationEngine],
 })

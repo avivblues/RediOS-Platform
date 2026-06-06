@@ -4,6 +4,7 @@ import type {
   MetadataDefinition,
   RuntimeContext,
   RuntimeDocument,
+  RuntimeTraceStepEngine,
   SimulationRequest,
   SimulationResult,
   SimulationStep,
@@ -17,6 +18,7 @@ import { MetadataResolver } from '../metadata/metadata-resolver.service';
 import { MetadataValidatorEngine } from '../metadata/metadata-validator-engine.service';
 import { ProcessEngine } from '../process/process-engine.service';
 import { SecurityEngine } from '../security/security-engine.service';
+import { TraceEngine } from '../trace/trace-engine.service';
 import { WorkflowEngine } from '../workflow/workflow-engine.service';
 
 @Injectable()
@@ -31,6 +33,7 @@ export class SimulationEngine {
     private readonly processEngine: ProcessEngine,
     private readonly businessEngine: BusinessEngine,
     private readonly eventEngine: EventEngine,
+    private readonly traceEngine: TraceEngine,
   ) {}
 
   async simulate(request: SimulationRequest): Promise<SimulationResult> {
@@ -47,12 +50,12 @@ export class SimulationEngine {
     });
 
     if (!validation.valid) {
-      return {
+      return this.finalize(request, context, {
         success: false,
         validation,
         steps,
         predicted,
-      };
+      });
     }
 
     const entity = await this.runStep(steps, 'VALIDATION', 'Entity metadata resolved.', () =>
@@ -60,7 +63,7 @@ export class SimulationEngine {
     );
 
     if (!entity.ok) {
-      return this.failed(validation, steps, predicted);
+      return this.finalize(request, context, this.failed(validation, steps, predicted));
     }
 
     const fields = await this.runStep(steps, 'VALIDATION', 'Field metadata resolved.', () =>
@@ -68,7 +71,7 @@ export class SimulationEngine {
     );
 
     if (!fields.ok) {
-      return this.failed(validation, steps, predicted);
+      return this.finalize(request, context, this.failed(validation, steps, predicted));
     }
 
     const requiredFields = this.validateRequiredFields(request, fields.value.map((field) => field.definition));
@@ -83,7 +86,7 @@ export class SimulationEngine {
           message: `Required fields are missing: ${requiredFields.join(', ')}`,
         },
       });
-      return this.failed(validation, steps, predicted);
+      return this.finalize(request, context, this.failed(validation, steps, predicted));
     }
 
     const action = await this.runStep(steps, 'ACTION', 'Action is available.', () =>
@@ -91,7 +94,7 @@ export class SimulationEngine {
     );
 
     if (!action.ok) {
-      return this.failed(validation, steps, predicted);
+      return this.finalize(request, context, this.failed(validation, steps, predicted));
     }
 
     const security = await this.runStep(steps, 'SECURITY', 'Action permission is valid.', () => {
@@ -102,7 +105,7 @@ export class SimulationEngine {
     });
 
     if (!security.ok) {
-      return this.failed(validation, steps, predicted);
+      return this.finalize(request, context, this.failed(validation, steps, predicted));
     }
 
     const document = await this.createMockDocument(context, request);
@@ -111,7 +114,7 @@ export class SimulationEngine {
     );
 
     if (!workflow.ok) {
-      return this.failed(validation, steps, predicted);
+      return this.finalize(request, context, this.failed(validation, steps, predicted));
     }
 
     predicted.workflow = {
@@ -129,7 +132,7 @@ export class SimulationEngine {
     );
 
     if (!process.ok) {
-      return this.failed(validation, steps, predicted);
+      return this.finalize(request, context, this.failed(validation, steps, predicted));
     }
 
     predicted.process = {
@@ -151,7 +154,7 @@ export class SimulationEngine {
     );
 
     if (!business.ok) {
-      return this.failed(validation, steps, predicted);
+      return this.finalize(request, context, this.failed(validation, steps, predicted));
     }
 
     predicted.business = {
@@ -167,7 +170,7 @@ export class SimulationEngine {
     );
 
     if (!events.ok) {
-      return this.failed(validation, steps, predicted);
+      return this.finalize(request, context, this.failed(validation, steps, predicted));
     }
 
     predicted.events = {
@@ -183,12 +186,12 @@ export class SimulationEngine {
       });
     }
 
-    return {
+    return this.finalize(request, context, {
       success: steps.every((step) => step.status !== 'FAILED'),
       validation,
       steps,
       predicted,
-    };
+    });
   }
 
   private async validateMetadata(context: RuntimeContext, entityCode: string): Promise<ValidationResult> {
@@ -338,6 +341,69 @@ export class SimulationEngine {
     }
 
     return `${stage}_FAILED`;
+  }
+
+  private async finalize(
+    request: SimulationRequest,
+    context: RuntimeContext,
+    result: SimulationResult,
+  ): Promise<SimulationResult> {
+    if (request.traceMode !== 'STORE') {
+      return result;
+    }
+
+    const trace = await this.traceEngine.start(context, {
+      entityCode: request.entityCode,
+      documentId: 'SIMULATED_DOCUMENT',
+      actionCode: request.actionCode,
+    });
+
+    for (const step of result.steps) {
+      const engine = this.toTraceEngine(step.stage);
+
+      if (!engine) {
+        continue;
+      }
+
+      await this.traceEngine.recordStepResult(
+        trace.id!,
+        engine,
+        step.status === 'READY' ? 'SUCCESS' : step.status,
+        {
+          dryRun: true,
+          traceMode: request.traceMode,
+          message: step.message,
+        },
+        step.result,
+        step.error,
+      );
+    }
+
+    if (result.success) {
+      await this.traceEngine.complete(trace.id!);
+    } else {
+      await this.traceEngine.fail(trace.id!, result.steps.find((step) => step.status === 'FAILED')?.error ?? result);
+    }
+
+    return {
+      ...result,
+      traceId: trace.id,
+    };
+  }
+
+  private toTraceEngine(stage: SimulationStep['stage']): RuntimeTraceStepEngine | undefined {
+    if (
+      stage === 'ACTION' ||
+      stage === 'SECURITY' ||
+      stage === 'WORKFLOW' ||
+      stage === 'PROCESS' ||
+      stage === 'BUSINESS' ||
+      stage === 'EVENT'
+    ) {
+      return stage;
+    }
+
+    return undefined;
   }
 
   private failed(

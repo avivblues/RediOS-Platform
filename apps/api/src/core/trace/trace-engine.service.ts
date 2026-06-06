@@ -87,6 +87,28 @@ export class TraceEngine {
     }
   }
 
+  async recordStepResult(
+    traceId: string,
+    engine: RuntimeTraceStepEngine,
+    status: RuntimeTraceStep['status'],
+    input?: unknown,
+    output?: unknown,
+    error?: unknown,
+  ): Promise<void> {
+    const startedAt = new Date();
+    const finishedAt = new Date();
+    await this.appendStep(traceId, {
+      engine,
+      status,
+      startedAt,
+      finishedAt,
+      durationMs: finishedAt.getTime() - startedAt.getTime(),
+      input: this.sanitizer.clean(input),
+      output: this.sanitizer.clean(output),
+      error: this.sanitizer.clean(error),
+    });
+  }
+
   async complete(traceId: string): Promise<void> {
     await this.finish(traceId, 'SUCCESS');
   }
