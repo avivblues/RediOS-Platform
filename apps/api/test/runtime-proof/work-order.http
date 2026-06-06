@@ -1,5 +1,6 @@
 @baseUrl = http://localhost:3001/api
 @documentId = replace-with-runtime-document-id
+@traceId = replace-with-runtime-trace-id
 
 ### Create WORK_ORDER metadata document
 ### Expected: stage STORED
@@ -43,3 +44,17 @@ x-permissions: WORK_ORDER.COMPLETE
 Content-Type: application/json
 
 {}
+
+### List WORK_ORDER START traces
+GET {{baseUrl}}/runtime-traces?entityCode=WORK_ORDER&documentId={{documentId}}&actionCode=START
+x-tenant-id: demo
+x-domain-code: DEFAULT
+x-application-code: ASSET_MAINTENANCE
+x-user-id: admin
+
+### Get trace detail
+GET {{baseUrl}}/runtime-traces/{{traceId}}
+x-tenant-id: demo
+x-domain-code: DEFAULT
+x-application-code: ASSET_MAINTENANCE
+x-user-id: admin

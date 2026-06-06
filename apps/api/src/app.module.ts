@@ -18,6 +18,7 @@ import { HealthModule } from './health/health.module';
 import { KernelLoggerModule } from './logger/kernel-logger.module';
 import { MetadataDebugModule } from './metadata/metadata-debug.module';
 import { RuntimeModule as RuntimeApiModule } from './runtime/runtime.module';
+import { RuntimeTracesModule } from './runtime-traces/runtime-traces.module';
 
 @Module({
   imports: [
@@ -43,6 +44,7 @@ import { RuntimeModule as RuntimeApiModule } from './runtime/runtime.module';
     HealthModule,
     MetadataDebugModule,
     RuntimeApiModule,
+    RuntimeTracesModule,
     ContextModule,
     ApplicationModule,
     MetadataModule,

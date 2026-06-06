@@ -9,4 +9,5 @@ export * from './metadata-definition';
 export * from './process-definition';
 export * from './runtime-context';
 export * from './runtime-document';
+export * from './runtime-trace';
 export * from './workflow-definition';

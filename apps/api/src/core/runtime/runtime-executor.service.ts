@@ -7,6 +7,7 @@ import type {
   MetadataDefinition,
   RuntimeContext,
   RuntimeDocument,
+  RuntimeTrace,
 } from '@redios/shared';
 import { ActionEngine, type RuntimeActionPlan } from '../action/action-engine.service';
 import { ApplicationEngine } from '../application/application-engine.service';
@@ -16,6 +17,7 @@ import { MetadataResolver } from '../metadata/metadata-resolver.service';
 import { ProcessEngine, type ProcessExecutionPlan } from '../process/process-engine.service';
 import { SecurityEngine } from '../security/security-engine.service';
 import { StorageEngine } from '../storage/storage.engine';
+import { TraceEngine } from '../trace/trace-engine.service';
 import { WorkflowEngine, type WorkflowTransitionResult } from '../workflow/workflow-engine.service';
 
 export interface RuntimeExecutionInput {
@@ -61,6 +63,7 @@ export interface RuntimeActionResult {
   process: ProcessExecutionPlan;
   business: BusinessExecutionResult;
   events: RuntimeEventPublishResult;
+  traceId: string;
   next: 'LEDGER_ENGINE';
 }
 
@@ -75,6 +78,7 @@ export class RuntimeExecutor {
     private readonly processEngine: ProcessEngine,
     private readonly businessEngine: BusinessEngine,
     private readonly eventEngine: EventEngine,
+    private readonly traceEngine: TraceEngine,
     private readonly storageEngine: StorageEngine,
   ) {}
 
@@ -130,61 +134,109 @@ export class RuntimeExecutor {
 
   async prepareAction(input: RuntimeActionInput): Promise<RuntimeActionResult> {
     const { context, entityCode, id, actionCode, payload } = input;
-    await this.resolveRuntimeTarget(context, entityCode);
-    const document = await this.storageEngine.findOne(context, entityCode, id);
-
-    if (!document) {
-      throw new NotFoundException('Runtime document was not found.');
-    }
-
-    const action = await this.actionEngine.resolve(context, entityCode, actionCode);
-    this.securityEngine.validateActionAccess(context, action);
-    const workflow = await this.workflowEngine.transition(context, entityCode, document.status, actionCode);
-    let workflowDocument = document;
-
-    if (workflow.transitioned) {
-      workflowDocument =
-        (await this.storageEngine.update(context, entityCode, id, {
-          status: workflow.to,
-        })) ?? document;
-    }
-
-    const actionData = this.toActionData(payload);
-    const hasActionData = Object.keys(actionData).length > 0;
-
-    if (hasActionData) {
-      workflowDocument.data = {
-        ...workflowDocument.data,
-        ...actionData,
-      };
-    }
-
-    const process = await this.processEngine.execute(context, entityCode, actionCode, workflow, workflowDocument);
-    const business = await this.businessEngine.execute(context, entityCode, workflowDocument, process);
-
-    if (
-      hasActionData ||
-      business.executedRules.some((rule) => rule.type === 'SET_FIELD_VALUE' && rule.status === 'EXECUTED')
-    ) {
-      await this.storageEngine.update(context, entityCode, id, {
-        data: workflowDocument.data,
-      });
-    }
-    const events = await this.eventEngine.publish(context, entityCode, workflowDocument, {
+    const trace = await this.traceEngine.start(context, {
+      entityCode,
+      documentId: id,
       actionCode,
-      workflowState: workflow.transitioned ? workflow.to : undefined,
-      processCode: process.processCode,
     });
 
-    return {
-      stage: 'EVENT_PUBLISHED',
-      actionCode,
-      workflow,
-      process,
-      business,
-      events,
-      next: 'LEDGER_ENGINE',
-    };
+    try {
+      await this.resolveRuntimeTarget(context, entityCode);
+      const document = await this.storageEngine.findOne(context, entityCode, id);
+
+      if (!document) {
+        throw new NotFoundException('Runtime document was not found.');
+      }
+
+      let action!: MetadataDefinition<ActionDefinition>;
+      await this.traceEngine.recordStep(
+        trace.id!,
+        'ACTION',
+        async () => {
+          action = await this.actionEngine.resolve(context, entityCode, actionCode);
+          return {
+            actionCode: action.definition.code,
+            enabled: action.definition.enabled,
+          };
+        },
+        { entityCode, actionCode },
+      );
+
+      await this.traceEngine.recordStep(trace.id!, 'SECURITY', () => {
+        this.securityEngine.validateActionAccess(context, action);
+        return {
+          allowed: true,
+          permissions: action.definition.permissions ?? [],
+        };
+      });
+
+      let workflowDocument = document;
+      const workflow = await this.traceEngine.recordStep(trace.id!, 'WORKFLOW', async () => {
+        const transition = await this.workflowEngine.transition(context, entityCode, document.status, actionCode);
+
+        if (transition.transitioned) {
+          workflowDocument =
+            (await this.storageEngine.update(context, entityCode, id, {
+              status: transition.to,
+            })) ?? document;
+        }
+
+        return transition;
+      });
+
+      const actionData = this.toActionData(payload);
+      const hasActionData = Object.keys(actionData).length > 0;
+
+      if (hasActionData) {
+        workflowDocument.data = {
+          ...workflowDocument.data,
+          ...actionData,
+        };
+      }
+
+      const process = await this.traceEngine.recordStep(trace.id!, 'PROCESS', () =>
+        this.processEngine.execute(context, entityCode, actionCode, workflow, workflowDocument),
+      );
+
+      const business = await this.traceEngine.recordStep(trace.id!, 'BUSINESS', async () => {
+        const businessResult = await this.businessEngine.execute(context, entityCode, workflowDocument, process);
+
+        if (
+          hasActionData ||
+          businessResult.executedRules.some((rule) => rule.type === 'SET_FIELD_VALUE' && rule.status === 'EXECUTED')
+        ) {
+          await this.storageEngine.update(context, entityCode, id, {
+            data: workflowDocument.data,
+          });
+        }
+
+        return businessResult;
+      });
+
+      const events = await this.traceEngine.recordStep(trace.id!, 'EVENT', () =>
+        this.eventEngine.publish(context, entityCode, workflowDocument, {
+          actionCode,
+          workflowState: workflow.transitioned ? workflow.to : undefined,
+          processCode: process.processCode,
+        }),
+      );
+
+      await this.traceEngine.complete(trace.id!);
+
+      return {
+        stage: 'EVENT_PUBLISHED',
+        actionCode,
+        workflow,
+        process,
+        business,
+        events,
+        traceId: trace.id!,
+        next: 'LEDGER_ENGINE',
+      };
+    } catch (error) {
+      await this.failTrace(trace, error);
+      throw error;
+    }
   }
 
   private async resolveRuntimeTarget(
@@ -229,5 +281,15 @@ export class RuntimeExecutor {
     }
 
     return {};
+  }
+
+  private async failTrace(trace: RuntimeTrace, error: unknown): Promise<void> {
+    if (trace.id) {
+      try {
+        await this.traceEngine.fail(trace.id, error);
+      } catch {
+        // Preserve the original runtime exception; trace persistence must not mask it.
+      }
+    }
   }
 }

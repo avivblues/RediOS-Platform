@@ -7,6 +7,7 @@ import { MetadataModule } from '../metadata/metadata.module';
 import { ProcessModule } from '../process/process.module';
 import { SecurityModule } from '../security/security.module';
 import { StorageModule } from '../storage/storage.module';
+import { TraceModule } from '../trace/trace.module';
 import { WorkflowModule } from '../workflow/workflow.module';
 import { RuntimeExecutor } from './runtime-executor.service';
 
@@ -20,6 +21,7 @@ import { RuntimeExecutor } from './runtime-executor.service';
     ProcessModule,
     BusinessModule,
     EventModule,
+    TraceModule,
     StorageModule,
   ],
   providers: [RuntimeExecutor],
