@@ -12,9 +12,9 @@ export class MetadataSeedRunner {
   async run(): Promise<void> {
     const context: RuntimeContext = {
       userId: 'seed',
-      tenantId: '1',
-      domainCode: '1.26.1.0',
-      applicationCode: 'MAINTENANCE',
+      tenantId: 'demo',
+      domainCode: 'DEFAULT',
+      applicationCode: 'ASSET_MAINTENANCE',
       permissions: [],
       capabilities: [],
     };

@@ -2,6 +2,7 @@ import type { MetadataDefinition, MetadataType, RuntimeContext } from '@redios/s
 
 export interface MetadataQuery {
   applicationCode?: string;
+  allApplications?: boolean;
   type?: MetadataType;
   code?: string;
   enabledOnly?: boolean;

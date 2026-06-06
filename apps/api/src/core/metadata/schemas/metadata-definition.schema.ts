@@ -56,5 +56,4 @@ MetadataDefinitionSchema.index({
   applicationCode: 1,
   type: 1,
   code: 1,
-  version: 1,
 });

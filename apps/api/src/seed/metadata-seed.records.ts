@@ -12,8 +12,8 @@ import type {
   WorkflowDefinition,
 } from '@redios/shared';
 
-const tenantId = '1';
-const domainCode = '1.26.1.0';
+const tenantId = 'demo';
+const domainCode = 'DEFAULT';
 
 type FieldSeed = {
   code: string;

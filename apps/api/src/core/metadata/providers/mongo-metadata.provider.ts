@@ -26,7 +26,6 @@ export class MongoMetadataProvider implements MetadataProvider {
           ...scope,
           type: definition.type,
           code: definition.code,
-          version: definition.version,
         },
         {
           ...definition,
@@ -62,7 +61,7 @@ export class MongoMetadataProvider implements MetadataProvider {
   async find(context: RuntimeContext, query: MetadataQuery = {}): Promise<MetadataDefinition[]> {
     const records = await this.model
       .find({
-        ...this.createScope(context, query.applicationCode),
+        ...this.createScope(context, query.allApplications ? undefined : query.applicationCode, query.allApplications),
         ...(query.type ? { type: query.type } : {}),
         ...(query.code ? { code: query.code } : {}),
         ...(query.enabledOnly ? { enabled: true } : {}),
@@ -77,7 +76,7 @@ export class MongoMetadataProvider implements MetadataProvider {
   async findOne(context: RuntimeContext, query: MetadataQuery): Promise<MetadataDefinition | null> {
     const record = await this.model
       .findOne({
-        ...this.createScope(context, query.applicationCode),
+        ...this.createScope(context, query.allApplications ? undefined : query.applicationCode, query.allApplications),
         ...(query.type ? { type: query.type } : {}),
         ...(query.code ? { code: query.code } : {}),
         ...(query.enabledOnly ? { enabled: true } : {}),
@@ -89,12 +88,17 @@ export class MongoMetadataProvider implements MetadataProvider {
     return record ? this.toDefinition(record) : null;
   }
 
-  private createScope(context: RuntimeContext, applicationCode = context.applicationCode): Record<string, string> {
-    return {
+  private createScope(
+    context: RuntimeContext,
+    applicationCode = context.applicationCode,
+    allApplications = false,
+  ): Record<string, string> {
+    const scope = {
       tenantId: context.tenantId,
       domainCode: context.domainCode,
-      applicationCode,
     };
+
+    return allApplications ? scope : { ...scope, applicationCode };
   }
 
   private toDefinition(record: MetadataDefinitionRecord): MetadataDefinition {

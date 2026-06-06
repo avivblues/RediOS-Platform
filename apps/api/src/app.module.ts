@@ -16,6 +16,7 @@ import { StorageModule } from './core/storage/storage.module';
 import { WorkflowModule } from './core/workflow/workflow.module';
 import { HealthModule } from './health/health.module';
 import { KernelLoggerModule } from './logger/kernel-logger.module';
+import { MetadataDebugModule } from './metadata/metadata-debug.module';
 import { RuntimeModule as RuntimeApiModule } from './runtime/runtime.module';
 
 @Module({
@@ -40,6 +41,7 @@ import { RuntimeModule as RuntimeApiModule } from './runtime/runtime.module';
     }),
     KernelLoggerModule,
     HealthModule,
+    MetadataDebugModule,
     RuntimeApiModule,
     ContextModule,
     ApplicationModule,

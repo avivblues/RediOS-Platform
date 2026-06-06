@@ -1,10 +1,11 @@
-@baseUrl = http://localhost:3000/api
+@baseUrl = http://localhost:3001/api
 @documentId = replace-with-runtime-document-id
 
 ### Create WORK_ORDER metadata document
+### Expected: stage STORED
 POST {{baseUrl}}/runtime/WORK_ORDER
-x-tenant-id: 1
-x-domain-code: 1.26.1.0
+x-tenant-id: demo
+x-domain-code: DEFAULT
 x-application-code: ASSET_MAINTENANCE
 x-user-id: admin
 x-permissions: WORK_ORDER.CREATE,WORK_ORDER.READ,WORK_ORDER.UPDATE,WORK_ORDER.START,WORK_ORDER.COMPLETE,WORK_ORDER.CANCEL
@@ -19,10 +20,11 @@ Content-Type: application/json
   }
 }
 
-### Start WORK_ORDER through metadata workflow and process
+### Start WORK_ORDER through metadata workflow, process, and business engine
+### Expected: stage BUSINESS_READY
 POST {{baseUrl}}/runtime/WORK_ORDER/{{documentId}}/actions/START
-x-tenant-id: 1
-x-domain-code: 1.26.1.0
+x-tenant-id: demo
+x-domain-code: DEFAULT
 x-application-code: ASSET_MAINTENANCE
 x-user-id: admin
 x-permissions: WORK_ORDER.START
@@ -30,10 +32,11 @@ Content-Type: application/json
 
 {}
 
-### Complete WORK_ORDER through metadata workflow and process
+### Complete WORK_ORDER through metadata workflow, process, and business engine
+### Expected: stage BUSINESS_READY
 POST {{baseUrl}}/runtime/WORK_ORDER/{{documentId}}/actions/COMPLETE
-x-tenant-id: 1
-x-domain-code: 1.26.1.0
+x-tenant-id: demo
+x-domain-code: DEFAULT
 x-application-code: ASSET_MAINTENANCE
 x-user-id: admin
 x-permissions: WORK_ORDER.COMPLETE
