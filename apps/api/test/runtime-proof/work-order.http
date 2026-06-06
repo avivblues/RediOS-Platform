@@ -20,8 +20,8 @@ Content-Type: application/json
   }
 }
 
-### Start WORK_ORDER through metadata workflow, process, and business engine
-### Expected: stage BUSINESS_READY
+### Start WORK_ORDER through metadata workflow, process, business, and event engines
+### Expected: stage EVENT_PUBLISHED with WORK_ORDER_STARTED_EVENT
 POST {{baseUrl}}/runtime/WORK_ORDER/{{documentId}}/actions/START
 x-tenant-id: demo
 x-domain-code: DEFAULT
@@ -32,8 +32,8 @@ Content-Type: application/json
 
 {}
 
-### Complete WORK_ORDER through metadata workflow, process, and business engine
-### Expected: stage BUSINESS_READY
+### Complete WORK_ORDER through metadata workflow, process, business, and event engines
+### Expected: stage EVENT_PUBLISHED
 POST {{baseUrl}}/runtime/WORK_ORDER/{{documentId}}/actions/COMPLETE
 x-tenant-id: demo
 x-domain-code: DEFAULT

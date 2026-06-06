@@ -5,6 +5,7 @@ import type {
   BusinessDefinition,
   EntityType,
   EntityDefinition,
+  EventDefinition,
   FieldDataType,
   FieldDefinition,
   MetadataDefinition,
@@ -30,6 +31,7 @@ type EntitySeed = {
   workflow?: WorkflowDefinition;
   processes?: ProcessDefinition[];
   businesses?: BusinessDefinition[];
+  events?: EventDefinition[];
 };
 
 type ApplicationSeed = {
@@ -120,6 +122,37 @@ const applications: ApplicationSeed[] = [
             steps: [
               { code: 'VALIDATE', type: 'VALIDATION', order: 1, enabled: true },
               { code: 'EVENT_ENGINE', type: 'EVENT', order: 2, enabled: true },
+            ],
+            enabled: true,
+          },
+        ],
+        events: [
+          {
+            code: 'WORK_ORDER_STARTED_EVENT',
+            entityCode: 'WORK_ORDER',
+            trigger: {
+              actionCode: 'START',
+              workflowState: 'IN_PROGRESS',
+              processCode: 'WORK_ORDER_START_PROCESS',
+            },
+            handlers: [
+              {
+                code: 'NOTIFY_SUPERVISOR',
+                type: 'NOTIFICATION',
+                enabled: true,
+                config: {
+                  targetRole: 'SUPERVISOR',
+                  message: 'Work order started',
+                },
+              },
+              {
+                code: 'TRACK_CHANGE',
+                type: 'AUDIT_LOG',
+                enabled: true,
+                config: {
+                  action: 'TRACK_CHANGE',
+                },
+              },
             ],
             enabled: true,
           },
@@ -401,6 +434,7 @@ function createEntityRecords(application: ApplicationSeed, entity: EntitySeed): 
     ...(entity.workflow ? [createWorkflowRecord(application, entity.workflow)] : []),
     ...(entity.processes ?? []).map((process) => createProcessRecord(application, process)),
     ...(entity.businesses ?? []).map((business) => createBusinessRecord(application, business)),
+    ...(entity.events ?? []).map((event) => createEventRecord(application, event)),
   ];
 }
 
@@ -532,6 +566,23 @@ function createBusinessRecord(
     version: 1,
     enabled: true,
     definition: business,
+  };
+}
+
+function createEventRecord(
+  application: ApplicationSeed,
+  event: EventDefinition,
+): MetadataDefinition<EventDefinition> {
+  return {
+    tenantId,
+    domainCode,
+    applicationCode: application.code,
+    type: 'EVENT',
+    code: event.code,
+    name: toLabel(event.code),
+    version: 1,
+    enabled: true,
+    definition: event,
   };
 }
 

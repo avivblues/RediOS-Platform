@@ -4,6 +4,8 @@ import type {
   ApplicationDefinition,
   BusinessDefinition,
   EntityDefinition,
+  EventDefinition,
+  EventTriggerDefinition,
   FieldDefinition,
   MetadataDefinition,
   MetadataType,
@@ -140,6 +142,28 @@ export class MetadataResolver {
     return definition as MetadataDefinition<BusinessDefinition>;
   }
 
+  async resolveEvents(
+    context: RuntimeContext,
+    entityCode: string,
+    trigger: EventTriggerDefinition,
+  ): Promise<MetadataDefinition<EventDefinition>[]> {
+    const definitions = await this.registry.findByType(context, 'EVENT');
+    const matchingDefinitions = definitions.filter((candidate) => {
+      const event = candidate.definition as EventDefinition;
+      return event.entityCode === entityCode && event.enabled && this.eventTriggerMatches(event.trigger, trigger);
+    });
+
+    for (const definition of matchingDefinitions) {
+      const validation = this.validator.validate(definition);
+
+      if (!validation.valid) {
+        throw new UnprocessableEntityException(validation.errors);
+      }
+    }
+
+    return matchingDefinitions as MetadataDefinition<EventDefinition>[];
+  }
+
   private async resolveMany<TDefinition>(
     context: RuntimeContext,
     type: MetadataType,
@@ -166,5 +190,21 @@ export class MetadataResolver {
     }
 
     return definition as MetadataDefinition<TDefinition>;
+  }
+
+  private eventTriggerMatches(expected: EventTriggerDefinition, actual: EventTriggerDefinition): boolean {
+    if (expected.actionCode && expected.actionCode !== actual.actionCode) {
+      return false;
+    }
+
+    if (expected.workflowState && expected.workflowState !== actual.workflowState) {
+      return false;
+    }
+
+    if (expected.processCode && expected.processCode !== actual.processCode) {
+      return false;
+    }
+
+    return true;
   }
 }

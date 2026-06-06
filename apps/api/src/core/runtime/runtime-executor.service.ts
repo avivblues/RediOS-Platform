@@ -11,6 +11,7 @@ import type {
 import { ActionEngine, type RuntimeActionPlan } from '../action/action-engine.service';
 import { ApplicationEngine } from '../application/application-engine.service';
 import { BusinessEngine, type BusinessExecutionResult } from '../business/business-engine.service';
+import { EventEngine, type RuntimeEventPublishResult } from '../event/event-engine.service';
 import { MetadataResolver } from '../metadata/metadata-resolver.service';
 import { ProcessEngine, type ProcessExecutionPlan } from '../process/process-engine.service';
 import { SecurityEngine } from '../security/security-engine.service';
@@ -54,12 +55,13 @@ export interface RuntimeActionInput {
 }
 
 export interface RuntimeActionResult {
-  stage: 'BUSINESS_READY';
+  stage: 'EVENT_PUBLISHED';
   actionCode: string;
   workflow: WorkflowTransitionResult;
   process: ProcessExecutionPlan;
   business: BusinessExecutionResult;
-  next: 'EVENT_ENGINE';
+  events: RuntimeEventPublishResult;
+  next: 'LEDGER_ENGINE';
 }
 
 @Injectable()
@@ -72,6 +74,7 @@ export class RuntimeExecutor {
     private readonly workflowEngine: WorkflowEngine,
     private readonly processEngine: ProcessEngine,
     private readonly businessEngine: BusinessEngine,
+    private readonly eventEngine: EventEngine,
     private readonly storageEngine: StorageEngine,
   ) {}
 
@@ -167,14 +170,20 @@ export class RuntimeExecutor {
         data: workflowDocument.data,
       });
     }
+    const events = await this.eventEngine.publish(context, entityCode, workflowDocument, {
+      actionCode,
+      workflowState: workflow.transitioned ? workflow.to : undefined,
+      processCode: process.processCode,
+    });
 
     return {
-      stage: 'BUSINESS_READY',
+      stage: 'EVENT_PUBLISHED',
       actionCode,
       workflow,
       process,
       business,
-      next: 'EVENT_ENGINE',
+      events,
+      next: 'LEDGER_ENGINE',
     };
   }
 

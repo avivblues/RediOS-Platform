@@ -10,6 +10,7 @@ type MetadataDebugResult = {
   workflows: string[];
   processes: string[];
   business: string[];
+  events: string[];
   counts: Record<string, number>;
 };
 
@@ -39,6 +40,7 @@ export class MetadataDebugController {
       workflows: this.codes(records, 'WORKFLOW'),
       processes: this.codes(records, 'PROCESS'),
       business: this.codes(records, 'BUSINESS'),
+      events: this.codes(records, 'EVENT'),
       counts: this.counts(records),
     };
   }

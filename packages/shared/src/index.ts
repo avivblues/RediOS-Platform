@@ -3,6 +3,7 @@ export * from './application-definition';
 export * from './business-definition';
 export * from './engine-interface';
 export * from './entity-definition';
+export * from './event-definition';
 export * from './field-definition';
 export * from './metadata-definition';
 export * from './process-definition';
