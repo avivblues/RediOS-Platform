@@ -1,747 +1,702 @@
 # RediOS Platform
-# Product Requirement Document
-# Prototype v0.1
+# Product Requirement Document (PRD)
 
+Version: 1.0  
+Status: Active Development  
+Current Kernel Phase: 9.6 Completed  
+Next Phase: Ledger / Impact Engine  
 
-==================================================
+---
 
+# 1. Vision
 
-# 1. Product Vision
+RediOS is an enterprise operating platform designed to build business applications without rewriting application logic.
 
+The main idea:
 
-RediOS adalah Enterprise Runtime Operating Platform
-untuk membangun aplikasi bisnis berbasis metadata.
+> Business changes should modify metadata, not source code.
 
+RediOS separates:
 
-RediOS bukan satu aplikasi ERP.
+- Platform Kernel
+- Business Definition
+- User Experience
 
+The kernel remains stable while companies can create different applications, workflows, forms, permissions, and processes dynamically.
 
-RediOS adalah kernel yang menjalankan banyak aplikasi bisnis
-dengan runtime engine yang sama.
+---
 
+# 2. Problem Statement
 
+Traditional ERP / SaaS applications usually create:
 
-Developer membuat:
+- modules
+- services
+- controllers
+- database schemas
+- workflows
 
+directly inside source code.
 
-ENGINE
+Example:
 
+InventoryService
 
+WorkOrderService
 
-Consultant / Implementor / User melakukan:
+CRMService
 
+AccountingService
 
-CONFIGURATION
 
-+
+This creates problems:
 
-METADATA DEFINITION
+- customization is expensive
+- upgrades are difficult
+- different companies require different forks
+- business logic becomes locked inside code
 
+---
 
+# 3. RediOS Philosophy
 
-Perubahan bisnis harus dilakukan melalui metadata
-selama tidak mengubah core business engine.
+RediOS follows:
 
+## Kernel First Architecture
 
+The system provides generic engines:
 
-==================================================
+- Runtime Engine
+- Metadata Engine
+- Action Engine
+- Security Engine
+- Workflow Engine
+- Process Engine
+- Business Engine
+- Event Engine
+- Trace Engine
+- Simulation Engine
+- Future Ledger Engine
 
 
-# 2. Platform Objective
+Business applications are only metadata.
 
+---
 
-RediOS dibuat untuk mengubah konsep:
+# 4. Core Rule
 
+RediOS must NEVER create hardcoded business modules.
 
-Application Development
+Forbidden examples:
 
+```
+inventory.service.ts
+stock.service.ts
+asset.service.ts
+workOrder.service.ts
+ticket.service.ts
+crm.service.ts
+accounting.service.ts
+```
 
-menjadi:
+Forbidden:
 
+```
+InventoryController
+AssetController
+TicketController
+WorkOrderController
+```
 
-Application Configuration
+Allowed:
 
+```
+RuntimeController
+MetadataEngine
+WorkflowEngine
+BusinessEngine
+```
 
+---
 
-Aplikasi tidak dibangun dengan membuat ulang:
+# 5. Metadata Driven Application Model
 
-- database table
-- controller
-- service
-- form
-- report
 
+Applications are created using metadata:
 
+Example:
 
-Aplikasi dibangun melalui:
+```
+Application:
+ASSET_MAINTENANCE
 
+Entities:
+- ASSET
+- WORK_ORDER
 
-Metadata
+Fields:
+- title
+- priority
+- status
 
-+
+Actions:
+- CREATE
+- START
+- COMPLETE
 
-Runtime Engine
+Workflow:
+OPEN
+ |
+START
+ |
+IN_PROGRESS
+ |
+COMPLETE
+ |
+DONE
+```
 
-+
 
-Business Engine
+No new backend code.
 
+---
 
+# 6. Multi Tenant / Multi Company Strategy
 
-==================================================
 
+RediOS supports different companies having different behavior.
 
-# 3. Platform Capability
+Controlled by:
 
-
-Satu RediOS Kernel mendukung:
-
-
-
-## Multi Tenant
-
-
-Satu platform melayani banyak customer.
-
-
-
-## Multi Application
-
-
-Satu kernel dapat menjalankan banyak aplikasi.
-
+```
+tenantId
+domainCode
+applicationCode
+```
 
 
 Example:
 
 
-ERP
+## Company A
 
-POS
+Work Order flow:
 
-WMS
-
-HRIS
-
-Ticketing
-
-Maintenance
-
-IoT Portal
-
-Custom Application
-
-
-
-Application bukan source code.
-
-
-Application adalah metadata composition.
+```
+CREATE
+ |
+ADMIN REVIEW
+ |
+SCHEDULE
+ |
+ASSIGN PIC
+ |
+ALLOCATE SPAREPART
+ |
+EXECUTE
+ |
+DONE
+```
 
 
+## Company B
 
-## Multi Company / Branch
+Same WORK_ORDER entity:
+
+```
+CREATE
+ |
+ASSIGN
+ |
+DONE
+```
 
 
-Menggunakan domainCode sebagai business namespace.
+Difference:
+
+Not code.
+
+Only metadata.
 
 
+---
 
-## Multi Module
-
-
-Module adalah capability metadata.
+# 7. RediOS Studio Vision
 
 
+RediOS will provide visual builders:
+
+## Application Builder
+
+Create:
+
+- ERP module
+- CRM module
+- Helpdesk
+- Asset Management
+- Custom application
+
+
+without programming.
+
+
+---
+
+
+## Form Builder
+
+
+User can:
+
+- add field
+- remove field
+- change validation
+- change visibility
+- change layout
+
+
+Examples:
+
+Add:
+
+```
+assetLocation
+serialNumber
+customerSegment
+```
+
+No migration required.
+
+
+---
+
+## Workflow Builder
+
+
+User can design:
 
 Example:
 
-
-Inventory
-
-Finance
-
-Maintenance
-
-Sales
-
-Purchasing
-
-
-
-Module dapat:
-
-- enable
-- disable
-- package based
-- subscription based
-
-
-
-## Multi Workflow
-
-
-Business flow dapat berubah tanpa coding.
-
-
-
-## Multi Experience
-
-
-Satu metadata dapat berjalan di:
-
-
-Web
-
-Mobile
-
-Device
-
-Future Interface
-
-
-
-==================================================
-
-
-# 4. Core Philosophy
-
-
-RediOS dipisah menjadi:
-
-
-
-METADATA
-
-
-menjawab:
-
-
-WHAT EXISTS
-
-
-
-contoh:
-
-
-- entity
-- field
-- form
-- workflow
-- report
-
-
-
---------------------------------------------------
-
-
-
-RUNTIME ENGINE
-
-
-menjawab:
-
-
-HOW TO EXECUTE
-
-
-
-contoh:
-
-
-- resolve metadata
-- execute action
-- execute process
-
-
-
---------------------------------------------------
-
-
-
-BUSINESS ENGINE
-
-
-menjawab:
-
-
-WHAT BUSINESS IMPACT HAPPENS
-
-
-
-contoh:
-
-
-- stock movement
-- costing
-- finance impact
-- pricing calculation
-
-
-
-==================================================
-
-
-# 5. Metadata Concept
-
-
-Metadata bukan business logic.
-
-
-Metadata hanya definisi.
-
-
-
-Example:
-
-
-
-WORK_ORDER
-
-
-memiliki:
-
-
-Action:
+```
+DRAFT
 
 APPROVE
 
+DONE
+```
 
 
-Workflow:
+Before saving:
 
-DRAFT -> APPROVED
+Simulation Engine validates:
 
-
-
-Process:
-
-CREATE_COST
-
-
-
-Business Engine yang menentukan impact.
+- missing states
+- invalid transition
+- missing permission
+- invalid action
+- broken process
 
 
+---
 
-==================================================
-
-
-# 6. Domain Code Concept
+## Security Builder
 
 
-domainCode adalah identitas area bisnis.
+Metadata controls:
 
-
-
-domainCode bukan relational hierarchy.
-
-
-
-Tidak menggunakan:
-
-
-parentId
-
+- role access
+- action permission
+- field visibility
+- field readonly
+- data scope
 
 
 Example:
 
+Manager:
 
+```
+CAN_APPROVE = true
+```
 
-1.26.1.0
+Staff:
 
+```
+CAN_APPROVE = false
+```
 
-artinya:
 
+---
 
-Client 1
+## Report Builder
 
-Join Year 2026
 
-Head Office
+Future capability:
 
+Users can create:
 
+- operational report
+- dashboard
+- KPI
+- analytics
 
---------------------------------------------------
+based on metadata.
 
 
+---
 
-1.26.1.1
+# 8. Runtime Execution Concept
 
 
-artinya:
+Every request flows through:
 
+```
+Runtime API
 
-Client 1
+    |
+    v
 
-Join Year 2026
+Context
 
-Branch 1
+    |
+    v
 
+Metadata Resolver
 
+    |
+    v
 
---------------------------------------------------
+Action
 
+    |
+    v
 
+Security
 
-Digunakan untuk:
+    |
+    v
 
+Workflow
 
-- ownership
-- access scope
-- numbering
-- consolidation
-- reporting
-
-
-
-==================================================
-
-
-# 7. Data Philosophy
-
-
-Data business tidak bergantung kepada module.
-
-
-
-Entity:
-
-hanya definisi.
-
-
-
-Document:
-
-menyimpan transaksi.
-
-
-
-Ledger:
-
-menyimpan impact.
-
-
-
-Snapshot:
-
-menyimpan hasil closing.
-
-
-
-Example:
-
-
-
-Transaction
-
-↓
-
-Ledger
-
-↓
-
-Monthly Snapshot
-
-↓
-
-Fast Reporting
-
-
-
-Digunakan untuk:
-
-
-inventory closing
-
-asset amount
-
-finance balance
-
-cost calculation
-
-
-
-==================================================
-
-
-# 8. Dynamic Experience Concept
-
-
-UI bukan dibuat manual per aplikasi.
-
-
-
-Tidak membuat:
-
-
-Asset Page
-
-Work Order Page
-
-
-
-Membuat:
-
-
-Experience Renderer
-
-
-
-Metadata menentukan:
-
-
-- field
-- layout
-- component
-- validation
-- visibility
-
-
-
-Renderer menghasilkan:
-
-
-Web
-
-Mobile
-
-
-
-==================================================
-
-
-# 9. IoT & Integration Vision
-
-
-RediOS dapat menjadi portal integrasi.
-
-
-
-External:
-
-
-PLC
-
-Arduino
-
-Sensor
-
-Machine
-
-External API
-
-
-
-Integration masuk melalui:
-
-
-Adapter
-
-↓
-
-Event
-
-↓
+    |
+    v
 
 Process
 
-↓
+    |
+    v
 
-Business Engine
+Business Rules
 
+    |
+    v
 
+Event
 
-==================================================
+    |
+    v
 
+Trace
 
-# 10. Prototype v0.1 Goal
-
-
-Prototype pertama:
-
-
-Asset Maintenance Runtime
-
-
-
-Tujuan:
+```
 
 
-Membuktikan RediOS Kernel.
+Every execution can be audited.
+
+---
+
+# 9. Simulation First Concept
 
 
+Before metadata goes live:
 
-Bukan membuat aplikasi maintenance.
-
-
-
-==================================================
+RediOS simulates execution.
 
 
-# 11. Prototype Scenario
+Example:
 
 
-Flow:
+User creates workflow:
+
+```
+OPEN
+
+APPROVE
+
+DONE
+```
 
 
+But transition references:
 
-Asset Master
-
-
-↓
-
-Work Order
+```
+OPEN -> REVIEW
+```
 
 
-↓
+Simulation detects:
 
-Approval
+```
+ERROR:
 
-
-↓
-
-Sparepart Usage
-
-
-↓
-
-Inventory Impact
+State REVIEW does not exist.
+```
 
 
-↓
-
-Cost Calculation
+Metadata cannot be activated until valid.
 
 
-↓
+---
 
-Ledger
-
-
-↓
-
-Report
+# 10. AI Assisted Configuration
 
 
+Future RediOS Studio can use AI Agent assistance.
 
-==================================================
+Example request:
+
+User:
+
+"Create asset maintenance application with approval workflow"
 
 
-# 12. Prototype Boundary
+AI generates metadata:
+
+- entities
+- fields
+- workflow
+- actions
+- process
+- business rules
 
 
-Implement:
+Simulation validates before activation.
 
 
-- metadata runtime
+---
 
-- runtime API
+# 11. Target Platform Comparison
+
+
+RediOS aims to combine concepts from:
+
+## Service Management Platforms
+
+Dynamic:
 
 - workflow
+- ticket
+- approval
+- automation
 
+
+## ERP Platforms
+
+Enterprise:
+
+- accounting
+- inventory
+- CRM
+- asset
+- operation
+
+
+## Low Code Platforms
+
+Configurable:
+
+- form
+- data model
 - process
 
-- business engine
 
-- ledger
+But RediOS difference:
 
-- report
-
+Kernel does not know business domains.
 
 
-Tidak fokus:
+---
+
+# 12. Example Applications
 
 
-- full ERP
+Applications are metadata packages:
 
-- full accounting
+## Asset Management
 
-- advanced UI builder
+Contains:
 
-
-
-==================================================
-
-
-# 13. Success Criteria
+- Asset
+- Maintenance
+- Work Order
 
 
-Prototype berhasil jika:
+## Helpdesk
+
+Contains:
+
+- Ticket
+- SLA
+- Escalation
 
 
+## Warehouse
 
-✓ membuat aplikasi baru tanpa source code baru
+Contains:
 
-
-
-✓ membuat entity baru tanpa controller
-
-
-
-✓ membuat field baru tanpa database migration
+- Receiving
+- Stock Movement
+- Transfer
 
 
+## CRM
 
-✓ workflow berubah dari metadata
+Contains:
 
-
-
-✓ action berubah dari metadata
-
-
-
-✓ report membaca Data View Engine
+- Customer
+- Lead
+- Opportunity
 
 
+## Finance
 
-✓ business impact masuk ledger
+Future:
 
-
-
-✓ UI dapat dirender dari metadata
-
-
-
-✓ satu kernel menjalankan banyak aplikasi
+- Journal
+- Ledger
+- Settlement
 
 
+No dedicated backend modules.
 
-==================================================
+---
 
-
-# 14. Long Term Vision
-
-
-RediOS menjadi:
+# 13. Development Roadmap
 
 
-Enterprise Runtime Operating Platform
+Completed:
+
+## Phase 1-4
+
+Foundation:
+
+- Metadata
+- Runtime API
+- Storage
+- Swagger
 
 
-yang menggabungkan:
+## Phase 5
+
+Action + Security Engine
 
 
+## Phase 6
 
-Metadata Engine
+Workflow Engine
 
-+
+
+## Phase 7
+
+Process Engine
+
+
+## Phase 8
 
 Business Engine
 
-+
 
-Experience Engine
+## Phase 9
 
-+
-
-Integration Engine
-
-+
-
-AI Engine
+Event Engine
 
 
+## Phase 9.5
 
-untuk membangun aplikasi enterprise masa depan.
+Runtime Trace Engine
+
+
+## Phase 9.5.1
+
+Trace Sanitizer
+
+
+## Phase 9.5.2
+
+Metadata Validation Engine
+
+
+## Phase 9.6
+
+Simulation Engine
+
+
+---
+
+# Next Phase
+
+
+## Phase 10
+
+Ledger / Impact Engine
+
+
+Purpose:
+
+One business action can create multiple impacts.
+
+
+Example:
+
+Receiving Item:
+
+Action:
+
+```
+RECEIVE
+```
+
+Impact:
+
+```
++ Inventory Quantity
+
++ Stock Movement
+
++ Accounting Journal
+
++ Asset Creation
+
++ Audit Log
+```
+
+
+Without hardcoded services.
+
+
+---
+
+# 14. Final Product Goal
+
+
+RediOS should allow:
+
+"Build enterprise software by configuring business knowledge,
+not rewriting application code."
+
+
+The value is not only the engine.
+
+The value is:
+
+- business experience
+- industry process knowledge
+- reusable metadata
+- automation intelligence
+
+
+```
+One Kernel
+
+Unlimited Applications
+```

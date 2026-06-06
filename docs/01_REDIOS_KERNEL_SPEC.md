@@ -1,1098 +1,965 @@
-# RediOS Platform
-# Kernel Specification
-# Prototype v0.1
+# RediOS Kernel Specification
 
+Version: 1.0  
+Status: Active  
+Current Kernel Phase: 9.6 Completed  
 
-==================================================
+---
 
+# 1. Kernel Principle
 
-# 1. Purpose
+RediOS uses:
 
+Metadata Driven Kernel Architecture
 
-Dokumen ini adalah technical contract untuk membangun
-RediOS Runtime Kernel.
+The kernel executes business behavior from metadata.
 
+The kernel must NEVER understand business domains.
 
-Dokumen ini menjadi acuan:
+Example:
 
+Kernel does NOT know:
 
-- Developer
-- AI Coding Agent
-- Future Contributor
+- Inventory
+- Accounting
+- Asset
+- Ticket
+- Work Order
+- CRM
 
+Kernel only understands:
 
-Tujuan utama:
+- Metadata
+- Runtime
+- Action
+- Security
+- Workflow
+- Process
+- Business Rule
+- Event
+- Trace
+- Simulation
+- Ledger Impact
 
+---
 
-Membangun engine.
+# 2. Forbidden Architecture
 
-Bukan membangun aplikasi.
 
+Never create:
 
+```ts
+InventoryService
+StockService
+AssetService
+WorkOrderService
+TicketService
+CustomerService
+AccountingService
+```
 
-==================================================
 
+Never create:
 
-# 2. Technology Stack Contract
+```ts
+InventoryController
+AssetController
+WorkOrderController
+TicketController
+CRMController
+```
 
 
-Backend Runtime:
+Never create:
 
+```ts
+inventory.schema.ts
+asset.schema.ts
+ticket.schema.ts
+```
 
-- Node.js
-- TypeScript
-- NestJS
 
+Business objects are metadata only.
 
+Allowed:
 
-Database:
+```ts
+RuntimeController
 
+MetadataEngine
 
-- MongoDB
-- Mongoose
+WorkflowEngine
 
+BusinessEngine
 
+EventEngine
 
-Architecture:
+LedgerEngine
+```
 
+---
 
-- Modular Monolith
-- Metadata Driven Runtime
-- Engine Based Architecture
+# 3. Runtime Pipeline
 
 
+All execution MUST follow:
 
-Frontend Renderer:
 
+```
+Runtime API
 
-Web:
+ ↓
 
-- Next.js
-- React
-- TypeScript
+Runtime Context
 
-
-
-Mobile:
-
-- React Native
-- TypeScript
-
-
-
-UI System:
-
-
-- Atomic Design System
-
-
-
-==================================================
-
-
-# 3. Repository Structure
-
-
-Gunakan monorepo.
-
-
-
-Structure:
-
-
-
-apps/
-
-
- api/
-
-
-    RediOS Runtime Kernel
-
-
-
- web/
-
-
-    Experience Renderer Web
-
-
-
- mobile/
-
-
-    Experience Renderer Mobile
-
-
-
-
-
-
-packages/
-
-
- shared/
-
-
-    Common contract
-
-    Metadata schema
-
-    Runtime interface
-
-
-
- engine-sdk/
-
-
-    Engine abstraction
-
-    Adapter interface
-
-
-
- ui-schema/
-
-
-    Experience definition
-
-    Atomic component schema
-
-
-
-
-==================================================
-
-
-# 4. Development Principle
-
-
-RediOS tidak menggunakan traditional MVC.
-
-
-
-DILARANG membuat:
-
-
-
-assetController
-
-
-itemController
-
-
-customerController
-
-
-workOrderController
-
-
-
-DILARANG membuat:
-
-
-
-assetService
-
-
-inventoryService khusus entity
-
-
-workOrderModel
-
-
-
-
-==================================================
-
-
-
-Yang dibuat:
-
-
-
-Runtime Controller
-
+ ↓
 
 Metadata Resolver
 
-
-Runtime Executor
-
-
-Engine
-
-
-Adapter
-
-
-Provider
-
-
-
-
-==================================================
-
-
-# 5. Canonical Runtime Pipeline
-
-
-Semua request wajib melewati pipeline ini.
-
-
-
-Client
-
-
-↓
-
-
-Runtime API
-
-
-↓
-
-
-Context Engine
-
-
-↓
-
-
-Application Engine
-
-
-↓
-
-
-Metadata Engine
-
-
-↓
-
-
-Security Engine
-
-
-↓
-
+ ↓
 
 Action Engine
 
+ ↓
 
-↓
+Security Engine
 
+ ↓
 
 Workflow Engine
 
-
-↓
-
+ ↓
 
 Process Engine
 
-
-↓
-
+ ↓
 
 Business Engine
 
-
-↓
-
-
-Storage Engine
-
-
-↓
-
-
-Ledger Engine
-
-
-↓
-
+ ↓
 
 Event Engine
 
+ ↓
+
+Ledger Engine (future)
+
+ ↓
+
+Trace Engine
+
+```
 
 
-Tidak boleh bypass pipeline.
+No engine can bypass previous engine.
 
 
+---
 
-==================================================
-
-
-# 6. Context Engine
+# 4. Runtime Context
 
 
-Responsibility:
+Every execution contains:
 
-
-Membuat execution context.
-
-
-
-Input v0.1:
-
-
-Request Header
-
-
-
-Example:
-
-
-
-x-user-id
-
-
-x-tenant-id
-
-
-x-domain-code
-
-
-x-application-code
-
-
-
-
-Output:
-
-
-
+```ts
 RuntimeContext {
-
-
- userId
-
 
  tenantId
 
-
  domainCode
-
 
  applicationCode
 
+ userId
 
- permissions
+ permissions[]
 
-
- capabilities
-
+ capabilities[]
 
 }
+```
 
 
+Every metadata lookup MUST include:
+
+```ts
+tenantId
+domainCode
+applicationCode
+```
 
 
-Future:
+Purpose:
+
+Different companies can have different:
+
+- workflow
+- rules
+- permissions
+- process
+
+without code changes.
 
 
-JWT
+---
 
-OAuth
-
-SSO
+# 5. Metadata Model
 
 
+All definitions stored inside:
 
-==================================================
-
-
-# 7. Application Engine
-
-
-Application bukan folder source code.
+```
+metadata_definitions
+```
 
 
-
-Application adalah metadata composition.
-
+Generic structure:
 
 
-Application terdiri dari:
+```ts
+MetadataDefinition {
+
+ tenantId
+
+ domainCode
+
+ applicationCode
+
+ type
+
+ code
+
+ version
+
+ enabled
+
+ definition
+
+}
+```
 
 
+Allowed metadata types:
 
-Entity
+```
+APPLICATION
+
+ENTITY
+
+FIELD
+
+ACTION
+
+WORKFLOW
+
+PROCESS
+
+BUSINESS
+
+EVENT
+
+LEDGER (future)
+```
 
 
-Action
+---
+
+# 6. Runtime Storage
 
 
-Workflow
+Business data stored generic:
 
-
-Process
-
-
-Report
-
-
-Experience
-
-
-Permission
-
-
+```
+runtime_documents
+```
 
 
 Example:
 
 
+```json
+{
+ entityCode:"WORK_ORDER",
 
-APPLICATION:
+ status:"OPEN",
+
+ data:{
+   title:"AC Broken",
+   priority:"HIGH"
+ }
+}
+```
 
 
-MAINTENANCE
+Forbidden:
 
+```
+work_orders collection
+
+assets collection
+
+tickets collection
+```
+
+
+---
+
+# 7. Action Engine
+
+
+Action controls:
+
+"What user wants to do"
+
+
+Example:
+
+```
+CREATE
+
+UPDATE
+
+START
+
+APPROVE
+
+CANCEL
+```
+
+
+Action metadata:
+
+
+```json
+{
+ code:"START",
+
+ entityCode:"WORK_ORDER",
+
+ permissions:[
+  "WORK_ORDER.START"
+ ],
+
+ behavior:{
+   confirmation:true
+ }
+}
+```
+
+
+Action Engine responsibility:
+
+- resolve action metadata
+- check enabled
+- prepare action plan
+
+
+---
+
+# 8. Security Engine
+
+
+Security is metadata based.
+
+Responsible:
+
+- validate context
+- validate permissions
+
+
+Example:
+
+
+Action requires:
+
+```
+WORK_ORDER.START
+```
+
+
+User context:
+
+```
+permissions:[
+ WORK_ORDER.START
+]
+```
+
+
+Allowed.
+
+
+No hardcoded role logic.
+
+
+---
+
+# 9. Workflow Engine
+
+
+Workflow controls:
+
+"Where document moves"
+
+
+Example:
+
+
+```
+OPEN
+
+ |
+START
+
+ |
+
+IN_PROGRESS
+
+ |
+COMPLETE
+
+ |
+
+DONE
+```
+
+
+Workflow metadata:
+
+
+```json
+{
+ states:[
+  OPEN,
+  IN_PROGRESS,
+  DONE
+ ],
+
+ transitions:[
+ {
+  actionCode:"START",
+  from:"OPEN",
+  to:"IN_PROGRESS"
+ }
+ ]
+}
+```
+
+
+Rules:
+
+- no hardcoded state
+- no enum status
+- status comes from metadata
+
+
+---
+
+# 10. Process Engine
+
+
+Process controls:
+
+"What steps happen"
+
+
+Example:
+
+START action:
+
+```
+VALIDATE
+
+BUSINESS_RULE
+
+EVENT
+
+LEDGER
+```
+
+
+Metadata:
+
+
+```json
+{
+ processCode:"START_PROCESS",
+
+ steps:[
+  VALIDATION,
+  BUSINESS,
+  EVENT
+ ]
+}
+```
+
+
+---
+
+# 11. Business Engine
+
+
+Business Engine executes:
+
+metadata rules
+
+
+Supported rules:
+
+
+```
+VALIDATE_REQUIRED_FIELD
+
+SET_FIELD_VALUE
+
+CALCULATE_FIELD
+```
+
+
+Example:
+
+
+```json
+{
+ type:"SET_FIELD_VALUE",
+
+ config:{
+  field:"status",
+  value:"DONE"
+ }
+}
+```
+
+
+Forbidden:
+
+
+```ts
+if(entity==="WORK_ORDER")
+```
+
+
+---
+
+# 12. Event Engine
+
+
+Event handles side effects.
+
+
+Example:
+
+Action:
+
+```
+WORK_ORDER START
+```
+
+
+Can trigger:
+
+
+```
+Notification
+
+Audit
+
+Webhook
+
+Integration
+
+Message Queue
+```
+
+
+Event metadata:
+
+
+```json
+{
+ eventCode:"WORK_ORDER_STARTED",
+
+ handlers:[
+  {
+    type:"NOTIFICATION"
+  }
+ ]
+}
+```
+
+
+Phase 9:
+
+Event only creates execution plan.
+
+No real external execution yet.
+
+
+---
+
+# 13. Trace Engine
+
+
+Every runtime execution creates trace.
+
+
+Collection:
+
+```
+runtime_traces
+```
 
 
 Contains:
 
 
+```
+ACTION SUCCESS
 
-ASSET
+SECURITY SUCCESS
+
+WORKFLOW SUCCESS
+
+PROCESS SUCCESS
+
+BUSINESS SUCCESS
+
+EVENT SUCCESS
+```
 
 
+Purpose:
+
+- debugging
+- audit
+- simulation comparison
+- AI explanation
+
+
+---
+
+# 14. Trace Sanitizer
+
+
+Before storing trace:
+
+Sensitive data MUST be masked.
+
+
+Fields:
+
+```
+password
+
+secret
+
+token
+
+accessToken
+
+refreshToken
+
+apiKey
+
+authorization
+
+credential
+```
+
+
+Example:
+
+
+Before:
+
+
+```json
+{
+ password:"secret123"
+}
+```
+
+
+After:
+
+
+```json
+{
+ password:"***MASKED***"
+}
+```
+
+
+---
+
+# 15. Metadata Validation Engine
+
+
+Before metadata activation:
+
+Validate:
+
+APPLICATION:
+
+- duplicate code
+- missing entity
+
+
+ENTITY:
+
+- missing fields
+- missing actions
+- missing workflow
+
+
+WORKFLOW:
+
+- missing state
+- invalid transition
+- invalid action
+- missing initial state
+
+
+PROCESS:
+
+- invalid trigger
+- invalid step
+
+
+BUSINESS:
+
+- invalid field reference
+
+
+EVENT:
+
+- invalid handler
+
+
+---
+
+# 16. Simulation Engine
+
+
+Simulation checks:
+
+"What will happen if user runs this?"
+
+
+Without saving real transaction.
+
+
+Example:
+
+
+Input:
+
+```
 WORK_ORDER
 
+Action START
+```
 
-APPROVAL_FLOW
 
+Output:
 
-MAINTENANCE_REPORT
 
-
-
-
-==================================================
-
-
-# 8. Metadata Engine
-
-
-Metadata Engine bertugas:
-
-
-- load definition
-
-- validate definition
-
-- resolve behavior
-
-- provide runtime contract
-
-
-
-Metadata tidak boleh menjalankan business logic.
-
-
-
-
-Metadata Types:
-
-
-
-APPLICATION
-
-
-ENTITY
-
-
-FIELD
-
-
-ACTION
-
-
-WORKFLOW
-
-
-PROCESS
-
-
-FORM
-
-
-REPORT
-
-
-EXPERIENCE
-
-
-RULE
-
-
-
-
-==================================================
-
-
-# 9. Metadata vs Database Rule
-
-
-PENTING:
-
-
-Metadata bukan database schema.
-
-
-
-Tidak membuat:
-
-
-
-asset collection
-
-
-item collection
-
-
-work_order collection
-
-
-
-
-Yang benar:
-
-
-
-runtime_documents
-
-
-
-
-Dengan:
-
-
-
-entityCode = ASSET
-
-
-entityCode = ITEM
-
-
-entityCode = WORK_ORDER
-
-
-
-
-Collection dibuat berdasarkan responsibility,
-bukan business object.
-
-
-
-==================================================
-
-
-# 10. Entity Contract
-
-
-Entity menggantikan static model.
-
-
-
-Entity Type:
-
-
-
-MASTER
-
-
-
-contoh:
-
-
-ITEM
-
-
-CUSTOMER
-
-
-ASSET
-
-
-
-
-
-DOCUMENT
-
-
-
-contoh:
-
-
-WORK_ORDER
-
-
-SALES_ORDER
-
-
-PURCHASE_ORDER
-
-
-
-
-
-LEDGER
-
-
-
-contoh:
-
-
-STOCK_LEDGER
-
-
-COST_LEDGER
-
-
-FINANCE_LEDGER
-
-
-
-
-
-SNAPSHOT
-
-
-
-contoh:
-
-
-MONTHLY_STOCK
-
-
-MONTHLY_COST
-
-
-BALANCE
-
-
-
-
-CONFIGURATION
-
-
-
-
-==================================================
-
-
-# 11. Field Contract
-
-
-Field berasal dari metadata.
-
-
-
-Field menentukan:
-
-
-
-name
-
-
-datatype
-
-
-validation
-
-
-default value
-
-
-visibility
-
-
-behavior
-
-
-
-
-
-Example:
-
-
-
+```json
 {
- entity:"ASSET",
+ success:true,
 
- field:"serialNo",
+ workflow:{
+  from:"OPEN",
+  to:"IN_PROGRESS"
+ },
 
- type:"string",
+ process:true,
 
- required:true
+ event:true
 }
+```
 
 
+Invalid:
 
 
-Tidak perlu migration database.
+Workflow:
+
+```
+OPEN -> APPROVE
+```
 
 
-
-==================================================
-
-
-# 12. Runtime Document Storage
+but APPROVE missing:
 
 
-Semua operational document masuk:
+Output:
 
 
-
-runtime_documents
-
-
-
-
-Format:
-
-
-
+```json
 {
- tenantId,
+ success:false,
 
- domainCode,
-
- applicationCode,
-
- entityCode,
-
- documentNo,
-
- status,
-
- header:{},
-
- lines:[],
-
- attributes:{},
-
- references:[],
-
- createdAt,
-
- updatedAt
+ error:"STATE_NOT_FOUND"
 }
+```
 
 
+---
 
+# 17. Future Ledger / Impact Engine
 
-==================================================
 
+Purpose:
 
-# 13. Domain Data Isolation
-
-
-Setiap query wajib membawa:
-
-
-
-tenantId
-
-
-domainCode
-
-
-
-domainCode digunakan untuk:
-
-
-
-ownership
-
-
-security scope
-
-
-reporting scope
-
-
-consolidation
-
-
-
-
-Tidak menggunakan parent relationship.
-
-
-
-==================================================
-# Engine Contract Summary
-
-
-All engines are independent modules.
-
-
-Each engine exposes:
-
-
-resolve()
-
-validate()
-
-execute()
-
-
-
-==================================================
-
-
-# Security Engine Contract
-
-
-Responsibility:
-
-
-- validate user context
-- validate permission
-- validate action access
-
-
-
-v0.1:
-
-
-Application Permission
-
-Entity Permission
-
-Action Permission
-
-
-
-Future:
-
-
-Field Permission
-
-Data Masking
-
-
-
-==================================================
-
-
-# Workflow Engine Contract
-
-
-Responsibility:
-
-
-Control document lifecycle.
-
+One action creates multiple impacts.
 
 
 Example:
 
 
-DRAFT
+Receiving Item:
 
-APPROVE
+Action:
 
-CLOSE
+```
+RECEIVE
+```
 
 
+Impact:
 
-Workflow does not execute business calculation.
 
+```
+Inventory +
 
+Stock Movement +
 
-==================================================
+Accounting Journal +
 
+Asset Creation +
+```
 
-# Process Engine Contract
 
+Important:
 
-Responsibility:
+Do NOT create:
 
+```ts
+InventoryService
 
-Execute ordered steps.
+AccountingService
+```
 
 
+Create:
 
-Example:
 
+```ts
+LedgerEngine
+```
 
-APPROVE_WORK_ORDER:
 
+Metadata:
 
-1 Validate
 
-2 Reserve Inventory
+```json
+{
+ impact:[
+ {
+  target:"STOCK",
+  operation:"INCREASE"
+ },
 
-3 Calculate Cost
+ {
+  target:"JOURNAL",
+  operation:"CREATE"
+ }
+]
+}
+```
 
-4 Create Ledger
 
+---
 
+# 18. AI Agent Rules
 
-==================================================
 
+When AI modifies RediOS:
 
-# Business Engine Contract
+ALWAYS check:
 
 
-Responsibility:
+```
+npm run typecheck
 
+npm run build
+```
 
-Enterprise calculation.
 
+Forbidden search:
 
 
-Example:
+```
+grep:
 
+Service
 
-Inventory Engine
+Controller
 
-Cost Engine
+Schema
+```
 
-Finance Engine
 
-Pricing Engine
+for business entities.
 
 
+Must remain empty:
 
-Business Engine never knows UI.
 
+```
+workOrderService
 
+assetService
 
-==================================================
+inventoryService
 
+ticketController
 
-# Ledger Engine Contract
+accountingController
+```
 
 
-Responsibility:
+---
 
+# 19. Design Goal
 
-Store transaction impact.
 
+Kernel should survive for years.
 
 
-Rules:
+Business changes should create:
 
+metadata changes
 
-Immutable
 
-Append only
+NOT:
 
+code changes
 
 
-Used by:
+Final principle:
 
 
-Finance
+```
+Stable Kernel
 
-Inventory
++
 
-Costing
+Dynamic Metadata
 
-Audit
+=
 
+Unlimited Enterprise Applications
+```
 
-
-==================================================
-
-
-# Data View Engine Contract
-
-
-Report never query runtime document directly.
-
-
-
-Data View handles:
-
-
-join
-
-aggregation
-
-calculation
-
-projection
-
-
-
-Used for:
-
-
-Costing Report
-
-Finance Report
-
-Dashboard
-
-
-
-==================================================
-
-
-# Event Engine Contract
-
-
-Responsibility:
-
-
-Publish after transaction event.
-
-
-
-Used for:
-
-
-Notification
-
-Webhook
-
-IoT
-
-Integration
-
-
-
-==================================================
-
-
-# Experience Engine Contract
-
-
-Metadata
-
-↓
-
-Renderer
-
-
-
-Support:
-
-
-Next.js
-
-React Native
-
-
-
-Atomic Structure:
-
-
-Design Token
-
-Atom
-
-Molecule
-
-Organism
-
-Template
-
-Page
