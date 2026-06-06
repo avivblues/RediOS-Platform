@@ -2,7 +2,15 @@ import type { ValidationResult } from './metadata-validation';
 
 export type SimulationTraceMode = 'NONE' | 'RETURN_ONLY' | 'STORE';
 
-export type SimulationStepStage = 'VALIDATION' | 'ACTION' | 'SECURITY' | 'WORKFLOW' | 'PROCESS' | 'BUSINESS' | 'EVENT';
+export type SimulationStepStage =
+  | 'VALIDATION'
+  | 'ACTION'
+  | 'SECURITY'
+  | 'WORKFLOW'
+  | 'PROCESS'
+  | 'BUSINESS'
+  | 'EVENT'
+  | 'LEDGER';
 
 export type SimulationStepStatus = 'SUCCESS' | 'FAILED' | 'SKIPPED' | 'READY';
 
@@ -51,6 +59,9 @@ export interface SimulationResult {
     events?: {
       events: string[];
       handlers: string[];
+    };
+    ledger?: {
+      impacts: string[];
     };
   };
 }

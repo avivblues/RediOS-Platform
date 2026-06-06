@@ -1,6 +1,6 @@
 export type RuntimeTraceStatus = 'RUNNING' | 'SUCCESS' | 'FAILED';
 
-export type RuntimeTraceStepEngine = 'ACTION' | 'SECURITY' | 'WORKFLOW' | 'PROCESS' | 'BUSINESS' | 'EVENT';
+export type RuntimeTraceStepEngine = 'ACTION' | 'SECURITY' | 'WORKFLOW' | 'PROCESS' | 'BUSINESS' | 'EVENT' | 'LEDGER';
 
 export type RuntimeTraceStepStatus = 'SUCCESS' | 'FAILED' | 'SKIPPED';
 

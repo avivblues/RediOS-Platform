@@ -7,6 +7,7 @@ import type {
   EventDefinition,
   EventTriggerDefinition,
   FieldDefinition,
+  LedgerDefinition,
   MetadataDefinition,
   MetadataType,
   ProcessDefinition,
@@ -162,6 +163,38 @@ export class MetadataResolver {
     }
 
     return matchingDefinitions as MetadataDefinition<EventDefinition>[];
+  }
+
+  async resolveLedger(
+    context: RuntimeContext,
+    entityCode: string,
+    actionCode: string,
+    workflowState?: string,
+    eventCodes: string[] = [],
+  ): Promise<MetadataDefinition<LedgerDefinition> | null> {
+    const definitions = await this.registry.findByType(context, 'LEDGER');
+    const definition = definitions.find((candidate) => {
+      const ledger = candidate.definition as LedgerDefinition;
+      return (
+        ledger.entityCode === entityCode &&
+        ledger.trigger.actionCode === actionCode &&
+        (!ledger.trigger.workflowState || ledger.trigger.workflowState === workflowState) &&
+        (!ledger.trigger.eventCode || eventCodes.includes(ledger.trigger.eventCode)) &&
+        ledger.enabled
+      );
+    });
+
+    if (!definition) {
+      return null;
+    }
+
+    const validation = this.validator.validate(definition);
+
+    if (!validation.valid) {
+      throw new UnprocessableEntityException(validation.errors);
+    }
+
+    return definition as MetadataDefinition<LedgerDefinition>;
   }
 
   private async resolveMany<TDefinition>(

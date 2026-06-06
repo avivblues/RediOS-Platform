@@ -13,6 +13,7 @@ import type {
 import { ActionEngine } from '../action/action-engine.service';
 import { BusinessEngine } from '../business/business-engine.service';
 import { EventEngine } from '../event/event-engine.service';
+import { LedgerEngine } from '../ledger/ledger-engine.service';
 import { METADATA_PROVIDER, type MetadataProvider } from '../metadata/metadata-provider.interface';
 import { MetadataResolver } from '../metadata/metadata-resolver.service';
 import { MetadataValidatorEngine } from '../metadata/metadata-validator-engine.service';
@@ -33,6 +34,7 @@ export class SimulationEngine {
     private readonly processEngine: ProcessEngine,
     private readonly businessEngine: BusinessEngine,
     private readonly eventEngine: EventEngine,
+    private readonly ledgerEngine: LedgerEngine,
     private readonly traceEngine: TraceEngine,
   ) {}
 
@@ -186,6 +188,29 @@ export class SimulationEngine {
       });
     }
 
+    const ledger = await this.runStep(steps, 'LEDGER', 'Ledger impacts predicted.', () =>
+      this.ledgerEngine.execute(context, businessDocument, request.actionCode, {
+        workflowState: workflow.value.transitioned ? workflow.value.to : undefined,
+        eventCodes: events.value.events.map((event) => event.eventCode),
+      }),
+    );
+
+    if (!ledger.ok) {
+      return this.finalize(request, context, this.failed(validation, steps, predicted));
+    }
+
+    predicted.ledger = {
+      impacts: ledger.value.impacts.map((impact) => `${impact.type} ${impact.target}`),
+    };
+
+    if (ledger.value.impacts.length === 0) {
+      steps.push({
+        stage: 'LEDGER',
+        status: 'SKIPPED',
+        message: 'No ledger impact metadata matched this action.',
+      });
+    }
+
     return this.finalize(request, context, {
       success: steps.every((step) => step.status !== 'FAILED'),
       validation,
@@ -202,18 +227,37 @@ export class SimulationEngine {
   }
 
   private relevantMetadata(metadata: MetadataDefinition[], entityCode: string): MetadataDefinition[] {
+    const relatedEntityCodes = new Set<string>([entityCode]);
+
+    for (const metadataDefinition of metadata) {
+      if (metadataDefinition.type !== 'LEDGER' || this.definitionEntityCode(metadataDefinition.definition) !== entityCode) {
+        continue;
+      }
+
+      for (const impact of this.ledgerImpacts(metadataDefinition.definition)) {
+        relatedEntityCodes.add(impact.target.entityCode);
+      }
+    }
+
     return metadata.filter((metadataDefinition) => {
       if (metadataDefinition.type === 'ENTITY') {
-        return metadataDefinition.code === entityCode;
+        return relatedEntityCodes.has(metadataDefinition.code);
       }
 
       if (
-        metadataDefinition.type === 'FIELD' ||
+        metadataDefinition.type === 'FIELD'
+      ) {
+        const fieldEntityCode = this.definitionEntityCode(metadataDefinition.definition);
+        return Boolean(fieldEntityCode && relatedEntityCodes.has(fieldEntityCode));
+      }
+
+      if (
         metadataDefinition.type === 'ACTION' ||
         metadataDefinition.type === 'WORKFLOW' ||
         metadataDefinition.type === 'PROCESS' ||
         metadataDefinition.type === 'BUSINESS' ||
-        metadataDefinition.type === 'EVENT'
+        metadataDefinition.type === 'EVENT' ||
+        metadataDefinition.type === 'LEDGER'
       ) {
         return this.definitionEntityCode(metadataDefinition.definition) === entityCode;
       }
@@ -228,6 +272,14 @@ export class SimulationEngine {
     }
 
     return undefined;
+  }
+
+  private ledgerImpacts(definition: unknown): Array<{ target: { entityCode: string } }> {
+    if (definition && typeof definition === 'object' && 'impacts' in definition && Array.isArray(definition.impacts)) {
+      return definition.impacts as Array<{ target: { entityCode: string } }>;
+    }
+
+    return [];
   }
 
   private async runStep<T>(
@@ -398,7 +450,8 @@ export class SimulationEngine {
       stage === 'WORKFLOW' ||
       stage === 'PROCESS' ||
       stage === 'BUSINESS' ||
-      stage === 'EVENT'
+      stage === 'EVENT' ||
+      stage === 'LEDGER'
     ) {
       return stage;
     }

@@ -7,6 +7,7 @@ export type MetadataType =
   | 'PROCESS'
   | 'BUSINESS'
   | 'EVENT'
+  | 'LEDGER'
   | 'FORM'
   | 'REPORT'
   | 'EXPERIENCE'

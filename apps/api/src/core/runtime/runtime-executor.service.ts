@@ -13,6 +13,7 @@ import { ActionEngine, type RuntimeActionPlan } from '../action/action-engine.se
 import { ApplicationEngine } from '../application/application-engine.service';
 import { BusinessEngine, type BusinessExecutionResult } from '../business/business-engine.service';
 import { EventEngine, type RuntimeEventPublishResult } from '../event/event-engine.service';
+import { LedgerEngine, type LedgerExecutionResult } from '../ledger/ledger-engine.service';
 import { MetadataResolver } from '../metadata/metadata-resolver.service';
 import { ProcessEngine, type ProcessExecutionPlan } from '../process/process-engine.service';
 import { SecurityEngine } from '../security/security-engine.service';
@@ -57,14 +58,15 @@ export interface RuntimeActionInput {
 }
 
 export interface RuntimeActionResult {
-  stage: 'EVENT_PUBLISHED';
+  stage: 'IMPACT_READY';
   actionCode: string;
   workflow: WorkflowTransitionResult;
   process: ProcessExecutionPlan;
   business: BusinessExecutionResult;
   events: RuntimeEventPublishResult;
+  ledger: LedgerExecutionResult;
   traceId: string;
-  next: 'LEDGER_ENGINE';
+  next: 'COMPLETED';
 }
 
 @Injectable()
@@ -78,6 +80,7 @@ export class RuntimeExecutor {
     private readonly processEngine: ProcessEngine,
     private readonly businessEngine: BusinessEngine,
     private readonly eventEngine: EventEngine,
+    private readonly ledgerEngine: LedgerEngine,
     private readonly traceEngine: TraceEngine,
     private readonly storageEngine: StorageEngine,
   ) {}
@@ -221,17 +224,25 @@ export class RuntimeExecutor {
         }),
       );
 
+      const ledger = await this.traceEngine.recordStep(trace.id!, 'LEDGER', () =>
+        this.ledgerEngine.execute(context, workflowDocument, actionCode, {
+          workflowState: workflow.transitioned ? workflow.to : undefined,
+          eventCodes: events.events.map((event) => event.eventCode),
+        }),
+      );
+
       await this.traceEngine.complete(trace.id!);
 
       return {
-        stage: 'EVENT_PUBLISHED',
+        stage: 'IMPACT_READY',
         actionCode,
         workflow,
         process,
         business,
         events,
+        ledger,
         traceId: trace.id!,
-        next: 'LEDGER_ENGINE',
+        next: 'COMPLETED',
       };
     } catch (error) {
       await this.failTrace(trace, error);

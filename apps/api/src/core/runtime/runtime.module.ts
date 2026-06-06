@@ -3,6 +3,7 @@ import { ActionModule } from '../action/action.module';
 import { ApplicationModule } from '../application/application.module';
 import { BusinessModule } from '../business/business.module';
 import { EventModule } from '../event/event.module';
+import { LedgerModule } from '../ledger/ledger.module';
 import { MetadataModule } from '../metadata/metadata.module';
 import { ProcessModule } from '../process/process.module';
 import { SecurityModule } from '../security/security.module';
@@ -21,6 +22,7 @@ import { RuntimeExecutor } from './runtime-executor.service';
     ProcessModule,
     BusinessModule,
     EventModule,
+    LedgerModule,
     TraceModule,
     StorageModule,
   ],

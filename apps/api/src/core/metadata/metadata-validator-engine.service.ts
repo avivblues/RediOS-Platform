@@ -6,6 +6,7 @@ import type {
   EntityDefinition,
   EventDefinition,
   FieldDefinition,
+  LedgerDefinition,
   MetadataDefinition,
   ProcessDefinition,
   ValidationIssue,
@@ -21,6 +22,7 @@ type MetadataIndex = {
   workflows: Map<string, MetadataDefinition<WorkflowDefinition>>;
   workflowsByEntity: Map<string, MetadataDefinition<WorkflowDefinition>>;
   processes: Map<string, MetadataDefinition<ProcessDefinition>>;
+  events: Map<string, MetadataDefinition<EventDefinition>>;
 };
 
 @Injectable()
@@ -35,6 +37,7 @@ export class MetadataValidatorEngine {
     this.validateProcesses(index, issues);
     this.validateBusinessDefinitions(metadataDefinitions, index, issues);
     this.validateEvents(metadataDefinitions, index, issues);
+    this.validateLedgerDefinitions(metadataDefinitions, index, issues);
 
     const errors = issues.filter((issue) => issue.severity === 'ERROR').length;
     const warnings = issues.filter((issue) => issue.severity === 'WARNING').length;
@@ -56,6 +59,7 @@ export class MetadataValidatorEngine {
       workflows: new Map(),
       workflowsByEntity: new Map(),
       processes: new Map(),
+      events: new Map(),
     };
 
     for (const metadata of metadataDefinitions) {
@@ -92,6 +96,11 @@ export class MetadataValidatorEngine {
       if (metadata.type === 'PROCESS') {
         const process = metadata.definition as ProcessDefinition;
         index.processes.set(process.code, metadata as MetadataDefinition<ProcessDefinition>);
+      }
+
+      if (metadata.type === 'EVENT') {
+        const event = metadata.definition as EventDefinition;
+        index.events.set(event.code, metadata as MetadataDefinition<EventDefinition>);
       }
     }
 
@@ -398,6 +407,74 @@ export class MetadataValidatorEngine {
             'Event handler enabled flag is required.',
             `EVENT.${event.code}.handlers[${handlerIndex}].enabled`,
           );
+        }
+      }
+    }
+  }
+
+  private validateLedgerDefinitions(metadataDefinitions: MetadataDefinition[], index: MetadataIndex, issues: ValidationIssue[]): void {
+    for (const metadata of metadataDefinitions.filter((candidate) => candidate.type === 'LEDGER')) {
+      const ledger = metadata.definition as LedgerDefinition;
+
+      if (!index.actionsByEntity.get(ledger.entityCode)?.has(ledger.trigger.actionCode)) {
+        this.addIssue(
+          issues,
+          'ACTION_NOT_FOUND',
+          'ERROR',
+          `Ledger trigger references missing action ${ledger.trigger.actionCode}.`,
+          `LEDGER.${ledger.code}.trigger.actionCode`,
+          `Create ${ledger.trigger.actionCode} action metadata.`,
+        );
+      }
+
+      if (ledger.trigger.workflowState && !this.workflowHasState(index, ledger.entityCode, ledger.trigger.workflowState)) {
+        this.addIssue(
+          issues,
+          'STATE_NOT_FOUND',
+          'ERROR',
+          `Ledger trigger references missing workflow state ${ledger.trigger.workflowState}.`,
+          `LEDGER.${ledger.code}.trigger.workflowState`,
+          `Create state ${ledger.trigger.workflowState}.`,
+        );
+      }
+
+      if (ledger.trigger.eventCode && !index.events.has(ledger.trigger.eventCode)) {
+        this.addIssue(
+          issues,
+          'EVENT_NOT_FOUND',
+          'ERROR',
+          `Ledger trigger references missing event ${ledger.trigger.eventCode}.`,
+          `LEDGER.${ledger.code}.trigger.eventCode`,
+          `Create ${ledger.trigger.eventCode} event metadata.`,
+        );
+      }
+
+      for (const [impactIndex, impact] of ledger.impacts.entries()) {
+        if (!index.entities.has(impact.target.entityCode)) {
+          this.addIssue(
+            issues,
+            'ENTITY_NOT_FOUND',
+            'ERROR',
+            `Ledger impact references missing target entity ${impact.target.entityCode}.`,
+            `LEDGER.${ledger.code}.impacts[${impactIndex}].target.entityCode`,
+            `Create ${impact.target.entityCode} entity metadata.`,
+          );
+          continue;
+        }
+
+        const targetFields = index.fieldsByEntity.get(impact.target.entityCode);
+
+        for (const targetField of Object.keys(impact.mapping ?? {})) {
+          if (!targetFields?.has(targetField)) {
+            this.addIssue(
+              issues,
+              'FIELD_NOT_FOUND',
+              'ERROR',
+              `Ledger impact maps to missing target field ${targetField}.`,
+              `LEDGER.${ledger.code}.impacts[${impactIndex}].mapping.${targetField}`,
+              `Create ${targetField} field metadata on ${impact.target.entityCode}.`,
+            );
+          }
         }
       }
     }

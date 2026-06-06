@@ -1,0 +1,31 @@
+@baseUrl = http://localhost:3001/api
+@documentId = replace-with-runtime-document-id
+
+### Create RECEIVING document
+### Expected: stage STORED
+POST {{baseUrl}}/runtime/RECEIVING
+x-tenant-id: demo
+x-domain-code: DEFAULT
+x-application-code: WAREHOUSE
+x-user-id: admin
+x-permissions: RECEIVING.CREATE,RECEIVING.READ,RECEIVING.UPDATE,RECEIVING.RECEIVE
+Content-Type: application/json
+
+{
+  "data": {
+    "itemName": "Bearing",
+    "quantity": 10
+  }
+}
+
+### Receive document and preview metadata-driven ledger impact
+### Expected: stage IMPACT_READY with CREATE_DOCUMENT STOCK_MOVEMENT READY
+POST {{baseUrl}}/runtime/RECEIVING/{{documentId}}/actions/RECEIVE
+x-tenant-id: demo
+x-domain-code: DEFAULT
+x-application-code: WAREHOUSE
+x-user-id: admin
+x-permissions: RECEIVING.RECEIVE
+Content-Type: application/json
+
+{}

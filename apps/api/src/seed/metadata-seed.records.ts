@@ -8,6 +8,7 @@ import type {
   EventDefinition,
   FieldDataType,
   FieldDefinition,
+  LedgerDefinition,
   MetadataDefinition,
   ProcessDefinition,
   WorkflowDefinition,
@@ -32,6 +33,7 @@ type EntitySeed = {
   processes?: ProcessDefinition[];
   businesses?: BusinessDefinition[];
   events?: EventDefinition[];
+  ledgers?: LedgerDefinition[];
 };
 
 type ApplicationSeed = {
@@ -245,6 +247,38 @@ const applications: ApplicationSeed[] = [
             enabled: true,
           },
         ],
+        ledgers: [
+          {
+            code: 'RECEIVE_LEDGER',
+            entityCode: 'RECEIVING',
+            trigger: {
+              actionCode: 'RECEIVE',
+              workflowState: 'RECEIVED',
+            },
+            impacts: [
+              {
+                code: 'CREATE_STOCK_MOVEMENT',
+                type: 'CREATE_DOCUMENT',
+                target: {
+                  entityCode: 'STOCK_MOVEMENT',
+                },
+                mapping: {
+                  stockItemName: 'data.itemName',
+                  stockQuantity: 'data.quantity',
+                },
+                enabled: true,
+              },
+            ],
+            enabled: true,
+          },
+        ],
+      },
+      {
+        code: 'STOCK_MOVEMENT',
+        name: 'Stock Movement',
+        type: 'DOCUMENT',
+        fields: [{ code: 'stockItemName' }, { code: 'stockQuantity' }],
+        actions: [],
       },
     ],
   },
@@ -435,6 +469,7 @@ function createEntityRecords(application: ApplicationSeed, entity: EntitySeed): 
     ...(entity.processes ?? []).map((process) => createProcessRecord(application, process)),
     ...(entity.businesses ?? []).map((business) => createBusinessRecord(application, business)),
     ...(entity.events ?? []).map((event) => createEventRecord(application, event)),
+    ...(entity.ledgers ?? []).map((ledger) => createLedgerRecord(application, ledger)),
   ];
 }
 
@@ -583,6 +618,23 @@ function createEventRecord(
     version: 1,
     enabled: true,
     definition: event,
+  };
+}
+
+function createLedgerRecord(
+  application: ApplicationSeed,
+  ledger: LedgerDefinition,
+): MetadataDefinition<LedgerDefinition> {
+  return {
+    tenantId,
+    domainCode,
+    applicationCode: application.code,
+    type: 'LEDGER',
+    code: ledger.code,
+    name: toLabel(ledger.code),
+    version: 1,
+    enabled: true,
+    definition: ledger,
   };
 }
 
