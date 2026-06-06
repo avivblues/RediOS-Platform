@@ -9,6 +9,7 @@ import type {
 } from '@redios/shared';
 import { Model } from 'mongoose';
 import { RUNTIME_TRACE_MODEL } from './schemas/runtime-trace.schema';
+import { TraceSanitizer } from './trace-sanitizer.service';
 
 type RuntimeTraceRecord = RuntimeTrace & { _id?: unknown };
 
@@ -30,6 +31,7 @@ export class TraceEngine {
   constructor(
     @InjectModel(RUNTIME_TRACE_MODEL)
     private readonly model: Model<RuntimeTraceRecord>,
+    private readonly sanitizer: TraceSanitizer,
   ) {}
 
   async start(context: RuntimeContext, input: RuntimeTraceStartInput): Promise<RuntimeTrace> {
@@ -66,8 +68,8 @@ export class TraceEngine {
         startedAt,
         finishedAt,
         durationMs: finishedAt.getTime() - startedAt.getTime(),
-        input,
-        output,
+        input: this.sanitizer.clean(input),
+        output: this.sanitizer.clean(output),
       });
       return output;
     } catch (error) {
@@ -78,8 +80,8 @@ export class TraceEngine {
         startedAt,
         finishedAt,
         durationMs: finishedAt.getTime() - startedAt.getTime(),
-        input,
-        error: this.serializeError(error),
+        input: this.sanitizer.clean(input),
+        error: this.sanitizer.clean(this.serializeError(error)),
       });
       throw error;
     }
@@ -90,7 +92,7 @@ export class TraceEngine {
   }
 
   async fail(traceId: string, error: unknown): Promise<void> {
-    await this.finish(traceId, 'FAILED', this.serializeError(error));
+    await this.finish(traceId, 'FAILED', this.sanitizer.clean(this.serializeError(error)));
   }
 
   async findOne(context: RuntimeContext, id: string): Promise<RuntimeTrace> {

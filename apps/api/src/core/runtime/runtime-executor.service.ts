@@ -159,7 +159,7 @@ export class RuntimeExecutor {
             enabled: action.definition.enabled,
           };
         },
-        { entityCode, actionCode },
+        { entityCode, actionCode, payload },
       );
 
       await this.traceEngine.recordStep(trace.id!, 'SECURITY', () => {
