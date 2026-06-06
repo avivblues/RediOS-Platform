@@ -20,6 +20,7 @@ import { MetadataDebugModule } from './metadata/metadata-debug.module';
 import { MetadataValidationModule } from './metadata/metadata-validation.module';
 import { RuntimeModule as RuntimeApiModule } from './runtime/runtime.module';
 import { RuntimeTracesModule } from './runtime-traces/runtime-traces.module';
+import { SimulationModule } from './simulation/simulation.module';
 
 @Module({
   imports: [
@@ -47,6 +48,7 @@ import { RuntimeTracesModule } from './runtime-traces/runtime-traces.module';
     MetadataValidationModule,
     RuntimeApiModule,
     RuntimeTracesModule,
+    SimulationModule,
     ContextModule,
     ApplicationModule,
     MetadataModule,

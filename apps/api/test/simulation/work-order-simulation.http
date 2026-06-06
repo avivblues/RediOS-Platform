@@ -1,0 +1,63 @@
+@baseUrl = http://localhost:3001/api
+
+### Simulate WORK_ORDER START
+### Expected: success true, OPEN -> IN_PROGRESS, WORK_ORDER_START_PROCESS, WORK_ORDER_STARTED_EVENT
+POST {{baseUrl}}/simulation/run
+Content-Type: application/json
+
+{
+  "tenantId": "demo",
+  "domainCode": "DEFAULT",
+  "applicationCode": "ASSET_MAINTENANCE",
+  "entityCode": "WORK_ORDER",
+  "actionCode": "START",
+  "currentState": "OPEN",
+  "permissions": ["WORK_ORDER.START"],
+  "payload": {
+    "assignedTo": "tech01"
+  },
+  "mockDocument": {
+    "data": {
+      "title": "Inspect CNC machine",
+      "description": "Routine inspection",
+      "priority": "HIGH"
+    }
+  }
+}
+
+### Simulate invalid WORK_ORDER transition
+### Expected: success false, error code TRANSITION_NOT_FOUND
+POST {{baseUrl}}/simulation/run
+Content-Type: application/json
+
+{
+  "tenantId": "demo",
+  "domainCode": "DEFAULT",
+  "applicationCode": "ASSET_MAINTENANCE",
+  "entityCode": "WORK_ORDER",
+  "actionCode": "COMPLETE",
+  "currentState": "OPEN",
+  "permissions": ["WORK_ORDER.COMPLETE"],
+  "mockDocument": {
+    "data": {
+      "title": "Inspect CNC machine"
+    }
+  }
+}
+
+### Simulate missing required field on CREATE
+### Expected: success false, error code FIELD_REQUIRED for title
+POST {{baseUrl}}/simulation/run
+Content-Type: application/json
+
+{
+  "tenantId": "demo",
+  "domainCode": "DEFAULT",
+  "applicationCode": "ASSET_MAINTENANCE",
+  "entityCode": "WORK_ORDER",
+  "actionCode": "CREATE",
+  "permissions": ["WORK_ORDER.CREATE"],
+  "payload": {
+    "description": "Missing title"
+  }
+}
