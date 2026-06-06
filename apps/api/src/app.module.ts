@@ -17,6 +17,7 @@ import { WorkflowModule } from './core/workflow/workflow.module';
 import { HealthModule } from './health/health.module';
 import { KernelLoggerModule } from './logger/kernel-logger.module';
 import { MetadataDebugModule } from './metadata/metadata-debug.module';
+import { MetadataValidationModule } from './metadata/metadata-validation.module';
 import { RuntimeModule as RuntimeApiModule } from './runtime/runtime.module';
 import { RuntimeTracesModule } from './runtime-traces/runtime-traces.module';
 
@@ -43,6 +44,7 @@ import { RuntimeTracesModule } from './runtime-traces/runtime-traces.module';
     KernelLoggerModule,
     HealthModule,
     MetadataDebugModule,
+    MetadataValidationModule,
     RuntimeApiModule,
     RuntimeTracesModule,
     ContextModule,

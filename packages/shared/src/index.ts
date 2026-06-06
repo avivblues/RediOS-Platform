@@ -6,6 +6,7 @@ export * from './entity-definition';
 export * from './event-definition';
 export * from './field-definition';
 export * from './metadata-definition';
+export * from './metadata-validation';
 export * from './process-definition';
 export * from './runtime-context';
 export * from './runtime-document';

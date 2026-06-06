@@ -1,0 +1,205 @@
+@baseUrl = http://localhost:3001/api
+
+### Invalid workflow: target state APPROVE does not exist
+POST {{baseUrl}}/metadata/validate
+Content-Type: application/json
+
+{
+  "metadataDefinitions": [
+    {
+      "tenantId": "demo",
+      "domainCode": "DEFAULT",
+      "applicationCode": "VALIDATION_PROOF",
+      "type": "APPLICATION",
+      "code": "VALIDATION_PROOF",
+      "name": "Validation Proof",
+      "version": 1,
+      "enabled": true,
+      "definition": {
+        "code": "VALIDATION_PROOF",
+        "name": "Validation Proof",
+        "capabilities": [],
+        "entityCodes": ["SAMPLE"],
+        "enabled": true
+      }
+    },
+    {
+      "tenantId": "demo",
+      "domainCode": "DEFAULT",
+      "applicationCode": "VALIDATION_PROOF",
+      "type": "ENTITY",
+      "code": "SAMPLE",
+      "name": "Sample",
+      "version": 1,
+      "enabled": true,
+      "definition": {
+        "code": "SAMPLE",
+        "name": "Sample",
+        "type": "DOCUMENT",
+        "fieldCodes": [],
+        "actionCodes": ["APPROVE"],
+        "workflowCode": "SAMPLE_FLOW",
+        "enabled": true
+      }
+    },
+    {
+      "tenantId": "demo",
+      "domainCode": "DEFAULT",
+      "applicationCode": "VALIDATION_PROOF",
+      "type": "ACTION",
+      "code": "APPROVE",
+      "name": "Approve",
+      "version": 1,
+      "enabled": true,
+      "definition": {
+        "code": "APPROVE",
+        "entityCode": "SAMPLE",
+        "label": "Approve",
+        "type": "APPROVE",
+        "enabled": true,
+        "permissions": ["SAMPLE.APPROVE"],
+        "behavior": {
+          "requiresApproval": false,
+          "confirmation": false
+        }
+      }
+    },
+    {
+      "tenantId": "demo",
+      "domainCode": "DEFAULT",
+      "applicationCode": "VALIDATION_PROOF",
+      "type": "WORKFLOW",
+      "code": "SAMPLE_FLOW",
+      "name": "Sample Flow",
+      "version": 1,
+      "enabled": true,
+      "definition": {
+        "code": "SAMPLE_FLOW",
+        "entityCode": "SAMPLE",
+        "states": [
+          {
+            "code": "OPEN",
+            "label": "Open",
+            "initial": true
+          },
+          {
+            "code": "DONE",
+            "label": "Done",
+            "final": true
+          }
+        ],
+        "transitions": [
+          {
+            "code": "APPROVE",
+            "from": "OPEN",
+            "to": "APPROVE",
+            "actionCode": "APPROVE"
+          }
+        ],
+        "enabled": true
+      }
+    }
+  ]
+}
+
+### Valid workflow
+POST {{baseUrl}}/metadata/validate
+Content-Type: application/json
+
+{
+  "metadataDefinitions": [
+    {
+      "tenantId": "demo",
+      "domainCode": "DEFAULT",
+      "applicationCode": "VALIDATION_PROOF",
+      "type": "APPLICATION",
+      "code": "VALIDATION_PROOF",
+      "name": "Validation Proof",
+      "version": 1,
+      "enabled": true,
+      "definition": {
+        "code": "VALIDATION_PROOF",
+        "name": "Validation Proof",
+        "capabilities": [],
+        "entityCodes": ["SAMPLE"],
+        "enabled": true
+      }
+    },
+    {
+      "tenantId": "demo",
+      "domainCode": "DEFAULT",
+      "applicationCode": "VALIDATION_PROOF",
+      "type": "ENTITY",
+      "code": "SAMPLE",
+      "name": "Sample",
+      "version": 1,
+      "enabled": true,
+      "definition": {
+        "code": "SAMPLE",
+        "name": "Sample",
+        "type": "DOCUMENT",
+        "fieldCodes": [],
+        "actionCodes": ["APPROVE"],
+        "workflowCode": "SAMPLE_FLOW",
+        "enabled": true
+      }
+    },
+    {
+      "tenantId": "demo",
+      "domainCode": "DEFAULT",
+      "applicationCode": "VALIDATION_PROOF",
+      "type": "ACTION",
+      "code": "APPROVE",
+      "name": "Approve",
+      "version": 1,
+      "enabled": true,
+      "definition": {
+        "code": "APPROVE",
+        "entityCode": "SAMPLE",
+        "label": "Approve",
+        "type": "APPROVE",
+        "enabled": true,
+        "permissions": ["SAMPLE.APPROVE"],
+        "behavior": {
+          "requiresApproval": false,
+          "confirmation": false
+        }
+      }
+    },
+    {
+      "tenantId": "demo",
+      "domainCode": "DEFAULT",
+      "applicationCode": "VALIDATION_PROOF",
+      "type": "WORKFLOW",
+      "code": "SAMPLE_FLOW",
+      "name": "Sample Flow",
+      "version": 1,
+      "enabled": true,
+      "definition": {
+        "code": "SAMPLE_FLOW",
+        "entityCode": "SAMPLE",
+        "states": [
+          {
+            "code": "OPEN",
+            "label": "Open",
+            "initial": true
+          },
+          {
+            "code": "DONE",
+            "label": "Done",
+            "final": true
+          }
+        ],
+        "transitions": [
+          {
+            "code": "APPROVE",
+            "from": "OPEN",
+            "to": "DONE",
+            "actionCode": "APPROVE"
+          }
+        ],
+        "enabled": true
+      }
+    }
+  ]
+}
