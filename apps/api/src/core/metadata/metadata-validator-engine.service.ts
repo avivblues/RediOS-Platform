@@ -9,6 +9,7 @@ import type {
   LedgerDefinition,
   MetadataDefinition,
   ProcessDefinition,
+  RelationDefinition,
   ValidationIssue,
   ValidationResult,
   WorkflowDefinition,
@@ -23,6 +24,7 @@ type MetadataIndex = {
   workflowsByEntity: Map<string, MetadataDefinition<WorkflowDefinition>>;
   processes: Map<string, MetadataDefinition<ProcessDefinition>>;
   events: Map<string, MetadataDefinition<EventDefinition>>;
+  relations: Map<string, MetadataDefinition<RelationDefinition>[]>;
 };
 
 @Injectable()
@@ -38,6 +40,8 @@ export class MetadataValidatorEngine {
     this.validateBusinessDefinitions(metadataDefinitions, index, issues);
     this.validateEvents(metadataDefinitions, index, issues);
     this.validateLedgerDefinitions(metadataDefinitions, index, issues);
+    this.validateRelationDefinitions(metadataDefinitions, index, issues);
+    this.validateFieldRelationReferences(index, issues);
 
     const errors = issues.filter((issue) => issue.severity === 'ERROR').length;
     const warnings = issues.filter((issue) => issue.severity === 'WARNING').length;
@@ -60,6 +64,7 @@ export class MetadataValidatorEngine {
       workflowsByEntity: new Map(),
       processes: new Map(),
       events: new Map(),
+      relations: new Map(),
     };
 
     for (const metadata of metadataDefinitions) {
@@ -101,6 +106,12 @@ export class MetadataValidatorEngine {
       if (metadata.type === 'EVENT') {
         const event = metadata.definition as EventDefinition;
         index.events.set(event.code, metadata as MetadataDefinition<EventDefinition>);
+      }
+
+      if (metadata.type === 'RELATION') {
+        const records = index.relations.get(metadata.code) ?? [];
+        records.push(metadata as MetadataDefinition<RelationDefinition>);
+        index.relations.set(metadata.code, records);
       }
     }
 
@@ -476,12 +487,144 @@ export class MetadataValidatorEngine {
             );
           }
         }
+
+        for (const sourcePath of Object.values(impact.mapping ?? {})) {
+          if (sourcePath.startsWith('relation.')) {
+            const relationCode = sourcePath.split('.')[1];
+
+            if (!relationCode || !index.relations.has(relationCode)) {
+              this.addIssue(
+                issues,
+                'RELATION_NOT_FOUND',
+                'ERROR',
+                `Ledger impact references missing relation ${relationCode ?? '(missing)'}.`,
+                `LEDGER.${ledger.code}.impacts[${impactIndex}].mapping`,
+                `Create ${relationCode ?? 'the referenced'} relation metadata.`,
+              );
+            }
+          }
+        }
+      }
+    }
+  }
+
+  private validateRelationDefinitions(metadataDefinitions: MetadataDefinition[], index: MetadataIndex, issues: ValidationIssue[]): void {
+    for (const [relationCode, relations] of index.relations.entries()) {
+      if (relations.length > 1) {
+        this.addIssue(
+          issues,
+          'DUPLICATE_RELATION_CODE',
+          'ERROR',
+          `Duplicate relation code ${relationCode}.`,
+          `RELATION.${relationCode}`,
+          'Keep one RELATION definition per code.',
+        );
+      }
+    }
+
+    const ownershipEdges: Array<{ code: string; source: string; target: string }> = [];
+
+    for (const metadata of metadataDefinitions.filter((candidate) => candidate.type === 'RELATION')) {
+      const relation = metadata.definition as RelationDefinition;
+      const sourceFields = index.fieldsByEntity.get(relation.source.entityCode);
+      const targetFields = index.fieldsByEntity.get(relation.target.entityCode);
+
+      if (!index.entities.has(relation.source.entityCode)) {
+        this.addIssue(
+          issues,
+          'RELATION_ENTITY_NOT_FOUND',
+          'ERROR',
+          `Relation references missing source entity ${relation.source.entityCode}.`,
+          `RELATION.${relation.code}.source.entityCode`,
+          `Create ${relation.source.entityCode} entity metadata.`,
+        );
+      }
+
+      if (!index.entities.has(relation.target.entityCode)) {
+        this.addIssue(
+          issues,
+          'RELATION_ENTITY_NOT_FOUND',
+          'ERROR',
+          `Relation references missing target entity ${relation.target.entityCode}.`,
+          `RELATION.${relation.code}.target.entityCode`,
+          `Create ${relation.target.entityCode} entity metadata.`,
+        );
+      }
+
+      if (!this.fieldExists(sourceFields, relation.mapping.sourceField)) {
+        this.addIssue(
+          issues,
+          'RELATION_FIELD_NOT_FOUND',
+          'ERROR',
+          `Relation source field ${relation.mapping.sourceField} does not exist.`,
+          `RELATION.${relation.code}.mapping.sourceField`,
+          `Create ${relation.mapping.sourceField} field metadata on ${relation.source.entityCode}.`,
+        );
+      }
+
+      if (!this.fieldExists(targetFields, relation.mapping.targetField)) {
+        this.addIssue(
+          issues,
+          'RELATION_FIELD_NOT_FOUND',
+          'ERROR',
+          `Relation target field ${relation.mapping.targetField} does not exist.`,
+          `RELATION.${relation.code}.mapping.targetField`,
+          `Create ${relation.mapping.targetField} field metadata on ${relation.target.entityCode}.`,
+        );
+      }
+
+      if (relation.behavior.ownership) {
+        ownershipEdges.push({
+          code: relation.code,
+          source: relation.source.entityCode,
+          target: relation.target.entityCode,
+        });
+      }
+    }
+
+    for (const edge of ownershipEdges) {
+      const circular = ownershipEdges.find(
+        (candidate) => candidate.source === edge.target && candidate.target === edge.source && candidate.code !== edge.code,
+      );
+
+      if (circular) {
+        this.addIssue(
+          issues,
+          'CIRCULAR_OWNERSHIP',
+          'ERROR',
+          `Relations ${edge.code} and ${circular.code} define circular ownership.`,
+          `RELATION.${edge.code}.behavior.ownership`,
+          'Only one side of a relation pair should own the lifecycle.',
+        );
+      }
+    }
+  }
+
+  private validateFieldRelationReferences(index: MetadataIndex, issues: ValidationIssue[]): void {
+    for (const fields of index.fieldsByEntity.values()) {
+      for (const field of fields.values()) {
+        const relationCode = field.definition.relation;
+
+        if (relationCode && !index.relations.has(relationCode)) {
+          this.addIssue(
+            issues,
+            'RELATION_NOT_FOUND',
+            'ERROR',
+            `Field references missing relation ${relationCode}.`,
+            `FIELD.${field.definition.entityCode}.${field.definition.code}.relation`,
+            `Create ${relationCode} relation metadata.`,
+          );
+        }
       }
     }
   }
 
   private workflowHasState(index: MetadataIndex, entityCode: string, stateCode: string): boolean {
     return Boolean(index.workflowsByEntity.get(entityCode)?.definition.states.some((state) => state.code === stateCode));
+  }
+
+  private fieldExists(fields: Map<string, MetadataDefinition<FieldDefinition>> | undefined, fieldCode: string): boolean {
+    return fieldCode === 'id' || Boolean(fields?.has(fieldCode));
   }
 
   private configString(config: Record<string, unknown> | undefined, key: string): string | undefined {

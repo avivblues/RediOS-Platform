@@ -1,0 +1,127 @@
+@baseUrl = http://localhost:3001/api
+
+### Resolve WORK_ORDER relations
+### Expected: WORK_ORDER_ASSET_RELATION found
+GET {{baseUrl}}/relations/WORK_ORDER
+x-tenant-id: demo
+x-domain-code: DEFAULT
+x-application-code: ASSET_MAINTENANCE
+x-user-id: admin
+
+### Validate invalid relation metadata
+### Expected: valid false with RELATION_FIELD_NOT_FOUND
+POST {{baseUrl}}/metadata/validate
+Content-Type: application/json
+
+[
+  {
+    "tenantId": "demo",
+    "domainCode": "DEFAULT",
+    "applicationCode": "TEST",
+    "type": "ENTITY",
+    "code": "SOURCE",
+    "name": "Source",
+    "version": 1,
+    "enabled": true,
+    "definition": {
+      "code": "SOURCE",
+      "name": "Source",
+      "type": "DOCUMENT",
+      "fieldCodes": ["targetId"],
+      "actionCodes": [],
+      "enabled": true
+    }
+  },
+  {
+    "tenantId": "demo",
+    "domainCode": "DEFAULT",
+    "applicationCode": "TEST",
+    "type": "ENTITY",
+    "code": "TARGET",
+    "name": "Target",
+    "version": 1,
+    "enabled": true,
+    "definition": {
+      "code": "TARGET",
+      "name": "Target",
+      "type": "DOCUMENT",
+      "fieldCodes": [],
+      "actionCodes": [],
+      "enabled": true
+    }
+  },
+  {
+    "tenantId": "demo",
+    "domainCode": "DEFAULT",
+    "applicationCode": "TEST",
+    "type": "FIELD",
+    "code": "targetId",
+    "name": "targetId",
+    "version": 1,
+    "enabled": true,
+    "definition": {
+      "code": "targetId",
+      "name": "targetId",
+      "entityCode": "SOURCE",
+      "dataType": "REFERENCE",
+      "required": false,
+      "visible": true,
+      "readonly": false
+    }
+  },
+  {
+    "tenantId": "demo",
+    "domainCode": "DEFAULT",
+    "applicationCode": "TEST",
+    "type": "RELATION",
+    "code": "SOURCE_TARGET_RELATION",
+    "name": "Source Target Relation",
+    "version": 1,
+    "enabled": true,
+    "definition": {
+      "code": "SOURCE_TARGET_RELATION",
+      "source": {
+        "entityCode": "SOURCE"
+      },
+      "target": {
+        "entityCode": "TARGET"
+      },
+      "type": "MANY_TO_ONE",
+      "mapping": {
+        "sourceField": "targetId",
+        "targetField": "missingTargetField"
+      },
+      "behavior": {
+        "required": false,
+        "cascade": false,
+        "ownership": false,
+        "lookup": true
+      },
+      "enabled": true
+    }
+  }
+]
+
+### Simulate WORK_ORDER START with relation prediction
+### Expected: predicted.relations contains WORK_ORDER_ASSET_RELATION
+POST {{baseUrl}}/simulation/run
+Content-Type: application/json
+
+{
+  "tenantId": "demo",
+  "domainCode": "DEFAULT",
+  "applicationCode": "ASSET_MAINTENANCE",
+  "entityCode": "WORK_ORDER",
+  "actionCode": "START",
+  "currentState": "OPEN",
+  "permissions": ["WORK_ORDER.START"],
+  "payload": {
+    "assignedTo": "tech01"
+  },
+  "mockDocument": {
+    "data": {
+      "title": "Inspect CNC machine",
+      "assetId": "asset-001"
+    }
+  }
+}

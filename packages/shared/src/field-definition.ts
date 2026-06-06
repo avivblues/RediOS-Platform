@@ -1,4 +1,4 @@
-export type FieldDataType = 'string' | 'number' | 'boolean' | 'date' | 'object' | 'array';
+export type FieldDataType = 'string' | 'number' | 'boolean' | 'date' | 'object' | 'array' | 'REFERENCE';
 
 export interface FieldDefinition {
   code: string;
@@ -10,4 +10,5 @@ export interface FieldDefinition {
   visible: boolean;
   readonly: boolean;
   validation?: Record<string, unknown>;
+  relation?: string;
 }

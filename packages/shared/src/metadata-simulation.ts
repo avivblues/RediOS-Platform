@@ -63,5 +63,11 @@ export interface SimulationResult {
     ledger?: {
       impacts: string[];
     };
+    relations?: Array<{
+      relation: string;
+      status: 'VALID';
+      target: string;
+      lookup: boolean;
+    }>;
   };
 }

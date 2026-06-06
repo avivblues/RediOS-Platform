@@ -11,6 +11,7 @@ type MetadataDebugResult = {
   processes: string[];
   business: string[];
   events: string[];
+  relations: string[];
   counts: Record<string, number>;
 };
 
@@ -41,6 +42,7 @@ export class MetadataDebugController {
       processes: this.codes(records, 'PROCESS'),
       business: this.codes(records, 'BUSINESS'),
       events: this.codes(records, 'EVENT'),
+      relations: this.codes(records, 'RELATION'),
       counts: this.counts(records),
     };
   }

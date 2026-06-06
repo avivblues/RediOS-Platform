@@ -18,6 +18,7 @@ import { METADATA_PROVIDER, type MetadataProvider } from '../metadata/metadata-p
 import { MetadataResolver } from '../metadata/metadata-resolver.service';
 import { MetadataValidatorEngine } from '../metadata/metadata-validator-engine.service';
 import { ProcessEngine } from '../process/process-engine.service';
+import { RelationEngine } from '../relation/relation-engine.service';
 import { SecurityEngine } from '../security/security-engine.service';
 import { TraceEngine } from '../trace/trace-engine.service';
 import { WorkflowEngine } from '../workflow/workflow-engine.service';
@@ -35,6 +36,7 @@ export class SimulationEngine {
     private readonly businessEngine: BusinessEngine,
     private readonly eventEngine: EventEngine,
     private readonly ledgerEngine: LedgerEngine,
+    private readonly relationEngine: RelationEngine,
     private readonly traceEngine: TraceEngine,
   ) {}
 
@@ -211,6 +213,21 @@ export class SimulationEngine {
       });
     }
 
+    const relations = await this.runStep(steps, 'VALIDATION', 'Relation metadata resolved.', () =>
+      this.relationEngine.resolve(context, request.entityCode),
+    );
+
+    if (!relations.ok) {
+      return this.finalize(request, context, this.failed(validation, steps, predicted));
+    }
+
+    predicted.relations = relations.value.relations.map((relation) => ({
+      relation: relation.code,
+      status: 'VALID',
+      target: relation.targetEntity,
+      lookup: relation.capabilities.lookup,
+    }));
+
     return this.finalize(request, context, {
       success: steps.every((step) => step.status !== 'FAILED'),
       validation,
@@ -230,25 +247,49 @@ export class SimulationEngine {
     const relatedEntityCodes = new Set<string>([entityCode]);
 
     for (const metadataDefinition of metadata) {
-      if (metadataDefinition.type !== 'LEDGER' || this.definitionEntityCode(metadataDefinition.definition) !== entityCode) {
-        continue;
+      if (metadataDefinition.type === 'LEDGER' && this.definitionEntityCode(metadataDefinition.definition) === entityCode) {
+        for (const impact of this.ledgerImpacts(metadataDefinition.definition)) {
+          relatedEntityCodes.add(impact.target.entityCode);
+        }
       }
 
-      for (const impact of this.ledgerImpacts(metadataDefinition.definition)) {
-        relatedEntityCodes.add(impact.target.entityCode);
+      if (metadataDefinition.type === 'RELATION' && this.relationSourceEntityCode(metadataDefinition.definition) === entityCode) {
+        const targetEntityCode = this.relationTargetEntityCode(metadataDefinition.definition);
+
+        if (targetEntityCode) {
+          relatedEntityCodes.add(targetEntityCode);
+        }
       }
     }
 
-    return metadata.filter((metadataDefinition) => {
+    return metadata.flatMap((metadataDefinition): MetadataDefinition[] => {
       if (metadataDefinition.type === 'ENTITY') {
-        return relatedEntityCodes.has(metadataDefinition.code);
+        if (!relatedEntityCodes.has(metadataDefinition.code)) {
+          return [];
+        }
+
+        if (metadataDefinition.code === entityCode) {
+          return [metadataDefinition];
+        }
+
+        const definition = metadataDefinition.definition as { actionCodes?: string[]; workflowCode?: string };
+        return [
+          {
+            ...metadataDefinition,
+            definition: {
+              ...definition,
+              actionCodes: [],
+              workflowCode: undefined,
+            },
+          },
+        ];
       }
 
       if (
         metadataDefinition.type === 'FIELD'
       ) {
         const fieldEntityCode = this.definitionEntityCode(metadataDefinition.definition);
-        return Boolean(fieldEntityCode && relatedEntityCodes.has(fieldEntityCode));
+        return fieldEntityCode && relatedEntityCodes.has(fieldEntityCode) ? [metadataDefinition] : [];
       }
 
       if (
@@ -259,10 +300,15 @@ export class SimulationEngine {
         metadataDefinition.type === 'EVENT' ||
         metadataDefinition.type === 'LEDGER'
       ) {
-        return this.definitionEntityCode(metadataDefinition.definition) === entityCode;
+        const metadataEntityCode = this.definitionEntityCode(metadataDefinition.definition);
+        return metadataEntityCode === entityCode ? [metadataDefinition] : [];
       }
 
-      return false;
+      if (metadataDefinition.type === 'RELATION') {
+        return this.relationSourceEntityCode(metadataDefinition.definition) === entityCode ? [metadataDefinition] : [];
+      }
+
+      return [];
     });
   }
 
@@ -280,6 +326,22 @@ export class SimulationEngine {
     }
 
     return [];
+  }
+
+  private relationSourceEntityCode(definition: unknown): string | undefined {
+    if (definition && typeof definition === 'object' && 'source' in definition) {
+      return (definition as { source?: { entityCode?: string } }).source?.entityCode;
+    }
+
+    return undefined;
+  }
+
+  private relationTargetEntityCode(definition: unknown): string | undefined {
+    if (definition && typeof definition === 'object' && 'target' in definition) {
+      return (definition as { target?: { entityCode?: string } }).target?.entityCode;
+    }
+
+    return undefined;
   }
 
   private async runStep<T>(

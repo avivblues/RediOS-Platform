@@ -10,6 +10,7 @@ import { EventModule } from './core/event/event.module';
 import { LedgerModule } from './core/ledger/ledger.module';
 import { MetadataModule } from './core/metadata/metadata.module';
 import { ProcessModule } from './core/process/process.module';
+import { RelationModule } from './core/relation/relation.module';
 import { RuntimeModule as CoreRuntimeModule } from './core/runtime/runtime.module';
 import { SecurityModule } from './core/security/security.module';
 import { StorageModule } from './core/storage/storage.module';
@@ -20,6 +21,7 @@ import { MetadataDebugModule } from './metadata/metadata-debug.module';
 import { MetadataValidationModule } from './metadata/metadata-validation.module';
 import { RuntimeModule as RuntimeApiModule } from './runtime/runtime.module';
 import { RuntimeTracesModule } from './runtime-traces/runtime-traces.module';
+import { RelationsModule } from './relations/relations.module';
 import { SimulationModule } from './simulation/simulation.module';
 
 @Module({
@@ -48,6 +50,7 @@ import { SimulationModule } from './simulation/simulation.module';
     MetadataValidationModule,
     RuntimeApiModule,
     RuntimeTracesModule,
+    RelationsModule,
     SimulationModule,
     ContextModule,
     ApplicationModule,
@@ -57,6 +60,7 @@ import { SimulationModule } from './simulation/simulation.module';
     CoreRuntimeModule,
     WorkflowModule,
     ProcessModule,
+    RelationModule,
     BusinessModule,
     StorageModule,
     LedgerModule,

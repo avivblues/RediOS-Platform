@@ -10,6 +10,7 @@ export * from './metadata-definition';
 export * from './metadata-simulation';
 export * from './metadata-validation';
 export * from './process-definition';
+export * from './relation-definition';
 export * from './runtime-context';
 export * from './runtime-document';
 export * from './runtime-trace';

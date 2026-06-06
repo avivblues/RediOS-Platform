@@ -8,6 +8,7 @@ export type MetadataType =
   | 'BUSINESS'
   | 'EVENT'
   | 'LEDGER'
+  | 'RELATION'
   | 'FORM'
   | 'REPORT'
   | 'EXPERIENCE'

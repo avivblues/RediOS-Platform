@@ -5,6 +5,7 @@ import { EventModule } from '../event/event.module';
 import { LedgerModule } from '../ledger/ledger.module';
 import { MetadataModule } from '../metadata/metadata.module';
 import { ProcessModule } from '../process/process.module';
+import { RelationModule } from '../relation/relation.module';
 import { SecurityModule } from '../security/security.module';
 import { TraceModule } from '../trace/trace.module';
 import { WorkflowModule } from '../workflow/workflow.module';
@@ -20,6 +21,7 @@ import { SimulationEngine } from './simulation-engine.service';
     BusinessModule,
     EventModule,
     LedgerModule,
+    RelationModule,
     TraceModule,
   ],
   providers: [SimulationEngine],

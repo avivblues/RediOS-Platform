@@ -11,6 +11,7 @@ import type {
   MetadataDefinition,
   MetadataType,
   ProcessDefinition,
+  RelationDefinition,
   RuntimeContext,
   WorkflowDefinition,
 } from '@redios/shared';
@@ -195,6 +196,24 @@ export class MetadataResolver {
     }
 
     return definition as MetadataDefinition<LedgerDefinition>;
+  }
+
+  async resolveRelations(context: RuntimeContext, entityCode: string): Promise<MetadataDefinition<RelationDefinition>[]> {
+    const definitions = await this.registry.findByType(context, 'RELATION');
+    const matchingDefinitions = definitions.filter((candidate) => {
+      const relation = candidate.definition as RelationDefinition;
+      return relation.source.entityCode === entityCode && relation.enabled;
+    });
+
+    for (const definition of matchingDefinitions) {
+      const validation = this.validator.validate(definition);
+
+      if (!validation.valid) {
+        throw new UnprocessableEntityException(validation.errors);
+      }
+    }
+
+    return matchingDefinitions as MetadataDefinition<RelationDefinition>[];
   }
 
   private async resolveMany<TDefinition>(

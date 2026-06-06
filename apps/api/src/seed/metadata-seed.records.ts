@@ -11,6 +11,7 @@ import type {
   LedgerDefinition,
   MetadataDefinition,
   ProcessDefinition,
+  RelationDefinition,
   WorkflowDefinition,
 } from '@redios/shared';
 
@@ -21,6 +22,7 @@ type FieldSeed = {
   code: string;
   dataType?: FieldDataType;
   required?: boolean;
+  relation?: string;
 };
 
 type EntitySeed = {
@@ -40,6 +42,7 @@ type ApplicationSeed = {
   code: string;
   name: string;
   entities: EntitySeed[];
+  relations?: RelationDefinition[];
 };
 
 const applications: ApplicationSeed[] = [
@@ -82,6 +85,7 @@ const applications: ApplicationSeed[] = [
           { code: 'description' },
           { code: 'priority' },
           { code: 'assignedTo' },
+          { code: 'assetId', dataType: 'REFERENCE', relation: 'WORK_ORDER_ASSET_RELATION' },
         ],
         actions: ['CREATE', 'READ', 'UPDATE', 'START', 'COMPLETE', 'CANCEL'],
         workflow: {
@@ -161,6 +165,29 @@ const applications: ApplicationSeed[] = [
         ],
       },
     ],
+    relations: [
+      {
+        code: 'WORK_ORDER_ASSET_RELATION',
+        source: {
+          entityCode: 'WORK_ORDER',
+        },
+        target: {
+          entityCode: 'ASSET',
+        },
+        type: 'MANY_TO_ONE',
+        mapping: {
+          sourceField: 'assetId',
+          targetField: 'id',
+        },
+        behavior: {
+          required: true,
+          cascade: false,
+          ownership: false,
+          lookup: true,
+        },
+        enabled: true,
+      },
+    ],
   },
   {
     code: 'CRM',
@@ -180,6 +207,36 @@ const applications: ApplicationSeed[] = [
           enabled: true,
         },
       },
+      {
+        code: 'CONTACT',
+        name: 'Contact',
+        type: 'MASTER',
+        fields: [{ code: 'contactName', required: true }, { code: 'email' }, { code: 'customerId', dataType: 'REFERENCE' }],
+        actions: ['CREATE', 'READ', 'UPDATE'],
+      },
+    ],
+    relations: [
+      {
+        code: 'CUSTOMER_CONTACT_RELATION',
+        source: {
+          entityCode: 'CUSTOMER',
+        },
+        target: {
+          entityCode: 'CONTACT',
+        },
+        type: 'ONE_TO_MANY',
+        mapping: {
+          sourceField: 'id',
+          targetField: 'customerId',
+        },
+        behavior: {
+          required: false,
+          cascade: false,
+          ownership: true,
+          lookup: true,
+        },
+        enabled: true,
+      },
     ],
   },
   {
@@ -190,7 +247,12 @@ const applications: ApplicationSeed[] = [
         code: 'RECEIVING',
         name: 'Receiving',
         type: 'DOCUMENT',
-        fields: [{ code: 'itemName', required: true }, { code: 'quantity' }, { code: 'status' }],
+        fields: [
+          { code: 'itemName', required: true },
+          { code: 'quantity' },
+          { code: 'status' },
+          { code: 'stockMovementId', dataType: 'REFERENCE', relation: 'RECEIVING_STOCK_MOVEMENT_RELATION' },
+        ],
         actions: ['CREATE', 'READ', 'UPDATE', 'RECEIVE'],
         workflow: {
           code: 'RECEIVING_LIFECYCLE',
@@ -279,6 +341,29 @@ const applications: ApplicationSeed[] = [
         type: 'DOCUMENT',
         fields: [{ code: 'stockItemName' }, { code: 'stockQuantity' }],
         actions: [],
+      },
+    ],
+    relations: [
+      {
+        code: 'RECEIVING_STOCK_MOVEMENT_RELATION',
+        source: {
+          entityCode: 'RECEIVING',
+        },
+        target: {
+          entityCode: 'STOCK_MOVEMENT',
+        },
+        type: 'ONE_TO_MANY',
+        mapping: {
+          sourceField: 'stockMovementId',
+          targetField: 'id',
+        },
+        behavior: {
+          required: false,
+          cascade: false,
+          ownership: false,
+          lookup: true,
+        },
+        enabled: true,
       },
     ],
   },
@@ -438,6 +523,7 @@ const applications: ApplicationSeed[] = [
 export const metadataSeedRecords: MetadataDefinition[] = applications.flatMap((application) => [
   createApplicationRecord(application),
   ...application.entities.flatMap((entity) => createEntityRecords(application, entity)),
+  ...(application.relations ?? []).map((relation) => createRelationRecord(application, relation)),
 ]);
 
 function createApplicationRecord(application: ApplicationSeed): MetadataDefinition<ApplicationDefinition> {
@@ -520,6 +606,7 @@ function createFieldRecord(
       required: field.required ?? false,
       visible: true,
       readonly: false,
+      relation: field.relation,
     },
   };
 }
@@ -635,6 +722,23 @@ function createLedgerRecord(
     version: 1,
     enabled: true,
     definition: ledger,
+  };
+}
+
+function createRelationRecord(
+  application: ApplicationSeed,
+  relation: RelationDefinition,
+): MetadataDefinition<RelationDefinition> {
+  return {
+    tenantId,
+    domainCode,
+    applicationCode: application.code,
+    type: 'RELATION',
+    code: relation.code,
+    name: toLabel(relation.code),
+    version: 1,
+    enabled: true,
+    definition: relation,
   };
 }
 
