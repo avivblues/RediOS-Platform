@@ -26,6 +26,7 @@ export class MongoMetadataProvider implements MetadataProvider {
           ...scope,
           type: definition.type,
           code: definition.code,
+          ...this.createDefinitionIdentity(definition),
         },
         {
           ...definition,
@@ -99,6 +100,20 @@ export class MongoMetadataProvider implements MetadataProvider {
     };
 
     return allApplications ? scope : { ...scope, applicationCode };
+  }
+
+  private createDefinitionIdentity(definition: MetadataDefinition): Record<string, string> {
+    if (definition.definition && typeof definition.definition === 'object' && 'entityCode' in definition.definition) {
+      const entityCode = (definition.definition as { entityCode?: unknown }).entityCode;
+
+      if (typeof entityCode === 'string') {
+        return {
+          'definition.entityCode': entityCode,
+        };
+      }
+    }
+
+    return {};
   }
 
   private toDefinition(record: MetadataDefinitionRecord): MetadataDefinition {

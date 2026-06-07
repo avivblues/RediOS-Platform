@@ -1,0 +1,56 @@
+@baseUrl = http://localhost:3001/api
+@assetId = replace-with-asset-runtime-document-id
+
+### Create ASSET for relation display
+POST {{baseUrl}}/runtime/ASSET
+x-tenant-id: demo
+x-domain-code: DEFAULT
+x-application-code: ASSET_MAINTENANCE
+x-user-id: admin
+x-permissions: ASSET.CREATE,ASSET.READ,ASSET.UPDATE,ASSET.ACTIVATE,ASSET.DISABLE
+Content-Type: application/json
+
+{
+  "data": {
+    "assetName": "AC Server Room",
+    "name": "AC Server Room",
+    "serialNumber": "AC-001",
+    "location": "Server Room"
+  }
+}
+
+### Create WORK_ORDER linked to ASSET
+POST {{baseUrl}}/runtime/WORK_ORDER
+x-tenant-id: demo
+x-domain-code: DEFAULT
+x-application-code: ASSET_MAINTENANCE
+x-user-id: admin
+x-permissions: WORK_ORDER.CREATE,WORK_ORDER.READ,WORK_ORDER.UPDATE,WORK_ORDER.START,WORK_ORDER.COMPLETE,WORK_ORDER.CANCEL
+Content-Type: application/json
+
+{
+  "data": {
+    "title": "Inspect AC Server Room",
+    "priority": "HIGH",
+    "assetId": "{{assetId}}"
+  }
+}
+
+### Query WORK_ORDER through metadata view
+### Expected: data[] with view metadata and assetId resolved as { id, display }
+POST {{baseUrl}}/query/WORK_ORDER
+x-tenant-id: demo
+x-domain-code: DEFAULT
+x-application-code: ASSET_MAINTENANCE
+x-user-id: admin
+x-permissions: WORK_ORDER.READ
+Content-Type: application/json
+
+{
+  "viewCode": "WORK_ORDER_LIST",
+  "filters": {
+    "status": "OPEN"
+  },
+  "page": 1,
+  "limit": 20
+}

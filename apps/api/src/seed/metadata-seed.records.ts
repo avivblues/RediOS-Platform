@@ -12,6 +12,7 @@ import type {
   MetadataDefinition,
   ProcessDefinition,
   RelationDefinition,
+  ViewDefinition,
   WorkflowDefinition,
 } from '@redios/shared';
 
@@ -36,6 +37,7 @@ type EntitySeed = {
   businesses?: BusinessDefinition[];
   events?: EventDefinition[];
   ledgers?: LedgerDefinition[];
+  views?: ViewDefinition[];
 };
 
 type ApplicationSeed = {
@@ -56,6 +58,7 @@ const applications: ApplicationSeed[] = [
         type: 'MASTER',
         fields: [
           { code: 'assetName', required: true },
+          { code: 'name' },
           { code: 'serialNumber' },
           { code: 'location' },
           { code: 'status' },
@@ -75,6 +78,23 @@ const applications: ApplicationSeed[] = [
           ],
           enabled: true,
         },
+        views: [
+          {
+            code: 'ASSET_LOOKUP',
+            entityCode: 'ASSET',
+            type: 'LOOKUP',
+            columns: [
+              { field: 'name', label: 'Name', visible: true, sortable: true, filterable: true },
+              { field: 'location', label: 'Location', visible: true, sortable: true, filterable: true },
+            ],
+            filters: [{ field: 'name', operator: 'CONTAINS' }],
+            sorting: {
+              field: 'name',
+              direction: 'ASC',
+            },
+            enabled: true,
+          },
+        ],
       },
       {
         code: 'WORK_ORDER',
@@ -160,6 +180,32 @@ const applications: ApplicationSeed[] = [
                 },
               },
             ],
+            enabled: true,
+          },
+        ],
+        views: [
+          {
+            code: 'WORK_ORDER_LIST',
+            entityCode: 'WORK_ORDER',
+            type: 'TABLE',
+            columns: [
+              { field: 'title', label: 'Title', visible: true, sortable: true, filterable: true },
+              { field: 'priority', label: 'Priority', visible: true, sortable: true, filterable: true },
+              { field: 'status', label: 'Status', visible: true, sortable: true, filterable: true },
+              {
+                field: 'assetId',
+                label: 'Asset',
+                visible: true,
+                sortable: false,
+                filterable: true,
+                relation: 'WORK_ORDER_ASSET_RELATION',
+              },
+            ],
+            filters: [{ field: 'status', operator: 'EQ' }],
+            sorting: {
+              field: 'title',
+              direction: 'ASC',
+            },
             enabled: true,
           },
         ],
@@ -515,6 +561,24 @@ const applications: ApplicationSeed[] = [
             enabled: true,
           },
         ],
+        views: [
+          {
+            code: 'TICKET_LIST',
+            entityCode: 'TICKET',
+            type: 'TABLE',
+            columns: [
+              { field: 'title', label: 'Title', visible: true, sortable: true, filterable: true },
+              { field: 'priority', label: 'Priority', visible: true, sortable: true, filterable: true },
+              { field: 'status', label: 'Status', visible: true, sortable: true, filterable: true },
+            ],
+            filters: [{ field: 'status', operator: 'EQ' }],
+            sorting: {
+              field: 'title',
+              direction: 'ASC',
+            },
+            enabled: true,
+          },
+        ],
       },
     ],
   },
@@ -556,6 +620,7 @@ function createEntityRecords(application: ApplicationSeed, entity: EntitySeed): 
     ...(entity.businesses ?? []).map((business) => createBusinessRecord(application, business)),
     ...(entity.events ?? []).map((event) => createEventRecord(application, event)),
     ...(entity.ledgers ?? []).map((ledger) => createLedgerRecord(application, ledger)),
+    ...(entity.views ?? []).map((view) => createViewRecord(application, view)),
   ];
 }
 
@@ -739,6 +804,23 @@ function createRelationRecord(
     version: 1,
     enabled: true,
     definition: relation,
+  };
+}
+
+function createViewRecord(
+  application: ApplicationSeed,
+  view: ViewDefinition,
+): MetadataDefinition<ViewDefinition> {
+  return {
+    tenantId,
+    domainCode,
+    applicationCode: application.code,
+    type: 'VIEW',
+    code: view.code,
+    name: toLabel(view.code),
+    version: 1,
+    enabled: true,
+    definition: view,
   };
 }
 

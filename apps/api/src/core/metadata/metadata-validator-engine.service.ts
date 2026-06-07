@@ -12,6 +12,7 @@ import type {
   RelationDefinition,
   ValidationIssue,
   ValidationResult,
+  ViewDefinition,
   WorkflowDefinition,
 } from '@redios/shared';
 
@@ -25,6 +26,7 @@ type MetadataIndex = {
   processes: Map<string, MetadataDefinition<ProcessDefinition>>;
   events: Map<string, MetadataDefinition<EventDefinition>>;
   relations: Map<string, MetadataDefinition<RelationDefinition>[]>;
+  views: Map<string, MetadataDefinition<ViewDefinition>[]>;
 };
 
 @Injectable()
@@ -42,6 +44,7 @@ export class MetadataValidatorEngine {
     this.validateLedgerDefinitions(metadataDefinitions, index, issues);
     this.validateRelationDefinitions(metadataDefinitions, index, issues);
     this.validateFieldRelationReferences(index, issues);
+    this.validateViewDefinitions(metadataDefinitions, index, issues);
 
     const errors = issues.filter((issue) => issue.severity === 'ERROR').length;
     const warnings = issues.filter((issue) => issue.severity === 'WARNING').length;
@@ -65,6 +68,7 @@ export class MetadataValidatorEngine {
       processes: new Map(),
       events: new Map(),
       relations: new Map(),
+      views: new Map(),
     };
 
     for (const metadata of metadataDefinitions) {
@@ -112,6 +116,12 @@ export class MetadataValidatorEngine {
         const records = index.relations.get(metadata.code) ?? [];
         records.push(metadata as MetadataDefinition<RelationDefinition>);
         index.relations.set(metadata.code, records);
+      }
+
+      if (metadata.type === 'VIEW') {
+        const records = index.views.get(metadata.code) ?? [];
+        records.push(metadata as MetadataDefinition<ViewDefinition>);
+        index.views.set(metadata.code, records);
       }
     }
 
@@ -619,12 +629,108 @@ export class MetadataValidatorEngine {
     }
   }
 
+  private validateViewDefinitions(metadataDefinitions: MetadataDefinition[], index: MetadataIndex, issues: ValidationIssue[]): void {
+    for (const [viewCode, views] of index.views.entries()) {
+      if (views.length > 1) {
+        this.addIssue(
+          issues,
+          'DUPLICATE_VIEW_CODE',
+          'ERROR',
+          `Duplicate view code ${viewCode}.`,
+          `VIEW.${viewCode}`,
+          'Keep one VIEW definition per code.',
+        );
+      }
+    }
+
+    for (const metadata of metadataDefinitions.filter((candidate) => candidate.type === 'VIEW')) {
+      const view = metadata.definition as ViewDefinition;
+      const entityFields = index.fieldsByEntity.get(view.entityCode);
+      const columnCounts = view.columns.reduce<Map<string, number>>((counts, column) => {
+        counts.set(column.field, (counts.get(column.field) ?? 0) + 1);
+        return counts;
+      }, new Map());
+
+      if (!index.entities.has(view.entityCode)) {
+        this.addIssue(
+          issues,
+          'ENTITY_NOT_FOUND',
+          'ERROR',
+          `View references missing entity ${view.entityCode}.`,
+          `VIEW.${view.code}.entityCode`,
+          `Create ${view.entityCode} entity metadata.`,
+        );
+      }
+
+      for (const [columnIndex, column] of view.columns.entries()) {
+        if (!this.fieldExists(entityFields, column.field)) {
+          this.addIssue(
+            issues,
+            'FIELD_NOT_FOUND',
+            'ERROR',
+            `View column references missing field ${column.field}.`,
+            `VIEW.${view.code}.columns[${columnIndex}].field`,
+            `Create ${column.field} field metadata on ${view.entityCode}.`,
+          );
+        }
+
+        if (column.relation && !index.relations.has(column.relation)) {
+          this.addIssue(
+            issues,
+            'RELATION_NOT_FOUND',
+            'ERROR',
+            `View column references missing relation ${column.relation}.`,
+            `VIEW.${view.code}.columns[${columnIndex}].relation`,
+            `Create ${column.relation} relation metadata.`,
+          );
+        }
+      }
+
+      for (const [field, count] of columnCounts.entries()) {
+        if (count > 1) {
+          this.addIssue(
+            issues,
+            'DUPLICATE_VIEW_COLUMN',
+            'ERROR',
+            `View has duplicate column ${field}.`,
+            `VIEW.${view.code}.columns`,
+            'Keep one column per field.',
+          );
+        }
+      }
+
+      for (const [filterIndex, filter] of view.filters.entries()) {
+        if (!this.fieldExists(entityFields, filter.field)) {
+          this.addIssue(
+            issues,
+            'FIELD_NOT_FOUND',
+            'ERROR',
+            `View filter references missing field ${filter.field}.`,
+            `VIEW.${view.code}.filters[${filterIndex}].field`,
+            `Create ${filter.field} field metadata on ${view.entityCode}.`,
+          );
+        }
+      }
+
+      if (view.sorting && !this.fieldExists(entityFields, view.sorting.field)) {
+        this.addIssue(
+          issues,
+          'FIELD_NOT_FOUND',
+          'ERROR',
+          `View sorting references missing field ${view.sorting.field}.`,
+          `VIEW.${view.code}.sorting.field`,
+          `Create ${view.sorting.field} field metadata on ${view.entityCode}.`,
+        );
+      }
+    }
+  }
+
   private workflowHasState(index: MetadataIndex, entityCode: string, stateCode: string): boolean {
     return Boolean(index.workflowsByEntity.get(entityCode)?.definition.states.some((state) => state.code === stateCode));
   }
 
   private fieldExists(fields: Map<string, MetadataDefinition<FieldDefinition>> | undefined, fieldCode: string): boolean {
-    return fieldCode === 'id' || Boolean(fields?.has(fieldCode));
+    return fieldCode === 'id' || fieldCode === 'status' || Boolean(fields?.has(fieldCode));
   }
 
   private configString(config: Record<string, unknown> | undefined, key: string): string | undefined {

@@ -228,6 +228,19 @@ export class SimulationEngine {
       lookup: relation.capabilities.lookup,
     }));
 
+    const views = await this.runStep(steps, 'VALIDATION', 'View metadata resolved.', () =>
+      this.metadataResolver.resolveViews(context, request.entityCode),
+    );
+
+    if (!views.ok) {
+      return this.finalize(request, context, this.failed(validation, steps, predicted));
+    }
+
+    predicted.views = views.value.map((view) => ({
+      code: view.definition.code,
+      valid: true,
+    }));
+
     return this.finalize(request, context, {
       success: steps.every((step) => step.status !== 'FAILED'),
       validation,
@@ -298,7 +311,8 @@ export class SimulationEngine {
         metadataDefinition.type === 'PROCESS' ||
         metadataDefinition.type === 'BUSINESS' ||
         metadataDefinition.type === 'EVENT' ||
-        metadataDefinition.type === 'LEDGER'
+        metadataDefinition.type === 'LEDGER' ||
+        metadataDefinition.type === 'VIEW'
       ) {
         const metadataEntityCode = this.definitionEntityCode(metadataDefinition.definition);
         return metadataEntityCode === entityCode ? [metadataDefinition] : [];

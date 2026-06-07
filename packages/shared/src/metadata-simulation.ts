@@ -69,5 +69,9 @@ export interface SimulationResult {
       target: string;
       lookup: boolean;
     }>;
+    views?: Array<{
+      code: string;
+      valid: boolean;
+    }>;
   };
 }

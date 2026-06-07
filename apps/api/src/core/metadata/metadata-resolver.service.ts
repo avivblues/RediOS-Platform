@@ -13,6 +13,7 @@ import type {
   ProcessDefinition,
   RelationDefinition,
   RuntimeContext,
+  ViewDefinition,
   WorkflowDefinition,
 } from '@redios/shared';
 import { MetadataRegistry } from './metadata-registry.service';
@@ -214,6 +215,51 @@ export class MetadataResolver {
     }
 
     return matchingDefinitions as MetadataDefinition<RelationDefinition>[];
+  }
+
+  async resolveView(
+    context: RuntimeContext,
+    entityCode: string,
+    viewCode?: string,
+  ): Promise<MetadataDefinition<ViewDefinition> | null> {
+    const definitions = await this.registry.findByType(context, 'VIEW');
+    const matchingDefinitions = definitions.filter((candidate) => {
+      const view = candidate.definition as ViewDefinition;
+      return view.entityCode === entityCode && view.enabled && (!viewCode || view.code === viewCode);
+    });
+    const definition =
+      matchingDefinitions.find((candidate) => (candidate.definition as ViewDefinition).type === 'TABLE') ??
+      matchingDefinitions[0];
+
+    if (!definition) {
+      return null;
+    }
+
+    const validation = this.validator.validate(definition);
+
+    if (!validation.valid) {
+      throw new UnprocessableEntityException(validation.errors);
+    }
+
+    return definition as MetadataDefinition<ViewDefinition>;
+  }
+
+  async resolveViews(context: RuntimeContext, entityCode: string): Promise<MetadataDefinition<ViewDefinition>[]> {
+    const definitions = await this.registry.findByType(context, 'VIEW');
+    const matchingDefinitions = definitions.filter((candidate) => {
+      const view = candidate.definition as ViewDefinition;
+      return view.entityCode === entityCode && view.enabled;
+    });
+
+    for (const definition of matchingDefinitions) {
+      const validation = this.validator.validate(definition);
+
+      if (!validation.valid) {
+        throw new UnprocessableEntityException(validation.errors);
+      }
+    }
+
+    return matchingDefinitions as MetadataDefinition<ViewDefinition>[];
   }
 
   private async resolveMany<TDefinition>(

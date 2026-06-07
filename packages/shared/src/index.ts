@@ -14,4 +14,5 @@ export * from './relation-definition';
 export * from './runtime-context';
 export * from './runtime-document';
 export * from './runtime-trace';
+export * from './view-definition';
 export * from './workflow-definition';

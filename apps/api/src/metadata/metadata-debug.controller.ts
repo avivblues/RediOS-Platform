@@ -12,6 +12,7 @@ type MetadataDebugResult = {
   business: string[];
   events: string[];
   relations: string[];
+  views: string[];
   counts: Record<string, number>;
 };
 
@@ -43,6 +44,7 @@ export class MetadataDebugController {
       business: this.codes(records, 'BUSINESS'),
       events: this.codes(records, 'EVENT'),
       relations: this.codes(records, 'RELATION'),
+      views: this.codes(records, 'VIEW'),
       counts: this.counts(records),
     };
   }
