@@ -113,6 +113,131 @@ textarea {
   gap: var(--redios-spacing-md);
 }
 
+.studio-home,
+.studio-wizard-body {
+  display: grid;
+  gap: var(--redios-spacing-md);
+}
+
+.studio-hero {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--redios-spacing-lg);
+  border: 1px solid color-mix(in srgb, var(--redios-color-primary), transparent 72%);
+  border-radius: var(--redios-radius-large);
+  padding: var(--redios-spacing-lg);
+  background: color-mix(in srgb, var(--redios-color-primary), var(--redios-color-surface) 92%);
+}
+
+.studio-home-grid,
+.studio-runtime-grid,
+.studio-card-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--redios-spacing-md);
+}
+
+.studio-metric-card,
+.studio-app-card,
+.studio-field-card {
+  text-align: left;
+  border: 1px solid color-mix(in srgb, var(--redios-color-text), transparent 86%);
+  border-radius: var(--redios-radius-medium);
+  padding: var(--redios-spacing-md);
+  background: var(--redios-color-surface);
+  color: var(--redios-color-text);
+  cursor: pointer;
+}
+
+.studio-metric-card strong,
+.studio-runtime-grid strong {
+  display: block;
+  margin-top: var(--redios-spacing-xs);
+  font-size: var(--redios-font-size-large);
+}
+
+.studio-kicker {
+  display: inline-block;
+  margin-bottom: var(--redios-spacing-xs);
+  color: var(--redios-color-primary);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.studio-search {
+  position: relative;
+  margin-bottom: var(--redios-spacing-md);
+}
+
+.studio-search-results {
+  position: absolute;
+  z-index: 10;
+  left: 0;
+  right: 0;
+  display: grid;
+  gap: var(--redios-spacing-xs);
+  border: 1px solid color-mix(in srgb, var(--redios-color-text), transparent 86%);
+  border-radius: var(--redios-radius-medium);
+  padding: var(--redios-spacing-xs);
+  background: var(--redios-color-surface);
+  box-shadow: 0 12px 28px color-mix(in srgb, var(--redios-color-text), transparent 88%);
+}
+
+.studio-empty-state {
+  border: 1px dashed color-mix(in srgb, var(--redios-color-text), transparent 72%);
+  border-radius: var(--redios-radius-medium);
+  padding: var(--redios-spacing-md);
+  background: color-mix(in srgb, var(--redios-color-surface), var(--redios-color-background) 32%);
+}
+
+.studio-empty-state p {
+  margin: var(--redios-spacing-xs) 0 var(--redios-spacing-sm);
+  color: color-mix(in srgb, var(--redios-color-text), transparent 32%);
+}
+
+.studio-wizard-steps,
+.studio-component-palette {
+  display: grid;
+  gap: var(--redios-spacing-xs);
+}
+
+.studio-flow-preview {
+  display: grid;
+  gap: var(--redios-spacing-sm);
+  margin-top: var(--redios-spacing-md);
+  border-radius: var(--redios-radius-medium);
+  padding: var(--redios-spacing-md);
+  background: color-mix(in srgb, var(--redios-color-primary), transparent 92%);
+}
+
+.studio-form-canvas-preview {
+  display: grid;
+  gap: var(--redios-spacing-md);
+  margin-bottom: var(--redios-spacing-md);
+}
+
+.studio-canvas-section {
+  display: grid;
+  gap: var(--redios-spacing-sm);
+  border: 1px solid color-mix(in srgb, var(--redios-color-text), transparent 88%);
+  border-radius: var(--redios-radius-medium);
+  padding: var(--redios-spacing-md);
+  background: color-mix(in srgb, var(--redios-color-surface), var(--redios-color-background) 18%);
+}
+
+.studio-input-placeholder {
+  height: 34px;
+  margin-top: var(--redios-spacing-xs);
+  border: 1px solid color-mix(in srgb, var(--redios-color-text), transparent 76%);
+  border-radius: var(--redios-radius-medium);
+  background: var(--redios-color-surface);
+}
+
+.studio-help-list {
+  padding-left: var(--redios-spacing-lg);
+}
+
 .studio-workspace-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -376,10 +501,35 @@ textarea {
 @media (max-width: 1100px) {
   .studio-body,
   .studio-workspace-grid,
+  .studio-home-grid,
+  .studio-runtime-grid,
+  .studio-card-grid,
   .studio-builder-grid,
   .studio-preview-grid,
   .studio-workflow-grid,
   .studio-integration-grid {
     grid-template-columns: 1fr;
+  }
+
+  .studio-hero {
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 720px) {
+  .studio-body {
+    display: block;
+  }
+
+  .studio-sidebar {
+    max-height: 42vh;
+    border-right: 0;
+    border-bottom: 1px solid color-mix(in srgb, var(--redios-color-text), transparent 86%);
+  }
+
+  .studio-builder-canvas,
+  .studio-preview-grid pre {
+    max-height: 50vh;
+    overflow: auto;
   }
 }

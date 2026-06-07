@@ -1,9 +1,15 @@
 import type { RuntimeForm, RuntimeFormField } from '../core/renderer/runtime-types';
+import { EmptyState } from '../studio/empty/EmptyState';
 import { renderRegisteredComponent } from './ComponentRegistry';
 
 export function FormRenderer({ form }: { form?: RuntimeForm }) {
   if (!form) {
-    return <div className="studio-empty">Select a form to preview.</div>;
+    return (
+      <EmptyState
+        title="No form selected yet"
+        description="Choose an existing form or create a new one to start arranging fields."
+      />
+    );
   }
 
   return (

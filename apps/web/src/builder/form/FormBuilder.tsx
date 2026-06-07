@@ -1,14 +1,12 @@
 import { useState } from 'react';
 import type { EntityDefinition, FormDefinition, MetadataDraft } from '@redios/shared';
-import { Button, Select } from '../../components/atomic/atoms/Atoms';
+import { Button } from '../../components/atomic/atoms/Atoms';
 import { Panel } from '../../components/atomic/organisms/Organisms';
 import type { DesignerClient, DesignerPreviewResult } from '../../core/api/designer-client';
 import type { RuntimeForm, RuntimeFormField } from '../../core/renderer/runtime-types';
 import { FieldPalette } from './FieldPalette';
 import { FormCanvas } from './FormCanvas';
 import { PropertyPanel } from './PropertyPanel';
-
-const palette = ['TEXT_INPUT', 'TEXT_AREA', 'NUMBER_INPUT', 'DATE_PICKER', 'SELECT', 'LOOKUP'];
 
 export function FormBuilder({
   form,
@@ -88,21 +86,27 @@ export function FormBuilder({
   return (
     <Panel title="Form Builder">
       <div className="studio-builder-grid">
-        <FieldPalette entity={entity} form={activeForm} selectedFieldCode={selectedFieldCode} onSelect={setSelectedFieldCode} />
+        <FieldPalette
+          entity={entity}
+          form={activeForm}
+          selectedFieldCode={selectedFieldCode}
+          selectedComponent={selectedComponent}
+          onSelect={setSelectedFieldCode}
+          onComponentChange={setSelectedComponent}
+        />
         <FormCanvas form={activeForm} selectedFieldCode={selectedFieldCode} onDropField={(fieldCode) => void addSelectedField(fieldCode)} onSelectField={setSelectedField} />
         <div>
           <PropertyPanel field={selectedField} valid={previewResult?.valid} />
           <div className="studio-card studio-builder-actions">
-            <Select value={selectedComponent} options={palette} onChange={setSelectedComponent} />
-          <div className="studio-action-row">
-            <Button variant="secondary" onClick={() => void preview()} disabled={!draft}>
-              Preview
-            </Button>
-            <Button onClick={() => void publish()} disabled={!draft || !previewResult?.valid}>
-              Publish
-            </Button>
+            <div className="studio-action-row">
+              <Button variant="secondary" onClick={() => void preview()} disabled={!draft}>
+                Preview
+              </Button>
+              <Button onClick={() => void publish()} disabled={!draft || !previewResult?.valid}>
+                Publish
+              </Button>
+            </div>
           </div>
-        </div>
         </div>
       </div>
     </Panel>

@@ -1,4 +1,4 @@
-import type { MetadataDefinition, MetadataType } from '@redios/shared';
+import type { MetadataDefinition, MetadataType, RuntimePackageDefinition } from '@redios/shared';
 import type { RuntimeForm, RuntimeNavigation, RuntimeTheme, ResolvedUIPage } from '../renderer/runtime-types';
 import type { ApiClient } from './api-client';
 
@@ -51,5 +51,9 @@ export class MetadataClient {
 
   getPage(pageCode: string): Promise<ResolvedUIPage> {
     return this.api.get(`/ui/pages/${pageCode}`);
+  }
+
+  getRuntimePackage(): Promise<MetadataDefinition<RuntimePackageDefinition> | null> {
+    return this.api.get('/runtime-package/current');
   }
 }

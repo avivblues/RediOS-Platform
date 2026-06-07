@@ -1,9 +1,15 @@
 import type { ResolvedUIAtom, ResolvedUIMolecule, ResolvedUIOrganism, ResolvedUIPage } from '../core/renderer/runtime-types';
+import { EmptyState } from '../studio/empty/EmptyState';
 import { renderRegisteredComponent } from './ComponentRegistry';
 
 export function PageRenderer({ page }: { page?: ResolvedUIPage }) {
   if (!page) {
-    return <div className="studio-empty">Select a page to preview.</div>;
+    return (
+      <EmptyState
+        title="No page selected yet"
+        description="Choose an existing page or create a new metadata-driven page."
+      />
+    );
   }
 
   return (

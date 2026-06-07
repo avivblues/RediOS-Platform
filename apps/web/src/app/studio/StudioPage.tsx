@@ -1,5 +1,13 @@
 import { useEffect, useMemo, useState } from 'react';
-import type { ConnectorDefinition, EntityDefinition, IntegrationDefinition, MetadataDefinition, WorkflowDefinition } from '@redios/shared';
+import type {
+  ApplicationDefinition,
+  ConnectorDefinition,
+  EntityDefinition,
+  IntegrationDefinition,
+  MetadataDefinition,
+  RuntimePackageDefinition,
+  WorkflowDefinition,
+} from '@redios/shared';
 import { FormBuilder } from '../../builder/form/FormBuilder';
 import { IntegrationBuilder } from '../../builder/integration/IntegrationBuilder';
 import { PageBuilder } from '../../builder/ui/PageBuilder';
@@ -12,17 +20,25 @@ import { RuntimeClient } from '../../core/api/runtime-client';
 import { useRuntimeContext } from '../../core/context/runtime-context';
 import type { ResolvedUIPage, RuntimeForm, RuntimeNavigation, RuntimeTheme } from '../../core/renderer/runtime-types';
 import { ThemeProvider } from '../../core/theme/theme-provider';
-import { ApplicationExplorer, type ExplorerSelection } from '../../studio/explorer/ApplicationExplorer';
+import { StudioHome } from '../../studio/dashboard/StudioHome';
+import type { ExplorerSelection } from '../../studio/explorer/ApplicationExplorer';
+import { HelpPanel } from '../../studio/help/HelpPanel';
 import { StudioHeader } from '../../studio/StudioHeader';
 import { StudioPreview } from '../../studio/preview/StudioPreview';
+import { RuntimeHealthView } from '../../studio/runtime/RuntimeHealthView';
 import { StudioSidebar } from '../../studio/StudioSidebar';
 import { StudioShell } from '../../studio/StudioShell';
 import { StudioWorkspace } from '../../studio/StudioWorkspace';
+import { TemplateGallery } from '../../studio/templates/TemplateGallery';
+import { GuidedAppBuilder } from '../../studio/wizard/GuidedAppBuilder';
 
 interface StudioState {
   theme: RuntimeTheme;
   navigation: RuntimeNavigation;
   tree: MetadataDebugTree;
+  applications: Array<MetadataDefinition<ApplicationDefinition>>;
+  entities: EntityDefinition[];
+  runtimePackage?: MetadataDefinition<RuntimePackageDefinition> | null;
 }
 
 export function StudioPage() {
@@ -53,12 +69,24 @@ export function StudioPage() {
           metadataClient.getNavigation(),
           metadataClient.getMetadataTree(),
         ]);
+        const [applications, entities, runtimePackage] = await Promise.all([
+          Promise.all(tree.applications.map((code) => metadataClient.getMetadata<ApplicationDefinition>('APPLICATION', code).catch(() => undefined))),
+          Promise.all(tree.entities.map((code) => metadataClient.getMetadata<EntityDefinition>('ENTITY', code).then((metadata) => metadata.definition).catch(() => undefined))),
+          metadataClient.getRuntimePackage().catch(() => null),
+        ]);
 
         if (!mounted) {
           return;
         }
 
-        setState({ theme, navigation, tree });
+        setState({
+          theme,
+          navigation,
+          tree,
+          applications: applications.filter((metadata): metadata is MetadataDefinition<ApplicationDefinition> => Boolean(metadata)),
+          entities: entities.filter((metadata): metadata is EntityDefinition => Boolean(metadata)),
+          runtimePackage,
+        });
         setSelection(current => current ?? initialSelection(tree));
       } catch (loadError) {
         if (mounted) {
@@ -138,7 +166,9 @@ export function StudioPage() {
         sidebar={
           <StudioSidebar
             navigation={state.navigation}
-            explorer={<ApplicationExplorer tree={state.tree} selection={selection} onSelect={setSelection} />}
+            tree={state.tree}
+            selection={selection}
+            onSelect={setSelection}
           />
         }
       >
@@ -147,6 +177,9 @@ export function StudioPage() {
           <ActiveWorkspace
             selection={selection}
             tree={state.tree}
+            applications={state.applications}
+            entities={state.entities}
+            runtimePackage={state.runtimePackage}
             form={form}
             entity={entity}
             page={page}
@@ -158,6 +191,7 @@ export function StudioPage() {
             runtimeClient={runtimeClient}
             context={context}
             preview={preview}
+            onSelect={setSelection}
             onPreview={setPreview}
             onPublished={() => setReloadKey((current) => current + 1)}
           />
@@ -170,6 +204,9 @@ export function StudioPage() {
 function ActiveWorkspace({
   selection,
   tree,
+  applications,
+  entities,
+  runtimePackage,
   form,
   entity,
   page,
@@ -181,11 +218,15 @@ function ActiveWorkspace({
   runtimeClient,
   context,
   preview,
+  onSelect,
   onPreview,
   onPublished,
 }: {
   selection?: ExplorerSelection;
   tree: MetadataDebugTree;
+  applications: Array<MetadataDefinition<ApplicationDefinition>>;
+  entities: EntityDefinition[];
+  runtimePackage?: MetadataDefinition<RuntimePackageDefinition> | null;
   form?: RuntimeForm;
   entity?: EntityDefinition;
   page?: ResolvedUIPage;
@@ -197,6 +238,7 @@ function ActiveWorkspace({
   runtimeClient: RuntimeClient;
   context: ReturnType<typeof useRuntimeContext>['context'];
   preview?: DesignerPreviewResult;
+  onSelect: (selection: ExplorerSelection) => void;
   onPreview: (preview: DesignerPreviewResult) => void;
   onPublished: () => void;
 }) {
@@ -204,11 +246,49 @@ function ActiveWorkspace({
     return <Panel title="Studio Workspace">Select metadata from the explorer.</Panel>;
   }
 
+  if (selection.type === 'HOME') {
+    return (
+      <>
+        <StudioHome
+          tree={tree}
+          applications={applications}
+          entities={entities}
+          runtimeStatus={runtimePackage?.definition.status}
+          onSelect={onSelect}
+        />
+        <HelpPanel topic="HOME" />
+      </>
+    );
+  }
+
+  if (selection.type === 'WIZARD') {
+    return (
+      <>
+        <GuidedAppBuilder />
+        <HelpPanel topic="HOME" />
+      </>
+    );
+  }
+
+  if (selection.type === 'TEMPLATES') {
+    return <TemplateGallery />;
+  }
+
+  if (selection.type === 'RUNTIME' || selection.type === 'HEALTH') {
+    return (
+      <>
+        <RuntimeHealthView runtimePackage={runtimePackage} />
+        <HelpPanel topic="RUNTIME" />
+      </>
+    );
+  }
+
   if (selection.type === 'ENTITY' || selection.type === 'FORMS') {
     return (
       <>
         <FormBuilder form={form} entity={entity} designer={designerClient} onPreview={onPreview} onPublished={onPublished} />
         <StudioPreview preview={preview} form={form} />
+        <HelpPanel topic="FORMS" />
       </>
     );
   }
@@ -222,6 +302,7 @@ function ActiveWorkspace({
       <>
         <WorkflowBuilder metadata={workflow} designer={designerClient} runtime={runtimeClient} context={context} onPreview={onPreview} />
         <StudioPreview preview={preview} />
+        <HelpPanel topic="WORKFLOWS" />
       </>
     );
   }
@@ -239,6 +320,7 @@ function ActiveWorkspace({
           onPreview={onPreview}
         />
         <StudioPreview preview={preview} />
+        <HelpPanel topic="INTEGRATIONS" />
       </>
     );
   }
@@ -252,6 +334,10 @@ function ActiveWorkspace({
 }
 
 function initialSelection(tree: MetadataDebugTree): ExplorerSelection | undefined {
+  if (tree.applications.length > 0 || tree.forms.length > 0 || tree.entities.length > 0) {
+    return { type: 'HOME', code: 'HOME' };
+  }
+
   if (tree.forms[0]) {
     return { type: 'FORMS', code: tree.forms[0] };
   }

@@ -1,6 +1,6 @@
 import type { RuntimeContext } from '../renderer/runtime-types';
 
-const API_BASE_URL = import.meta.env.VITE_REDIOS_API_URL ?? 'http://localhost:3001/api';
+const API_BASE_URL = import.meta.env.VITE_REDIOS_API_URL ?? '/api';
 
 export class ApiClient {
   constructor(private readonly context: RuntimeContext) {}

@@ -1,5 +1,7 @@
 import { Badge } from '../../components/atomic/atoms/Atoms';
 import type { RuntimeFormField } from '../../core/renderer/runtime-types';
+import { EmptyState } from '../../studio/empty/EmptyState';
+import { humanizeCode } from '../../studio/humanizer/HumanizerEngine';
 import { PropertyEditor } from '../property/PropertyEditor';
 
 export function PropertyPanel({
@@ -18,37 +20,44 @@ export function PropertyPanel({
       {field ? (
         <>
           <div className="studio-list-row">
-            <strong>fieldCode</strong>
-            <span>{field.fieldCode}</span>
+            <strong>Label</strong>
+            <span>{humanizeCode(field.fieldCode)}</span>
           </div>
           <div className="studio-list-row">
-            <strong>component</strong>
-            <span>{field.component}</span>
+            <strong>Component</strong>
+            <span>{humanizeCode(field.component)}</span>
           </div>
           <div className="studio-list-row">
-            <strong>required</strong>
+            <strong>Required</strong>
             <span>{String(field.required ?? false)}</span>
           </div>
           <div className="studio-list-row">
-            <strong>readonly</strong>
+            <strong>Visibility</strong>
+            <span>{field.visible === false ? 'Hidden' : 'Visible'}</span>
+          </div>
+          <div className="studio-list-row">
+            <strong>Security</strong>
             <span>{String(field.readonly ?? false)}</span>
           </div>
           <div className="studio-list-row">
-            <strong>visibility</strong>
-            <span>{field.visible === false ? 'hidden' : 'visible'}</span>
+            <strong>Validation</strong>
+            <span>{field.required ? 'Required' : 'Optional'}</span>
           </div>
           <div className="studio-list-row">
-            <strong>lookup relation</strong>
+            <strong>Lookup relation</strong>
             <span>{field.relation?.code ?? '-'}</span>
           </div>
           <div className="studio-list-row">
-            <strong>view</strong>
+            <strong>View</strong>
             <span>{field.view?.code ?? '-'}</span>
           </div>
           <PropertyEditor node={field as unknown as Record<string, unknown>} onChange={() => undefined} />
         </>
       ) : (
-        <div className="studio-empty">Click a field in the canvas to inspect metadata.</div>
+        <EmptyState
+          title="No field selected yet"
+          description="Click a field on the canvas to inspect label, component, security, and validation metadata."
+        />
       )}
     </div>
   );
