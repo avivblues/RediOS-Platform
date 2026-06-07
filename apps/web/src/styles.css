@@ -108,6 +108,11 @@ textarea {
   overflow: auto;
 }
 
+.studio-workspace-stack {
+  display: grid;
+  gap: var(--redios-spacing-md);
+}
+
 .studio-workspace-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -133,6 +138,10 @@ textarea {
 
 .studio-panel {
   margin-bottom: var(--redios-spacing-md);
+}
+
+.studio-builder-actions {
+  margin-top: var(--redios-spacing-md);
 }
 
 .studio-panel h3,

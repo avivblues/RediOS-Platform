@@ -1,5 +1,4 @@
 import type { MetadataDebugTree } from '../../core/api/metadata-client';
-import { Sidebar } from '../../components/atomic/organisms/Organisms';
 
 export interface ExplorerSelection {
   type: string;
@@ -30,7 +29,7 @@ export function ApplicationExplorer({
   onSelect: (selection: ExplorerSelection) => void;
 }) {
   return (
-    <Sidebar>
+    <section>
       <h3>Metadata Explorer</h3>
       {!tree ? <div className="studio-empty">Loading metadata tree...</div> : null}
       {tree
@@ -52,6 +51,6 @@ export function ApplicationExplorer({
             ) : null;
           })
         : null}
-    </Sidebar>
+    </section>
   );
 }

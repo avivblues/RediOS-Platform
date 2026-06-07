@@ -1,20 +1,23 @@
 import { useEffect, useMemo, useState } from 'react';
-import type { ConnectorDefinition, IntegrationDefinition, MetadataDefinition, WorkflowDefinition } from '@redios/shared';
-import { EntityBuilder } from '../../builder/entity/EntityBuilder';
+import type { ConnectorDefinition, EntityDefinition, IntegrationDefinition, MetadataDefinition, WorkflowDefinition } from '@redios/shared';
 import { FormBuilder } from '../../builder/form/FormBuilder';
 import { IntegrationBuilder } from '../../builder/integration/IntegrationBuilder';
+import { PageBuilder } from '../../builder/ui/PageBuilder';
 import { WorkflowBuilder } from '../../builder/workflow/WorkflowBuilder';
-import { Button } from '../../components/atomic/atoms/Atoms';
-import { StudioLayout } from '../../components/atomic/templates/StudioLayout';
-import { createApiClient } from '../../core/api/api-client';
+import { Panel } from '../../components/atomic/organisms/Organisms';
 import { DesignerClient, type DesignerPreviewResult } from '../../core/api/designer-client';
 import { MetadataClient, type MetadataDebugTree } from '../../core/api/metadata-client';
+import { createRediOSClient } from '../../core/api/redios-client';
 import { RuntimeClient } from '../../core/api/runtime-client';
 import { useRuntimeContext } from '../../core/context/runtime-context';
 import type { ResolvedUIPage, RuntimeForm, RuntimeNavigation, RuntimeTheme } from '../../core/renderer/runtime-types';
 import { ThemeProvider } from '../../core/theme/theme-provider';
 import { ApplicationExplorer, type ExplorerSelection } from '../../studio/explorer/ApplicationExplorer';
+import { StudioHeader } from '../../studio/StudioHeader';
 import { StudioPreview } from '../../studio/preview/StudioPreview';
+import { StudioSidebar } from '../../studio/StudioSidebar';
+import { StudioShell } from '../../studio/StudioShell';
+import { StudioWorkspace } from '../../studio/StudioWorkspace';
 
 interface StudioState {
   theme: RuntimeTheme;
@@ -24,19 +27,21 @@ interface StudioState {
 
 export function StudioPage() {
   const { context } = useRuntimeContext();
-  const api = useMemo(() => createApiClient(context), [context]);
-  const metadataClient = useMemo(() => new MetadataClient(api), [api]);
-  const designerClient = useMemo(() => new DesignerClient(api), [api]);
-  const runtimeClient = useMemo(() => new RuntimeClient(api), [api]);
+  const redios = useMemo(() => createRediOSClient(context), [context]);
+  const metadataClient = redios.metadata;
+  const designerClient = redios.designer;
+  const runtimeClient = redios.runtime;
   const [state, setState] = useState<StudioState | undefined>();
   const [selection, setSelection] = useState<ExplorerSelection | undefined>();
   const [form, setForm] = useState<RuntimeForm | undefined>();
+  const [entity, setEntity] = useState<EntityDefinition | undefined>();
   const [page, setPage] = useState<ResolvedUIPage | undefined>();
   const [workflow, setWorkflow] = useState<MetadataDefinition<WorkflowDefinition> | undefined>();
   const [integration, setIntegration] = useState<MetadataDefinition<IntegrationDefinition> | undefined>();
   const [connector, setConnector] = useState<MetadataDefinition<ConnectorDefinition> | undefined>();
   const [preview, setPreview] = useState<DesignerPreviewResult | undefined>();
   const [error, setError] = useState<string | undefined>();
+  const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
     let mounted = true;
@@ -54,7 +59,7 @@ export function StudioPage() {
         }
 
         setState({ theme, navigation, tree });
-        setSelection({ type: 'ENTITY', code: tree.entities[0] ?? '' });
+        setSelection(current => current ?? initialSelection(tree));
       } catch (loadError) {
         if (mounted) {
           setError(loadError instanceof Error ? loadError.message : String(loadError));
@@ -67,7 +72,7 @@ export function StudioPage() {
     return () => {
       mounted = false;
     };
-  }, [metadataClient]);
+  }, [metadataClient, reloadKey]);
 
   useEffect(() => {
     if (!selection || !state) {
@@ -84,6 +89,7 @@ export function StudioPage() {
 
       try {
         const nextForm = await resolveForm(activeSelection, activeState.tree, metadataClient);
+        const nextEntity = await resolveEntity(activeSelection, nextForm, metadataClient);
         const nextPage = await resolvePage(activeSelection, metadataClient);
         const nextWorkflow = await resolveWorkflow(activeSelection, metadataClient);
         const nextIntegration = await resolveIntegration(activeSelection, metadataClient);
@@ -94,6 +100,7 @@ export function StudioPage() {
         }
 
         setForm(nextForm);
+        setEntity(nextEntity);
         setPage(nextPage);
         setWorkflow(nextWorkflow);
         setIntegration(nextIntegration);
@@ -118,39 +125,142 @@ export function StudioPage() {
 
   return (
     <ThemeProvider theme={state.theme}>
-      <StudioLayout
+      <StudioShell
         header={
-          <div className="studio-section-header">
-            <div>
-              <h1>RediOS Studio</h1>
-              <div className="studio-muted">Metadata editor | Theme: {state.theme.theme} | Navigation: {state.navigation.navigation}</div>
-            </div>
-            <Button variant="secondary" onClick={() => void runSimulation(runtimeClient, context, form?.entityCode)}>
-              Simulate
-            </Button>
-          </div>
+          <StudioHeader
+            context={context}
+            themeCode={state.theme.theme}
+            navigationCode={state.navigation.navigation}
+            canSimulate={Boolean(form?.entityCode)}
+            onSimulate={() => void runSimulation(runtimeClient, context, form?.entityCode)}
+          />
         }
-        sidebar={<ApplicationExplorer tree={state.tree} selection={selection} onSelect={setSelection} />}
+        sidebar={
+          <StudioSidebar
+            navigation={state.navigation}
+            explorer={<ApplicationExplorer tree={state.tree} selection={selection} onSelect={setSelection} />}
+          />
+        }
       >
         {error ? <div className="studio-error">{error}</div> : null}
-        <div className="studio-workspace-grid">
-          <EntityBuilder entityCode={form?.entityCode ?? selection?.code} form={form} designer={designerClient} onPreview={setPreview} />
-          <FormBuilder form={form} designer={designerClient} onPreview={setPreview} />
-        </div>
-        <WorkflowBuilder metadata={workflow} designer={designerClient} runtime={runtimeClient} context={context} onPreview={setPreview} />
+        <StudioWorkspace>
+          <ActiveWorkspace
+            selection={selection}
+            tree={state.tree}
+            form={form}
+            entity={entity}
+            page={page}
+            workflow={workflow}
+            integration={integration}
+            connector={connector}
+            metadataClient={metadataClient}
+            designerClient={designerClient}
+            runtimeClient={runtimeClient}
+            context={context}
+            preview={preview}
+            onPreview={setPreview}
+            onPublished={() => setReloadKey((current) => current + 1)}
+          />
+        </StudioWorkspace>
+      </StudioShell>
+    </ThemeProvider>
+  );
+}
+
+function ActiveWorkspace({
+  selection,
+  tree,
+  form,
+  entity,
+  page,
+  workflow,
+  integration,
+  connector,
+  metadataClient,
+  designerClient,
+  runtimeClient,
+  context,
+  preview,
+  onPreview,
+  onPublished,
+}: {
+  selection?: ExplorerSelection;
+  tree: MetadataDebugTree;
+  form?: RuntimeForm;
+  entity?: EntityDefinition;
+  page?: ResolvedUIPage;
+  workflow?: MetadataDefinition<WorkflowDefinition>;
+  integration?: MetadataDefinition<IntegrationDefinition>;
+  connector?: MetadataDefinition<ConnectorDefinition>;
+  metadataClient: MetadataClient;
+  designerClient: DesignerClient;
+  runtimeClient: RuntimeClient;
+  context: ReturnType<typeof useRuntimeContext>['context'];
+  preview?: DesignerPreviewResult;
+  onPreview: (preview: DesignerPreviewResult) => void;
+  onPublished: () => void;
+}) {
+  if (!selection) {
+    return <Panel title="Studio Workspace">Select metadata from the explorer.</Panel>;
+  }
+
+  if (selection.type === 'ENTITY' || selection.type === 'FORMS') {
+    return (
+      <>
+        <FormBuilder form={form} entity={entity} designer={designerClient} onPreview={onPreview} onPublished={onPublished} />
+        <StudioPreview preview={preview} form={form} />
+      </>
+    );
+  }
+
+  if (selection.type === 'PAGES') {
+    return <PageBuilder page={page} />;
+  }
+
+  if (selection.type === 'WORKFLOWS') {
+    return (
+      <>
+        <WorkflowBuilder metadata={workflow} designer={designerClient} runtime={runtimeClient} context={context} onPreview={onPreview} />
+        <StudioPreview preview={preview} />
+      </>
+    );
+  }
+
+  if (selection.type === 'INTEGRATIONS' || selection.type === 'CONNECTORS') {
+    return (
+      <>
         <IntegrationBuilder
-          tree={state.tree}
+          tree={tree}
           selectedIntegration={integration}
           selectedConnector={connector}
           metadata={metadataClient}
           designer={designerClient}
           runtime={runtimeClient}
-          onPreview={setPreview}
+          onPreview={onPreview}
         />
-        <StudioPreview preview={preview} form={form} page={page} />
-      </StudioLayout>
-    </ThemeProvider>
+        <StudioPreview preview={preview} />
+      </>
+    );
+  }
+
+  return (
+    <Panel title="Metadata">
+      <div className="studio-muted">Selected metadata is loaded from the Metadata Engine.</div>
+      <pre>{JSON.stringify(selection, null, 2)}</pre>
+    </Panel>
   );
+}
+
+function initialSelection(tree: MetadataDebugTree): ExplorerSelection | undefined {
+  if (tree.forms[0]) {
+    return { type: 'FORMS', code: tree.forms[0] };
+  }
+
+  if (tree.entities[0]) {
+    return { type: 'ENTITY', code: tree.entities[0] };
+  }
+
+  return undefined;
 }
 
 async function resolveForm(
@@ -173,6 +283,20 @@ async function resolveForm(
   }
 
   return undefined;
+}
+
+async function resolveEntity(
+  selection: ExplorerSelection,
+  form: RuntimeForm | undefined,
+  metadataClient: MetadataClient,
+): Promise<EntityDefinition | undefined> {
+  const entityCode = selection.type === 'ENTITY' ? selection.code : form?.entityCode;
+
+  if (!entityCode) {
+    return undefined;
+  }
+
+  return metadataClient.getMetadata<EntityDefinition>('ENTITY', entityCode).then((metadata) => metadata.definition).catch(() => undefined);
 }
 
 async function resolvePage(selection: ExplorerSelection, metadataClient: MetadataClient): Promise<ResolvedUIPage | undefined> {

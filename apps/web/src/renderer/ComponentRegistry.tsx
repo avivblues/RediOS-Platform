@@ -7,6 +7,7 @@ export const componentRegistry: Record<string, StudioRenderer> = {
   BUTTON: ({ label }) => <Button>{label ?? 'Button'}</Button>,
   TEXT_INPUT: ({ label }) => <Input value="" placeholder={label ?? 'Text'} onChange={() => undefined} />,
   TEXT_AREA: ({ label }) => <textarea className="studio-input" placeholder={label ?? 'Text area'} />,
+  TEXTAREA: ({ label }) => <textarea className="studio-input" placeholder={label ?? 'Text area'} />,
   NUMBER_INPUT: ({ label }) => <Input value="" type="number" placeholder={label ?? 'Number'} onChange={() => undefined} />,
   DATE_PICKER: ({ label }) => <Input value="" type="date" placeholder={label ?? 'Date'} onChange={() => undefined} />,
   SELECT: () => <Select value="" options={['']} onChange={() => undefined} />,

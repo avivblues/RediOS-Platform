@@ -21,7 +21,7 @@ export function FormRenderer({ form }: { form?: RuntimeForm }) {
 }
 
 function RenderedField({ field }: { field: RuntimeFormField }) {
-  if (!field.visible) {
+  if (field.visible === false) {
     return null;
   }
 
