@@ -8,6 +8,7 @@ import { ProcessModule } from '../process/process.module';
 import { RelationModule } from '../relation/relation.module';
 import { SecurityModule } from '../security/security.module';
 import { TraceModule } from '../trace/trace.module';
+import { UIModule } from '../ui/ui.module';
 import { WorkflowModule } from '../workflow/workflow.module';
 import { SimulationEngine } from './simulation-engine.service';
 
@@ -23,6 +24,7 @@ import { SimulationEngine } from './simulation-engine.service';
     LedgerModule,
     RelationModule,
     TraceModule,
+    UIModule,
   ],
   providers: [SimulationEngine],
   exports: [SimulationEngine],

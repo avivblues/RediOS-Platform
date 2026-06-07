@@ -10,6 +10,7 @@ export type MetadataType =
   | 'LEDGER'
   | 'RELATION'
   | 'VIEW'
+  | 'UI'
   | 'FORM'
   | 'REPORT'
   | 'EXPERIENCE'

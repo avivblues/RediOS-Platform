@@ -12,6 +12,7 @@ import type {
   MetadataDefinition,
   ProcessDefinition,
   RelationDefinition,
+  UIDefinition,
   ViewDefinition,
   WorkflowDefinition,
 } from '@redios/shared';
@@ -45,7 +46,119 @@ type ApplicationSeed = {
   name: string;
   entities: EntitySeed[];
   relations?: RelationDefinition[];
+  uis?: UIDefinition[];
 };
+
+const commonUIDefinitions: UIDefinition[] = [
+  ...[
+    'TEXT_INPUT',
+    'TEXT_AREA',
+    'NUMBER_INPUT',
+    'DATE_PICKER',
+    'SELECT',
+    'BUTTON',
+    'BADGE',
+    'LABEL',
+    'CARD',
+    'TABLE',
+    'CHART',
+    'ICON',
+  ].map((code): UIDefinition => ({
+    kind: 'ATOM',
+    code,
+    category: toAtomCategory(code),
+    renderer: {
+      web: toRendererName(code),
+      mobile: toRendererName(code),
+    },
+    propsSchema: defaultPropsSchema(code),
+    enabled: true,
+  })),
+  {
+    kind: 'MOLECULE',
+    code: 'FORM_FIELD',
+    atoms: [
+      { atom: 'LABEL', bind: 'label' },
+      { atom: 'TEXT_INPUT', bind: 'value' },
+    ],
+    enabled: true,
+  },
+  {
+    kind: 'MOLECULE',
+    code: 'SEARCH_BOX',
+    atoms: [
+      { atom: 'TEXT_INPUT', bind: 'query' },
+      { atom: 'BUTTON', bind: 'submit' },
+    ],
+    enabled: true,
+  },
+  {
+    kind: 'MOLECULE',
+    code: 'ACTION_BUTTON',
+    atoms: [{ atom: 'BUTTON', bind: 'action' }],
+    enabled: true,
+  },
+  {
+    kind: 'MOLECULE',
+    code: 'STATUS_BADGE',
+    atoms: [{ atom: 'BADGE', bind: 'status' }],
+    enabled: true,
+  },
+  {
+    kind: 'ORGANISM',
+    code: 'FORM_SECTION',
+    molecules: [{ molecule: 'FORM_FIELD', bind: 'fields' }],
+    enabled: true,
+  },
+  {
+    kind: 'ORGANISM',
+    code: 'DATA_TABLE',
+    molecules: [
+      { molecule: 'SEARCH_BOX', bind: 'search' },
+      { molecule: 'FORM_FIELD', bind: 'filters' },
+    ],
+    enabled: true,
+  },
+  {
+    kind: 'ORGANISM',
+    code: 'ACTION_BAR',
+    molecules: [{ molecule: 'ACTION_BUTTON', bind: 'actions' }],
+    enabled: true,
+  },
+  {
+    kind: 'ORGANISM',
+    code: 'DETAIL_CARD',
+    molecules: [
+      { molecule: 'STATUS_BADGE', bind: 'status' },
+      { molecule: 'FORM_FIELD', bind: 'fields' },
+    ],
+    enabled: true,
+  },
+  {
+    kind: 'ORGANISM',
+    code: 'TIMELINE',
+    molecules: [{ molecule: 'STATUS_BADGE', bind: 'events' }],
+    enabled: true,
+  },
+  {
+    kind: 'TEMPLATE',
+    code: 'SINGLE_PAGE',
+    regions: [{ code: 'HEADER' }, { code: 'CONTENT' }],
+    enabled: true,
+  },
+  {
+    kind: 'TEMPLATE',
+    code: 'MASTER_DETAIL',
+    regions: [{ code: 'HEADER' }, { code: 'CONTENT' }, { code: 'SIDEBAR' }],
+    enabled: true,
+  },
+  {
+    kind: 'TEMPLATE',
+    code: 'DASHBOARD_LAYOUT',
+    regions: [{ code: 'HEADER' }, { code: 'CONTENT' }, { code: 'SIDEBAR' }],
+    enabled: true,
+  },
+];
 
 const applications: ApplicationSeed[] = [
   {
@@ -231,6 +344,38 @@ const applications: ApplicationSeed[] = [
           ownership: false,
           lookup: true,
         },
+        enabled: true,
+      },
+    ],
+    uis: [
+      {
+        kind: 'PAGE',
+        code: 'WORK_ORDER_DETAIL_PAGE',
+        entityCode: 'WORK_ORDER',
+        viewCode: 'WORK_ORDER_LIST',
+        template: 'MASTER_DETAIL',
+        regions: {
+          HEADER: ['ACTION_BAR'],
+          CONTENT: ['DETAIL_CARD'],
+          SIDEBAR: ['TIMELINE'],
+        },
+        actions: ['START', 'COMPLETE', 'CANCEL'],
+        relations: ['WORK_ORDER_ASSET_RELATION'],
+        enabled: true,
+      },
+      {
+        kind: 'PAGE',
+        code: 'ASSET_DETAIL_PAGE',
+        entityCode: 'ASSET',
+        viewCode: 'ASSET_LOOKUP',
+        template: 'MASTER_DETAIL',
+        regions: {
+          HEADER: ['ACTION_BAR'],
+          CONTENT: ['DETAIL_CARD'],
+          SIDEBAR: ['TIMELINE'],
+        },
+        actions: ['ACTIVATE', 'DISABLE'],
+        relations: [],
         enabled: true,
       },
     ],
@@ -581,6 +726,23 @@ const applications: ApplicationSeed[] = [
         ],
       },
     ],
+    uis: [
+      {
+        kind: 'PAGE',
+        code: 'TICKET_DETAIL_PAGE',
+        entityCode: 'TICKET',
+        viewCode: 'TICKET_LIST',
+        template: 'MASTER_DETAIL',
+        regions: {
+          HEADER: ['ACTION_BAR'],
+          CONTENT: ['DETAIL_CARD'],
+          SIDEBAR: ['TIMELINE'],
+        },
+        actions: ['ASSIGN', 'START', 'RESOLVE', 'CLOSE', 'REOPEN'],
+        relations: [],
+        enabled: true,
+      },
+    ],
   },
 ];
 
@@ -588,6 +750,7 @@ export const metadataSeedRecords: MetadataDefinition[] = applications.flatMap((a
   createApplicationRecord(application),
   ...application.entities.flatMap((entity) => createEntityRecords(application, entity)),
   ...(application.relations ?? []).map((relation) => createRelationRecord(application, relation)),
+  ...[...commonUIDefinitions, ...(application.uis ?? [])].map((ui) => createUIRecord(application, ui)),
 ]);
 
 function createApplicationRecord(application: ApplicationSeed): MetadataDefinition<ApplicationDefinition> {
@@ -824,12 +987,76 @@ function createViewRecord(
   };
 }
 
+function createUIRecord(
+  application: ApplicationSeed,
+  ui: UIDefinition,
+): MetadataDefinition<UIDefinition> {
+  return {
+    tenantId,
+    domainCode,
+    applicationCode: application.code,
+    type: 'UI',
+    code: ui.code,
+    name: toLabel(ui.code),
+    version: 1,
+    enabled: true,
+    definition: ui,
+  };
+}
+
 function toActionType(actionCode: string): ActionType {
   if (['CREATE', 'READ', 'UPDATE', 'APPROVE', 'CANCEL'].includes(actionCode)) {
     return actionCode as ActionType;
   }
 
   return 'CUSTOM';
+}
+
+function toAtomCategory(code: string): 'INPUT' | 'ACTION' | 'DISPLAY' | 'DATA' | 'VISUAL' {
+  if (['TEXT_INPUT', 'TEXT_AREA', 'NUMBER_INPUT', 'DATE_PICKER', 'SELECT'].includes(code)) {
+    return 'INPUT';
+  }
+
+  if (code === 'BUTTON') {
+    return 'ACTION';
+  }
+
+  if (['TABLE', 'CHART'].includes(code)) {
+    return 'DATA';
+  }
+
+  if (['ICON', 'CARD'].includes(code)) {
+    return 'VISUAL';
+  }
+
+  return 'DISPLAY';
+}
+
+function toRendererName(code: string): string {
+  return code
+    .split('_')
+    .map((part) => part.charAt(0) + part.slice(1).toLowerCase())
+    .join('');
+}
+
+function defaultPropsSchema(code: string): Record<string, string> {
+  if (['TEXT_INPUT', 'TEXT_AREA', 'NUMBER_INPUT', 'DATE_PICKER', 'SELECT'].includes(code)) {
+    return {
+      placeholder: 'string',
+      disabled: 'boolean',
+    };
+  }
+
+  if (code === 'BUTTON') {
+    return {
+      label: 'string',
+      disabled: 'boolean',
+    };
+  }
+
+  return {
+    label: 'string',
+  };
 }
 
 function toLabel(code: string): string {

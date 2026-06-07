@@ -21,6 +21,7 @@ import { ProcessEngine } from '../process/process-engine.service';
 import { RelationEngine } from '../relation/relation-engine.service';
 import { SecurityEngine } from '../security/security-engine.service';
 import { TraceEngine } from '../trace/trace-engine.service';
+import { UIEngine } from '../ui/ui-engine.service';
 import { WorkflowEngine } from '../workflow/workflow-engine.service';
 
 @Injectable()
@@ -37,6 +38,7 @@ export class SimulationEngine {
     private readonly eventEngine: EventEngine,
     private readonly ledgerEngine: LedgerEngine,
     private readonly relationEngine: RelationEngine,
+    private readonly uiEngine: UIEngine,
     private readonly traceEngine: TraceEngine,
   ) {}
 
@@ -241,6 +243,22 @@ export class SimulationEngine {
       valid: true,
     }));
 
+    const pages = await this.runStep(steps, 'VALIDATION', 'UI pages resolved.', () =>
+      this.uiEngine.resolvePagesByEntity(context, request.entityCode),
+    );
+
+    if (!pages.ok) {
+      return this.finalize(request, context, this.failed(validation, steps, predicted));
+    }
+
+    predicted.ui = {
+      pages: pages.value.map((page) => ({
+        code: page.page.code,
+        template: page.template.code,
+        atoms: this.uiEngine.countAtoms(page),
+      })),
+    };
+
     return this.finalize(request, context, {
       success: steps.every((step) => step.status !== 'FAILED'),
       validation,
@@ -320,6 +338,10 @@ export class SimulationEngine {
 
       if (metadataDefinition.type === 'RELATION') {
         return this.relationSourceEntityCode(metadataDefinition.definition) === entityCode ? [metadataDefinition] : [];
+      }
+
+      if (metadataDefinition.type === 'UI') {
+        return [metadataDefinition];
       }
 
       return [];

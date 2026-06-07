@@ -103,6 +103,16 @@ export class MongoMetadataProvider implements MetadataProvider {
   }
 
   private createDefinitionIdentity(definition: MetadataDefinition): Record<string, string> {
+    if (definition.type === 'UI' && definition.definition && typeof definition.definition === 'object' && 'kind' in definition.definition) {
+      const kind = (definition.definition as { kind?: unknown }).kind;
+
+      if (typeof kind === 'string') {
+        return {
+          'definition.kind': kind,
+        };
+      }
+    }
+
     if (definition.definition && typeof definition.definition === 'object' && 'entityCode' in definition.definition) {
       const entityCode = (definition.definition as { entityCode?: unknown }).entityCode;
 

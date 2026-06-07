@@ -15,6 +15,7 @@ import { RelationModule } from './core/relation/relation.module';
 import { RuntimeModule as CoreRuntimeModule } from './core/runtime/runtime.module';
 import { SecurityModule } from './core/security/security.module';
 import { StorageModule } from './core/storage/storage.module';
+import { UIModule as CoreUIModule } from './core/ui/ui.module';
 import { WorkflowModule } from './core/workflow/workflow.module';
 import { HealthModule } from './health/health.module';
 import { KernelLoggerModule } from './logger/kernel-logger.module';
@@ -25,6 +26,7 @@ import { RuntimeModule as RuntimeApiModule } from './runtime/runtime.module';
 import { RuntimeTracesModule } from './runtime-traces/runtime-traces.module';
 import { RelationsModule } from './relations/relations.module';
 import { SimulationModule } from './simulation/simulation.module';
+import { UIModule } from './ui/ui.module';
 
 @Module({
   imports: [
@@ -55,6 +57,7 @@ import { SimulationModule } from './simulation/simulation.module';
     RuntimeTracesModule,
     RelationsModule,
     SimulationModule,
+    UIModule,
     ContextModule,
     ApplicationModule,
     MetadataModule,
@@ -69,6 +72,7 @@ import { SimulationModule } from './simulation/simulation.module';
     StorageModule,
     LedgerModule,
     EventModule,
+    CoreUIModule,
   ],
 })
 export class AppModule {}

@@ -10,6 +10,12 @@ import type {
   MetadataDefinition,
   ProcessDefinition,
   RelationDefinition,
+  UIAtomDefinition,
+  UIDefinition,
+  UIMoleculeDefinition,
+  UIOrganismDefinition,
+  UIPageDefinition,
+  UITemplateDefinition,
   ValidationIssue,
   ValidationResult,
   ViewDefinition,
@@ -27,6 +33,7 @@ type MetadataIndex = {
   events: Map<string, MetadataDefinition<EventDefinition>>;
   relations: Map<string, MetadataDefinition<RelationDefinition>[]>;
   views: Map<string, MetadataDefinition<ViewDefinition>[]>;
+  ui: Map<string, MetadataDefinition<UIDefinition>[]>;
 };
 
 @Injectable()
@@ -45,6 +52,7 @@ export class MetadataValidatorEngine {
     this.validateRelationDefinitions(metadataDefinitions, index, issues);
     this.validateFieldRelationReferences(index, issues);
     this.validateViewDefinitions(metadataDefinitions, index, issues);
+    this.validateUIDefinitions(metadataDefinitions, index, issues);
 
     const errors = issues.filter((issue) => issue.severity === 'ERROR').length;
     const warnings = issues.filter((issue) => issue.severity === 'WARNING').length;
@@ -69,6 +77,7 @@ export class MetadataValidatorEngine {
       events: new Map(),
       relations: new Map(),
       views: new Map(),
+      ui: new Map(),
     };
 
     for (const metadata of metadataDefinitions) {
@@ -122,6 +131,14 @@ export class MetadataValidatorEngine {
         const records = index.views.get(metadata.code) ?? [];
         records.push(metadata as MetadataDefinition<ViewDefinition>);
         index.views.set(metadata.code, records);
+      }
+
+      if (metadata.type === 'UI') {
+        const ui = metadata.definition as UIDefinition;
+        const key = this.uiKey(ui.kind, ui.code);
+        const records = index.ui.get(key) ?? [];
+        records.push(metadata as MetadataDefinition<UIDefinition>);
+        index.ui.set(key, records);
       }
     }
 
@@ -725,8 +742,169 @@ export class MetadataValidatorEngine {
     }
   }
 
+  private validateUIDefinitions(metadataDefinitions: MetadataDefinition[], index: MetadataIndex, issues: ValidationIssue[]): void {
+    for (const [key, definitions] of index.ui.entries()) {
+      if (definitions.length > 1) {
+        this.addIssue(
+          issues,
+          'DUPLICATE_UI_CODE',
+          'ERROR',
+          `Duplicate UI definition ${key}.`,
+          `UI.${key}`,
+          'Keep one UI definition per kind and code.',
+        );
+      }
+    }
+
+    for (const metadata of metadataDefinitions.filter((candidate) => candidate.type === 'UI')) {
+      const ui = metadata.definition as UIDefinition;
+
+      if (ui.kind === 'ATOM') {
+        this.validateUIAtom(ui, issues);
+      }
+
+      if (ui.kind === 'MOLECULE') {
+        this.validateUIMolecule(ui, index, issues);
+      }
+
+      if (ui.kind === 'ORGANISM') {
+        this.validateUIOrganism(ui, index, issues);
+      }
+
+      if (ui.kind === 'TEMPLATE') {
+        this.validateUITemplate(ui, issues);
+      }
+
+      if (ui.kind === 'PAGE') {
+        this.validateUIPage(ui, index, issues);
+      }
+    }
+  }
+
+  private validateUIAtom(atom: UIAtomDefinition, issues: ValidationIssue[]): void {
+    if (!atom.renderer.web || !atom.renderer.mobile) {
+      this.addIssue(
+        issues,
+        'UI_RENDERER_NOT_FOUND',
+        'ERROR',
+        `UI atom ${atom.code} must define web and mobile renderer names.`,
+        `UI.ATOM.${atom.code}.renderer`,
+        'Set renderer.web and renderer.mobile.',
+      );
+    }
+  }
+
+  private validateUIMolecule(molecule: UIMoleculeDefinition, index: MetadataIndex, issues: ValidationIssue[]): void {
+    for (const [atomIndex, atomBinding] of molecule.atoms.entries()) {
+      if (!this.hasUI(index, 'ATOM', atomBinding.atom)) {
+        this.addIssue(
+          issues,
+          'UI_ATOM_NOT_FOUND',
+          'ERROR',
+          `Molecule ${molecule.code} references missing atom ${atomBinding.atom}.`,
+          `UI.MOLECULE.${molecule.code}.atoms[${atomIndex}].atom`,
+          `Create atom ${atomBinding.atom}.`,
+        );
+      }
+    }
+  }
+
+  private validateUIOrganism(organism: UIOrganismDefinition, index: MetadataIndex, issues: ValidationIssue[]): void {
+    for (const [moleculeIndex, moleculeBinding] of organism.molecules.entries()) {
+      if (!this.hasUI(index, 'MOLECULE', moleculeBinding.molecule)) {
+        this.addIssue(
+          issues,
+          'UI_MOLECULE_NOT_FOUND',
+          'ERROR',
+          `Organism ${organism.code} references missing molecule ${moleculeBinding.molecule}.`,
+          `UI.ORGANISM.${organism.code}.molecules[${moleculeIndex}].molecule`,
+          `Create molecule ${moleculeBinding.molecule}.`,
+        );
+      }
+    }
+  }
+
+  private validateUITemplate(template: UITemplateDefinition, issues: ValidationIssue[]): void {
+    const regionCounts = template.regions.reduce<Map<string, number>>((counts, region) => {
+      counts.set(region.code, (counts.get(region.code) ?? 0) + 1);
+      return counts;
+    }, new Map());
+
+    for (const [regionCode, count] of regionCounts.entries()) {
+      if (count > 1) {
+        this.addIssue(
+          issues,
+          'UI_REGION_INVALID',
+          'ERROR',
+          `Template ${template.code} has duplicate region ${regionCode}.`,
+          `UI.TEMPLATE.${template.code}.regions`,
+          'Use unique region codes.',
+        );
+      }
+    }
+  }
+
+  private validateUIPage(page: UIPageDefinition, index: MetadataIndex, issues: ValidationIssue[]): void {
+    const template = this.getUI<UITemplateDefinition>(index, 'TEMPLATE', page.template);
+
+    if (!template) {
+      this.addIssue(
+        issues,
+        'UI_TEMPLATE_NOT_FOUND',
+        'ERROR',
+        `Page ${page.code} references missing template ${page.template}.`,
+        `UI.PAGE.${page.code}.template`,
+        `Create template ${page.template}.`,
+      );
+    }
+
+    const templateRegions = new Set(template?.regions.map((region) => region.code) ?? []);
+
+    for (const [regionCode, organisms] of Object.entries(page.regions)) {
+      if (template && !templateRegions.has(regionCode)) {
+        this.addIssue(
+          issues,
+          'UI_REGION_INVALID',
+          'ERROR',
+          `Page ${page.code} uses region ${regionCode} that is not declared by template ${page.template}.`,
+          `UI.PAGE.${page.code}.regions.${regionCode}`,
+          `Add region ${regionCode} to template ${page.template} or update the page region.`,
+        );
+      }
+
+      for (const [organismIndex, organismCode] of organisms.entries()) {
+        if (!this.hasUI(index, 'ORGANISM', organismCode)) {
+          this.addIssue(
+            issues,
+            'UI_ORGANISM_NOT_FOUND',
+            'ERROR',
+            `Page ${page.code} references missing organism ${organismCode}.`,
+            `UI.PAGE.${page.code}.regions.${regionCode}[${organismIndex}]`,
+            `Create organism ${organismCode}.`,
+          );
+        }
+      }
+    }
+  }
+
   private workflowHasState(index: MetadataIndex, entityCode: string, stateCode: string): boolean {
     return Boolean(index.workflowsByEntity.get(entityCode)?.definition.states.some((state) => state.code === stateCode));
+  }
+
+  private hasUI(index: MetadataIndex, kind: UIDefinition['kind'], code: string): boolean {
+    return Boolean(this.getUI(index, kind, code));
+  }
+
+  private getUI<TDefinition extends UIDefinition>(
+    index: MetadataIndex,
+    kind: UIDefinition['kind'],
+    code: string,
+  ): TDefinition | undefined {
+    return index.ui.get(this.uiKey(kind, code))?.[0]?.definition as TDefinition | undefined;
+  }
+
+  private uiKey(kind: UIDefinition['kind'], code: string): string {
+    return `${kind}:${code}`;
   }
 
   private fieldExists(fields: Map<string, MetadataDefinition<FieldDefinition>> | undefined, fieldCode: string): boolean {

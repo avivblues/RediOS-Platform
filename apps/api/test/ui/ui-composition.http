@@ -1,0 +1,23 @@
+@baseUrl = http://localhost:3001/api
+
+### Resolve WORK_ORDER detail page composition
+### Expected: PAGE -> MASTER_DETAIL -> ACTION_BAR / DETAIL_CARD / TIMELINE -> molecules -> atoms
+GET {{baseUrl}}/ui/pages/WORK_ORDER_DETAIL_PAGE
+x-tenant-id: demo
+x-domain-code: DEFAULT
+x-application-code: ASSET_MAINTENANCE
+x-user-id: admin
+
+### Resolve ASSET detail page composition
+GET {{baseUrl}}/ui/pages/ASSET_DETAIL_PAGE
+x-tenant-id: demo
+x-domain-code: DEFAULT
+x-application-code: ASSET_MAINTENANCE
+x-user-id: admin
+
+### Resolve TICKET detail page composition
+GET {{baseUrl}}/ui/pages/TICKET_DETAIL_PAGE
+x-tenant-id: demo
+x-domain-code: DEFAULT
+x-application-code: HELPDESK
+x-user-id: admin

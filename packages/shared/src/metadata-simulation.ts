@@ -73,5 +73,12 @@ export interface SimulationResult {
       code: string;
       valid: boolean;
     }>;
+    ui?: {
+      pages: Array<{
+        code: string;
+        template: string;
+        atoms: number;
+      }>;
+    };
   };
 }

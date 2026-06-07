@@ -13,6 +13,9 @@ import type {
   ProcessDefinition,
   RelationDefinition,
   RuntimeContext,
+  UIDefinition,
+  UIKind,
+  UIPageDefinition,
   ViewDefinition,
   WorkflowDefinition,
 } from '@redios/shared';
@@ -260,6 +263,48 @@ export class MetadataResolver {
     }
 
     return matchingDefinitions as MetadataDefinition<ViewDefinition>[];
+  }
+
+  async resolveUI(
+    context: RuntimeContext,
+    kind: UIKind,
+    code: string,
+  ): Promise<MetadataDefinition<UIDefinition> | null> {
+    const definitions = await this.registry.findByType(context, 'UI');
+    const definition = definitions.find((candidate) => {
+      const ui = candidate.definition as UIDefinition;
+      return ui.kind === kind && ui.code === code && ui.enabled;
+    });
+
+    if (!definition) {
+      return null;
+    }
+
+    const validation = this.validator.validate(definition);
+
+    if (!validation.valid) {
+      throw new UnprocessableEntityException(validation.errors);
+    }
+
+    return definition as MetadataDefinition<UIDefinition>;
+  }
+
+  async resolveUIPages(context: RuntimeContext, entityCode: string): Promise<MetadataDefinition<UIPageDefinition>[]> {
+    const definitions = await this.registry.findByType(context, 'UI');
+    const matchingDefinitions = definitions.filter((candidate) => {
+      const ui = candidate.definition as UIDefinition;
+      return ui.kind === 'PAGE' && ui.entityCode === entityCode && ui.enabled;
+    });
+
+    for (const definition of matchingDefinitions) {
+      const validation = this.validator.validate(definition);
+
+      if (!validation.valid) {
+        throw new UnprocessableEntityException(validation.errors);
+      }
+    }
+
+    return matchingDefinitions as MetadataDefinition<UIPageDefinition>[];
   }
 
   private async resolveMany<TDefinition>(
