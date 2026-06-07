@@ -12,6 +12,7 @@ export type SimulationStepStage =
   | 'PROCESS'
   | 'BUSINESS'
   | 'EVENT'
+  | 'INTEGRATION'
   | 'LEDGER';
 
 export type SimulationStepStatus = 'SUCCESS' | 'FAILED' | 'SKIPPED' | 'READY';
@@ -67,6 +68,12 @@ export interface SimulationResult {
       events: string[];
       handlers: string[];
     };
+    integrations?: Array<{
+      code: string;
+      trigger: string;
+      connector: string;
+      status: 'READY' | 'SUCCESS' | 'FAILED';
+    }>;
     ledger?: {
       impacts: string[];
     };

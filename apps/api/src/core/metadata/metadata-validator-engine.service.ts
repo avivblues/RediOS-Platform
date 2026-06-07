@@ -4,12 +4,14 @@ import type {
   ApplicationDefinition,
   BusinessDefinition,
   ConflictPolicyDefinition,
+  ConnectorDefinition,
   EntityDefinition,
   EventDefinition,
   ExperienceConditions,
   ExperienceDefinition,
   FieldDefinition,
   FormDefinition,
+  IntegrationDefinition,
   LedgerDefinition,
   MetadataDefinition,
   NavigationDefinition,
@@ -50,6 +52,8 @@ type MetadataIndex = {
   experiences: Map<string, MetadataDefinition<ExperienceDefinition>[]>;
   syncPolicies: Map<string, MetadataDefinition<SyncDefinition>[]>;
   conflictPolicies: Map<string, MetadataDefinition<ConflictPolicyDefinition>[]>;
+  integrations: Map<string, MetadataDefinition<IntegrationDefinition>[]>;
+  connectors: Map<string, MetadataDefinition<ConnectorDefinition>[]>;
 };
 
 @Injectable()
@@ -76,6 +80,8 @@ export class MetadataValidatorEngine {
     this.validateExperienceDefinitions(metadataDefinitions, index, issues);
     this.validateSyncPolicyDefinitions(metadataDefinitions, index, issues);
     this.validateConflictPolicyDefinitions(metadataDefinitions, index, issues);
+    this.validateConnectorDefinitions(metadataDefinitions, index, issues);
+    this.validateIntegrationDefinitions(metadataDefinitions, index, issues);
     this.validateDependencyIntegrity(metadataDefinitions, index, issues);
 
     const errors = issues.filter((issue) => issue.severity === 'ERROR').length;
@@ -109,6 +115,8 @@ export class MetadataValidatorEngine {
       experiences: new Map(),
       syncPolicies: new Map(),
       conflictPolicies: new Map(),
+      integrations: new Map(),
+      connectors: new Map(),
     };
 
     for (const metadata of metadataDefinitions) {
@@ -220,6 +228,18 @@ export class MetadataValidatorEngine {
         const records = index.conflictPolicies.get(key) ?? [];
         records.push(metadata as MetadataDefinition<ConflictPolicyDefinition>);
         index.conflictPolicies.set(key, records);
+      }
+
+      if (metadata.type === 'INTEGRATION') {
+        const records = index.integrations.get(metadata.code) ?? [];
+        records.push(metadata as MetadataDefinition<IntegrationDefinition>);
+        index.integrations.set(metadata.code, records);
+      }
+
+      if (metadata.type === 'CONNECTOR') {
+        const records = index.connectors.get(metadata.code) ?? [];
+        records.push(metadata as MetadataDefinition<ConnectorDefinition>);
+        index.connectors.set(metadata.code, records);
       }
     }
 
@@ -1651,6 +1671,119 @@ export class MetadataValidatorEngine {
     }
   }
 
+  private validateConnectorDefinitions(
+    metadataDefinitions: MetadataDefinition[],
+    _index: MetadataIndex,
+    issues: ValidationIssue[],
+  ): void {
+    const connectorTypes = ['HTTP', 'WEBHOOK', 'EMAIL', 'MESSAGE_QUEUE', 'CUSTOM'];
+    const authTypes = ['NONE', 'OAUTH2', 'API_KEY', 'TOKEN'];
+
+    for (const metadata of metadataDefinitions.filter((candidate) => candidate.type === 'CONNECTOR')) {
+      const connector = metadata.definition as ConnectorDefinition;
+
+      if (!connectorTypes.includes(connector.type)) {
+        this.addIssue(
+          issues,
+          'CONNECTOR_INVALID',
+          'ERROR',
+          `Connector ${connector.code} has invalid type ${connector.type}.`,
+          `CONNECTOR.${connector.code}.type`,
+          'Use a supported connector type.',
+        );
+      }
+
+      if (!authTypes.includes(connector.authType)) {
+        this.addIssue(
+          issues,
+          'CONNECTOR_INVALID',
+          'ERROR',
+          `Connector ${connector.code} has invalid auth type ${connector.authType}.`,
+          `CONNECTOR.${connector.code}.authType`,
+          'Use a supported auth type.',
+        );
+      }
+
+      if (connector.secretCode && connector.configSchema && 'secret' in connector.configSchema) {
+        this.addIssue(
+          issues,
+          'SECRET_REFERENCE_INVALID',
+          'ERROR',
+          `Connector ${connector.code} must not store secrets in metadata config.`,
+          `CONNECTOR.${connector.code}.configSchema`,
+          'Store only a secretCode reference and resolve the secret through SecretProvider.',
+        );
+      }
+
+      if (connector.authType !== 'NONE' && !connector.secretCode) {
+        this.addIssue(
+          issues,
+          'SECRET_REFERENCE_INVALID',
+          'ERROR',
+          `Connector ${connector.code} requires a secretCode reference for ${connector.authType} auth.`,
+          `CONNECTOR.${connector.code}.secretCode`,
+          'Store a secretCode reference only; never store the secret value in metadata.',
+        );
+      }
+    }
+  }
+
+  private validateIntegrationDefinitions(
+    metadataDefinitions: MetadataDefinition[],
+    index: MetadataIndex,
+    issues: ValidationIssue[],
+  ): void {
+    const triggerTypes = ['EVENT', 'WORKFLOW', 'MANUAL', 'SCHEDULE'];
+
+    for (const metadata of metadataDefinitions.filter((candidate) => candidate.type === 'INTEGRATION')) {
+      const integration = metadata.definition as IntegrationDefinition;
+
+      if (!triggerTypes.includes(integration.trigger.type)) {
+        this.addIssue(
+          issues,
+          'INTEGRATION_TRIGGER_INVALID',
+          'ERROR',
+          `Integration ${integration.code} has invalid trigger type ${integration.trigger.type}.`,
+          `INTEGRATION.${integration.code}.trigger.type`,
+          'Use EVENT, WORKFLOW, MANUAL, or SCHEDULE.',
+        );
+      }
+
+      if (integration.trigger.type === 'EVENT' && integration.trigger.sourceCode && !index.events.has(integration.trigger.sourceCode)) {
+        this.addIssue(
+          issues,
+          'INTEGRATION_TRIGGER_INVALID',
+          'ERROR',
+          `Integration ${integration.code} references missing event ${integration.trigger.sourceCode}.`,
+          `INTEGRATION.${integration.code}.trigger.sourceCode`,
+          `Create ${integration.trigger.sourceCode} event metadata.`,
+        );
+      }
+
+      if (!index.connectors.has(integration.connector.connectorCode)) {
+        this.addIssue(
+          issues,
+          'CONNECTOR_NOT_FOUND',
+          'ERROR',
+          `Integration ${integration.code} references missing connector ${integration.connector.connectorCode}.`,
+          `INTEGRATION.${integration.code}.connector.connectorCode`,
+          'Create connector metadata or select an existing connector.',
+        );
+      }
+
+      if (!this.mappingValid(integration.mapping.input) || !this.mappingValid(integration.mapping.output)) {
+        this.addIssue(
+          issues,
+          'INVALID_MAPPING',
+          'ERROR',
+          `Integration ${integration.code} has invalid mapping metadata.`,
+          `INTEGRATION.${integration.code}.mapping`,
+          'Mapping keys and values must be string paths.',
+        );
+      }
+    }
+  }
+
   private validateDependencyIntegrity(
     metadataDefinitions: MetadataDefinition[],
     index: MetadataIndex,
@@ -1848,6 +1981,19 @@ export class MetadataValidatorEngine {
           ...policy.rules.map((rule, ruleIndex) =>
             this.dependency(metadata, 'FIELD', rule.fieldCode, `CONFLICT_POLICY.${policy.code}.rules[${ruleIndex}].fieldCode`),
           ),
+        ];
+      }
+
+      if (metadata.type === 'INTEGRATION') {
+        const integration = metadata.definition as IntegrationDefinition;
+        return [
+          ...(integration.trigger.type === 'EVENT' && integration.trigger.sourceCode
+            ? [this.dependency(metadata, 'EVENT', integration.trigger.sourceCode, `INTEGRATION.${integration.code}.trigger.sourceCode`)]
+            : []),
+          ...(integration.trigger.type === 'WORKFLOW' && integration.trigger.sourceCode
+            ? [this.dependency(metadata, 'WORKFLOW', integration.trigger.sourceCode, `INTEGRATION.${integration.code}.trigger.sourceCode`)]
+            : []),
+          this.dependency(metadata, 'CONNECTOR', integration.connector.connectorCode, `INTEGRATION.${integration.code}.connector.connectorCode`),
         ];
       }
 
@@ -2111,6 +2257,14 @@ export class MetadataValidatorEngine {
   private configString(config: Record<string, unknown> | undefined, key: string): string | undefined {
     const value = config?.[key];
     return typeof value === 'string' ? value : undefined;
+  }
+
+  private mappingValid(mapping: Record<string, string> | undefined): boolean {
+    if (!mapping || typeof mapping !== 'object' || Array.isArray(mapping)) {
+      return false;
+    }
+
+    return Object.entries(mapping).every(([source, target]) => source.length > 0 && typeof target === 'string' && target.length > 0);
   }
 
   private addIssue(

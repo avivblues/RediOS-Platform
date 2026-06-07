@@ -12,6 +12,7 @@ import { DesignerModule as CoreDesignerModule } from './core/designer/designer.m
 import { EventModule } from './core/event/event.module';
 import { ExperienceModule as CoreExperienceModule } from './core/experience/experience.module';
 import { FormModule as CoreFormModule } from './core/form/form.module';
+import { IntegrationModule as CoreIntegrationModule } from './core/integration/integration.module';
 import { LedgerModule } from './core/ledger/ledger.module';
 import { MetadataModule } from './core/metadata/metadata.module';
 import { NavigationModule as CoreNavigationModule } from './core/navigation/navigation.module';
@@ -27,11 +28,13 @@ import { ThemeModule as CoreThemeModule } from './core/theme/theme.module';
 import { UIModule as CoreUIModule } from './core/ui/ui.module';
 import { WorkflowModule } from './core/workflow/workflow.module';
 import { ConflictsModule } from './conflicts/conflicts.module';
+import { ConnectorsModule } from './connectors/connectors.module';
 import { DesignerModule } from './designer/designer.module';
 import { DependenciesModule } from './dependencies/dependencies.module';
 import { ExperienceModule } from './experience/experience.module';
 import { FormsModule } from './forms/forms.module';
 import { HealthModule } from './health/health.module';
+import { IntegrationsModule } from './integrations/integrations.module';
 import { KernelLoggerModule } from './logger/kernel-logger.module';
 import { MetadataDebugModule } from './metadata/metadata-debug.module';
 import { MetadataValidationModule } from './metadata/metadata-validation.module';
@@ -71,6 +74,8 @@ import { UIModule } from './ui/ui.module';
     MetadataDebugModule,
     MetadataValidationModule,
     ConflictsModule,
+    ConnectorsModule,
+    IntegrationsModule,
     QueryModule,
     RuntimeApiModule,
     RuntimeTracesModule,
@@ -108,6 +113,7 @@ import { UIModule } from './ui/ui.module';
     CoreNavigationModule,
     CoreSecurityPolicyModule,
     CoreExperienceModule,
+    CoreIntegrationModule,
     CoreSyncModule,
   ],
 })

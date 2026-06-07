@@ -8,6 +8,7 @@ export type RuntimeTraceStepEngine =
   | 'PROCESS'
   | 'BUSINESS'
   | 'EVENT'
+  | 'INTEGRATION'
   | 'LEDGER'
   | 'CONFLICT_CHECK'
   | 'SYNC_REPLAY'

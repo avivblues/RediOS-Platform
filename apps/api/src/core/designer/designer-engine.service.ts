@@ -1,12 +1,14 @@
 import { BadRequestException, Inject, Injectable, NotFoundException, UnprocessableEntityException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import type {
+  ConnectorDefinition,
   DesignerOperation,
   DependencyImpact,
   DesignerTargetType,
   FormDefinition,
   FormFieldDefinition,
   FormSectionDefinition,
+  IntegrationDefinition,
   MetadataDefinition,
   MetadataDraft,
   MetadataVersion,
@@ -35,7 +37,14 @@ import { METADATA_VERSION_MODEL } from './schemas/metadata-version.schema';
 
 type MetadataDraftRecord = MetadataDraft & { _id?: unknown };
 type MetadataVersionRecord = MetadataVersion & { _id?: unknown };
-type DesignerDefinition = FormDefinition | ThemeDefinition | NavigationDefinition | SecurityPolicyDefinition | WorkflowDefinition;
+type DesignerDefinition =
+  | FormDefinition
+  | ThemeDefinition
+  | NavigationDefinition
+  | SecurityPolicyDefinition
+  | WorkflowDefinition
+  | IntegrationDefinition
+  | ConnectorDefinition;
 
 export interface CreateDesignerDraftRequest {
   targetType: DesignerTargetType;
@@ -433,6 +442,14 @@ export class DesignerEngine {
       return ['WORKFLOW', 'PROCESS', 'EVENT', 'SECURITY', 'UI', 'FORMS', 'VALIDATION'];
     }
 
+    if (draft.targetType === 'INTEGRATION') {
+      return ['INTEGRATION', 'EVENT', 'CONNECTOR', 'VALIDATION', 'SIMULATION'];
+    }
+
+    if (draft.targetType === 'CONNECTOR') {
+      return ['CONNECTOR', 'INTEGRATION', 'VALIDATION'];
+    }
+
     if (draft.targetType === 'THEME') {
       return ['THEME', 'UI_RENDER', 'NAVIGATION', 'VALIDATION'];
     }
@@ -443,7 +460,7 @@ export class DesignerEngine {
   private dependencyTargetFromOperation(
     draft: MetadataDraft<DesignerDefinition>,
     operation: DesignerOperation | undefined,
-  ): { type: 'FIELD' | 'THEME' | 'NAVIGATION' | 'SECURITY_POLICY' | 'WORKFLOW'; code: string } | undefined {
+  ): { type: 'FIELD' | 'THEME' | 'NAVIGATION' | 'SECURITY_POLICY' | 'WORKFLOW' | 'INTEGRATION' | 'CONNECTOR'; code: string } | undefined {
     if (!operation) {
       return undefined;
     }
@@ -496,6 +513,20 @@ export class DesignerEngine {
       };
     }
 
+    if (operation.type === 'CREATE_INTEGRATION' || operation.type === 'UPDATE_INTEGRATION' || operation.type === 'DELETE_INTEGRATION') {
+      return {
+        type: 'INTEGRATION',
+        code: draft.targetCode,
+      };
+    }
+
+    if (operation.type === 'CREATE_CONNECTOR' || operation.type === 'UPDATE_CONNECTOR' || operation.type === 'DELETE_CONNECTOR') {
+      return {
+        type: 'CONNECTOR',
+        code: draft.targetCode,
+      };
+    }
+
     return undefined;
   }
 
@@ -527,6 +558,26 @@ export class DesignerEngine {
       }) as Promise<MetadataDefinition<DesignerDefinition> | null>;
     }
 
+    if (request.targetType === 'INTEGRATION') {
+      return (
+        ((await this.metadataProvider.findOne(context, {
+          type: 'INTEGRATION',
+          code: request.targetCode,
+          enabledOnly: true,
+        })) as MetadataDefinition<DesignerDefinition> | null) ?? this.createIntegrationSource(context, request)
+      );
+    }
+
+    if (request.targetType === 'CONNECTOR') {
+      return (
+        ((await this.metadataProvider.findOne(context, {
+          type: 'CONNECTOR',
+          code: request.targetCode,
+          enabledOnly: true,
+        })) as MetadataDefinition<DesignerDefinition> | null) ?? this.createConnectorSource(context, request)
+      );
+    }
+
     return (await this.metadataResolver.resolveSecurityPolicy(context, request.targetCode)) ?? this.createPolicySource(context, request);
   }
 
@@ -555,6 +606,16 @@ export class DesignerEngine {
       }) as Promise<MetadataDefinition<DesignerDefinition> | null>;
     }
 
+    if (draft.targetType === 'INTEGRATION' || draft.targetType === 'CONNECTOR') {
+      return (
+        ((await this.metadataProvider.findOne(context, {
+          type: draft.targetType,
+          code: draft.targetCode,
+          enabledOnly: true,
+        })) as MetadataDefinition<DesignerDefinition> | null) ?? draft.draft
+      );
+    }
+
     return (await this.metadataResolver.resolveSecurityPolicy(context, draft.targetCode)) ?? draft.draft;
   }
 
@@ -580,6 +641,16 @@ export class DesignerEngine {
 
     if (targetType === 'WORKFLOW') {
       this.applyWorkflowOperation(definition as WorkflowDefinition, operation);
+      return;
+    }
+
+    if (targetType === 'INTEGRATION') {
+      this.applyIntegrationOperation(definition as IntegrationDefinition, operation);
+      return;
+    }
+
+    if (targetType === 'CONNECTOR') {
+      this.applyConnectorOperation(definition as ConnectorDefinition, operation);
       return;
     }
 
@@ -616,6 +687,72 @@ export class DesignerEngine {
       domainCode: context.domainCode,
       applicationCode: context.applicationCode,
       type: 'SECURITY_POLICY',
+      code: request.targetCode,
+      name: request.targetCode,
+      version: 1,
+      enabled: true,
+      definition,
+    };
+  }
+
+  private createIntegrationSource(
+    context: RuntimeContext,
+    request: CreateDesignerDraftRequest,
+  ): MetadataDefinition<IntegrationDefinition> {
+    const definition: IntegrationDefinition = {
+      code: request.targetCode,
+      name: request.targetCode,
+      enabled: true,
+      version: 1,
+      trigger: {
+        type: 'EVENT',
+        sourceCode: '',
+      },
+      connector: {
+        type: 'WEBHOOK',
+        connectorCode: '',
+      },
+      mapping: {
+        input: {},
+        output: {},
+      },
+      errorPolicy: {
+        retry: false,
+        maxAttempts: 1,
+      },
+    };
+
+    return {
+      tenantId: context.tenantId,
+      domainCode: context.domainCode,
+      applicationCode: context.applicationCode,
+      type: 'INTEGRATION',
+      code: request.targetCode,
+      name: request.targetCode,
+      version: 1,
+      enabled: true,
+      definition,
+    };
+  }
+
+  private createConnectorSource(
+    context: RuntimeContext,
+    request: CreateDesignerDraftRequest,
+  ): MetadataDefinition<ConnectorDefinition> {
+    const definition: ConnectorDefinition = {
+      code: request.targetCode,
+      type: 'WEBHOOK',
+      configSchema: {},
+      authType: 'NONE',
+      enabled: true,
+      version: 1,
+    };
+
+    return {
+      tenantId: context.tenantId,
+      domainCode: context.domainCode,
+      applicationCode: context.applicationCode,
+      type: 'CONNECTOR',
       code: request.targetCode,
       name: request.targetCode,
       version: 1,
@@ -700,6 +837,70 @@ export class DesignerEngine {
     const path = operation.path ?? this.payloadString(payload, 'path');
     const value = 'after' in operation ? operation.after : payload.value;
     this.setPath(theme as unknown as Record<string, unknown>, path.startsWith('tokens.') || path.startsWith('layout.') || path.startsWith('assets.') ? path : `tokens.${path}`, value);
+  }
+
+  private applyIntegrationOperation(integration: IntegrationDefinition, operation: DesignerOperation): void {
+    const payload = operation.payload ?? {};
+
+    if (operation.type === 'DELETE_INTEGRATION') {
+      integration.enabled = false;
+      return;
+    }
+
+    if (operation.type !== 'CREATE_INTEGRATION' && operation.type !== 'UPDATE_INTEGRATION') {
+      throw new BadRequestException(`Unsupported integration designer operation: ${operation.type}`);
+    }
+
+    const definition = this.payloadDefinition<IntegrationDefinition>(payload);
+
+    if (definition) {
+      Object.assign(integration, definition);
+      return;
+    }
+
+    for (const key of ['code', 'name', 'enabled', 'version', 'trigger', 'connector', 'mapping', 'errorPolicy'] as const) {
+      if (key in payload) {
+        (integration as unknown as Record<string, unknown>)[key] = payload[key];
+      }
+    }
+
+    const path = operation.path ?? this.payloadOptionalString(payload, 'path');
+
+    if (path) {
+      this.setPath(integration as unknown as Record<string, unknown>, path, 'after' in operation ? operation.after : payload.value);
+    }
+  }
+
+  private applyConnectorOperation(connector: ConnectorDefinition, operation: DesignerOperation): void {
+    const payload = operation.payload ?? {};
+
+    if (operation.type === 'DELETE_CONNECTOR') {
+      connector.enabled = false;
+      return;
+    }
+
+    if (operation.type !== 'CREATE_CONNECTOR' && operation.type !== 'UPDATE_CONNECTOR') {
+      throw new BadRequestException(`Unsupported connector designer operation: ${operation.type}`);
+    }
+
+    const definition = this.payloadDefinition<ConnectorDefinition>(payload);
+
+    if (definition) {
+      Object.assign(connector, definition);
+      return;
+    }
+
+    for (const key of ['code', 'type', 'configSchema', 'authType', 'secretCode', 'enabled', 'version'] as const) {
+      if (key in payload) {
+        (connector as unknown as Record<string, unknown>)[key] = payload[key];
+      }
+    }
+
+    const path = operation.path ?? this.payloadOptionalString(payload, 'path');
+
+    if (path) {
+      this.setPath(connector as unknown as Record<string, unknown>, path, 'after' in operation ? operation.after : payload.value);
+    }
   }
 
   private applyWorkflowOperation(workflow: WorkflowDefinition, operation: DesignerOperation): void {
@@ -1112,6 +1313,16 @@ export class DesignerEngine {
     return definition as Partial<SecurityPolicyDefinition>;
   }
 
+  private payloadDefinition<TDefinition>(payload: Record<string, unknown>): Partial<TDefinition> | undefined {
+    const definition = payload.definition;
+
+    if (!definition || typeof definition !== 'object' || Array.isArray(definition)) {
+      return undefined;
+    }
+
+    return definition as Partial<TDefinition>;
+  }
+
   private async saveVersion(
     context: RuntimeContext,
     metadata: MetadataDefinition<DesignerDefinition>,
@@ -1190,7 +1401,9 @@ export class DesignerEngine {
       targetType !== 'THEME' &&
       targetType !== 'NAVIGATION' &&
       targetType !== 'SECURITY_POLICY' &&
-      targetType !== 'WORKFLOW'
+      targetType !== 'WORKFLOW' &&
+      targetType !== 'INTEGRATION' &&
+      targetType !== 'CONNECTOR'
     ) {
       throw new BadRequestException(`Unsupported designer target type: ${targetType}`);
     }
@@ -1241,6 +1454,17 @@ export class DesignerEngine {
 
     if (operationType === 'CREATE_POLICY' || operationType === 'UPDATE_POLICY' || operationType === 'DELETE_POLICY') {
       return `SECURITY_POLICY_${operationType}`;
+    }
+
+    if (
+      operationType === 'CREATE_INTEGRATION' ||
+      operationType === 'UPDATE_INTEGRATION' ||
+      operationType === 'DELETE_INTEGRATION' ||
+      operationType === 'CREATE_CONNECTOR' ||
+      operationType === 'UPDATE_CONNECTOR' ||
+      operationType === 'DELETE_CONNECTOR'
+    ) {
+      return `INTEGRATION_${operationType}`;
     }
 
     return `DESIGNER_${operationType}`;

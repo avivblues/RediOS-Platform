@@ -24,4 +24,18 @@ export class RuntimeClient {
   analyzeDependency(type: string, code: string): Promise<unknown> {
     return this.api.get(`/dependencies/${type}/${code}`);
   }
+
+  testIntegration(integrationCode: string, payload: Record<string, unknown>): Promise<unknown> {
+    return this.api.post('/integrations/test', {
+      integrationCode,
+      payload,
+    });
+  }
+
+  testConnector(connectorCode: string, payload: Record<string, unknown>): Promise<unknown> {
+    return this.api.post('/connectors/test', {
+      connectorCode,
+      payload,
+    });
+  }
 }

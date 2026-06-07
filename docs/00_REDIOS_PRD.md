@@ -1019,7 +1019,7 @@ Mapping = metadata
 Never:
 
 
-GoogleService.ts
+ProviderSpecificService.ts
 
 WhatsAppWorkflow.ts
 

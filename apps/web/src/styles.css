@@ -277,6 +277,12 @@ textarea {
   margin-bottom: var(--redios-spacing-md);
 }
 
+.studio-integration-grid {
+  display: grid;
+  grid-template-columns: minmax(220px, 0.8fr) minmax(0, 1.6fr) minmax(280px, 1fr);
+  gap: var(--redios-spacing-md);
+}
+
 .studio-canvas {
   position: relative;
   min-height: 460px;
@@ -363,7 +369,8 @@ textarea {
   .studio-workspace-grid,
   .studio-builder-grid,
   .studio-preview-grid,
-  .studio-workflow-grid {
+  .studio-workflow-grid,
+  .studio-integration-grid {
     grid-template-columns: 1fr;
   }
 }

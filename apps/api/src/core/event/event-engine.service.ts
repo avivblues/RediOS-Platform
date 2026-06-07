@@ -1,5 +1,12 @@
 import { Injectable } from '@nestjs/common';
-import type { EventHandlerType, EventTriggerDefinition, RuntimeContext, RuntimeDocument } from '@redios/shared';
+import type {
+  EventHandlerType,
+  EventTriggerDefinition,
+  IntegrationExecutionResult,
+  RuntimeContext,
+  RuntimeDocument,
+} from '@redios/shared';
+import { IntegrationEngine } from '../integration/integration-engine.service';
 import { MetadataResolver } from '../metadata/metadata-resolver.service';
 
 export interface RuntimeEventState extends EventTriggerDefinition {}
@@ -18,20 +25,41 @@ export interface RuntimeEventPlan {
 export interface RuntimeEventPublishResult {
   status: 'EVENT_PUBLISHED';
   events: RuntimeEventPlan[];
+  integrations: IntegrationExecutionResult[];
   next: 'LEDGER_ENGINE';
 }
 
 @Injectable()
 export class EventEngine {
-  constructor(private readonly metadataResolver: MetadataResolver) {}
+  constructor(
+    private readonly metadataResolver: MetadataResolver,
+    private readonly integrationEngine: IntegrationEngine,
+  ) {}
 
   async publish(
     context: RuntimeContext,
     entityCode: string,
-    _document: RuntimeDocument,
+    document: RuntimeDocument,
     runtimeState: RuntimeEventState,
   ): Promise<RuntimeEventPublishResult> {
     const events = await this.metadataResolver.resolveEvents(context, entityCode, runtimeState);
+    const integrations: IntegrationExecutionResult[] = [];
+
+    for (const event of events) {
+      integrations.push(
+        ...(await this.integrationEngine.execute(context, {
+          code: event.definition.code,
+          type: 'EVENT',
+          sourceCode: event.definition.code,
+          payload: {
+            entityCode,
+            document,
+            runtimeState,
+            event: event.definition,
+          },
+        })),
+      );
+    }
 
     return {
       status: 'EVENT_PUBLISHED',
@@ -45,6 +73,7 @@ export class EventEngine {
             status: 'READY',
           })),
       })),
+      integrations,
       next: 'LEDGER_ENGINE',
     };
   }

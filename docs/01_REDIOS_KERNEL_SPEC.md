@@ -1871,7 +1871,7 @@ Never create:
 
 
 ```
-WhatsAppService
+ProviderSpecificService
 
 GoogleCalendarWorkflow
 

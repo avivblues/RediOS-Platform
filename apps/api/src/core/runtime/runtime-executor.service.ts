@@ -257,6 +257,11 @@ export class RuntimeExecutor {
         }),
       );
 
+      await this.traceEngine.recordStepResult(trace.id!, 'INTEGRATION', 'SUCCESS', {
+        status: 'INTEGRATION_SUCCESS',
+        integrations: events.integrations,
+      });
+
       const ledger = await this.traceEngine.recordStep(trace.id!, 'LEDGER', () =>
         this.ledgerEngine.execute(context, workflowDocument, actionCode, {
           workflowState: workflow.transitioned ? workflow.to : undefined,

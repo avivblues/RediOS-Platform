@@ -10,6 +10,7 @@ export * from './event-definition';
 export * from './experience-definition';
 export * from './field-definition';
 export * from './form-definition';
+export * from './integration-definition';
 export * from './ledger-definition';
 export * from './metadata-definition';
 export * from './metadata-simulation';

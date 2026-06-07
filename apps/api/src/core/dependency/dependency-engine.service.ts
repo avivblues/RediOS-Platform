@@ -4,6 +4,7 @@ import type {
   ApplicationDefinition,
   BusinessDefinition,
   ConflictPolicyDefinition,
+  ConnectorDefinition,
   DependencyGraph,
   DependencyImpact,
   DependencyNode,
@@ -15,6 +16,7 @@ import type {
   ExperienceDefinition,
   FieldDefinition,
   FormDefinition,
+  IntegrationDefinition,
   LedgerDefinition,
   MetadataDefinition,
   NavigationDefinition,
@@ -171,6 +173,14 @@ export class DependencyEngine {
       return this.conflictPolicyReferences(record.definition as ConflictPolicyDefinition, source);
     }
 
+    if (record.type === 'INTEGRATION') {
+      return this.integrationReferences(record.definition as IntegrationDefinition, source);
+    }
+
+    if (record.type === 'CONNECTOR') {
+      return this.connectorReferences(record.definition as ConnectorDefinition, source);
+    }
+
     if (record.type === 'FIELD') {
       return this.fieldReferences(record.definition as FieldDefinition, source);
     }
@@ -234,6 +244,22 @@ export class DependencyEngine {
       ...(definition.trigger.actionCode ? [this.reference(source, 'TRIGGERS', 'ACTION', definition.trigger.actionCode)] : []),
       ...(definition.trigger.processCode ? [this.reference(source, 'TRIGGERS', 'PROCESS', definition.trigger.processCode)] : []),
     ];
+  }
+
+  private integrationReferences(definition: IntegrationDefinition, source: DependencyNode): DependencyReference[] {
+    return [
+      ...(definition.trigger.type === 'EVENT' && definition.trigger.sourceCode
+        ? [this.reference(source, 'TRIGGERS', 'EVENT', definition.trigger.sourceCode)]
+        : []),
+      ...(definition.trigger.type === 'WORKFLOW' && definition.trigger.sourceCode
+        ? [this.reference(source, 'TRIGGERS', 'WORKFLOW', definition.trigger.sourceCode)]
+        : []),
+      this.reference(source, 'REFERENCES', 'CONNECTOR', definition.connector.connectorCode),
+    ];
+  }
+
+  private connectorReferences(_definition: ConnectorDefinition, _source: DependencyNode): DependencyReference[] {
+    return [];
   }
 
   private ledgerReferences(definition: LedgerDefinition, source: DependencyNode): DependencyReference[] {

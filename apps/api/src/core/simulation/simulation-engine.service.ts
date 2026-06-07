@@ -250,6 +250,12 @@ export class SimulationEngine {
       events: events.value.events.map((event) => event.eventCode),
       handlers: events.value.events.flatMap((event) => event.handlers.map((handler) => handler.type)),
     };
+    predicted.integrations = events.value.integrations.map((integration) => ({
+      code: integration.code,
+      trigger: integration.trigger,
+      connector: integration.connector,
+      status: integration.status,
+    }));
 
     if (events.value.events.length === 0 || events.value.events.every((event) => event.handlers.length === 0)) {
       steps.push({
@@ -258,6 +264,16 @@ export class SimulationEngine {
         message: 'No event metadata or enabled event handlers matched this action.',
       });
     }
+
+    steps.push({
+      stage: 'INTEGRATION',
+      status: events.value.integrations.length > 0 ? 'SUCCESS' : 'SKIPPED',
+      message:
+        events.value.integrations.length > 0
+          ? 'Integration metadata and connectors are ready.'
+          : 'No integration metadata matched generated events.',
+      result: events.value.integrations,
+    });
 
     const ledger = await this.runStep(steps, 'LEDGER', 'Ledger impacts predicted.', () =>
       this.ledgerEngine.execute(context, businessDocument, request.actionCode, {
@@ -551,6 +567,10 @@ export class SimulationEngine {
       if (metadataDefinition.type === 'CONFLICT_POLICY') {
         const metadataEntityCode = this.definitionEntityCode(metadataDefinition.definition);
         return metadataEntityCode === entityCode ? [metadataDefinition] : [];
+      }
+
+      if (metadataDefinition.type === 'INTEGRATION' || metadataDefinition.type === 'CONNECTOR') {
+        return [metadataDefinition];
       }
 
       return [];

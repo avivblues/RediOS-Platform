@@ -1,0 +1,55 @@
+### List integration metadata
+GET http://localhost:3001/api/integrations
+x-tenant-id: demo
+x-domain-code: DEFAULT
+x-application-code: MAINTENANCE
+x-user-id: studio-user
+x-permissions: FORM.DESIGN,FORM.PUBLISH
+
+### Test generic connector
+POST http://localhost:3001/api/connectors/test
+content-type: application/json
+x-tenant-id: demo
+x-domain-code: DEFAULT
+x-application-code: MAINTENANCE
+x-user-id: studio-user
+x-permissions: FORM.DESIGN,FORM.PUBLISH
+
+{
+  "connectorCode": "GENERIC_WEBHOOK",
+  "payload": {
+    "document": {
+      "id": "SIMULATED_DOCUMENT"
+    }
+  }
+}
+
+### Test integration mapping and connector execution
+POST http://localhost:3001/api/integrations/test
+content-type: application/json
+x-tenant-id: demo
+x-domain-code: DEFAULT
+x-application-code: MAINTENANCE
+x-user-id: studio-user
+x-permissions: FORM.DESIGN,FORM.PUBLISH
+
+{
+  "integrationCode": "SEND_NOTIFICATION_INTEGRATION",
+  "payload": {
+    "document": {
+      "id": "SIMULATED_DOCUMENT"
+    },
+    "event": {
+      "code": "WORK_ORDER_STARTED_EVENT"
+    },
+    "runtimeState": {
+      "workflowState": "IN_PROGRESS"
+    }
+  }
+}
+
+### Runtime proof
+# Triggering START through the runtime action pipeline should produce trace steps:
+# EVENT SUCCESS
+# INTEGRATION SUCCESS
+# CONNECTOR EXECUTED in the integration result payload.

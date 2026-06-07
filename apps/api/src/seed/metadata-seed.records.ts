@@ -4,6 +4,7 @@ import type {
   ApplicationDefinition,
   BusinessDefinition,
   ConflictPolicyDefinition,
+  ConnectorDefinition,
   EntityType,
   EntityDefinition,
   EventDefinition,
@@ -11,6 +12,7 @@ import type {
   FieldDataType,
   FieldDefinition,
   FormDefinition,
+  IntegrationDefinition,
   LedgerDefinition,
   MetadataDefinition,
   NavigationDefinition,
@@ -61,6 +63,8 @@ type ApplicationSeed = {
   experiences?: ExperienceDefinition[];
   syncPolicies?: SyncDefinition[];
   conflictPolicies?: ConflictPolicyDefinition[];
+  connectors?: ConnectorDefinition[];
+  integrations?: IntegrationDefinition[];
 };
 
 const commonThemeDefinitions: ThemeDefinition[] = [
@@ -824,6 +828,49 @@ const applications: ApplicationSeed[] = [
         rules: [],
       },
     ],
+    connectors: [
+      {
+        code: 'GENERIC_WEBHOOK',
+        type: 'WEBHOOK',
+        configSchema: {
+          endpoint: 'https://example.invalid/redios-webhook',
+          method: 'POST',
+        },
+        authType: 'NONE',
+        enabled: true,
+        version: 1,
+      },
+    ],
+    integrations: [
+      {
+        code: 'SEND_NOTIFICATION_INTEGRATION',
+        name: 'Send Notification Integration',
+        enabled: true,
+        version: 1,
+        trigger: {
+          type: 'EVENT',
+          sourceCode: 'WORK_ORDER_STARTED_EVENT',
+        },
+        connector: {
+          type: 'WEBHOOK',
+          connectorCode: 'GENERIC_WEBHOOK',
+        },
+        mapping: {
+          input: {
+            'document.id': 'external.reference',
+            'event.code': 'external.eventCode',
+            'runtimeState.workflowState': 'external.state',
+          },
+          output: {},
+        },
+        errorPolicy: {
+          retry: true,
+          maxAttempts: 2,
+          delayMs: 0,
+          fallback: 'TRACE_ONLY',
+        },
+      },
+    ],
     securityPolicies: [
       {
         code: 'WORK_ORDER_TECHNICIAN_POLICY',
@@ -1355,6 +1402,8 @@ export const metadataSeedRecords: MetadataDefinition[] = applications.flatMap((a
   ...(application.experiences ?? []).map((experience) => createExperienceRecord(application, experience)),
   ...(application.syncPolicies ?? []).map((syncPolicy) => createSyncPolicyRecord(application, syncPolicy)),
   ...(application.conflictPolicies ?? []).map((conflictPolicy) => createConflictPolicyRecord(application, conflictPolicy)),
+  ...(application.connectors ?? []).map((connector) => createConnectorRecord(application, connector)),
+  ...(application.integrations ?? []).map((integration) => createIntegrationRecord(application, integration)),
   ...[...commonUIDefinitions, ...(application.uis ?? [])].map((ui) => createUIRecord(application, ui)),
 ]);
 
@@ -1709,6 +1758,40 @@ function createConflictPolicyRecord(
     version: 1,
     enabled: conflictPolicy.enabled,
     definition: conflictPolicy,
+  };
+}
+
+function createConnectorRecord(
+  application: ApplicationSeed,
+  connector: ConnectorDefinition,
+): MetadataDefinition<ConnectorDefinition> {
+  return {
+    tenantId,
+    domainCode,
+    applicationCode: application.code,
+    type: 'CONNECTOR',
+    code: connector.code,
+    name: toLabel(connector.code),
+    version: connector.version,
+    enabled: connector.enabled,
+    definition: connector,
+  };
+}
+
+function createIntegrationRecord(
+  application: ApplicationSeed,
+  integration: IntegrationDefinition,
+): MetadataDefinition<IntegrationDefinition> {
+  return {
+    tenantId,
+    domainCode,
+    applicationCode: application.code,
+    type: 'INTEGRATION',
+    code: integration.code,
+    name: integration.name,
+    version: integration.version,
+    enabled: integration.enabled,
+    definition: integration,
   };
 }
 

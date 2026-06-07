@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
-import type { MetadataDefinition, WorkflowDefinition } from '@redios/shared';
+import type { ConnectorDefinition, IntegrationDefinition, MetadataDefinition, WorkflowDefinition } from '@redios/shared';
 import { EntityBuilder } from '../../builder/entity/EntityBuilder';
 import { FormBuilder } from '../../builder/form/FormBuilder';
+import { IntegrationBuilder } from '../../builder/integration/IntegrationBuilder';
 import { WorkflowBuilder } from '../../builder/workflow/WorkflowBuilder';
 import { Button } from '../../components/atomic/atoms/Atoms';
 import { StudioLayout } from '../../components/atomic/templates/StudioLayout';
@@ -32,6 +33,8 @@ export function StudioPage() {
   const [form, setForm] = useState<RuntimeForm | undefined>();
   const [page, setPage] = useState<ResolvedUIPage | undefined>();
   const [workflow, setWorkflow] = useState<MetadataDefinition<WorkflowDefinition> | undefined>();
+  const [integration, setIntegration] = useState<MetadataDefinition<IntegrationDefinition> | undefined>();
+  const [connector, setConnector] = useState<MetadataDefinition<ConnectorDefinition> | undefined>();
   const [preview, setPreview] = useState<DesignerPreviewResult | undefined>();
   const [error, setError] = useState<string | undefined>();
 
@@ -83,6 +86,8 @@ export function StudioPage() {
         const nextForm = await resolveForm(activeSelection, activeState.tree, metadataClient);
         const nextPage = await resolvePage(activeSelection, metadataClient);
         const nextWorkflow = await resolveWorkflow(activeSelection, metadataClient);
+        const nextIntegration = await resolveIntegration(activeSelection, metadataClient);
+        const nextConnector = await resolveConnector(activeSelection, metadataClient);
 
         if (!mounted) {
           return;
@@ -91,6 +96,8 @@ export function StudioPage() {
         setForm(nextForm);
         setPage(nextPage);
         setWorkflow(nextWorkflow);
+        setIntegration(nextIntegration);
+        setConnector(nextConnector);
       } catch (selectionError) {
         if (mounted) {
           setError(selectionError instanceof Error ? selectionError.message : String(selectionError));
@@ -131,6 +138,15 @@ export function StudioPage() {
           <FormBuilder form={form} designer={designerClient} onPreview={setPreview} />
         </div>
         <WorkflowBuilder metadata={workflow} designer={designerClient} runtime={runtimeClient} context={context} onPreview={setPreview} />
+        <IntegrationBuilder
+          tree={state.tree}
+          selectedIntegration={integration}
+          selectedConnector={connector}
+          metadata={metadataClient}
+          designer={designerClient}
+          runtime={runtimeClient}
+          onPreview={setPreview}
+        />
         <StudioPreview preview={preview} form={form} page={page} />
       </StudioLayout>
     </ThemeProvider>
@@ -173,6 +189,28 @@ async function resolveWorkflow(
 ): Promise<MetadataDefinition<WorkflowDefinition> | undefined> {
   if (selection.type === 'WORKFLOWS') {
     return metadataClient.getMetadata<WorkflowDefinition>('WORKFLOW', selection.code).catch(() => undefined);
+  }
+
+  return undefined;
+}
+
+async function resolveIntegration(
+  selection: ExplorerSelection,
+  metadataClient: MetadataClient,
+): Promise<MetadataDefinition<IntegrationDefinition> | undefined> {
+  if (selection.type === 'INTEGRATIONS') {
+    return metadataClient.getMetadata<IntegrationDefinition>('INTEGRATION', selection.code).catch(() => undefined);
+  }
+
+  return undefined;
+}
+
+async function resolveConnector(
+  selection: ExplorerSelection,
+  metadataClient: MetadataClient,
+): Promise<MetadataDefinition<ConnectorDefinition> | undefined> {
+  if (selection.type === 'CONNECTORS') {
+    return metadataClient.getMetadata<ConnectorDefinition>('CONNECTOR', selection.code).catch(() => undefined);
   }
 
   return undefined;

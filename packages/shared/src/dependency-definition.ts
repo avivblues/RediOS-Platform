@@ -18,6 +18,8 @@ export type DependencyNodeType = Extract<
   | 'THEME'
   | 'NAVIGATION'
   | 'SECURITY_POLICY'
+  | 'INTEGRATION'
+  | 'CONNECTOR'
   | 'EXPERIENCE'
   | 'SYNC_POLICY'
   | 'CONFLICT_POLICY'

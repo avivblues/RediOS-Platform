@@ -17,6 +17,8 @@ export interface MetadataDebugTree {
   themes: string[];
   navigation: string[];
   securityPolicies: string[];
+  integrations: string[];
+  connectors: string[];
   experiences: string[];
   syncPolicies: string[];
   conflictPolicies: string[];

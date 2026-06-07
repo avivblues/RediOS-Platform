@@ -12,6 +12,8 @@ const groups: Array<{ key: keyof MetadataDebugTree; label: string }> = [
   { key: 'forms', label: 'Forms' },
   { key: 'views', label: 'Views' },
   { key: 'workflows', label: 'Workflows' },
+  { key: 'integrations', label: 'Integrations' },
+  { key: 'connectors', label: 'Connectors' },
   { key: 'ui', label: 'Pages' },
   { key: 'securityPolicies', label: 'Security' },
   { key: 'navigation', label: 'Navigation' },
