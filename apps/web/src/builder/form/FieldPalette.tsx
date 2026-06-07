@@ -11,6 +11,7 @@ export function FieldPalette({
   form,
   selectedFieldCode,
   selectedComponent,
+  expertMode,
   onSelect,
   onComponentChange,
 }: {
@@ -18,6 +19,7 @@ export function FieldPalette({
   form?: RuntimeForm;
   selectedFieldCode?: string;
   selectedComponent: string;
+  expertMode: boolean;
   onSelect: (fieldCode: string) => void;
   onComponentChange: (component: string) => void;
 }) {
@@ -34,7 +36,12 @@ export function FieldPalette({
 
   return (
     <div className="studio-card">
-      <h4>Fields</h4>
+      <h4>Data Source</h4>
+      <div className="studio-muted">
+        {humanizeCode(entity.code)}
+        {expertMode ? ` | Technical Code: ${entity.code}` : ''}
+      </div>
+      <h4>Components</h4>
       <div className="studio-component-palette">
         {componentOptions.slice(0, 4).map((component) => (
           <button
@@ -59,6 +66,7 @@ export function FieldPalette({
           onClick={() => onSelect(fieldCode)}
         >
           <span>{humanizeCode(fieldCode)}</span>
+          {expertMode ? <span className="studio-muted">{fieldCode}</span> : null}
           {usedFields.has(fieldCode) ? <Badge>on form</Badge> : null}
         </button>
       ))}

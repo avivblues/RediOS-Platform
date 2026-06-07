@@ -22,13 +22,13 @@ export function StudioHome({
     <div className="studio-home">
       <section className="studio-hero">
         <div>
-          <span className="studio-kicker">Welcome back</span>
-          <h2>What do you want to build?</h2>
-          <p className="studio-muted">Build enterprise apps from metadata, preview impact, then publish through the Designer Engine.</p>
+          <span className="studio-kicker">Welcome to RediOS Studio</span>
+          <h2>Customize enterprise applications without editing code.</h2>
+          <p className="studio-muted">Choose an application, update its experience, preview impact, then publish safely through metadata.</p>
         </div>
         <div className="studio-action-row">
           <Button onClick={() => onSelect({ type: 'WIZARD', code: 'GUIDED_APP_BUILDER' })}>Create Application</Button>
-          <Button variant="secondary" onClick={() => onSelect({ type: 'APPLICATION', code: tree.applications[0] ?? 'APPLICATIONS' })}>
+          <Button variant="secondary" onClick={() => onSelect({ type: 'APPLICATION_BUILDER', code: tree.applications[0] ?? 'APPLICATIONS' })}>
             Modify Existing App
           </Button>
           <Button variant="secondary" onClick={() => onSelect({ type: 'TEMPLATES', code: 'TEMPLATES' })}>Import Template</Button>
@@ -36,7 +36,7 @@ export function StudioHome({
       </section>
 
       <div className="studio-home-grid">
-        <MetricCard label="Applications" value={tree.applications.length} onClick={() => onSelect({ type: 'APPLICATION', code: tree.applications[0] ?? 'APPLICATIONS' })} />
+        <MetricCard label="Applications" value={tree.applications.length} onClick={() => onSelect({ type: 'APPLICATION_BUILDER', code: tree.applications[0] ?? 'APPLICATIONS' })} />
         <MetricCard label="Forms" value={tree.forms.length} onClick={() => onSelect({ type: 'FORMS', code: tree.forms[0] ?? 'FORMS' })} />
         <MetricCard label="Pages" value={tree.ui.length} onClick={() => onSelect({ type: 'PAGES', code: tree.ui[0] ?? 'PAGES' })} />
         <MetricCard label="Workflow" value={tree.workflows.length} onClick={() => onSelect({ type: 'WORKFLOWS', code: tree.workflows[0] ?? 'WORKFLOWS' })} />
@@ -53,14 +53,18 @@ export function StudioHome({
             const human = humanizeMetadata(app.code, 'APPLICATION', app.description);
 
             return (
-              <button key={app.code} className="studio-app-card" onClick={() => onSelect({ type: 'APPLICATION', code: app.code })}>
+              <article key={app.code} className="studio-app-card">
                 <span className="studio-kicker">{human.icon}</span>
                 <h3>{app.name || human.label}</h3>
                 <p>{app.description ?? human.description}</p>
                 <div className="studio-muted">{app.entityCodes.length} entities</div>
+                <div className="studio-muted">{tree.forms.length} forms</div>
                 <div className="studio-muted">{workflowCount} workflows</div>
                 <strong>{app.enabled ? 'Published' : 'Draft'}</strong>
-              </button>
+                <div className="studio-action-row">
+                  <Button onClick={() => onSelect({ type: 'APPLICATION_BUILDER', code: app.code })}>Customize</Button>
+                </div>
+              </article>
             );
           })}
           {applications.length === 0 ? <div className="studio-empty">No application metadata registered yet.</div> : null}

@@ -6,11 +6,13 @@ import { FormRenderer } from '../../renderer/FormRenderer';
 export function FormCanvas({
   form,
   selectedFieldCode,
+  expertMode,
   onDropField,
   onSelectField,
 }: {
   form?: RuntimeForm;
   selectedFieldCode?: string;
+  expertMode: boolean;
   onDropField: (fieldCode: string) => void;
   onSelectField: (field: RuntimeFormField) => void;
 }) {
@@ -18,7 +20,8 @@ export function FormCanvas({
     <div className="studio-builder-canvas">
       <div className="studio-section-header">
         <strong>{form ? humanizeCode(form.form) : 'No form selected yet'}</strong>
-        <span className="studio-muted">{form?.entityCode}</span>
+        <span className="studio-muted">{form ? `Data: ${humanizeCode(form.entityCode)}` : ''}</span>
+        {expertMode && form ? <span className="studio-muted">Technical Code: {form.form}</span> : null}
       </div>
       <div
         className="studio-drop-zone"
@@ -32,16 +35,17 @@ export function FormCanvas({
           }
         }}
       >
-        Drag an entity field here to create an ADD_FIELD draft operation
+        Drag a field here to add it to this form
       </div>
       {form ? (
         <div className="studio-form-canvas-preview">
           {form.sections.map((section) => (
             <section key={section.code} className="studio-canvas-section">
-              <h4>Section: {humanizeCode(section.code)}</h4>
+              <h4>{humanizeCode(section.code)} Details</h4>
               {section.fields.map((field) => (
                 <button key={field.fieldCode} className="studio-field-card" onClick={() => onSelectField(field)}>
                   <span>{humanizeCode(field.fieldCode)}</span>
+                  {expertMode ? <small>{field.fieldCode}</small> : null}
                   <div className="studio-input-placeholder" />
                 </button>
               ))}

@@ -7,17 +7,20 @@ import type { RuntimeForm, RuntimeFormField } from '../../core/renderer/runtime-
 import { FieldPalette } from './FieldPalette';
 import { FormCanvas } from './FormCanvas';
 import { PropertyPanel } from './PropertyPanel';
+import { humanizeCode } from '../../studio/humanizer/HumanizerEngine';
 
 export function FormBuilder({
   form,
   entity,
   designer,
+  expertMode = false,
   onPreview,
   onPublished,
 }: {
   form?: RuntimeForm;
   entity?: EntityDefinition;
   designer: DesignerClient;
+  expertMode?: boolean;
   onPreview: (preview: DesignerPreviewResult) => void;
   onPublished?: () => void;
 }) {
@@ -85,19 +88,42 @@ export function FormBuilder({
 
   return (
     <Panel title="Form Builder">
+      <div className="studio-builder-intro">
+        <div>
+          <h3>Forms control how users enter and update data</h3>
+          <p className="studio-muted">Choose data, arrange fields, preview the result, then publish safely.</p>
+        </div>
+        <div className="studio-flow-indicator">
+          <span>1 Select Data</span>
+          <span>2 Design Form</span>
+          <span>3 Preview</span>
+          <span>4 Publish</span>
+        </div>
+      </div>
       <div className="studio-builder-grid">
         <FieldPalette
           entity={entity}
           form={activeForm}
           selectedFieldCode={selectedFieldCode}
           selectedComponent={selectedComponent}
+          expertMode={expertMode}
           onSelect={setSelectedFieldCode}
           onComponentChange={setSelectedComponent}
         />
-        <FormCanvas form={activeForm} selectedFieldCode={selectedFieldCode} onDropField={(fieldCode) => void addSelectedField(fieldCode)} onSelectField={setSelectedField} />
+        <FormCanvas
+          form={activeForm}
+          selectedFieldCode={selectedFieldCode}
+          expertMode={expertMode}
+          onDropField={(fieldCode) => void addSelectedField(fieldCode)}
+          onSelectField={setSelectedField}
+        />
         <div>
-          <PropertyPanel field={selectedField} valid={previewResult?.valid} />
+          <PropertyPanel field={selectedField} valid={previewResult?.valid} expertMode={expertMode} />
           <div className="studio-card studio-builder-actions">
+            <div className="studio-muted">
+              Data source: {entity ? humanizeCode(entity.code) : 'Choose a data source'}
+              {expertMode && entity ? ` | Technical Code: ${entity.code}` : ''}
+            </div>
             <div className="studio-action-row">
               <Button variant="secondary" onClick={() => void preview()} disabled={!draft}>
                 Preview

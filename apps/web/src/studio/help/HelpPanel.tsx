@@ -6,6 +6,11 @@ const helpContent: Record<string, { title: string; body: string; steps: string[]
     body: 'Start from applications, templates, or guided builders. The cards summarize metadata already published in RediOS.',
     steps: ['Review application metadata', 'Choose what to build', 'Open a builder', 'Preview and publish safely'],
   },
+  APPLICATION: {
+    title: 'Application Builder',
+    body: 'Application Builder groups the metadata that shapes one business application.',
+    steps: ['Choose data model', 'Design forms and pages', 'Configure workflow and integration', 'Review access control'],
+  },
   FORMS: {
     title: 'Forms',
     body: 'Forms define how users enter and edit data.',

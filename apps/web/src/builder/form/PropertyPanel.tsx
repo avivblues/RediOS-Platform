@@ -7,9 +7,11 @@ import { PropertyEditor } from '../property/PropertyEditor';
 export function PropertyPanel({
   field,
   valid,
+  expertMode,
 }: {
   field?: RuntimeFormField;
   valid?: boolean;
+  expertMode: boolean;
 }) {
   return (
     <div className="studio-card">
@@ -23,6 +25,12 @@ export function PropertyPanel({
             <strong>Label</strong>
             <span>{humanizeCode(field.fieldCode)}</span>
           </div>
+          {expertMode ? (
+            <div className="studio-list-row">
+              <strong>Technical Code</strong>
+              <span>{field.fieldCode}</span>
+            </div>
+          ) : null}
           <div className="studio-list-row">
             <strong>Component</strong>
             <span>{humanizeCode(field.component)}</span>

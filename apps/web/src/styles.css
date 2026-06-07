@@ -170,6 +170,78 @@ textarea {
   margin-bottom: var(--redios-spacing-md);
 }
 
+.studio-header-actions,
+.studio-sidebar-brand,
+.studio-builder-intro,
+.studio-flow-indicator,
+.studio-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: var(--redios-spacing-sm);
+}
+
+.studio-header-actions {
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.studio-sidebar-brand {
+  justify-content: space-between;
+  margin-bottom: var(--redios-spacing-md);
+}
+
+.studio-breadcrumb {
+  margin-bottom: var(--redios-spacing-md);
+  color: color-mix(in srgb, var(--redios-color-text), transparent 32%);
+}
+
+.studio-breadcrumb span::after {
+  content: '>';
+  margin-left: var(--redios-spacing-sm);
+}
+
+.studio-builder-intro {
+  justify-content: space-between;
+  margin-bottom: var(--redios-spacing-md);
+}
+
+.studio-flow-indicator {
+  flex-wrap: wrap;
+}
+
+.studio-flow-indicator span {
+  border-radius: 999px;
+  padding: var(--redios-spacing-xs) var(--redios-spacing-sm);
+  background: color-mix(in srgb, var(--redios-color-primary), transparent 88%);
+}
+
+.studio-error-state {
+  border: 1px solid color-mix(in srgb, var(--redios-color-danger), transparent 50%);
+  border-radius: var(--redios-radius-medium);
+  padding: var(--redios-spacing-md);
+  background: color-mix(in srgb, var(--redios-color-danger), var(--redios-color-surface) 94%);
+}
+
+.studio-error-state pre {
+  white-space: pre-wrap;
+}
+
+.studio-desktop-preview {
+  border: 1px solid color-mix(in srgb, var(--redios-color-text), transparent 88%);
+  border-radius: var(--redios-radius-large);
+  padding: var(--redios-spacing-md);
+  background: color-mix(in srgb, var(--redios-color-background), var(--redios-color-surface) 35%);
+}
+
+.studio-mobile-preview {
+  max-width: 320px;
+  min-height: 220px;
+  border: 10px solid color-mix(in srgb, var(--redios-color-text), transparent 82%);
+  border-radius: var(--redios-radius-large);
+  padding: var(--redios-spacing-md);
+  background: var(--redios-color-surface);
+}
+
 .studio-search-results {
   position: absolute;
   z-index: 10;
@@ -512,6 +584,11 @@ textarea {
   }
 
   .studio-hero {
+    flex-direction: column;
+  }
+
+  .studio-builder-intro {
+    align-items: flex-start;
     flex-direction: column;
   }
 }

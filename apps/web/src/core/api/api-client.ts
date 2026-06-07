@@ -34,7 +34,7 @@ export class ApiClient {
     });
 
     if (!response.ok) {
-      throw new Error(`Studio API request failed: ${response.status} ${response.statusText}`);
+      throw new Error(`API returned ${response.status} ${response.statusText} for ${path}`);
     }
 
     return response.json() as Promise<TResponse>;

@@ -1,39 +1,41 @@
 import type { MetadataDebugTree } from '../../core/api/metadata-client';
+import type { StudioMode } from '../mode/studio-mode';
 
 export interface StudioNavigationItem {
   code: string;
   label: string;
-  group: 'HOME' | 'BUILD' | 'EXPERIENCE' | 'SECURITY' | 'INTEGRATION' | 'OPERATIONS';
+  group: 'BUILD' | 'AUTOMATE' | 'CONTROL' | 'SYSTEM';
   selectionType: string;
   metadataKey?: keyof MetadataDebugTree;
+  expertOnly?: boolean;
 }
 
+export const STUDIO_NAVIGATION = 'STUDIO_NAVIGATION';
+
 const registry: StudioNavigationItem[] = [
-  { code: 'HOME', label: 'Home', group: 'HOME', selectionType: 'HOME' },
-  { code: 'APPLICATIONS', label: 'Applications', group: 'BUILD', selectionType: 'APPLICATION', metadataKey: 'applications' },
-  { code: 'DATA_MODEL', label: 'Data Model', group: 'BUILD', selectionType: 'ENTITY', metadataKey: 'entities' },
-  { code: 'FORMS', label: 'Forms', group: 'BUILD', selectionType: 'FORMS', metadataKey: 'forms' },
-  { code: 'PAGES', label: 'Pages', group: 'BUILD', selectionType: 'PAGES', metadataKey: 'ui' },
-  { code: 'WORKFLOW', label: 'Workflow', group: 'BUILD', selectionType: 'WORKFLOWS', metadataKey: 'workflows' },
-  { code: 'AUTOMATION', label: 'Automation', group: 'BUILD', selectionType: 'PROCESSES', metadataKey: 'processes' },
-  { code: 'THEME', label: 'Theme', group: 'EXPERIENCE', selectionType: 'THEMES', metadataKey: 'themes' },
-  { code: 'NAVIGATION', label: 'Navigation', group: 'EXPERIENCE', selectionType: 'NAVIGATION', metadataKey: 'navigation' },
-  { code: 'MOBILE', label: 'Mobile', group: 'EXPERIENCE', selectionType: 'EXPERIENCES', metadataKey: 'experiences' },
-  { code: 'TEMPLATES', label: 'Templates', group: 'EXPERIENCE', selectionType: 'TEMPLATES' },
-  { code: 'ROLES', label: 'Roles', group: 'SECURITY', selectionType: 'SECURITY', metadataKey: 'securityPolicies' },
-  { code: 'POLICIES', label: 'Policies', group: 'SECURITY', selectionType: 'SECURITY', metadataKey: 'securityPolicies' },
-  { code: 'AUDIT', label: 'Audit', group: 'SECURITY', selectionType: 'RUNTIME', metadataKey: 'runtimePackages' },
-  { code: 'CONNECTORS', label: 'Connectors', group: 'INTEGRATION', selectionType: 'CONNECTORS', metadataKey: 'connectors' },
-  { code: 'WEBHOOKS', label: 'Webhooks', group: 'INTEGRATION', selectionType: 'INTEGRATIONS', metadataKey: 'integrations' },
-  { code: 'API', label: 'API', group: 'INTEGRATION', selectionType: 'CONNECTORS', metadataKey: 'connectors' },
-  { code: 'RUNTIME', label: 'Runtime', group: 'OPERATIONS', selectionType: 'RUNTIME', metadataKey: 'runtimePackages' },
-  { code: 'VERSIONS', label: 'Versions', group: 'OPERATIONS', selectionType: 'RUNTIME', metadataKey: 'runtimePackages' },
-  { code: 'DEPLOYMENT', label: 'Deployment', group: 'OPERATIONS', selectionType: 'RUNTIME', metadataKey: 'runtimePackages' },
-  { code: 'HEALTH', label: 'Health', group: 'OPERATIONS', selectionType: 'HEALTH', metadataKey: 'runtimePackages' },
+  { code: 'APPLICATIONS', label: 'Applications', group: 'BUILD', selectionType: 'HOME', metadataKey: 'applications' },
+  { code: 'DATA_MODEL', label: 'Data Model', group: 'BUILD', selectionType: 'ENTITY', metadataKey: 'entities', expertOnly: true },
+  { code: 'FORM_BUILDER', label: 'Form Builder', group: 'BUILD', selectionType: 'FORMS', metadataKey: 'forms' },
+  { code: 'PAGE_BUILDER', label: 'Page Builder', group: 'BUILD', selectionType: 'PAGES', metadataKey: 'ui', expertOnly: true },
+  { code: 'WORKFLOW_BUILDER', label: 'Workflow Builder', group: 'BUILD', selectionType: 'WORKFLOWS', metadataKey: 'workflows' },
+  { code: 'PROCESS_BUILDER', label: 'Process Builder', group: 'AUTOMATE', selectionType: 'PROCESSES', metadataKey: 'processes', expertOnly: true },
+  { code: 'INTEGRATION_BUILDER', label: 'Integration Builder', group: 'AUTOMATE', selectionType: 'INTEGRATIONS', metadataKey: 'integrations', expertOnly: true },
+  { code: 'EVENT_RULES', label: 'Event Rules', group: 'AUTOMATE', selectionType: 'EVENTS', metadataKey: 'events', expertOnly: true },
+  { code: 'SECURITY', label: 'Security', group: 'CONTROL', selectionType: 'SECURITY', metadataKey: 'securityPolicies' },
+  { code: 'THEME_STUDIO', label: 'Theme Studio', group: 'CONTROL', selectionType: 'THEMES', metadataKey: 'themes', expertOnly: true },
+  { code: 'RUNTIME_MONITOR', label: 'Runtime Monitor', group: 'CONTROL', selectionType: 'RUNTIME', metadataKey: 'runtimePackages', expertOnly: true },
+  { code: 'AUDIT', label: 'Audit', group: 'CONTROL', selectionType: 'RUNTIME', metadataKey: 'runtimePackages', expertOnly: true },
+  { code: 'METADATA_EXPLORER', label: 'Metadata Explorer', group: 'SYSTEM', selectionType: 'METADATA_EXPLORER', expertOnly: true },
+  { code: 'RUNTIME_PACKAGE', label: 'Runtime Package', group: 'SYSTEM', selectionType: 'RUNTIME', metadataKey: 'runtimePackages', expertOnly: true },
+  { code: 'TRACE_VIEWER', label: 'Trace Viewer', group: 'SYSTEM', selectionType: 'TRACE_VIEWER', expertOnly: true },
 ];
 
-export function createStudioNavigation(tree: MetadataDebugTree): StudioNavigationItem[] {
+export function createStudioNavigation(tree: MetadataDebugTree, mode: StudioMode): StudioNavigationItem[] {
   return registry.filter((item) => {
+    if (item.expertOnly && mode !== 'EXPERT') {
+      return false;
+    }
+
     if (!item.metadataKey) {
       return true;
     }

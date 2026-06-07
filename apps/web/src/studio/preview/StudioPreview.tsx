@@ -44,15 +44,29 @@ export function StudioPreview({
             ))}
           </section>
           <section className="studio-card">
-            <h4>Simulation</h4>
-            <pre>{JSON.stringify(preview.simulation, null, 2)}</pre>
+            <h4>Runtime Simulation</h4>
+            <div className="studio-impact studio-impact-info">Simulation completed through the existing Simulation Engine.</div>
+            <div className="studio-muted">Use Expert Mode for raw runtime details in later Studio tooling.</div>
           </section>
         </div>
       ) : null}
-      <div className="studio-preview-grid">
-        <FormRenderer form={form} />
-        <PageRenderer page={page} />
-      </div>
+      <section className="studio-card">
+        <div className="studio-section-header">
+          <h4>Desktop Preview</h4>
+          <span className="studio-muted">Rendered from metadata</span>
+        </div>
+        <div className="studio-desktop-preview">
+          <FormRenderer form={form} />
+          <PageRenderer page={page} />
+        </div>
+      </section>
+      <section className="studio-card">
+        <div className="studio-section-header">
+          <h4>Mobile Preview</h4>
+          <span className="studio-muted">Adaptive experience placeholder</span>
+        </div>
+        <div className="studio-mobile-preview">Mobile layout will use Adaptive Experience metadata when available.</div>
+      </section>
     </Panel>
   );
 }

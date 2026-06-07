@@ -20,9 +20,12 @@ import { RuntimeClient } from '../../core/api/runtime-client';
 import { useRuntimeContext } from '../../core/context/runtime-context';
 import type { ResolvedUIPage, RuntimeForm, RuntimeNavigation, RuntimeTheme } from '../../core/renderer/runtime-types';
 import { ThemeProvider } from '../../core/theme/theme-provider';
+import { ApplicationBuilderView } from '../../studio/application/ApplicationBuilderView';
 import { StudioHome } from '../../studio/dashboard/StudioHome';
+import { ErrorState } from '../../studio/error/ErrorState';
 import type { ExplorerSelection } from '../../studio/explorer/ApplicationExplorer';
 import { HelpPanel } from '../../studio/help/HelpPanel';
+import { readStudioMode, type StudioMode, writeStudioMode } from '../../studio/mode/studio-mode';
 import { StudioHeader } from '../../studio/StudioHeader';
 import { StudioPreview } from '../../studio/preview/StudioPreview';
 import { RuntimeHealthView } from '../../studio/runtime/RuntimeHealthView';
@@ -58,6 +61,7 @@ export function StudioPage() {
   const [preview, setPreview] = useState<DesignerPreviewResult | undefined>();
   const [error, setError] = useState<string | undefined>();
   const [reloadKey, setReloadKey] = useState(0);
+  const [mode, setMode] = useState<StudioMode>(() => readStudioMode());
 
   useEffect(() => {
     let mounted = true;
@@ -148,7 +152,31 @@ export function StudioPage() {
   }, [metadataClient, selection, state]);
 
   if (!state) {
-    return <main className="runtime-card">Loading RediOS Studio...</main>;
+    return (
+      <main className="runtime-card">
+        {error ? <ErrorState message={error} onRetry={() => setReloadKey((current) => current + 1)} /> : 'Loading RediOS Studio...'}
+      </main>
+    );
+  }
+
+  const activeApplicationCode = selectedApplicationCode(selection, context.applicationCode);
+
+  function handleSelect(nextSelection: ExplorerSelection) {
+    setSelection(nextSelection);
+
+    if (nextSelection.type === 'APPLICATION_BUILDER') {
+      window.history.pushState(null, '', `/studio/apps/${nextSelection.code}`);
+      return;
+    }
+
+    if (window.location.pathname !== '/studio') {
+      window.history.pushState(null, '', '/studio');
+    }
+  }
+
+  function handleModeChange(nextMode: StudioMode) {
+    setMode(nextMode);
+    writeStudioMode(nextMode);
   }
 
   return (
@@ -158,21 +186,25 @@ export function StudioPage() {
           <StudioHeader
             context={context}
             themeCode={state.theme.theme}
-            navigationCode={state.navigation.navigation}
+            applications={state.applications}
+            selectedApplicationCode={activeApplicationCode}
+            mode={mode}
+            onApplicationSelect={(applicationCode) => handleSelect({ type: 'APPLICATION_BUILDER', code: applicationCode })}
+            onModeChange={handleModeChange}
             canSimulate={Boolean(form?.entityCode)}
             onSimulate={() => void runSimulation(runtimeClient, context, form?.entityCode)}
           />
         }
         sidebar={
           <StudioSidebar
-            navigation={state.navigation}
             tree={state.tree}
             selection={selection}
-            onSelect={setSelection}
+            mode={mode}
+            onSelect={handleSelect}
           />
         }
       >
-        {error ? <div className="studio-error">{error}</div> : null}
+        {error ? <ErrorState message={error} onRetry={() => setReloadKey((current) => current + 1)} /> : null}
         <StudioWorkspace>
           <ActiveWorkspace
             selection={selection}
@@ -191,7 +223,8 @@ export function StudioPage() {
             runtimeClient={runtimeClient}
             context={context}
             preview={preview}
-            onSelect={setSelection}
+            mode={mode}
+            onSelect={handleSelect}
             onPreview={setPreview}
             onPublished={() => setReloadKey((current) => current + 1)}
           />
@@ -218,6 +251,7 @@ function ActiveWorkspace({
   runtimeClient,
   context,
   preview,
+  mode,
   onSelect,
   onPreview,
   onPublished,
@@ -238,6 +272,7 @@ function ActiveWorkspace({
   runtimeClient: RuntimeClient;
   context: ReturnType<typeof useRuntimeContext>['context'];
   preview?: DesignerPreviewResult;
+  mode: StudioMode;
   onSelect: (selection: ExplorerSelection) => void;
   onPreview: (preview: DesignerPreviewResult) => void;
   onPublished: () => void;
@@ -257,6 +292,21 @@ function ActiveWorkspace({
           onSelect={onSelect}
         />
         <HelpPanel topic="HOME" />
+      </>
+    );
+  }
+
+  if (selection.type === 'APPLICATION_BUILDER') {
+    const application = applications.find((metadata) => metadata.definition.code === selection.code) ?? applications[0];
+
+    if (!application) {
+      return <Panel title="Application Builder">No application metadata available.</Panel>;
+    }
+
+    return (
+      <>
+        <ApplicationBuilderView application={application} entities={entities} tree={tree} onSelect={onSelect} />
+        <HelpPanel topic="APPLICATION" />
       </>
     );
   }
@@ -286,7 +336,7 @@ function ActiveWorkspace({
   if (selection.type === 'ENTITY' || selection.type === 'FORMS') {
     return (
       <>
-        <FormBuilder form={form} entity={entity} designer={designerClient} onPreview={onPreview} onPublished={onPublished} />
+        <FormBuilder form={form} entity={entity} designer={designerClient} expertMode={mode === 'EXPERT'} onPreview={onPreview} onPublished={onPublished} />
         <StudioPreview preview={preview} form={form} />
         <HelpPanel topic="FORMS" />
       </>
@@ -325,15 +375,30 @@ function ActiveWorkspace({
     );
   }
 
+  if (selection.type === 'METADATA_EXPLORER' && mode === 'EXPERT') {
+    return (
+      <Panel title="Metadata Explorer">
+        <div className="studio-muted">Expert tools expose raw metadata categories for debugging.</div>
+        <pre>{JSON.stringify(tree, null, 2)}</pre>
+      </Panel>
+    );
+  }
+
   return (
-    <Panel title="Metadata">
-      <div className="studio-muted">Selected metadata is loaded from the Metadata Engine.</div>
-      <pre>{JSON.stringify(selection, null, 2)}</pre>
+    <Panel title="Studio Tool">
+      <div className="studio-muted">This Studio area is available from metadata and will use the existing engine APIs when opened.</div>
+      {mode === 'EXPERT' ? <pre>{JSON.stringify(selection, null, 2)}</pre> : null}
     </Panel>
   );
 }
 
 function initialSelection(tree: MetadataDebugTree): ExplorerSelection | undefined {
+  const [, route, resource, applicationCode] = window.location.pathname.split('/');
+
+  if (route === 'studio' && resource === 'apps' && applicationCode) {
+    return { type: 'APPLICATION_BUILDER', code: applicationCode };
+  }
+
   if (tree.applications.length > 0 || tree.forms.length > 0 || tree.entities.length > 0) {
     return { type: 'HOME', code: 'HOME' };
   }
@@ -347,6 +412,10 @@ function initialSelection(tree: MetadataDebugTree): ExplorerSelection | undefine
   }
 
   return undefined;
+}
+
+function selectedApplicationCode(selection: ExplorerSelection | undefined, fallback: string): string {
+  return selection?.type === 'APPLICATION_BUILDER' ? selection.code : fallback;
 }
 
 async function resolveForm(
