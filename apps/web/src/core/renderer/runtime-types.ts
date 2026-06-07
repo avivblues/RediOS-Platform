@@ -1,11 +1,20 @@
 import type {
   NavigationDefinition,
-  UIAtomDefinition,
   UIPageDefinition,
   UITemplateDefinition,
   ViewColumnDefinition,
   ViewDefinition,
 } from '@redios/shared';
+import type {
+  ResolvedUIAtom,
+  ResolvedUIMolecule,
+  ResolvedUIOrganism,
+  ResolvedUIPage as CoreResolvedUIPage,
+  ResolvedUIRegion,
+  RuntimeDocumentState,
+  RuntimeFormField,
+  RuntimeFormSection,
+} from '@redios/runtime-renderer-core';
 
 export interface RuntimeContext {
   tenantId: string;
@@ -62,31 +71,9 @@ export interface RuntimeNavigation {
   items: RuntimeNavigationItem[];
 }
 
-export interface ResolvedUIAtom {
-  code: string;
-  category: UIAtomDefinition['category'];
-  renderer: UIAtomDefinition['renderer'];
-  propsSchema: UIAtomDefinition['propsSchema'];
-  bind: string;
-}
+export type { ResolvedUIAtom, ResolvedUIMolecule, ResolvedUIOrganism, ResolvedUIRegion, RuntimeDocumentState, RuntimeFormField, RuntimeFormSection };
 
-export interface ResolvedUIMolecule {
-  code: string;
-  bind: string;
-  atoms: ResolvedUIAtom[];
-}
-
-export interface ResolvedUIOrganism {
-  code: string;
-  molecules: ResolvedUIMolecule[];
-}
-
-export interface ResolvedUIRegion {
-  code: string;
-  components: ResolvedUIOrganism[];
-}
-
-export interface ResolvedUIPage {
+export interface ResolvedUIPage extends CoreResolvedUIPage {
   page: UIPageDefinition;
   template: UITemplateDefinition;
   theme: RuntimeTheme;
@@ -96,41 +83,6 @@ export interface ResolvedUIPage {
     navigation: RuntimeNavigation;
     page: UIPageDefinition;
   };
-  regions: ResolvedUIRegion[];
-}
-
-export interface RuntimeFormField {
-  fieldCode: string;
-  component: string;
-  order: number;
-  required: boolean;
-  readonly: boolean;
-  visible: boolean;
-  binding: {
-    source: 'FORM';
-    fieldCode: string;
-    path: string;
-  };
-  metadata: Record<string, unknown>;
-  relation?: {
-    code: string;
-    target: string;
-    valueField: string;
-    displayField?: string;
-  };
-  view?: {
-    code: string;
-    entityCode: string;
-    type: ViewDefinition['type'];
-    columns: ViewColumnDefinition[];
-  };
-}
-
-export interface RuntimeFormSection {
-  code: string;
-  title: string;
-  order: number;
-  fields: RuntimeFormField[];
 }
 
 export interface RuntimeForm {
@@ -153,7 +105,3 @@ export interface QueryResult {
   };
 }
 
-export interface RuntimeDocumentState {
-  id?: string;
-  data: Record<string, unknown>;
-}

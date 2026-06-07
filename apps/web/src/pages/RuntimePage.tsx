@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
+import { createDocumentState } from '@redios/runtime-renderer-core';
 import { createMetadataClient } from '../core/metadata-client/metadata-client';
-import { createDocumentFromForm } from '../core/renderer/form-binding';
 import type {
   ResolvedUIPage,
   RuntimeDocumentState,
@@ -56,7 +56,7 @@ export function RuntimePage() {
           theme,
           navigation,
         });
-        setDocument(form ? createDocumentFromForm(form.sections.flatMap((section) => section.fields)) : { data: {} });
+        setDocument(form ? createDocumentState(form.sections.flatMap((section) => section.fields)) : { data: {} });
       } catch (loadError) {
         if (mounted) {
           setError(loadError instanceof Error ? loadError.message : String(loadError));
@@ -81,6 +81,16 @@ export function RuntimePage() {
 
   const renderContext = {
     client,
+    rendererContext: {
+      tenantId: context.tenantId,
+      domainCode: context.domainCode,
+      applicationCode: context.applicationCode,
+      userId: context.userId,
+      roles: context.roles,
+      groups: context.groups,
+      attributes: context.attributes,
+      platform: 'WEB' as const,
+    },
     theme: state.theme,
     navigation: state.navigation,
     form: state.form,

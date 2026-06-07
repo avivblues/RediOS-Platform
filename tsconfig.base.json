@@ -16,7 +16,8 @@
     "paths": {
       "@redios/shared": ["packages/shared/src"],
       "@redios/engine-sdk": ["packages/engine-sdk/src"],
-      "@redios/ui-schema": ["packages/ui-schema/src"]
+      "@redios/ui-schema": ["packages/ui-schema/src"],
+      "@redios/runtime-renderer-core": ["packages/runtime-renderer-core/src"]
     }
   }
 }

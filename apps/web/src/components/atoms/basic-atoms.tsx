@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { bindFormField } from '../../core/renderer/form-binding';
+import { bindFormField, resolveAction } from '@redios/runtime-renderer-core';
 import type { RuntimeComponentProps } from '../../core/renderer/render-context';
 import type { QueryResult } from '../../core/renderer/runtime-types';
 
@@ -14,7 +14,7 @@ export function TextInputRenderer({ context }: RuntimeComponentProps) {
     return <input className="runtime-control" aria-label="text input" />;
   }
 
-  const binding = bindFormField(context.document, context.setDocument, field);
+  const binding = bindFormField(context.document, field);
 
   return (
     <input
@@ -22,7 +22,7 @@ export function TextInputRenderer({ context }: RuntimeComponentProps) {
       aria-label={field.fieldCode}
       disabled={field.readonly}
       value={String(binding.value)}
-      onChange={(event) => binding.update(event.target.value)}
+      onChange={(event) => context.setDocument(binding.setValue(event.target.value))}
     />
   );
 }
@@ -34,7 +34,7 @@ export function TextAreaRenderer({ context }: RuntimeComponentProps) {
     return <textarea className="runtime-control" aria-label="text area" />;
   }
 
-  const binding = bindFormField(context.document, context.setDocument, field);
+  const binding = bindFormField(context.document, field);
 
   return (
     <textarea
@@ -42,7 +42,7 @@ export function TextAreaRenderer({ context }: RuntimeComponentProps) {
       aria-label={field.fieldCode}
       disabled={field.readonly}
       value={String(binding.value)}
-      onChange={(event) => binding.update(event.target.value)}
+      onChange={(event) => context.setDocument(binding.setValue(event.target.value))}
     />
   );
 }
@@ -54,7 +54,7 @@ export function NumberInputRenderer({ context }: RuntimeComponentProps) {
     return <input className="runtime-control" type="number" aria-label="number input" />;
   }
 
-  const binding = bindFormField(context.document, context.setDocument, field);
+  const binding = bindFormField(context.document, field);
 
   return (
     <input
@@ -63,7 +63,7 @@ export function NumberInputRenderer({ context }: RuntimeComponentProps) {
       aria-label={field.fieldCode}
       disabled={field.readonly}
       value={String(binding.value)}
-      onChange={(event) => binding.update(event.target.value === '' ? '' : Number(event.target.value))}
+      onChange={(event) => context.setDocument(binding.setValue(event.target.value === '' ? '' : Number(event.target.value)))}
     />
   );
 }
@@ -75,7 +75,7 @@ export function DatePickerRenderer({ context }: RuntimeComponentProps) {
     return <input className="runtime-control" type="date" aria-label="date picker" />;
   }
 
-  const binding = bindFormField(context.document, context.setDocument, field);
+  const binding = bindFormField(context.document, field);
 
   return (
     <input
@@ -84,7 +84,7 @@ export function DatePickerRenderer({ context }: RuntimeComponentProps) {
       aria-label={field.fieldCode}
       disabled={field.readonly}
       value={String(binding.value)}
-      onChange={(event) => binding.update(event.target.value)}
+      onChange={(event) => context.setDocument(binding.setValue(event.target.value))}
     />
   );
 }
@@ -96,7 +96,7 @@ export function SelectRenderer({ context }: RuntimeComponentProps) {
     return <select className="runtime-control" aria-label="select" />;
   }
 
-  const binding = bindFormField(context.document, context.setDocument, field);
+  const binding = bindFormField(context.document, field);
 
   return (
     <select
@@ -104,7 +104,7 @@ export function SelectRenderer({ context }: RuntimeComponentProps) {
       aria-label={field.fieldCode}
       disabled={field.readonly}
       value={String(binding.value)}
-      onChange={(event) => binding.update(event.target.value)}
+      onChange={(event) => context.setDocument(binding.setValue(event.target.value))}
     >
       <option value="">Select</option>
     </select>
@@ -119,7 +119,7 @@ export function LookupRenderer({ context }: RuntimeComponentProps) {
     return <select className="runtime-control" aria-label="lookup" />;
   }
 
-  const binding = bindFormField(context.document, context.setDocument, field);
+  const binding = bindFormField(context.document, field);
 
   async function loadLookup() {
     if (!field?.relation || !field.view) {
@@ -142,7 +142,7 @@ export function LookupRenderer({ context }: RuntimeComponentProps) {
       disabled={field.readonly}
       value={String(binding.value)}
       onFocus={loadLookup}
-      onChange={(event) => binding.update(event.target.value)}
+      onChange={(event) => context.setDocument(binding.setValue(event.target.value))}
     >
       <option value="">Select</option>
       {options.map((option) => (
@@ -154,25 +154,31 @@ export function LookupRenderer({ context }: RuntimeComponentProps) {
   );
 }
 
-export function ButtonRenderer({ context }: RuntimeComponentProps) {
+export function ButtonRenderer({ node, context }: RuntimeComponentProps) {
   const actionCode = context.actions[0];
+  const action = resolveAction({
+    node,
+    entityCode: context.entityCode,
+    document: context.document,
+    actionCode,
+  });
 
   return (
     <button
       className="runtime-button"
-      disabled={!actionCode || !context.entityCode || !context.documentId}
+      disabled={!action || !action.documentId}
       onClick={() => {
-        if (actionCode && context.entityCode && context.documentId) {
+        if (action?.documentId) {
           void context.client.runAction({
-            entityCode: context.entityCode,
-            documentId: context.documentId,
-            actionCode,
-            payload: context.document.data,
+            entityCode: action.entityCode,
+            documentId: action.documentId,
+            actionCode: action.actionCode,
+            payload: action.payload,
           });
         }
       }}
     >
-      {actionCode ?? 'Action'}
+      {action?.actionCode ?? 'Action'}
     </button>
   );
 }

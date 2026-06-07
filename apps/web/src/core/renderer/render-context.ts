@@ -1,9 +1,7 @@
 import type React from 'react';
+import type { RuntimeNode, RuntimeRendererContext } from '@redios/runtime-renderer-core';
 import type { MetadataClient } from '../metadata-client/metadata-client';
 import type {
-  ResolvedUIAtom,
-  ResolvedUIMolecule,
-  ResolvedUIOrganism,
   RuntimeDocumentState,
   RuntimeForm,
   RuntimeFormField,
@@ -13,6 +11,7 @@ import type {
 
 export interface RuntimeRenderContext {
   client: MetadataClient;
+  rendererContext: RuntimeRendererContext;
   theme: RuntimeTheme;
   navigation: RuntimeNavigation;
   form?: RuntimeForm;
@@ -25,7 +24,7 @@ export interface RuntimeRenderContext {
 }
 
 export interface RuntimeComponentProps {
-  node: ResolvedUIAtom | ResolvedUIMolecule | ResolvedUIOrganism;
+  node: RuntimeNode;
   context: RuntimeRenderContext;
   children?: React.ReactNode;
 }

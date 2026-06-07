@@ -26,6 +26,8 @@ import {
 import type { RuntimeComponentRenderer } from '../renderer/render-context';
 
 export const componentRegistry: Record<string, RuntimeComponentRenderer> = {
+  PAGE: ContainerRenderer,
+  TEMPLATE: ContainerRenderer,
   TEXT_INPUT: TextInputRenderer,
   TEXT_AREA: TextAreaRenderer,
   NUMBER_INPUT: NumberInputRenderer,
@@ -50,9 +52,21 @@ export const componentRegistry: Record<string, RuntimeComponentRenderer> = {
 };
 
 export function resolveComponentRenderer(code: string): RuntimeComponentRenderer {
+  if (code.startsWith('PAGE:') || code.startsWith('TEMPLATE:') || code === 'HEADER' || code === 'CONTENT' || code === 'SIDEBAR') {
+    return ContainerRenderer;
+  }
+
   return componentRegistry[code] ?? UnknownComponentRenderer;
 }
 
+function ContainerRenderer({ node, children }: Parameters<RuntimeComponentRenderer>[0]) {
+  return (
+    <section className={node.kind === 'REGION' ? 'runtime-region' : undefined} data-component={node.component}>
+      {children}
+    </section>
+  );
+}
+
 function UnknownComponentRenderer({ node }: Parameters<RuntimeComponentRenderer>[0]) {
-  return <div className="runtime-card">Unsupported component: {node.code}</div>;
+  return <div className="runtime-card">Unsupported component: {node.component}</div>;
 }
