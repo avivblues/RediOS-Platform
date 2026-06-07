@@ -15,6 +15,7 @@ export type MetadataType =
   | 'THEME'
   | 'NAVIGATION'
   | 'SECURITY_POLICY'
+  | 'SYNC_POLICY'
   | 'REPORT'
   | 'EXPERIENCE'
   | 'RULE';

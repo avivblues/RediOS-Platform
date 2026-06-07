@@ -21,6 +21,7 @@ import { RuntimeModule as CoreRuntimeModule } from './core/runtime/runtime.modul
 import { SecurityModule } from './core/security/security.module';
 import { SecurityPolicyModule as CoreSecurityPolicyModule } from './core/security-policy/security-policy.module';
 import { StorageModule } from './core/storage/storage.module';
+import { SyncModule as CoreSyncModule } from './core/sync/sync.module';
 import { ThemeModule as CoreThemeModule } from './core/theme/theme.module';
 import { UIModule as CoreUIModule } from './core/ui/ui.module';
 import { WorkflowModule } from './core/workflow/workflow.module';
@@ -39,6 +40,7 @@ import { RuntimeTracesModule } from './runtime-traces/runtime-traces.module';
 import { SecurityPolicyModule } from './security-policy/security-policy.module';
 import { RelationsModule } from './relations/relations.module';
 import { SimulationModule } from './simulation/simulation.module';
+import { SyncModule } from './sync/sync.module';
 import { ThemesModule } from './themes/themes.module';
 import { UIModule } from './ui/ui.module';
 
@@ -79,6 +81,7 @@ import { UIModule } from './ui/ui.module';
     NavigationModule,
     SecurityPolicyModule,
     ExperienceModule,
+    SyncModule,
     ContextModule,
     ApplicationModule,
     MetadataModule,
@@ -101,6 +104,7 @@ import { UIModule } from './ui/ui.module';
     CoreNavigationModule,
     CoreSecurityPolicyModule,
     CoreExperienceModule,
+    CoreSyncModule,
   ],
 })
 export class AppModule {}

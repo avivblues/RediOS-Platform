@@ -1,5 +1,6 @@
 import type { RuntimeRendererContext } from '@redios/runtime-renderer-core';
 import type { MobileMetadataClient } from '../api/mobile-metadata-client';
+import type { OfflineStore } from '../storage/offline-store';
 import type {
   MobileNavigation,
   MobileRuntimeForm,
@@ -21,6 +22,8 @@ export interface MobileRuntimeRenderContext {
   entityCode?: string;
   documentId?: string;
   actions: string[];
+  online: boolean;
+  offlineStore: OfflineStore;
 }
 
 export function activeFieldForNode(

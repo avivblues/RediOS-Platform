@@ -21,6 +21,7 @@ import type {
   RelationDefinition,
   RuntimeContext,
   SecurityPolicyDefinition,
+  SyncDefinition,
   ThemeDefinition,
   UIDefinition,
   ViewDefinition,
@@ -159,6 +160,10 @@ export class DependencyEngine {
 
     if (record.type === 'EXPERIENCE') {
       return this.experienceReferences(record.definition as ExperienceDefinition, source);
+    }
+
+    if (record.type === 'SYNC_POLICY') {
+      return this.syncPolicyReferences(record.definition as SyncDefinition, source);
     }
 
     if (record.type === 'FIELD') {
@@ -344,6 +349,10 @@ export class DependencyEngine {
         ...(variant.themeCode ? [this.reference(source, 'REFERENCES', 'THEME', variant.themeCode)] : []),
       ]),
     ];
+  }
+
+  private syncPolicyReferences(definition: SyncDefinition, source: DependencyNode): DependencyReference[] {
+    return [this.reference(source, 'REFERENCES', 'ENTITY', definition.entityCode)];
   }
 
   private toImpact(reference: DependencyReference): DependencyImpact {

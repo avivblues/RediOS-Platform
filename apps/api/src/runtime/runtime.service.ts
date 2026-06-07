@@ -70,12 +70,32 @@ export class RuntimeService {
     payload: unknown,
   ): Promise<RuntimeActionResult> {
     const context = this.contextEngine.resolve(headers);
+    const actionPayload = this.actionPayload(payload);
     return this.runtimeExecutor.prepareAction({
       context,
       entityCode,
       id,
       actionCode,
-      payload,
+      payload: actionPayload.payload,
+      source: actionPayload.source,
     });
+  }
+
+  private actionPayload(payload: unknown): { payload: unknown; source?: 'OFFLINE_SYNC' } {
+    if (!payload || typeof payload !== 'object' || Array.isArray(payload)) {
+      return { payload };
+    }
+
+    const record = payload as Record<string, unknown>;
+    const source = record.source === 'OFFLINE_SYNC' ? 'OFFLINE_SYNC' : undefined;
+
+    if (!source) {
+      return { payload };
+    }
+
+    return {
+      source,
+      payload: record.payload ?? record.data ?? {},
+    };
   }
 }

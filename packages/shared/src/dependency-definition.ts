@@ -19,6 +19,7 @@ export type DependencyNodeType = Extract<
   | 'NAVIGATION'
   | 'SECURITY_POLICY'
   | 'EXPERIENCE'
+  | 'SYNC_POLICY'
 >;
 
 export interface DependencyNode {

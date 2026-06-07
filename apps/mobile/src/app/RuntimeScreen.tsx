@@ -15,11 +15,13 @@ import type {
 import { useRuntimeContext } from '../core/context/runtime-context';
 import { MobileThemeProvider } from '../core/theme/theme-provider';
 import { MobileNavigationRenderer } from '../components/organisms/mobile-organisms';
+import { SQLiteOfflineStore } from '../core/storage/offline-store';
 
 export interface RuntimeScreenProps {
   entityCode: string;
   debugPageCode?: string;
   documentId?: string;
+  online?: boolean;
 }
 
 interface RuntimeScreenState {
@@ -30,9 +32,10 @@ interface RuntimeScreenState {
   navigation: MobileNavigation;
 }
 
-export function RuntimeScreen({ entityCode, debugPageCode, documentId }: RuntimeScreenProps) {
+export function RuntimeScreen({ entityCode, debugPageCode, documentId, online = true }: RuntimeScreenProps) {
   const { context } = useRuntimeContext();
   const client = useMemo(() => createMobileMetadataClient(context), [context]);
+  const offlineStore = useMemo(() => new SQLiteOfflineStore(), []);
   const [state, setState] = useState<RuntimeScreenState | undefined>();
   const [document, setDocument] = useState<RuntimeDocumentState>({ id: documentId, data: {} });
   const [error, setError] = useState<string | undefined>();
@@ -138,6 +141,8 @@ export function RuntimeScreen({ entityCode, debugPageCode, documentId }: Runtime
     entityCode: state.page.page.entityCode,
     documentId,
     actions: state.page.page.actions ?? [],
+    online,
+    offlineStore,
   };
   const runtimeTree = generateRuntimeTree({
     page: state.page,

@@ -20,6 +20,7 @@ export * from './runtime-context';
 export * from './runtime-document';
 export * from './runtime-trace';
 export * from './security-policy-definition';
+export * from './sync-definition';
 export * from './theme-definition';
 export * from './ui-definition';
 export * from './view-definition';

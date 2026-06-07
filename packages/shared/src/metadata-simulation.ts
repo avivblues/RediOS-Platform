@@ -120,5 +120,10 @@ export interface SimulationResult {
       platform: string;
       page: string;
     };
+    sync?: {
+      offline: boolean;
+      strategy: string;
+      conflict: string;
+    };
   };
 }

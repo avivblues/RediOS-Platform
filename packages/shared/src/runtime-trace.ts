@@ -9,6 +9,7 @@ export type RuntimeTraceStepEngine =
   | 'BUSINESS'
   | 'EVENT'
   | 'LEDGER'
+  | 'SYNC_REPLAY'
   | 'DESIGNER'
   | 'VALIDATION'
   | 'DEPENDENCY_CHECK'

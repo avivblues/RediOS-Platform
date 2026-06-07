@@ -1,0 +1,62 @@
+@baseUrl = http://localhost:3001/api
+@tenantId = demo
+@domainCode = DEFAULT
+@applicationCode = ASSET_MAINTENANCE
+@documentId = replace-with-runtime-document-id
+
+### Sync policies return metadata-driven offline entities
+GET {{baseUrl}}/sync/policies
+x-tenant-id: {{tenantId}}
+x-domain-code: {{domainCode}}
+x-application-code: {{applicationCode}}
+x-user-id: mobile-tech
+x-roles: TECHNICIAN
+x-permissions: WORK_ORDER.READ,WORK_ORDER.COMPLETE,ASSET.READ
+
+### Expected
+### WORK_ORDER_SYNC -> OFFLINE_FIRST, MANUAL_REVIEW
+### ASSET_SYNC -> CACHE_ONLY, SERVER_WINS
+### STOCK_BALANCE_SYNC is not returned because offlineEnabled=false
+
+### Mobile bootstrap package
+POST {{baseUrl}}/sync/bootstrap
+content-type: application/json
+x-tenant-id: {{tenantId}}
+x-domain-code: {{domainCode}}
+x-application-code: {{applicationCode}}
+x-user-id: mobile-tech
+x-roles: TECHNICIAN
+x-permissions: WORK_ORDER.READ,WORK_ORDER.COMPLETE,ASSET.READ
+
+{
+  "deviceId": "mobile-device-001",
+  "metadataVersion": 0
+}
+
+### Expected
+### metadataVersion exists
+### entities includes WORK_ORDER and ASSET
+### forms includes WORK_ORDER_FORM
+### navigation includes MAIN_NAVIGATION and MOBILE_NAV
+### theme includes DEFAULT_THEME and COMPACT_THEME
+### experience includes WORK_ORDER_EXPERIENCE and ASSET_EXPERIENCE
+
+### Offline replay still calls Runtime API
+POST {{baseUrl}}/runtime/WORK_ORDER/{{documentId}}/actions/COMPLETE
+content-type: application/json
+x-tenant-id: {{tenantId}}
+x-domain-code: {{domainCode}}
+x-application-code: {{applicationCode}}
+x-user-id: mobile-tech
+x-roles: TECHNICIAN
+x-permissions: WORK_ORDER.READ,WORK_ORDER.COMPLETE,ASSET.READ
+
+{
+  "source": "OFFLINE_SYNC",
+  "payload": {
+    "photo": "file001"
+  }
+}
+
+### Expected trace
+### ACTION -> SECURITY -> SECURITY_POLICY -> WORKFLOW -> PROCESS -> BUSINESS -> EVENT -> LEDGER -> SYNC_REPLAY

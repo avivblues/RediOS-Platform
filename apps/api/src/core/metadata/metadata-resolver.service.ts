@@ -17,6 +17,7 @@ import type {
   RelationDefinition,
   RuntimeContext,
   SecurityPolicyDefinition,
+  SyncDefinition,
   ThemeDefinition,
   UIDefinition,
   UIKind,
@@ -400,6 +401,32 @@ export class MetadataResolver {
     }
 
     return definition as MetadataDefinition<ExperienceDefinition>;
+  }
+
+  async resolveSyncPolicy(
+    context: RuntimeContext,
+    entityCode: string,
+  ): Promise<MetadataDefinition<SyncDefinition> | null> {
+    const definitions = await this.registry.findByType(context, 'SYNC_POLICY');
+    const matchingDefinitions = definitions
+      .filter((candidate) => {
+        const policy = candidate.definition as SyncDefinition;
+        return policy.enabled && policy.entityCode === entityCode;
+      })
+      .sort((left, right) => (right.definition as SyncDefinition).priority - (left.definition as SyncDefinition).priority);
+    const definition = matchingDefinitions[0];
+
+    if (!definition) {
+      return null;
+    }
+
+    const validation = this.validator.validate(definition);
+
+    if (!validation.valid) {
+      throw new UnprocessableEntityException(validation.errors);
+    }
+
+    return definition as MetadataDefinition<SyncDefinition>;
   }
 
   async resolveUI(

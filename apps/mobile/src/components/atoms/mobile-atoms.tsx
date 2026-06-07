@@ -127,12 +127,21 @@ export function MobileButton({ node, context }: MobileComponentProps) {
       style={[styles.button, { backgroundColor: theme.tokens.colors.primary }]}
       onPress={() => {
         if (action?.documentId) {
-          void context.client.runAction({
-            entityCode: action.entityCode,
-            documentId: action.documentId,
-            actionCode: action.actionCode,
-            data: action.payload,
-          });
+          if (context.online) {
+            void context.client.runAction({
+              entityCode: action.entityCode,
+              documentId: action.documentId,
+              actionCode: action.actionCode,
+              data: action.payload,
+            });
+          } else {
+            void context.offlineStore.queueAction({
+              entityCode: action.entityCode,
+              documentId: action.documentId,
+              actionCode: action.actionCode,
+              payload: action.payload,
+            });
+          }
         }
       }}
     >

@@ -16,6 +16,7 @@ import type {
   ProcessDefinition,
   RelationDefinition,
   SecurityPolicyDefinition,
+  SyncDefinition,
   ThemeDefinition,
   UIDefinition,
   ViewDefinition,
@@ -57,6 +58,7 @@ type ApplicationSeed = {
   navigations?: NavigationDefinition[];
   securityPolicies?: SecurityPolicyDefinition[];
   experiences?: ExperienceDefinition[];
+  syncPolicies?: SyncDefinition[];
 };
 
 const commonThemeDefinitions: ThemeDefinition[] = [
@@ -602,6 +604,17 @@ const applications: ApplicationSeed[] = [
           },
         ],
       },
+      {
+        code: 'STOCK_BALANCE',
+        name: 'Stock Balance',
+        type: 'MASTER',
+        fields: [
+          { code: 'sku', required: true },
+          { code: 'quantity', dataType: 'number' },
+          { code: 'location' },
+        ],
+        actions: ['CREATE', 'READ', 'UPDATE'],
+      },
     ],
     relations: [
       {
@@ -742,6 +755,46 @@ const applications: ApplicationSeed[] = [
             interaction: 'TOUCH',
           },
         ],
+      },
+    ],
+    syncPolicies: [
+      {
+        code: 'WORK_ORDER_SYNC',
+        entityCode: 'WORK_ORDER',
+        enabled: true,
+        offlineEnabled: true,
+        strategy: 'OFFLINE_FIRST',
+        syncDirection: 'BIDIRECTIONAL',
+        conflictPolicy: 'MANUAL_REVIEW',
+        retention: {
+          maxAgeDays: 30,
+          maxRecords: 500,
+        },
+        priority: 100,
+      },
+      {
+        code: 'ASSET_SYNC',
+        entityCode: 'ASSET',
+        enabled: true,
+        offlineEnabled: true,
+        strategy: 'CACHE_ONLY',
+        syncDirection: 'DOWNLOAD',
+        conflictPolicy: 'SERVER_WINS',
+        retention: {
+          maxAgeDays: 90,
+          maxRecords: 1000,
+        },
+        priority: 90,
+      },
+      {
+        code: 'STOCK_BALANCE_SYNC',
+        entityCode: 'STOCK_BALANCE',
+        enabled: true,
+        offlineEnabled: false,
+        strategy: 'ONLINE_ONLY',
+        syncDirection: 'DOWNLOAD',
+        conflictPolicy: 'SERVER_WINS',
+        priority: 10,
       },
     ],
     securityPolicies: [
@@ -1273,6 +1326,7 @@ export const metadataSeedRecords: MetadataDefinition[] = applications.flatMap((a
   ),
   ...(application.securityPolicies ?? []).map((policy) => createSecurityPolicyRecord(application, policy)),
   ...(application.experiences ?? []).map((experience) => createExperienceRecord(application, experience)),
+  ...(application.syncPolicies ?? []).map((syncPolicy) => createSyncPolicyRecord(application, syncPolicy)),
   ...[...commonUIDefinitions, ...(application.uis ?? [])].map((ui) => createUIRecord(application, ui)),
 ]);
 
@@ -1593,6 +1647,23 @@ function createExperienceRecord(
     version: 1,
     enabled: experience.enabled,
     definition: experience,
+  };
+}
+
+function createSyncPolicyRecord(
+  application: ApplicationSeed,
+  syncPolicy: SyncDefinition,
+): MetadataDefinition<SyncDefinition> {
+  return {
+    tenantId,
+    domainCode,
+    applicationCode: application.code,
+    type: 'SYNC_POLICY',
+    code: syncPolicy.code,
+    name: toLabel(syncPolicy.code),
+    version: 1,
+    enabled: syncPolicy.enabled,
+    definition: syncPolicy,
   };
 }
 

@@ -6,8 +6,11 @@ import type {
   MobileRuntimeContext,
   MobileRuntimeForm,
   MobileRuntimeTheme,
+  MobileSyncBootstrapPackage,
+  ResolvedSyncPolicy,
   RuntimeExperience,
 } from './mobile-runtime-types';
+import type { OfflineAction } from '../storage/offline-store';
 
 const API_BASE_URL = process.env.EXPO_PUBLIC_REDIOS_API_URL ?? 'http://localhost:3001/api';
 
@@ -34,6 +37,17 @@ export class MobileMetadataClient {
     return this.get(themeCode ? `/themes/${themeCode}` : '/themes/current');
   }
 
+  getSyncPolicies(): Promise<ResolvedSyncPolicy[]> {
+    return this.get('/sync/policies');
+  }
+
+  bootstrapSync(deviceId: string, metadataVersion?: number): Promise<MobileSyncBootstrapPackage> {
+    return this.post('/sync/bootstrap', {
+      deviceId,
+      metadataVersion,
+    });
+  }
+
   query(entityCode: string, viewCode?: string): Promise<MobileQueryResult> {
     return this.post(`/query/${entityCode}`, {
       ...(viewCode ? { viewCode } : {}),
@@ -46,6 +60,17 @@ export class MobileMetadataClient {
     }
 
     return this.post(`/runtime/${request.entityCode}/${request.documentId}/actions/${request.actionCode}`, request.data);
+  }
+
+  replayOfflineAction(action: OfflineAction): Promise<unknown> {
+    if (!action.documentId) {
+      return Promise.reject(new Error('Offline replay requires a document id.'));
+    }
+
+    return this.post(`/runtime/${action.entityCode}/${action.documentId}/actions/${action.actionCode}`, {
+      source: 'OFFLINE_SYNC',
+      payload: action.payload,
+    });
   }
 
   private get<TResponse>(path: string): Promise<TResponse> {

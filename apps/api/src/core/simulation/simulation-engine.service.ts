@@ -27,6 +27,7 @@ import { ProcessEngine } from '../process/process-engine.service';
 import { RelationEngine } from '../relation/relation-engine.service';
 import { SecurityEngine } from '../security/security-engine.service';
 import { SecurityPolicyEngine } from '../security-policy/security-policy-engine.service';
+import { SyncPolicyEngine } from '../sync/sync-policy-engine.service';
 import { ThemeEngine } from '../theme/theme-engine.service';
 import { TraceEngine } from '../trace/trace-engine.service';
 import { UIEngine } from '../ui/ui-engine.service';
@@ -52,6 +53,7 @@ export class SimulationEngine {
     private readonly navigationEngine: NavigationEngine,
     private readonly securityPolicyEngine: SecurityPolicyEngine,
     private readonly experienceEngine: ExperienceEngine,
+    private readonly syncPolicyEngine: SyncPolicyEngine,
     private readonly traceEngine: TraceEngine,
   ) {}
 
@@ -339,6 +341,20 @@ export class SimulationEngine {
       page: experience.value.page,
     };
 
+    const syncPolicy = await this.runStep(steps, 'VALIDATION', 'Sync policy metadata resolved.', () =>
+      this.syncPolicyEngine.resolvePolicy(context, request.entityCode),
+    );
+
+    if (!syncPolicy.ok) {
+      return this.finalize(request, context, this.failed(validation, steps, predicted));
+    }
+
+    predicted.sync = {
+      offline: syncPolicy.value.offline,
+      strategy: syncPolicy.value.strategy,
+      conflict: syncPolicy.value.conflict,
+    };
+
     const forms = await this.runStep(steps, 'VALIDATION', 'Form metadata resolved.', () =>
       this.formEngine.compose(context, request.entityCode),
     );
@@ -508,6 +524,11 @@ export class SimulationEngine {
       }
 
       if (metadataDefinition.type === 'EXPERIENCE') {
+        const metadataEntityCode = this.definitionEntityCode(metadataDefinition.definition);
+        return metadataEntityCode === entityCode ? [metadataDefinition] : [];
+      }
+
+      if (metadataDefinition.type === 'SYNC_POLICY') {
         const metadataEntityCode = this.definitionEntityCode(metadataDefinition.definition);
         return metadataEntityCode === entityCode ? [metadataDefinition] : [];
       }

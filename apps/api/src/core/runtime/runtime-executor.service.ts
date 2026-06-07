@@ -56,6 +56,7 @@ export interface RuntimeActionInput {
   id: string;
   actionCode: string;
   payload: unknown;
+  source?: 'OFFLINE_SYNC';
 }
 
 export interface RuntimeActionResult {
@@ -144,7 +145,7 @@ export class RuntimeExecutor {
   }
 
   async prepareAction(input: RuntimeActionInput): Promise<RuntimeActionResult> {
-    const { context, entityCode, id, actionCode, payload } = input;
+    const { context, entityCode, id, actionCode, payload, source } = input;
     const trace = await this.traceEngine.start(context, {
       entityCode,
       documentId: id,
@@ -242,6 +243,15 @@ export class RuntimeExecutor {
           eventCodes: events.events.map((event) => event.eventCode),
         }),
       );
+
+      if (source === 'OFFLINE_SYNC') {
+        await this.traceEngine.recordStepResult(trace.id!, 'SYNC_REPLAY', 'SUCCESS', {
+          source,
+          entityCode,
+          documentId: id,
+          actionCode,
+        });
+      }
 
       await this.traceEngine.complete(trace.id!);
 

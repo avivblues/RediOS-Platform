@@ -10,6 +10,7 @@ import type {
   RuntimeFormField,
   RuntimeFormSection,
 } from '@redios/runtime-renderer-core';
+import type { ResolvedSyncPolicy } from '@redios/shared';
 
 export interface MobileRuntimeContext {
   tenantId: string;
@@ -100,7 +101,19 @@ export interface MobileRuntimeActionRequest {
   data: Record<string, unknown>;
 }
 
+export interface MobileSyncBootstrapPackage {
+  metadataVersion: number;
+  entities: unknown[];
+  forms: unknown[];
+  workflow: unknown[];
+  security: unknown[];
+  navigation: unknown[];
+  theme: unknown[];
+  experience: unknown[];
+}
+
 export type {
+  ResolvedSyncPolicy,
   ResolvedUIAtom,
   ResolvedUIMolecule,
   ResolvedUIOrganism,

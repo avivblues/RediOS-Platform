@@ -16,6 +16,7 @@ import type {
   ProcessDefinition,
   RelationDefinition,
   SecurityPolicyDefinition,
+  SyncDefinition,
   ThemeDefinition,
   UIAtomDefinition,
   UIDefinition,
@@ -46,6 +47,7 @@ type MetadataIndex = {
   navigation: Map<string, MetadataDefinition<NavigationDefinition>[]>;
   securityPolicies: Map<string, MetadataDefinition<SecurityPolicyDefinition>[]>;
   experiences: Map<string, MetadataDefinition<ExperienceDefinition>[]>;
+  syncPolicies: Map<string, MetadataDefinition<SyncDefinition>[]>;
 };
 
 @Injectable()
@@ -70,6 +72,7 @@ export class MetadataValidatorEngine {
     this.validateNavigationDefinitions(metadataDefinitions, index, issues);
     this.validateSecurityPolicyDefinitions(metadataDefinitions, index, issues);
     this.validateExperienceDefinitions(metadataDefinitions, index, issues);
+    this.validateSyncPolicyDefinitions(metadataDefinitions, index, issues);
     this.validateDependencyIntegrity(metadataDefinitions, index, issues);
 
     const errors = issues.filter((issue) => issue.severity === 'ERROR').length;
@@ -101,6 +104,7 @@ export class MetadataValidatorEngine {
       navigation: new Map(),
       securityPolicies: new Map(),
       experiences: new Map(),
+      syncPolicies: new Map(),
     };
 
     for (const metadata of metadataDefinitions) {
@@ -196,6 +200,14 @@ export class MetadataValidatorEngine {
         const records = index.securityPolicies.get(metadata.code) ?? [];
         records.push(metadata as MetadataDefinition<SecurityPolicyDefinition>);
         index.securityPolicies.set(metadata.code, records);
+      }
+
+      if (metadata.type === 'SYNC_POLICY') {
+        const syncPolicy = metadata.definition as SyncDefinition;
+        const key = this.syncPolicyKey(syncPolicy.entityCode, syncPolicy.code);
+        const records = index.syncPolicies.get(key) ?? [];
+        records.push(metadata as MetadataDefinition<SyncDefinition>);
+        index.syncPolicies.set(key, records);
       }
     }
 
@@ -1432,6 +1444,95 @@ export class MetadataValidatorEngine {
     }
   }
 
+  private validateSyncPolicyDefinitions(
+    metadataDefinitions: MetadataDefinition[],
+    index: MetadataIndex,
+    issues: ValidationIssue[],
+  ): void {
+    for (const [syncPolicyKey, policies] of index.syncPolicies.entries()) {
+      if (policies.length > 1) {
+        this.addIssue(
+          issues,
+          'SYNC_POLICY_INVALID',
+          'ERROR',
+          `Duplicate sync policy definition ${syncPolicyKey}.`,
+          `SYNC_POLICY.${syncPolicyKey}`,
+          'Keep one SYNC_POLICY definition per entity and code.',
+        );
+      }
+    }
+
+    for (const metadata of metadataDefinitions.filter((candidate) => candidate.type === 'SYNC_POLICY')) {
+      const policy = metadata.definition as SyncDefinition;
+
+      if (!index.entities.has(policy.entityCode)) {
+        this.addIssue(
+          issues,
+          'SYNC_ENTITY_NOT_FOUND',
+          'ERROR',
+          `Sync policy ${policy.code} references missing entity ${policy.entityCode}.`,
+          `SYNC_POLICY.${policy.code}.entityCode`,
+          `Create ${policy.entityCode} entity metadata.`,
+        );
+      }
+
+      if (!['ONLINE_ONLY', 'CACHE_ONLY', 'OFFLINE_FIRST'].includes(policy.strategy)) {
+        this.addIssue(
+          issues,
+          'SYNC_POLICY_INVALID',
+          'ERROR',
+          `Sync policy ${policy.code} has invalid strategy ${policy.strategy}.`,
+          `SYNC_POLICY.${policy.code}.strategy`,
+          'Use ONLINE_ONLY, CACHE_ONLY, or OFFLINE_FIRST.',
+        );
+      }
+
+      if (!['DOWNLOAD', 'UPLOAD', 'BIDIRECTIONAL'].includes(policy.syncDirection)) {
+        this.addIssue(
+          issues,
+          'SYNC_POLICY_INVALID',
+          'ERROR',
+          `Sync policy ${policy.code} has invalid direction ${policy.syncDirection}.`,
+          `SYNC_POLICY.${policy.code}.syncDirection`,
+          'Use DOWNLOAD, UPLOAD, or BIDIRECTIONAL.',
+        );
+      }
+
+      if (!['SERVER_WINS', 'CLIENT_WINS', 'MANUAL_REVIEW'].includes(policy.conflictPolicy)) {
+        this.addIssue(
+          issues,
+          'SYNC_CONFLICT_POLICY_INVALID',
+          'ERROR',
+          `Sync policy ${policy.code} has invalid conflict policy ${policy.conflictPolicy}.`,
+          `SYNC_POLICY.${policy.code}.conflictPolicy`,
+          'Use SERVER_WINS, CLIENT_WINS, or MANUAL_REVIEW.',
+        );
+      }
+
+      if (policy.offlineEnabled && policy.strategy === 'ONLINE_ONLY') {
+        this.addIssue(
+          issues,
+          'SYNC_POLICY_INVALID',
+          'ERROR',
+          `Sync policy ${policy.code} enables offline with ONLINE_ONLY strategy.`,
+          `SYNC_POLICY.${policy.code}.strategy`,
+          'Use CACHE_ONLY or OFFLINE_FIRST when offlineEnabled is true.',
+        );
+      }
+
+      if (!policy.offlineEnabled && policy.strategy === 'OFFLINE_FIRST') {
+        this.addIssue(
+          issues,
+          'SYNC_POLICY_INVALID',
+          'ERROR',
+          `Sync policy ${policy.code} disables offline but uses OFFLINE_FIRST strategy.`,
+          `SYNC_POLICY.${policy.code}.offlineEnabled`,
+          'Set offlineEnabled true or change strategy.',
+        );
+      }
+    }
+  }
+
   private validateDependencyIntegrity(
     metadataDefinitions: MetadataDefinition[],
     index: MetadataIndex,
@@ -1617,6 +1718,11 @@ export class MetadataValidatorEngine {
         ];
       }
 
+      if (metadata.type === 'SYNC_POLICY') {
+        const policy = metadata.definition as SyncDefinition;
+        return [this.dependency(metadata, 'ENTITY', policy.entityCode, `SYNC_POLICY.${policy.code}.entityCode`)];
+      }
+
       return [];
     });
   }
@@ -1728,6 +1834,10 @@ export class MetadataValidatorEngine {
   }
 
   private experienceKey(entityCode: string, code: string): string {
+    return `${entityCode}:${code}`;
+  }
+
+  private syncPolicyKey(entityCode: string, code: string): string {
     return `${entityCode}:${code}`;
   }
 
