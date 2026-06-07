@@ -1,0 +1,11 @@
+{
+  "expo": {
+    "name": "RediOS Mobile Runtime",
+    "slug": "redios-mobile-runtime",
+    "scheme": "redios",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "platforms": ["ios", "android"],
+    "newArchEnabled": true
+  }
+}

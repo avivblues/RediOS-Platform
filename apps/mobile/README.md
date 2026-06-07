@@ -1,16 +1,13 @@
 # RediOS Mobile Runtime
 
-Mobile rendering will consume `@redios/runtime-renderer-core`.
+This Expo runtime renders mobile experiences from metadata.
 
-The shared core owns:
+Runtime flow:
 
-- metadata traversal
-- runtime tree generation
-- form binding
-- visibility and readonly decisions
-- action resolution
-- platform layout resolution
+1. `RuntimeScreen` receives an `entityCode`.
+2. Mobile resolves `/api/experience/:entityCode?platform=MOBILE`.
+3. The selected page, form, theme, and navigation metadata are loaded.
+4. `@redios/runtime-renderer-core` creates the `RuntimeNode` tree.
+5. `MobileRuntimeAdapter` maps generic runtime nodes to React Native components.
 
-Future React Native work should provide a mobile `PlatformAdapter` that maps generic `RuntimeNode.component` values such as `TEXT_INPUT`, `BUTTON`, `LOOKUP`, `TABLE`, `CARD`, and `FORM_FIELD` to native components.
-
-No mobile screens or entity-specific renderers are defined in this placeholder.
+The app contains no entity-specific screens, workflows, forms, or APIs.
