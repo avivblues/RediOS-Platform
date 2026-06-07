@@ -1,474 +1,326 @@
 # RediOS Kernel Specification
 
-Version: 1.0  
-Status: Active  
-Current Kernel Phase: 9.6 Completed  
+Version: 2.0  
+Status: Active Development  
+Architecture: Metadata Driven Runtime Kernel  
+Current Capability: Phase 18.x Foundation Complete
+
 
 ---
 
-# 1. Kernel Principle
+# 1. Kernel Philosophy
 
-RediOS uses:
 
-Metadata Driven Kernel Architecture
+RediOS Kernel is the stable execution layer.
 
-The kernel executes business behavior from metadata.
+The kernel NEVER understands business domain.
 
-The kernel must NEVER understand business domains.
-
-Example:
 
 Kernel does NOT know:
 
-- Inventory
-- Accounting
-- Asset
-- Ticket
-- Work Order
-- CRM
 
-Kernel only understands:
+```
+Inventory
 
-- Metadata
-- Runtime
-- Action
-- Security
-- Workflow
-- Process
-- Business Rule
-- Event
-- Trace
-- Simulation
-- Ledger Impact
+Accounting
+
+Work Order
+
+Ticket
+
+CRM
+
+HR
+
+Asset
+```
+
+
+Those are applications.
+
+Applications are metadata.
+
 
 ---
 
-# 2. Forbidden Architecture
+# 2. Core Principle
+
+
+The most important rule:
+
+
+```
+CHANGE METADATA
+
+NOT CODE
+```
+
+
+Business change:
+
+DO NOT:
+
+change service
+
+change controller
+
+change frontend
+
+
+DO:
+
+change metadata
+
+
+---
+
+# 3. Forbidden Backend Pattern
 
 
 Never create:
 
-```ts
-InventoryService
-StockService
-AssetService
+
+```
 WorkOrderService
-TicketService
-CustomerService
-AccountingService
+
+TicketWorkflow
+
+InventoryProcess
+
+AssetPermission
+
+CustomerForm
+
+InvoiceController
 ```
 
 
-Never create:
-
-```ts
-InventoryController
-AssetController
-WorkOrderController
-TicketController
-CRMController
-```
+Because this creates product fork.
 
 
-Never create:
-
-```ts
-inventory.schema.ts
-asset.schema.ts
-ticket.schema.ts
-```
-
-
-Business objects are metadata only.
+---
 
 Allowed:
 
-```ts
-RuntimeController
 
-MetadataEngine
+```
+RuntimeEngine
 
 WorkflowEngine
 
-BusinessEngine
+ProcessEngine
 
-EventEngine
+FormEngine
 
-LedgerEngine
-```
+QueryEngine
 
----
-
-# 3. Runtime Pipeline
-
-
-All execution MUST follow:
-
-
-```
-Runtime API
-
- ↓
-
-Runtime Context
-
- ↓
-
-Metadata Resolver
-
- ↓
-
-Action Engine
-
- ↓
-
-Security Engine
-
- ↓
-
-Workflow Engine
-
- ↓
-
-Process Engine
-
- ↓
-
-Business Engine
-
- ↓
-
-Event Engine
-
- ↓
-
-Ledger Engine (future)
-
- ↓
-
-Trace Engine
-
+SecurityEngine
 ```
 
 
-No engine can bypass previous engine.
+Generic only.
 
 
 ---
 
-# 4. Runtime Context
+# 4. Kernel Architecture Overview
 
 
-Every execution contains:
 
-```ts
-RuntimeContext {
+```
+                 USER
 
- tenantId
 
- domainCode
+                  |
 
- applicationCode
+                  v
 
- userId
 
- permissions[]
+          Runtime API Layer
 
- capabilities[]
+
+                  |
+
+                  v
+
+
+          Runtime Context
+
+
+                  |
+
+                  v
+
+
+        Metadata Resolver
+
+
+                  |
+
+                  v
+
+
++--------------------------------+
+
+|         Kernel Engines          |
+
++--------------------------------+
+
+|                                |
+
+| Action Engine                  |
+
+| Security Engine                |
+
+| Workflow Engine                |
+
+| Process Engine                 |
+
+| Business Engine                |
+
+| Event Engine                   |
+
+| Ledger Impact Engine           |
+
+| Trace Engine                   |
+
+|                                |
+
++--------------------------------+
+
+                  |
+
+                  v
+
+
+          Document Storage
+
+```
+
+
+---
+
+# 5. Metadata Storage Principle
+
+
+All definitions stored as:
+
+
+metadata_definitions
+
+
+Example:
+
+
+```
+{
+ type:"WORKFLOW",
+
+ code:"WORK_ORDER_FLOW",
+
+ tenantId:"xxx",
+
+ domainCode:"SERVICE",
+
+ applicationCode:"ASSET",
+
+ definition:{}
 
 }
 ```
 
 
-Every metadata lookup MUST include:
+Kernel only reads:
 
-```ts
+
+type
+
+code
+
+definition
+
+
+Never entity specific collection.
+
+
+---
+
+# 6. Metadata Scope
+
+
+Every metadata supports:
+
+
+```
 tenantId
+
 domainCode
+
 applicationCode
 ```
 
 
 Purpose:
 
-Different companies can have different:
 
-- workflow
-- rules
-- permissions
-- process
+Multi company
 
-without code changes.
+Multi industry
+
+Multi application
 
 
 ---
 
-# 5. Metadata Model
+# 7. Current Metadata Types
 
 
-All definitions stored inside:
+## Application Foundation
+
 
 ```
-metadata_definitions
-```
+TENANT
 
+DOMAIN
 
-Generic structure:
-
-
-```ts
-MetadataDefinition {
-
- tenantId
-
- domainCode
-
- applicationCode
-
- type
-
- code
-
- version
-
- enabled
-
- definition
-
-}
-```
-
-
-Allowed metadata types:
-
-```
 APPLICATION
+```
 
+
+---
+
+
+## Data Layer
+
+
+```
 ENTITY
 
 FIELD
 
-ACTION
+RELATION
+```
 
+
+---
+
+## Action Layer
+
+
+```
+ACTION
+```
+
+
+---
+
+## Runtime Layer
+
+
+```
 WORKFLOW
 
 PROCESS
-
-BUSINESS
-
-EVENT
-
-LEDGER (future)
-```
-
-
----
-
-# 6. Runtime Storage
-
-
-Business data stored generic:
-
-```
-runtime_documents
-```
-
-
-Example:
-
-
-```json
-{
- entityCode:"WORK_ORDER",
-
- status:"OPEN",
-
- data:{
-   title:"AC Broken",
-   priority:"HIGH"
- }
-}
-```
-
-
-Forbidden:
-
-```
-work_orders collection
-
-assets collection
-
-tickets collection
-```
-
-
----
-
-# 7. Action Engine
-
-
-Action controls:
-
-"What user wants to do"
-
-
-Example:
-
-```
-CREATE
-
-UPDATE
-
-START
-
-APPROVE
-
-CANCEL
-```
-
-
-Action metadata:
-
-
-```json
-{
- code:"START",
-
- entityCode:"WORK_ORDER",
-
- permissions:[
-  "WORK_ORDER.START"
- ],
-
- behavior:{
-   confirmation:true
- }
-}
-```
-
-
-Action Engine responsibility:
-
-- resolve action metadata
-- check enabled
-- prepare action plan
-
-
----
-
-# 8. Security Engine
-
-
-Security is metadata based.
-
-Responsible:
-
-- validate context
-- validate permissions
-
-
-Example:
-
-
-Action requires:
-
-```
-WORK_ORDER.START
-```
-
-
-User context:
-
-```
-permissions:[
- WORK_ORDER.START
-]
-```
-
-
-Allowed.
-
-
-No hardcoded role logic.
-
-
----
-
-# 9. Workflow Engine
-
-
-Workflow controls:
-
-"Where document moves"
-
-
-Example:
-
-
-```
-OPEN
-
- |
-START
-
- |
-
-IN_PROGRESS
-
- |
-COMPLETE
-
- |
-
-DONE
-```
-
-
-Workflow metadata:
-
-
-```json
-{
- states:[
-  OPEN,
-  IN_PROGRESS,
-  DONE
- ],
-
- transitions:[
- {
-  actionCode:"START",
-  from:"OPEN",
-  to:"IN_PROGRESS"
- }
- ]
-}
-```
-
-
-Rules:
-
-- no hardcoded state
-- no enum status
-- status comes from metadata
-
-
----
-
-# 10. Process Engine
-
-
-Process controls:
-
-"What steps happen"
-
-
-Example:
-
-START action:
-
-```
-VALIDATE
 
 BUSINESS_RULE
 
@@ -478,175 +330,555 @@ LEDGER
 ```
 
 
+---
+
+## Presentation Layer
+
+
+```
+VIEW
+
+FORM
+
+UI
+
+THEME
+
+NAVIGATION
+
+EXPERIENCE
+```
+
+
+---
+
+## Security Layer
+
+
+```
+SECURITY_POLICY
+```
+
+
+Supports:
+
+
+RBAC
+
+ABAC
+
+Field ACL
+
+Data Policy
+
+
+---
+
+## Governance Layer
+
+
+```
+DEPENDENCY
+
+VALIDATION
+
+SIMULATION
+
+TRACE
+
+VERSION
+```
+
+
+---
+
+## Mobile Runtime Layer
+
+
+```
+SYNC_POLICY
+
+CONFLICT_POLICY
+```
+
+
+---
+
+# 8. Runtime Execution Contract
+
+
+Every action follows same pipeline.
+
+
+
+Example:
+
+
+User:
+
+
+```
+START WORK_ORDER
+```
+
+
+Kernel sees:
+
+
+```
+ACTION START
+
+ENTITY WORK_ORDER
+```
+
+
+Not:
+
+
+```
+startWorkOrder()
+```
+
+
+---
+
+Execution:
+
+
+```
+Runtime Request
+
+
+        |
+
+
+Action Resolve
+
+
+        |
+
+
+Security Check
+
+
+        |
+
+
+Workflow Transition
+
+
+        |
+
+
+Process Execute
+
+
+        |
+
+
+Business Rule
+
+
+        |
+
+
+Event Publish
+
+
+        |
+
+
+Ledger Impact
+
+
+        |
+
+
+Trace Save
+```
+
+
+---
+
+# 9. Runtime Context
+
+
+Every engine receives:
+
+
+```
+RuntimeContext {
+
+ tenantId
+
+ userId
+
+ domainCode
+
+ applicationCode
+
+ entityCode
+
+ actionCode
+
+ metadataVersion
+
+}
+```
+
+
+Never pass business object.
+
+
+---
+
+# 10. Action Engine
+
+
+Responsible:
+
+
+- validate action exists
+
+- resolve action metadata
+
+- prepare execution
+
+
+Example:
+
+
 Metadata:
 
 
-```json
+```
 {
- processCode:"START_PROCESS",
+ code:"APPROVE",
 
- steps:[
-  VALIDATION,
-  BUSINESS,
-  EVENT
- ]
+ entity:"REQUEST"
 }
 ```
 
 
+No:
+
+
+approveRequest()
+
+
 ---
 
-# 11. Business Engine
+# 11. Security Policy Engine
 
 
-Business Engine executes:
-
-metadata rules
+Security is evaluated runtime.
 
 
-Supported rules:
+Supports:
 
 
-```
-VALIDATE_REQUIRED_FIELD
-
-SET_FIELD_VALUE
-
-CALCULATE_FIELD
-```
+## RBAC
 
 
 Example:
 
 
-```json
-{
- type:"SET_FIELD_VALUE",
+Role:
 
- config:{
-  field:"status",
-  value:"DONE"
- }
-}
-```
+MANAGER
 
 
-Forbidden:
+Can:
 
-
-```ts
-if(entity==="WORK_ORDER")
-```
+APPROVE
 
 
 ---
 
-# 12. Event Engine
 
-
-Event handles side effects.
+## ABAC
 
 
 Example:
 
-Action:
 
-```
-WORK_ORDER START
-```
+Allow if:
 
 
-Can trigger:
-
-
-```
-Notification
-
-Audit
-
-Webhook
-
-Integration
-
-Message Queue
-```
-
-
-Event metadata:
-
-
-```json
-{
- eventCode:"WORK_ORDER_STARTED",
-
- handlers:[
-  {
-    type:"NOTIFICATION"
-  }
- ]
-}
-```
-
-
-Phase 9:
-
-Event only creates execution plan.
-
-No real external execution yet.
+department == user.department
 
 
 ---
 
-# 13. Trace Engine
+
+## Field Policy
+
+
+Example:
+
+
+cost:
+
+
+Manager:
+
+visible
+
+
+Technician:
+
+hidden
+
+
+---
+
+# 12. Workflow Engine
+
+
+Workflow is metadata graph.
+
+
+Example:
+
+
+```
+OPEN
+
+ |
+
+APPROVE
+
+ |
+
+DONE
+```
+
+
+Stored:
+
+
+STATE
+
+TRANSITION
+
+ACTION
+
+
+
+Validation prevents:
+
+
+Transition to missing state.
+
+
+---
+
+# 13. Process Engine
+
+
+Process executes automation.
+
+
+Example:
+
+
+After APPROVE:
+
+
+```
+Send Notification
+
+Create Task
+
+Update Field
+```
+
+
+No custom code.
+
+
+---
+
+# 14. Business Rule Engine
+
+
+Executes rules:
+
+
+Examples:
+
+
+Validation
+
+
+Calculation
+
+
+Condition
+
+
+Automation
+
+
+
+Example:
+
+
+```
+IF priority = HIGH
+
+THEN escalation = TRUE
+```
+
+
+Metadata only.
+
+
+---
+
+# 15. Event Engine
+
+
+Responsible:
+
+
+Publish events.
+
+
+Example:
+
+
+```
+WORK_ORDER_APPROVED
+```
+
+
+Handlers:
+
+
+EMAIL
+
+WEBHOOK
+
+PROCESS
+
+INTEGRATION
+
+
+---
+
+# 16. Ledger Impact Engine
+
+
+Important:
+
+
+Ledger != Accounting only.
+
+
+Ledger means:
+
+
+Controlled business impact.
+
+
+Example:
+
+
+Receiving:
+
+
+```
+ACTION RECEIVE
+
+
+creates:
+
+
+STOCK_MOVEMENT
+
+INVENTORY_IMPACT
+
+AUDIT
+```
+
+
+Metadata:
+
+
+LEDGER
+
+
+No inventory code.
+
+
+---
+---
+
+# 17. Trace Engine
+
+
+Trace Engine is the black box recorder of RediOS.
 
 
 Every runtime execution creates trace.
 
 
-Collection:
-
-```
-runtime_traces
-```
-
-
-Contains:
+Example:
 
 
 ```
-ACTION SUCCESS
+ACTION_RECEIVED
 
-SECURITY SUCCESS
+↓
 
-WORKFLOW SUCCESS
+SECURITY_CHECK
 
-PROCESS SUCCESS
+↓
 
-BUSINESS SUCCESS
+WORKFLOW_TRANSITION
 
-EVENT SUCCESS
+↓
+
+PROCESS_EXECUTION
+
+↓
+
+BUSINESS_RULE
+
+↓
+
+EVENT_TRIGGER
+
+↓
+
+LEDGER_IMPACT
+
+↓
+
+COMPLETED
 ```
 
 
 Purpose:
 
+
 - debugging
 - audit
-- simulation comparison
-- AI explanation
+- compliance
+- support
 
 
 ---
 
-# 14. Trace Sanitizer
+## Trace Sanitizer
 
 
-Before storing trace:
-
-Sensitive data MUST be masked.
+Sensitive data must never be stored raw.
 
 
-Fields:
+Masked:
+
 
 ```
 password
@@ -670,20 +902,20 @@ credential
 Example:
 
 
-Before:
+Input:
 
 
-```json
+```
 {
- password:"secret123"
+ password:"abc123"
 }
 ```
 
 
-After:
+Stored:
 
 
-```json
+```
 {
  password:"***MASKED***"
 }
@@ -692,274 +924,1676 @@ After:
 
 ---
 
-# 15. Metadata Validation Engine
+# 18. Validation Engine
 
 
-Before metadata activation:
+Validation runs before metadata publish.
 
-Validate:
+
+Purpose:
+
+
+Prevent invalid application creation.
+
+
+Checks:
+
 
 APPLICATION:
 
-- duplicate code
-- missing entity
+- duplicate application
+- invalid reference
 
 
 ENTITY:
 
-- missing fields
-- missing actions
-- missing workflow
+- missing field
+- invalid action
 
 
 WORKFLOW:
 
 - missing state
-- invalid transition
-- invalid action
-- missing initial state
+- broken transition
+- missing action
+- multiple initial states
 
 
-PROCESS:
+FORM:
 
-- invalid trigger
-- invalid step
-
-
-BUSINESS:
-
-- invalid field reference
+- invalid field
+- invalid lookup
 
 
-EVENT:
+UI:
 
-- invalid handler
+- invalid component tree
+
+
+SECURITY:
+
+- invalid policy
 
 
 ---
 
-# 16. Simulation Engine
+# 19. Simulation Engine
 
 
-Simulation checks:
-
-"What will happen if user runs this?"
+Simulation allows testing metadata without execution.
 
 
-Without saving real transaction.
+Flow:
+
+
+```
+Metadata Draft
+
+      |
+
+Simulation Engine
+
+      |
+
+Prediction Result
+```
 
 
 Example:
 
 
-Input:
+User creates:
+
 
 ```
+OPEN
+
+ |
+
+APPROVE
+
+ |
+
+DONE
+```
+
+
+but APPROVE state missing.
+
+
+Simulation returns:
+
+
+```
+STATE_NOT_FOUND
+```
+
+
+---
+
+Simulation predicts:
+
+
+- workflow
+- process
+- event
+- ledger impact
+- relation
+- view
+- form
+- UI
+- security
+- navigation
+- conflict
+
+
+---
+
+# 20. Relation Engine
+
+
+Relation Engine manages entity relationship.
+
+
+Example:
+
+
 WORK_ORDER
 
-Action START
-```
+
+has relation:
 
 
-Output:
+ASSET
 
-
-```json
-{
- success:true,
-
- workflow:{
-  from:"OPEN",
-  to:"IN_PROGRESS"
- },
-
- process:true,
-
- event:true
-}
-```
-
-
-Invalid:
-
-
-Workflow:
-
-```
-OPEN -> APPROVE
-```
-
-
-but APPROVE missing:
-
-
-Output:
-
-
-```json
-{
- success:false,
-
- error:"STATE_NOT_FOUND"
-}
-```
-
-
----
-
-# 17. Future Ledger / Impact Engine
-
-
-Purpose:
-
-One action creates multiple impacts.
-
-
-Example:
-
-
-Receiving Item:
-
-Action:
-
-```
-RECEIVE
-```
-
-
-Impact:
-
-
-```
-Inventory +
-
-Stock Movement +
-
-Accounting Journal +
-
-Asset Creation +
-```
-
-
-Important:
-
-Do NOT create:
-
-```ts
-InventoryService
-
-AccountingService
-```
-
-
-Create:
-
-
-```ts
-LedgerEngine
-```
 
 
 Metadata:
 
 
-```json
-{
- impact:[
- {
-  target:"STOCK",
-  operation:"INCREASE"
- },
+```
+WORK_ORDER_ASSET_RELATION
+```
 
- {
-  target:"JOURNAL",
-  operation:"CREATE"
- }
-]
+
+
+Never:
+
+
+```
+populateAsset()
+```
+
+
+Runtime resolves relation dynamically.
+
+
+---
+
+# 21. Query / View Engine
+
+
+All data views are metadata.
+
+
+Never create:
+
+
+```
+WorkOrderListQuery
+AssetTableQuery
+```
+
+
+Use:
+
+
+VIEW metadata.
+
+
+Example:
+
+
+```
+WORK_ORDER_LIST_VIEW
+```
+
+
+contains:
+
+
+columns
+
+filters
+
+relations
+
+sorting
+
+
+---
+
+# 22. Form Engine
+
+
+Forms are metadata driven.
+
+
+Never create:
+
+
+```
+EntitySpecificForm
+
+TicketForm
+
+CustomerForm
+```
+
+
+Form metadata:
+
+
+```
+{
+ entity:"WORK_ORDER",
+
+ fields:[
+
+ title,
+
+ priority,
+
+ assetId
+
+ ]
 }
 ```
 
 
----
-
-# 18. AI Agent Rules
-
-
-When AI modifies RediOS:
-
-ALWAYS check:
-
-
-```
-npm run typecheck
-
-npm run build
-```
-
-
-Forbidden search:
-
-
-```
-grep:
-
-Service
-
-Controller
-
-Schema
-```
-
-
-for business entities.
-
-
-Must remain empty:
-
-
-```
-workOrderService
-
-assetService
-
-inventoryService
-
-ticketController
-
-accountingController
-```
+Runtime creates form schema.
 
 
 ---
 
-# 19. Design Goal
+# 23. Lookup Resolution
 
 
-Kernel should survive for years.
-
-
-Business changes should create:
-
-metadata changes
-
-
-NOT:
-
-code changes
-
-
-Final principle:
+Lookup uses:
 
 
 ```
-Stable Kernel
+Relation Engine
 
 +
 
-Dynamic Metadata
-
-=
-
-Unlimited Enterprise Applications
+View Engine
 ```
 
+
+Example:
+
+
+Field:
+
+
+assetId
+
+
+Display:
+
+
+```
+AC Server Room
+```
+
+
+Flow:
+
+
+```
+FORM
+
+ |
+
+RELATION
+
+ |
+
+VIEW
+
+ |
+
+QUERY
+```
+
+
+No direct entity query.
+
+
+---
+
+# 24. UI Composition Engine
+
+
+RediOS UI follows Atomic Design.
+
+
+Hierarchy:
+
+
+```
+PAGE
+
+ |
+
+TEMPLATE
+
+ |
+
+ORGANISM
+
+ |
+
+MOLECULE
+
+ |
+
+ATOM
+```
+
+
+
+Example:
+
+
+```
+WORK_ORDER_PAGE
+
+
+MASTER_DETAIL_TEMPLATE
+
+
+DETAIL_CARD
+
+
+FORM_FIELD
+
+
+TEXT_INPUT
+```
+
+
+---
+
+Important:
+
+
+UI metadata describes structure.
+
+
+Renderer decides implementation.
+
+
+---
+
+# 25. Theme Engine
+
+
+Theme controls visual identity.
+
+
+Metadata:
+
+
+THEME
+
+
+Controls:
+
+
+- color
+- typography
+- spacing
+- radius
+- density
+
+
+Example:
+
+
+Tenant A:
+
+
+blue corporate theme
+
+
+Tenant B:
+
+
+compact dark theme
+
+
+Same application.
+
+
+Different theme.
+
+
+---
+
+# 26. Navigation Engine
+
+
+Navigation is metadata.
+
+
+Never:
+
+
+```
+WorkOrderMenu.ts
+```
+
+
+Navigation supports:
+
+
+- sidebar
+- mobile tab
+- menu tree
+- permission filtering
+
+
+Example:
+
+
+```
+MAIN_NAVIGATION
+
+ |- Asset
+
+ |- Work Order
+
+ |- Ticket
+```
+
+
+Visibility controlled by Security Policy.
+
+
+---
+
+# 27. Adaptive Experience Engine
+
+
+Important decision:
+
+
+WEB EXPERIENCE
+
+and
+
+MOBILE EXPERIENCE
+
+
+are different.
+
+
+
+Same:
+
+
+```
+ENTITY
+
+WORKFLOW
+
+SECURITY
+
+PROCESS
+```
+
+
+Different:
+
+
+```
+PAGE
+
+LAYOUT
+
+NAVIGATION
+
+INTERACTION
+```
+
+
+Example:
+
+
+WEB:
+
+
+```
+Table
+
++
+
+Sidebar
+
++
+
+Detail Panel
+```
+
+
+Mobile:
+
+
+```
+Card
+
++
+
+Bottom Navigation
+
++
+
+Swipe Action
+```
+
+
+---
+
+# 28. Designer Engine
+
+
+Designer changes metadata safely.
+
+
+Never update production metadata directly.
+
+
+Lifecycle:
+
+
+```
+CREATE DRAFT
+
+
+      |
+
+
+MODIFY
+
+
+      |
+
+
+DEPENDENCY CHECK
+
+
+      |
+
+
+SIMULATION
+
+
+      |
+
+
+VALIDATION
+
+
+      |
+
+
+PUBLISH VERSION
+```
+
+
+---
+
+# 29. Metadata Versioning
+
+
+Every publish creates immutable version.
+
+
+Example:
+
+
+```
+Version 10
+
+WORK_ORDER_FORM
+
+5 fields
+```
+
+
+
+After change:
+
+
+```
+Version 11
+
+WORK_ORDER_FORM
+
+6 fields
+```
+
+
+Rollback creates new version.
+
+
+Never edit history.
+
+
+---
+
+# 30. Dependency Engine
+
+
+Before metadata change:
+
+
+Analyze impact.
+
+
+Example:
+
+
+Remove:
+
+
+```
+assetId
+```
+
+
+Impacts:
+
+
+```
+FORM
+
+VIEW
+
+RELATION
+
+SECURITY POLICY
+```
+
+
+Unsafe changes are blocked.
+
+
+---
+
+# 31. Security Architecture
+
+
+Security is metadata driven.
+
+
+Supports:
+
+
+## RBAC
+
+
+Role based.
+
+
+Example:
+
+
+ADMIN
+
+TECHNICIAN
+
+
+---
+
+## ABAC
+
+
+Attribute based.
+
+
+Example:
+
+
+```
+user.department == document.department
+```
+
+
+---
+
+## Field ACL
+
+
+Example:
+
+
+cost field:
+
+
+Manager:
+
+visible
+
+
+Technician:
+
+hidden
+
+
+---
+
+## Data Policy
+
+
+Example:
+
+
+User only sees:
+
+
+own branch data.
+
+
+---
+
+# 32. Audit Requirement
+
+
+All important actions must record:
+
+
+who
+
+when
+
+where
+
+what changed
+
+before
+
+after
+
+
+Implemented through:
+
+
+Trace Engine
+
+Event Engine
+
+Audit Metadata
+
+
+---
+---
+
+# 33. Mobile Runtime Foundation
+
+
+Mobile applications use same kernel metadata.
+
+
+Mobile DOES NOT duplicate business logic.
+
+
+Shared:
+
+
+```
+ENTITY
+
+FIELD
+
+ACTION
+
+WORKFLOW
+
+PROCESS
+
+SECURITY
+
+BUSINESS RULE
+```
+
+
+Mobile specific:
+
+
+```
+EXPERIENCE
+
+LAYOUT
+
+INTERACTION
+
+SYNC POLICY
+```
+
+
+---
+
+# 34. Mobile Renderer Rule
+
+
+Never create:
+
+
+```
+WorkOrderMobileScreen
+
+TicketMobilePage
+
+AssetMobileForm
+```
+
+
+Allowed:
+
+
+```
+MetadataRenderer
+
+MobileRenderer
+
+ComponentRegistry
+```
+
+
+Example:
+
+
+Metadata:
+
+
+```
+FORM_FIELD
+
+component:
+
+TEXT_INPUT
+```
+
+
+Mobile renders:
+
+
+Native Input
+
+
+Web renders:
+
+
+HTML Input
+
+
+---
+
+# 35. Offline Sync Foundation
+
+
+Offline is supported through metadata.
+
+
+Foundation:
+
+
+```
+SYNC_POLICY
+
+CONFLICT_POLICY
+
+SYNC_QUEUE
+```
+
+
+Purpose:
+
+
+Allow mobile operation during connection loss.
+
+
+---
+
+# 36. Offline Scope Decision
+
+
+Current scope:
+
+
+FOUNDATION ONLY
+
+
+Implemented:
+
+- metadata contract
+- sync concept
+- conflict detection model
+
+
+Deferred:
+
+
+Enterprise Offline Phase
+
+
+Includes:
+
+- background sync
+- delta sync
+- offline encryption
+- device policy
+- large dataset sync
+
+
+---
+
+# 37. Integration Architecture
+
+
+Integration must be generic.
+
+
+Never create:
+
+
+```
+WhatsAppService
+
+GoogleCalendarWorkflow
+
+OfficeApprovalCode
+```
+
+
+Allowed:
+
+
+```
+IntegrationEngine
+
+ConnectorEngine
+
+MappingEngine
+```
+
+
+---
+
+# 38. Integration Flow
+
+
+Example:
+
+
+WORK_ORDER_APPROVED
+
+
+Metadata:
+
+
+```
+EVENT
+
+ |
+
+INTEGRATION HANDLER
+
+ |
+
+CONNECTOR
+
+ |
+
+EXTERNAL SYSTEM
+```
+
+
+Connector examples:
+
+
+Communication:
+
+- WhatsApp
+
+- Telegram
+
+- Email
+
+
+Productivity:
+
+- Microsoft 365
+
+- Google Workspace
+
+
+Enterprise:
+
+- REST API
+
+- Webhook
+
+- Message Queue
+
+
+---
+
+# 39. Performance Principle
+
+
+RediOS must NOT parse raw metadata on every request.
+
+
+Bad:
+
+
+```
+Request
+
+ |
+
+Load 500 metadata
+
+ |
+
+Parse JSON
+
+ |
+
+Execute
+```
+
+
+---
+
+Correct:
+
+
+```
+Metadata
+
+ |
+
+Compile
+
+ |
+
+Runtime Package
+
+ |
+
+Execute
+```
+
+
+---
+
+# 40. Metadata Runtime Compiler
+
+
+Future performance layer.
+
+
+Input:
+
+
+```
+ENTITY
+
+WORKFLOW
+
+FORM
+
+UI
+
+SECURITY
+
+PROCESS
+```
+
+
+Compile into:
+
+
+```
+Runtime Graph
+
+Security Matrix
+
+UI Tree
+
+Workflow Map
+
+Validation Map
+```
+
+
+---
+
+# 41. Cache Strategy
+
+
+Important decision:
+
+
+DO NOT cache transactional truth.
+
+
+Avoid:
+
+
+```
+Document cache
+
+Workflow state cache
+```
+
+
+Risk:
+
+
+User sees outdated business data.
+
+
+---
+
+Allowed:
+
+
+```
+Metadata Cache
+
+Compiled Runtime Cache
+
+Theme Cache
+
+Navigation Cache
+```
+
+
+---
+
+# 42. Version Based Cache
+
+
+Every metadata publish increments version.
+
+
+Example:
+
+
+Current:
+
+
+```
+Application:
+
+ASSET
+
+
+Metadata Version:
+
+25
+```
+
+
+Cache:
+
+
+```
+ASSET:v25
+```
+
+
+After publish:
+
+
+```
+ASSET:v26
+```
+
+
+Old cache automatically ignored.
+
+
+---
+
+# 43. Database Strategy
+
+
+Kernel supports large enterprise scale.
+
+
+Rules:
+
+
+Metadata:
+
+optimized read
+
+
+Transaction:
+
+strong consistency
+
+
+Trace:
+
+append only
+
+
+Event:
+
+async capable
+
+
+---
+
+# 44. Scalability Target
+
+
+Architecture target:
+
+
+Small tenant:
+
+hundreds users
+
+
+Medium:
+
+thousands users
+
+
+Enterprise:
+
+100k+ users
+
+
+---
+
+Scaling:
+
+
+API horizontal scaling
+
+
+Worker scaling
+
+
+Database optimization
+
+
+Runtime compiler
+
+
+Async processing
+
+
+---
+
+# 45. Builder Studio Priority
+
+
+After kernel foundation:
+
+
+Priority moves to:
+
+
+RediOS Studio
+
+
+---
+
+Studio modules:
+
+
+Application Builder
+
+
+Entity Builder
+
+
+Field Builder
+
+
+Workflow Builder
+
+
+Form Builder
+
+
+Page Builder
+
+
+Theme Builder
+
+
+Navigation Builder
+
+
+Security Builder
+
+
+Integration Builder
+
+
+---
+
+# 46. Renderer Architecture
+
+
+Frontend must never contain business logic.
+
+
+Forbidden:
+
+
+```
+if(entity=="WORK_ORDER")
+
+show button
+```
+
+
+Correct:
+
+
+```
+metadata.actions[]
+
+render()
+```
+
+
+---
+
+# 47. Web Application Renderer
+
+
+Web renderer responsibility:
+
+
+Render:
+
+
+PAGE
+
+TEMPLATE
+
+ORGANISM
+
+MOLECULE
+
+ATOM
+
+
+Handle:
+
+
+desktop UX
+
+large screen
+
+complex layout
+
+
+---
+
+# 48. Mobile Application Renderer
+
+
+Mobile renderer responsibility:
+
+
+Render same metadata
+
+
+but optimize:
+
+
+touch interaction
+
+
+small screen
+
+
+offline usage
+
+
+native behavior
+
+
+---
+
+# 49. AI Assistant Future
+
+
+AI can generate metadata.
+
+
+Example:
+
+
+Prompt:
+
+
+"Create maintenance system"
+
+
+AI creates:
+
+
+```
+ENTITY
+
+FIELD
+
+FORM
+
+VIEW
+
+WORKFLOW
+
+PROCESS
+
+SECURITY
+```
+
+
+User validates.
+
+
+Kernel executes.
+
+
+---
+
+# 50. Enterprise Governance
+
+
+Required:
+
+
+Audit Trail
+
+Metadata Version
+
+Rollback
+
+Approval Flow
+
+Change History
+
+Compliance Report
+
+
+---
+
+# 51. Current Completed Foundation
+
+
+Completed:
+
+
+Phase 1-18.x
+
+
+Includes:
+
+
+Metadata Engine
+
+Runtime Engine
+
+Action Engine
+
+Security Engine
+
+Workflow Engine
+
+Process Engine
+
+Business Engine
+
+Event Engine
+
+Ledger Impact Engine
+
+Trace Engine
+
+Trace Sanitizer
+
+Validation Engine
+
+Simulation Engine
+
+Relation Engine
+
+Query Engine
+
+View Engine
+
+UI Composition Engine
+
+Form Engine
+
+Designer Engine
+
+Dependency Engine
+
+Theme Engine
+
+Navigation Engine
+
+Security Policy Engine
+
+Experience Engine
+
+Mobile Foundation
+
+Offline Foundation
+
+
+---
+
+# 52. Deferred Enterprise Features
+
+
+Deferred intentionally:
+
+
+Advanced Offline Sync
+
+
+Runtime Compiler
+
+
+Integration Marketplace
+
+
+AI Builder
+
+
+Reporting Engine
+
+
+Monitoring Dashboard
+
+
+High Availability Deployment
+
+
+---
+
+# 53. Kernel Stability Rule
+
+
+Before adding feature ask:
+
+
+Question 1:
+
+
+Does kernel need to know business name?
+
+
+If yes:
+
+
+WRONG DESIGN
+
+
+---
+
+
+Question 2:
+
+
+Can another tenant customize without code?
+
+
+If no:
+
+
+WRONG DESIGN
+
+
+---
+
+
+Question 3:
+
+
+Can metadata describe this?
+
+
+If yes:
+
+
+CREATE METADATA ENGINE
+
+
+---
+
+# 54. Final Architecture Goal
+
+
+
+```
+Business Idea
+
+
+      |
+
+
+RediOS Studio
+
+
+      |
+
+
+Metadata
+
+
+      |
+
+
+Kernel Runtime
+
+
+      |
+
+
+Application
+```
+
+
+
+No source change.
+
+
+No fork.
+
+
+Enterprise customizable platform.
+
+
+---
+
+END OF KERNEL SPECIFICATION

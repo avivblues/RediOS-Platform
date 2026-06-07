@@ -1,702 +1,1446 @@
 # RediOS Platform
 # Product Requirement Document (PRD)
 
-Version: 1.0  
+Version: 2.0  
 Status: Active Development  
-Current Kernel Phase: 9.6 Completed  
-Next Phase: Ledger / Impact Engine  
+Current Phase: 18.x  
+Architecture: Metadata Driven Enterprise Platform
 
 ---
 
 # 1. Vision
 
-RediOS is an enterprise operating platform designed to build business applications without rewriting application logic.
+RediOS is an Enterprise Operating Platform designed to build, customize, and operate business applications without rewriting source code.
 
-The main idea:
+Core principle:
 
-> Business changes should modify metadata, not source code.
+> Business changes should modify metadata, not application code.
 
 RediOS separates:
 
 - Platform Kernel
 - Business Definition
 - User Experience
+- Integration Layer
 
-The kernel remains stable while companies can create different applications, workflows, forms, permissions, and processes dynamically.
+The kernel stays stable while every company can create different:
+
+- applications
+- workflows
+- forms
+- approvals
+- processes
+- permissions
+- UI experiences
+
+using metadata.
 
 ---
 
-# 2. Problem Statement
+# 2. Product Positioning
 
-Traditional ERP / SaaS applications usually create:
+RediOS aims to become a flexible enterprise platform comparable in concept to:
 
-- modules
-- services
-- controllers
-- database schemas
-- workflows
+- ServiceNow
+- Salesforce Platform
+- Microsoft Power Platform
+- Odoo Studio
 
-directly inside source code.
+but designed with:
 
-Example:
+- kernel-first architecture
+- metadata-first runtime
+- multi-tenant isolation
+- developer extensibility
+- enterprise scalability
 
+
+RediOS is NOT:
+
+- traditional ERP
+- fixed CRM
+- fixed Helpdesk
+- fixed Inventory
+
+
+RediOS is:
+
+> Platform to create platforms.
+
+---
+
+# 3. Problem Statement
+
+Traditional enterprise systems create:
+
+```
 InventoryService
 
-WorkOrderService
+AssetService
 
-CRMService
+TicketService
 
-AccountingService
+AccountingModule
 
+CRMModule
+```
 
-This creates problems:
-
-- customization is expensive
-- upgrades are difficult
-- different companies require different forks
-- business logic becomes locked inside code
-
----
-
-# 3. RediOS Philosophy
-
-RediOS follows:
-
-## Kernel First Architecture
-
-The system provides generic engines:
-
-- Runtime Engine
-- Metadata Engine
-- Action Engine
-- Security Engine
-- Workflow Engine
-- Process Engine
-- Business Engine
-- Event Engine
-- Trace Engine
-- Simulation Engine
-- Future Ledger Engine
+inside source code.
 
 
-Business applications are only metadata.
+Problems:
+
+- customization requires developer
+- upgrade becomes difficult
+- every client creates fork
+- business logic is locked
+- integration becomes expensive
+
+
+RediOS solution:
+
+Move business behavior into metadata.
 
 ---
 
-# 4. Core Rule
+# 4. Kernel First Architecture
 
-RediOS must NEVER create hardcoded business modules.
+Backend contains generic engines only.
 
-Forbidden examples:
+Examples:
 
 ```
-inventory.service.ts
-stock.service.ts
-asset.service.ts
+Runtime Engine
+
+Metadata Engine
+
+Action Engine
+
+Security Engine
+
+Workflow Engine
+
+Process Engine
+
+Business Engine
+
+Event Engine
+
+Ledger Engine
+
+Relation Engine
+
+Query Engine
+
+UI Engine
+
+Form Engine
+
+Theme Engine
+
+Navigation Engine
+
+Experience Engine
+```
+
+Business applications are metadata.
+
+---
+
+# 5. No Hardcoded Business Module Rule
+
+NEVER create:
+
+```
 workOrder.service.ts
-ticket.service.ts
-crm.service.ts
-accounting.service.ts
+
+inventory.service.ts
+
+asset.controller.ts
+
+ticket.module.ts
+
+crm.schema.ts
 ```
 
-Forbidden:
-
-```
-InventoryController
-AssetController
-TicketController
-WorkOrderController
-```
 
 Allowed:
 
 ```
-RuntimeController
-MetadataEngine
-WorkflowEngine
-BusinessEngine
+runtime.service.ts
+
+metadata-engine.ts
+
+workflow-engine.ts
+
+form-engine.ts
+
+ui-engine.ts
 ```
 
 ---
 
-# 5. Metadata Driven Application Model
+# 6. Multi Tenant Strategy
 
 
-Applications are created using metadata:
+Every metadata is scoped by:
 
-Example:
-
-```
-Application:
-ASSET_MAINTENANCE
-
-Entities:
-- ASSET
-- WORK_ORDER
-
-Fields:
-- title
-- priority
-- status
-
-Actions:
-- CREATE
-- START
-- COMPLETE
-
-Workflow:
-OPEN
- |
-START
- |
-IN_PROGRESS
- |
-COMPLETE
- |
-DONE
-```
-
-
-No new backend code.
-
----
-
-# 6. Multi Tenant / Multi Company Strategy
-
-
-RediOS supports different companies having different behavior.
-
-Controlled by:
 
 ```
 tenantId
+
 domainCode
+
 applicationCode
 ```
 
 
 Example:
 
+Company A:
 
-## Company A
-
-Work Order flow:
-
-```
-CREATE
- |
-ADMIN REVIEW
- |
-SCHEDULE
- |
-ASSIGN PIC
- |
-ALLOCATE SPAREPART
- |
-EXECUTE
- |
-DONE
-```
-
-
-## Company B
-
-Same WORK_ORDER entity:
+WORK_ORDER flow:
 
 ```
 CREATE
- |
+
+↓
+
+APPROVAL
+
+↓
+
 ASSIGN
- |
+
+↓
+
+EXECUTE
+
+↓
+
 DONE
 ```
 
 
-Difference:
+Company B:
 
-Not code.
+same WORK_ORDER:
+
+```
+CREATE
+
+↓
+
+ASSIGN
+
+↓
+
+DONE
+```
+
+
+No backend change.
 
 Only metadata.
+
+---
+
+# 7. Metadata Driven Applications
+
+
+Application consists of:
+
+
+## Data
+
+ENTITY
+
+FIELD
+
+RELATION
+
+
+## Behavior
+
+ACTION
+
+WORKFLOW
+
+PROCESS
+
+BUSINESS RULE
+
+EVENT
+
+
+## Experience
+
+VIEW
+
+FORM
+
+UI
+
+THEME
+
+NAVIGATION
+
+EXPERIENCE
+
+
+## Security
+
+RBAC
+
+ABAC
+
+FIELD POLICY
+
+DATA POLICY
+
+
+## Operation
+
+AUDIT
+
+TRACE
+
+SIMULATION
+
+DEPENDENCY
 
 
 ---
 
-# 7. RediOS Studio Vision
+# 8. RediOS Studio
 
 
-RediOS will provide visual builders:
+RediOS Studio provides visual builders.
+
 
 ## Application Builder
 
 Create:
 
-- ERP module
-- CRM module
+- ERP
+- CRM
 - Helpdesk
 - Asset Management
-- Custom application
+- HR
+- Custom Apps
 
 
-without programming.
+without coding.
 
 
 ---
-
 
 ## Form Builder
 
 
 User can:
 
-- add field
-- remove field
-- change validation
-- change visibility
-- change layout
+- drag field
+- add section
+- change component
+- create lookup
+- configure validation
+
+
+Result:
+
+Metadata updated.
+
+
+No React change.
+
+No API change.
+
+
+---
+
+## UI Builder
+
+
+Supports Atomic Design:
+
+
+```
+PAGE
+
+ ↓
+
+TEMPLATE
+
+ ↓
+
+ORGANISM
+
+ ↓
+
+MOLECULE
+
+ ↓
+
+ATOM
+```
 
 
 Examples:
 
-Add:
+BUTTON
 
-```
-assetLocation
-serialNumber
-customerSegment
-```
+INPUT
 
-No migration required.
+CARD
 
+TABLE
 
----
+TIMELINE
 
-## Workflow Builder
-
-
-User can design:
-
-Example:
-
-```
-DRAFT
-
-APPROVE
-
-DONE
-```
-
-
-Before saving:
-
-Simulation Engine validates:
-
-- missing states
-- invalid transition
-- missing permission
-- invalid action
-- broken process
+FORM
 
 
 ---
 
-## Security Builder
+## Theme Builder
 
 
-Metadata controls:
+Client can customize:
 
-- role access
-- action permission
-- field visibility
-- field readonly
-- data scope
+- colors
+- spacing
+- typography
+- density
+- navigation style
 
 
-Example:
-
-Manager:
-
-```
-CAN_APPROVE = true
-```
-
-Staff:
-
-```
-CAN_APPROVE = false
-```
+without deployment.
 
 
 ---
 
-## Report Builder
+# 9. Web and Mobile Strategy
 
 
-Future capability:
-
-Users can create:
-
-- operational report
-- dashboard
-- KPI
-- analytics
-
-based on metadata.
+Important:
 
 
----
-
-# 8. Runtime Execution Concept
+WEB UI != MOBILE UI
 
 
-Every request flows through:
-
-```
-Runtime API
-
-    |
-    v
-
-Context
-
-    |
-    v
-
-Metadata Resolver
-
-    |
-    v
-
-Action
-
-    |
-    v
-
-Security
-
-    |
-    v
-
-Workflow
-
-    |
-    v
-
-Process
-
-    |
-    v
-
-Business Rules
-
-    |
-    v
-
-Event
-
-    |
-    v
-
-Trace
-
-```
-
-
-Every execution can be audited.
-
----
-
-# 9. Simulation First Concept
-
-
-Before metadata goes live:
-
-RediOS simulates execution.
+Both consume same metadata but different experience.
 
 
 Example:
 
 
-User creates workflow:
-
 ```
-OPEN
+WORK_ORDER_PAGE
 
-APPROVE
+WEB:
 
-DONE
-```
+sidebar + table + detail
 
 
-But transition references:
+MOBILE:
 
-```
-OPEN -> REVIEW
+card + bottom navigation
 ```
 
 
-Simulation detects:
+Controlled by:
 
-```
-ERROR:
-
-State REVIEW does not exist.
-```
-
-
-Metadata cannot be activated until valid.
+Experience Engine.
 
 
 ---
 
-# 10. AI Assisted Configuration
+# 10. Offline Mobile Strategy
 
 
-Future RediOS Studio can use AI Agent assistance.
-
-Example request:
-
-User:
-
-"Create asset maintenance application with approval workflow"
+Mobile supports offline foundation:
 
 
-AI generates metadata:
-
-- entities
-- fields
-- workflow
-- actions
-- process
-- business rules
+- local metadata
+- local document draft
+- sync queue
+- conflict detection
 
 
-Simulation validates before activation.
+Advanced offline synchronization is separate phase.
 
 
 ---
 
-# 11. Target Platform Comparison
+# 11. Integration Vision
 
 
-RediOS aims to combine concepts from:
-
-## Service Management Platforms
-
-Dynamic:
-
-- workflow
-- ticket
-- approval
-- automation
+RediOS supports integration with:
 
 
-## ERP Platforms
+Communication:
+
+- WhatsApp
+- Telegram
+- Email
+
+
+Productivity:
+
+- Microsoft 365
+- Google Workspace
+
 
 Enterprise:
 
-- accounting
-- inventory
-- CRM
-- asset
-- operation
+- API
+- Webhook
+- Event Bus
+- External Workflow
 
 
-## Low Code Platforms
+Integration must be metadata driven.
 
-Configurable:
+No hardcoded connector logic.
 
-- form
-- data model
-- process
+---
+
+# 12. Security Requirement
 
 
-But RediOS difference:
+Enterprise security:
 
-Kernel does not know business domains.
+- RBAC
+- ABAC
+- Field ACL
+- Data Policy
+- Audit Trail
+- Compliance
+
+
+Security is evaluated dynamically.
+
+---
+
+# 13. Performance Strategy
+
+
+RediOS must support enterprise scale.
+
+
+Principles:
+
+DO NOT cache transactional truth.
+
+
+Avoid:
+
+```
+cache document state blindly
+```
+
+
+Use:
+
+
+## Metadata Runtime Compiler
+
+
+Compile:
+
+metadata
+
+↓
+
+runtime optimized structure
+
+
+## Version Based Cache
+
+
+Example:
+
+
+```
+metadataVersion = 20
+
+
+cache key:
+
+tenant:app:v20
+```
+
+
+Metadata change:
+
+new version
+
+automatic refresh
 
 
 ---
 
-# 12. Example Applications
+# 14. Target Enterprise Capability
 
 
-Applications are metadata packages:
+RediOS must support:
 
-## Asset Management
-
-Contains:
-
-- Asset
-- Maintenance
-- Work Order
+- thousands of users
+- millions of records
+- large enterprise tenants
+- custom processes
+- multiple applications
 
 
-## Helpdesk
-
-Contains:
-
-- Ticket
-- SLA
-- Escalation
+without source code fork.
 
 
-## Warehouse
+---
 
-Contains:
+# 15. Long Term Vision
 
-- Receiving
-- Stock Movement
-- Transfer
 
+A company should be able to build:
+
+ERP
+
+CRM
+
+ITSM
+
+HR
+
+Asset Management
+
+Industry specific application
+
+
+from RediOS Studio only.
+
+
+Final goal:
+
+
+> Build enterprise software at metadata speed.
+---
+
+# 16. RediOS Studio Architecture
+
+
+RediOS Studio is the control center for metadata creation.
+
+
+Studio does NOT generate source code.
+
+
+Studio creates:
+
+```
+Metadata Definition
+        |
+Validation Engine
+        |
+Simulation Engine
+        |
+Dependency Engine
+        |
+Publish
+        |
+Runtime Engine
+```
+
+
+---
+
+## 16.1 Entity Designer
+
+
+Capabilities:
+
+- create entity
+- add fields
+- configure datatype
+- configure validation
+- configure relation
+- configure indexes
+
+
+Example:
+
+User creates:
+
+CUSTOMER
+
+Fields:
+
+- name
+- email
+- phone
+
+
+System creates metadata only.
+
+
+No database model class.
+
+No API controller.
+
+
+---
+
+## 16.2 Workflow Designer
+
+
+User can visually create:
+
+
+```
+STATE
+
+ |
+
+ACTION
+
+ |
+
+STATE
+```
+
+
+Example:
+
+
+OPEN
+
+ |
+
+APPROVE
+
+ |
+
+DONE
+
+
+
+Before publish:
+
+
+Validation checks:
+
+- missing state
+- invalid transition
+- missing action
+
+
+---
+
+## 16.3 Process Designer
+
+
+Used for automation.
+
+
+Example:
+
+
+When:
+
+WORK_ORDER APPROVED
+
+
+Then:
+
+- assign technician
+- send notification
+- create task
+
+
+Metadata:
+
+
+PROCESS
+
+
+No custom worker.
+
+
+---
+
+## 16.4 Page Designer
+
+
+User can compose:
+
+
+PAGE
+
+TEMPLATE
+
+SECTION
+
+COMPONENT
+
+
+Using Atomic Design Engine.
+
+
+---
+
+## 16.5 Security Designer
+
+
+Configure:
+
+
+Role Based Access Control
+
+Attribute Based Access Control
+
+Field Level Permission
+
+Data Visibility Rule
+
+
+Examples:
+
+
+Manager:
+
+can see cost
+
+
+Technician:
+
+cannot see cost
+
+
+Same API.
+
+Different policy.
+
+
+---
+
+# 17. Metadata Lifecycle
+
+
+Metadata is never directly changed.
+
+
+Flow:
+
+
+```
+CREATE DRAFT
+
+      |
+
+CHANGE
+
+      |
+
+DEPENDENCY CHECK
+
+      |
+
+SIMULATION
+
+      |
+
+VALIDATION
+
+      |
+
+PUBLISH VERSION
+
+      |
+
+RUNTIME
+```
+
+
+Benefits:
+
+- safe customization
+- rollback support
+- audit history
+- enterprise governance
+
+
+---
+
+# 18. Version Management
+
+
+Every metadata publish creates version.
+
+
+Example:
+
+
+Version 10:
+
+
+WORK_ORDER_FORM
+
+5 fields
+
+
+Version 11:
+
+
+WORK_ORDER_FORM
+
+6 fields
+
+
+
+Runtime knows active version.
+
+
+Rollback supported.
+
+
+---
+
+# 19. Application Marketplace Vision
+
+
+Future RediOS applications:
+
+
+Examples:
+
+
+## ITSM
+
+Metadata:
+
+Ticket
+
+Incident
+
+Problem
+
+Change Request
+
+
+---
+
+## ERP
+
+Metadata:
+
+Inventory
+
+Purchase
+
+Warehouse
+
+Finance
+
+
+---
 
 ## CRM
 
-Contains:
+Metadata:
 
-- Customer
-- Lead
-- Opportunity
+Lead
 
+Customer
 
-## Finance
+Opportunity
 
-Future:
-
-- Journal
-- Ledger
-- Settlement
-
-
-No dedicated backend modules.
 
 ---
 
-# 13. Development Roadmap
+
+All apps are metadata packages.
+
+
+No source fork.
+
+
+---
+
+# 20. Integration Hub
+
+
+Future integration engine supports:
+
+
+## Communication
+
+
+WhatsApp
+
+Telegram
+
+Email
+
+SMS
+
+
+---
+
+## Productivity
+
+
+Microsoft 365
+
+Google Workspace
+
+
+---
+
+## Enterprise
+
+
+REST API
+
+Webhook
+
+Message Queue
+
+Event Stream
+
+
+
+Integration rules:
+
+
+Connector = generic
+
+Mapping = metadata
+
+
+Never:
+
+
+GoogleService.ts
+
+WhatsAppWorkflow.ts
+
+
+---
+
+# 21. Reporting & Analytics
+
+
+Future reporting engine:
+
+
+Dashboard Builder
+
+
+Chart Builder
+
+
+KPI Builder
+
+
+Data Explorer
+
+
+
+Based on:
+
+
+VIEW metadata
+
+QUERY engine
+
+SECURITY policy
+
+
+
+Reports respect permission.
+
+
+---
+
+# 22. AI Assistant Vision
+
+
+RediOS AI Assistant can help:
+
+
+Generate:
+
+- entity
+- workflow
+- form
+- report
+- automation
+
+
+Example:
+
+
+User:
+
+"Create asset maintenance system"
+
+
+AI generates:
+
+
+ENTITY
+
+FIELD
+
+FORM
+
+WORKFLOW
+
+PROCESS
+
+
+Human validates.
+
+
+---
+
+# 23. Performance Architecture
+
+
+RediOS must support enterprise workload.
+
+
+Avoid:
+
+
+```
+request
+
+↓
+
+parse thousands metadata
+
+↓
+
+execute
+```
+
+
+Target:
+
+
+```
+metadata
+
+↓
+
+compile
+
+↓
+
+runtime package
+
+↓
+
+execute
+```
+
+
+---
+
+## Metadata Runtime Package
+
+
+Example:
+
+
+Tenant A
+
+
+Application ERP
+
+
+Version 25
+
+
+
+Compile:
+
+
+Workflow Graph
+
+Security Matrix
+
+Form Schema
+
+UI Tree
+
+Navigation Tree
+
+
+---
+
+## Cache Policy
+
+
+Do not cache transactional truth.
+
+
+Allowed:
+
+
+Metadata cache
+
+Compiled runtime cache
+
+Static configuration cache
+
+
+Avoid:
+
+
+Document state cache
+
+Workflow state cache
+
+
+---
+
+# 24. Enterprise Scale Target
+
+
+Architecture target:
+
+
+Small:
+
+100 users
+
+
+Medium:
+
+10,000 users
+
+
+Enterprise:
+
+100,000+ users
+
+
+
+Scaling strategy:
+
+
+Horizontal API
+
+Worker Pool
+
+Database Partition
+
+Metadata Compiler
+
+Async Event Processing
+
+
+---
+
+# 25. Offline Strategy Decision
+
+
+Offline foundation exists:
+
+
+SYNC_POLICY
+
+CONFLICT_POLICY
+
+ACTION QUEUE
+
+
+Current scope:
+
+Foundation only.
+
+
+Deferred enterprise offline:
+
+
+- advanced conflict UI
+- delta sync
+- background sync
+- device management
+- encryption policy
+
+
+Moved to Enterprise Offline Phase.
+
+
+---
+
+# 26. Audit & Compliance
+
+
+Every important action:
+
+
+who
+
+when
+
+where
+
+before
+
+after
+
+why
+
+
+
+Supported by:
+
+
+Trace Engine
+
+Audit Event
+
+Metadata Version
+
+
+---
+
+# 27. Observability
+
+
+Platform must provide:
+
+
+Runtime Trace
+
+Execution Timeline
+
+Performance Metrics
+
+Error Tracking
+
+User Activity
+
+
+---
+
+# 28. Development Roadmap
 
 
 Completed:
 
-## Phase 1-4
 
-Foundation:
+Kernel Foundation
 
-- Metadata
-- Runtime API
-- Storage
-- Swagger
+Metadata Engine
 
-
-## Phase 5
-
-Action + Security Engine
-
-
-## Phase 6
+Runtime Engine
 
 Workflow Engine
 
-
-## Phase 7
-
 Process Engine
 
-
-## Phase 8
-
-Business Engine
-
-
-## Phase 9
+Business Rule Engine
 
 Event Engine
 
+Ledger Impact Engine
 
-## Phase 9.5
-
-Runtime Trace Engine
-
-
-## Phase 9.5.1
-
-Trace Sanitizer
-
-
-## Phase 9.5.2
-
-Metadata Validation Engine
-
-
-## Phase 9.6
+Trace Engine
 
 Simulation Engine
 
+Validation Engine
 
----
+Relation Engine
 
-# Next Phase
+Query/View Engine
 
+UI Composition
 
-## Phase 10
+Form Engine
 
-Ledger / Impact Engine
+Designer Engine
 
+Theme Engine
 
-Purpose:
+Navigation Engine
 
-One business action can create multiple impacts.
+Security Policy Engine
 
+Experience Engine
 
-Example:
+Mobile Runtime Foundation
 
-Receiving Item:
-
-Action:
-
-```
-RECEIVE
-```
-
-Impact:
-
-```
-+ Inventory Quantity
-
-+ Stock Movement
-
-+ Accounting Journal
-
-+ Asset Creation
-
-+ Audit Log
-```
-
-
-Without hardcoded services.
+Offline Foundation
 
 
 ---
 
-# 14. Final Product Goal
+# 29. Next Priority
 
 
-RediOS should allow:
-
-"Build enterprise software by configuring business knowledge,
-not rewriting application code."
+Immediate focus:
 
 
-The value is not only the engine.
-
-The value is:
-
-- business experience
-- industry process knowledge
-- reusable metadata
-- automation intelligence
+RediOS Studio
 
 
-```
-One Kernel
+Including:
 
-Unlimited Applications
-```
+
+Application Builder
+
+Entity Builder
+
+Form Builder
+
+Workflow Builder
+
+Page Builder
+
+Security Builder
+
+
+Goal:
+
+
+User can create complete application without developer.
+
+
+---
+
+# 30. Final Product Goal
+
+
+RediOS should enable:
+
+
+Idea
+
+↓
+
+Metadata Design
+
+↓
+
+Simulation
+
+↓
+
+Publish
+
+↓
+
+Production Application
+
+
+
+without source code change.
+
+
+
+END OF DOCUMENT
