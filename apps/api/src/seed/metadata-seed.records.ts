@@ -220,6 +220,7 @@ const applications: ApplicationSeed[] = [
           { code: 'title', required: true },
           { code: 'description' },
           { code: 'priority' },
+          { code: 'estimatedCost', dataType: 'number' },
           { code: 'assignedTo' },
           { code: 'assetId', dataType: 'REFERENCE', relation: 'WORK_ORDER_ASSET_RELATION' },
         ],

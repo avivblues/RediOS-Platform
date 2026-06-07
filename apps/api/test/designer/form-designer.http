@@ -1,0 +1,114 @@
+@baseUrl = http://localhost:3001/api
+@draftId = replace-with-created-draft-id
+@invalidDraftId = replace-with-invalid-draft-id
+
+### Create draft for WORK_ORDER_FORM
+POST {{baseUrl}}/designer/drafts
+x-tenant-id: demo
+x-domain-code: DEFAULT
+x-application-code: ASSET_MAINTENANCE
+x-user-id: designer
+x-permissions: FORM.DESIGN,FORM.PUBLISH
+content-type: application/json
+
+{
+  "targetType": "FORM",
+  "targetCode": "WORK_ORDER_FORM",
+  "entityCode": "WORK_ORDER"
+}
+
+### Add estimatedCost field to draft
+POST {{baseUrl}}/designer/{{draftId}}/operations
+x-tenant-id: demo
+x-domain-code: DEFAULT
+x-application-code: ASSET_MAINTENANCE
+x-user-id: designer
+x-permissions: FORM.DESIGN,FORM.PUBLISH
+content-type: application/json
+
+{
+  "type": "ADD_FIELD",
+  "payload": {
+    "section": "GENERAL",
+    "fieldCode": "estimatedCost",
+    "component": "NUMBER_INPUT"
+  }
+}
+
+### Preview draft
+POST {{baseUrl}}/designer/{{draftId}}/preview
+x-tenant-id: demo
+x-domain-code: DEFAULT
+x-application-code: ASSET_MAINTENANCE
+x-user-id: designer
+x-permissions: FORM.DESIGN,FORM.PUBLISH
+
+### Publish draft
+POST {{baseUrl}}/designer/{{draftId}}/publish
+x-tenant-id: demo
+x-domain-code: DEFAULT
+x-application-code: ASSET_MAINTENANCE
+x-user-id: designer
+x-permissions: FORM.DESIGN,FORM.PUBLISH
+
+### Verify composed form contains estimatedCost
+GET {{baseUrl}}/forms/WORK_ORDER
+x-tenant-id: demo
+x-domain-code: DEFAULT
+x-application-code: ASSET_MAINTENANCE
+x-user-id: designer
+
+### Rollback to version 1
+POST {{baseUrl}}/designer/{{draftId}}/rollback
+x-tenant-id: demo
+x-domain-code: DEFAULT
+x-application-code: ASSET_MAINTENANCE
+x-user-id: designer
+x-permissions: FORM.DESIGN,FORM.PUBLISH
+content-type: application/json
+
+{
+  "version": 1
+}
+
+### Create invalid draft
+POST {{baseUrl}}/designer/drafts
+x-tenant-id: demo
+x-domain-code: DEFAULT
+x-application-code: ASSET_MAINTENANCE
+x-user-id: designer
+x-permissions: FORM.DESIGN,FORM.PUBLISH
+content-type: application/json
+
+{
+  "targetType": "FORM",
+  "targetCode": "WORK_ORDER_FORM",
+  "entityCode": "WORK_ORDER"
+}
+
+### Add lookup field without relation/view metadata
+POST {{baseUrl}}/designer/{{invalidDraftId}}/operations
+x-tenant-id: demo
+x-domain-code: DEFAULT
+x-application-code: ASSET_MAINTENANCE
+x-user-id: designer
+x-permissions: FORM.DESIGN,FORM.PUBLISH
+content-type: application/json
+
+{
+  "type": "ADD_FIELD",
+  "payload": {
+    "section": "GENERAL",
+    "fieldCode": "assetId",
+    "component": "LOOKUP"
+  }
+}
+
+### Preview invalid draft
+### Expected: valid=false with FORM_RELATION_NOT_FOUND and FORM_VIEW_NOT_FOUND before publish
+POST {{baseUrl}}/designer/{{invalidDraftId}}/preview
+x-tenant-id: demo
+x-domain-code: DEFAULT
+x-application-code: ASSET_MAINTENANCE
+x-user-id: designer
+x-permissions: FORM.DESIGN,FORM.PUBLISH

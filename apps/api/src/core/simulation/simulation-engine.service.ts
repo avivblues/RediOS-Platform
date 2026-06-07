@@ -44,6 +44,31 @@ export class SimulationEngine {
     private readonly traceEngine: TraceEngine,
   ) {}
 
+  simulateDesigner(input: {
+    validation: ValidationResult;
+    operation: string;
+    impact: string[];
+  }): SimulationResult {
+    return {
+      success: input.validation.valid,
+      validation: input.validation,
+      steps: [
+        {
+          stage: 'VALIDATION',
+          status: input.validation.valid ? 'SUCCESS' : 'FAILED',
+          message: input.validation.valid ? 'Designer metadata validation passed.' : 'Designer metadata validation failed.',
+          result: input.validation,
+        },
+      ],
+      predicted: {
+        designer: {
+          operation: input.operation,
+          impact: input.impact,
+        },
+      },
+    };
+  }
+
   async simulate(request: SimulationRequest): Promise<SimulationResult> {
     const context = this.toContext(request);
     const steps: SimulationStep[] = [];

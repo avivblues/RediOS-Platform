@@ -981,6 +981,25 @@ export class MetadataValidatorEngine {
               );
             }
           }
+
+          if (field.component === 'LOOKUP' && !field.lookup) {
+            this.addIssue(
+              issues,
+              'FORM_RELATION_NOT_FOUND',
+              'ERROR',
+              `Lookup field ${field.fieldCode} must define relation metadata.`,
+              `FORM.${form.code}.sections.${section.code}.fields[${fieldIndex}].lookup.relationCode`,
+              'Set lookup.relationCode for lookup fields.',
+            );
+            this.addIssue(
+              issues,
+              'FORM_VIEW_NOT_FOUND',
+              'ERROR',
+              `Lookup field ${field.fieldCode} must define lookup view metadata.`,
+              `FORM.${form.code}.sections.${section.code}.fields[${fieldIndex}].lookup.viewCode`,
+              'Set lookup.viewCode for lookup fields.',
+            );
+          }
         }
       }
 

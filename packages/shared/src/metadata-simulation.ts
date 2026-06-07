@@ -85,5 +85,9 @@ export interface SimulationResult {
       fields: number;
       lookups: number;
     }>;
+    designer?: {
+      operation: string;
+      impact: string[];
+    };
   };
 }
