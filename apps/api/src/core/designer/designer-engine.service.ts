@@ -18,6 +18,7 @@ import type {
   SimulationResult,
   ThemeDefinition,
   ValidationResult,
+  WorkflowDefinition,
 } from '@redios/shared';
 import { Model } from 'mongoose';
 import { EventEngine } from '../event/event-engine.service';
@@ -34,7 +35,7 @@ import { METADATA_VERSION_MODEL } from './schemas/metadata-version.schema';
 
 type MetadataDraftRecord = MetadataDraft & { _id?: unknown };
 type MetadataVersionRecord = MetadataVersion & { _id?: unknown };
-type DesignerDefinition = FormDefinition | ThemeDefinition | NavigationDefinition | SecurityPolicyDefinition;
+type DesignerDefinition = FormDefinition | ThemeDefinition | NavigationDefinition | SecurityPolicyDefinition | WorkflowDefinition;
 
 export interface CreateDesignerDraftRequest {
   targetType: DesignerTargetType;
@@ -147,7 +148,7 @@ export class DesignerEngine {
           $set: {
             status: 'DRAFT',
             'draft.definition': definition,
-            'draft.name': definition.name,
+            'draft.name': this.definitionDisplayName(definition, draft.draft.name),
             updatedBy: context.userId,
           },
           $push: {
@@ -428,6 +429,10 @@ export class DesignerEngine {
       return ['SECURITY_POLICY', 'RUNTIME_AUTHORIZATION', 'VALIDATION'];
     }
 
+    if (draft.targetType === 'WORKFLOW') {
+      return ['WORKFLOW', 'PROCESS', 'EVENT', 'SECURITY', 'UI', 'FORMS', 'VALIDATION'];
+    }
+
     if (draft.targetType === 'THEME') {
       return ['THEME', 'UI_RENDER', 'NAVIGATION', 'VALIDATION'];
     }
@@ -438,7 +443,7 @@ export class DesignerEngine {
   private dependencyTargetFromOperation(
     draft: MetadataDraft<DesignerDefinition>,
     operation: DesignerOperation | undefined,
-  ): { type: 'FIELD' | 'THEME' | 'NAVIGATION' | 'SECURITY_POLICY'; code: string } | undefined {
+  ): { type: 'FIELD' | 'THEME' | 'NAVIGATION' | 'SECURITY_POLICY' | 'WORKFLOW'; code: string } | undefined {
     if (!operation) {
       return undefined;
     }
@@ -477,6 +482,20 @@ export class DesignerEngine {
       };
     }
 
+    if (
+      operation.type === 'ADD_STATE' ||
+      operation.type === 'REMOVE_STATE' ||
+      operation.type === 'UPDATE_STATE' ||
+      operation.type === 'ADD_TRANSITION' ||
+      operation.type === 'REMOVE_TRANSITION' ||
+      operation.type === 'UPDATE_TRANSITION'
+    ) {
+      return {
+        type: 'WORKFLOW',
+        code: draft.targetCode,
+      };
+    }
+
     return undefined;
   }
 
@@ -500,6 +519,14 @@ export class DesignerEngine {
       return this.metadataResolver.resolveNavigation(context, request.targetCode);
     }
 
+    if (request.targetType === 'WORKFLOW') {
+      return this.metadataProvider.findOne(context, {
+        type: 'WORKFLOW',
+        code: request.targetCode,
+        enabledOnly: true,
+      }) as Promise<MetadataDefinition<DesignerDefinition> | null>;
+    }
+
     return (await this.metadataResolver.resolveSecurityPolicy(context, request.targetCode)) ?? this.createPolicySource(context, request);
   }
 
@@ -518,6 +545,14 @@ export class DesignerEngine {
 
     if (draft.targetType === 'NAVIGATION') {
       return this.metadataResolver.resolveNavigation(context, draft.targetCode);
+    }
+
+    if (draft.targetType === 'WORKFLOW') {
+      return this.metadataProvider.findOne(context, {
+        type: 'WORKFLOW',
+        code: draft.targetCode,
+        enabledOnly: true,
+      }) as Promise<MetadataDefinition<DesignerDefinition> | null>;
     }
 
     return (await this.metadataResolver.resolveSecurityPolicy(context, draft.targetCode)) ?? draft.draft;
@@ -540,6 +575,11 @@ export class DesignerEngine {
 
     if (targetType === 'SECURITY_POLICY') {
       this.applySecurityPolicyOperation(definition as SecurityPolicyDefinition, operation);
+      return;
+    }
+
+    if (targetType === 'WORKFLOW') {
+      this.applyWorkflowOperation(definition as WorkflowDefinition, operation);
       return;
     }
 
@@ -660,6 +700,100 @@ export class DesignerEngine {
     const path = operation.path ?? this.payloadString(payload, 'path');
     const value = 'after' in operation ? operation.after : payload.value;
     this.setPath(theme as unknown as Record<string, unknown>, path.startsWith('tokens.') || path.startsWith('layout.') || path.startsWith('assets.') ? path : `tokens.${path}`, value);
+  }
+
+  private applyWorkflowOperation(workflow: WorkflowDefinition, operation: DesignerOperation): void {
+    const payload = operation.payload ?? {};
+
+    if (operation.type === 'ADD_STATE') {
+      const code = this.payloadString(payload, 'code');
+      if (workflow.states.some((state) => state.code === code)) {
+        throw new BadRequestException(`Workflow state ${code} already exists.`);
+      }
+
+      const type = this.payloadWorkflowStateType(payload);
+      const state = {
+        code,
+        label: this.payloadString(payload, 'label', code),
+        type,
+        colorToken: this.payloadOptionalString(payload, 'colorToken'),
+        initial: type === 'INITIAL' ? true : this.payloadBoolean(payload, 'initial'),
+        final: type === 'FINAL' ? true : this.payloadBoolean(payload, 'final'),
+      };
+      workflow.states.push(state);
+      this.normalizeWorkflowStateTypes(workflow);
+      return;
+    }
+
+    if (operation.type === 'REMOVE_STATE') {
+      const code = this.payloadString(payload, 'code');
+      workflow.states = workflow.states.filter((state) => state.code !== code);
+      workflow.transitions = workflow.transitions.filter((transition) => transition.from !== code && transition.to !== code);
+      return;
+    }
+
+    if (operation.type === 'UPDATE_STATE') {
+      const state = this.findWorkflowState(workflow, this.payloadString(payload, 'code'));
+      const nextCode = this.payloadOptionalString(payload, 'nextCode');
+      if (nextCode && nextCode !== state.code) {
+        for (const transition of workflow.transitions) {
+          if (transition.from === state.code) {
+            transition.from = nextCode;
+          }
+          if (transition.to === state.code) {
+            transition.to = nextCode;
+          }
+        }
+        state.code = nextCode;
+      }
+      state.label = this.payloadString(payload, 'label', state.label);
+      state.type = this.payloadWorkflowStateType(payload, state.type ?? 'NORMAL');
+      state.colorToken = this.payloadOptionalString(payload, 'colorToken') ?? state.colorToken;
+      state.initial = state.type === 'INITIAL' ? true : this.payloadBoolean(payload, 'initial', false);
+      state.final = state.type === 'FINAL' ? true : this.payloadBoolean(payload, 'final', false);
+      this.normalizeWorkflowStateTypes(workflow);
+      return;
+    }
+
+    if (operation.type === 'ADD_TRANSITION') {
+      const from = this.payloadString(payload, 'from');
+      const to = this.payloadString(payload, 'to');
+      const actionCode = this.payloadOptionalString(payload, 'actionCode') ?? '';
+      const code = this.payloadString(payload, 'code', `${from}_${actionCode}_${to}`);
+      if (workflow.transitions.some((transition) => transition.code === code)) {
+        throw new BadRequestException(`Workflow transition ${code} already exists.`);
+      }
+      workflow.transitions.push({
+        code,
+        from,
+        to,
+        actionCode,
+        condition: this.payloadWorkflowCondition(payload),
+        securityPolicy: this.payloadOptionalString(payload, 'securityPolicy'),
+        processBinding: this.payloadOptionalString(payload, 'processBinding'),
+      });
+      return;
+    }
+
+    if (operation.type === 'REMOVE_TRANSITION') {
+      const code = this.payloadString(payload, 'code');
+      workflow.transitions = workflow.transitions.filter((transition) => transition.code !== code);
+      return;
+    }
+
+    if (operation.type === 'UPDATE_TRANSITION') {
+      const transition = this.findWorkflowTransition(workflow, this.payloadString(payload, 'code'));
+      transition.code = this.payloadOptionalString(payload, 'nextCode') ?? transition.code;
+      transition.from = this.payloadString(payload, 'from', transition.from);
+      transition.to = this.payloadString(payload, 'to', transition.to);
+      transition.actionCode = this.payloadString(payload, 'actionCode', transition.actionCode);
+      transition.condition = this.payloadWorkflowCondition(payload) ?? transition.condition;
+      transition.securityPolicy = this.payloadOptionalString(payload, 'securityPolicy') ?? transition.securityPolicy;
+      transition.processBinding = this.payloadOptionalString(payload, 'processBinding') ?? transition.processBinding;
+      return;
+    }
+
+    throw new BadRequestException(`Unsupported workflow designer operation: ${operation.type}`);
   }
 
   private applyFormOperation(form: FormDefinition, operation: DesignerOperation): void {
@@ -1051,7 +1185,13 @@ export class DesignerEngine {
   }
 
   private assertSupportedTarget(targetType: DesignerTargetType): void {
-    if (targetType !== 'FORM' && targetType !== 'THEME' && targetType !== 'NAVIGATION' && targetType !== 'SECURITY_POLICY') {
+    if (
+      targetType !== 'FORM' &&
+      targetType !== 'THEME' &&
+      targetType !== 'NAVIGATION' &&
+      targetType !== 'SECURITY_POLICY' &&
+      targetType !== 'WORKFLOW'
+    ) {
       throw new BadRequestException(`Unsupported designer target type: ${targetType}`);
     }
   }
@@ -1135,6 +1275,79 @@ export class DesignerEngine {
     return typeof value === 'boolean' ? value : fallback;
   }
 
+  private payloadWorkflowStateType(
+    payload: Record<string, unknown>,
+    fallback: NonNullable<WorkflowDefinition['states'][number]['type']> = 'NORMAL',
+  ): NonNullable<WorkflowDefinition['states'][number]['type']> {
+    const value = payload.type;
+
+    if (value === 'INITIAL' || value === 'NORMAL' || value === 'FINAL') {
+      return value;
+    }
+
+    return fallback;
+  }
+
+  private payloadWorkflowCondition(payload: Record<string, unknown>): WorkflowDefinition['transitions'][number]['condition'] | undefined {
+    const value = payload.condition ?? payload.conditions;
+
+    if (typeof value === 'string') {
+      return value;
+    }
+
+    if (value && typeof value === 'object' && !Array.isArray(value)) {
+      return value as Record<string, unknown>;
+    }
+
+    return undefined;
+  }
+
+  private findWorkflowState(workflow: WorkflowDefinition, code: string): WorkflowDefinition['states'][number] {
+    const state = workflow.states.find((candidate) => candidate.code === code);
+
+    if (!state) {
+      throw new BadRequestException(`Workflow state ${code} was not found.`);
+    }
+
+    return state;
+  }
+
+  private findWorkflowTransition(workflow: WorkflowDefinition, code: string): WorkflowDefinition['transitions'][number] {
+    const transition = workflow.transitions.find((candidate) => candidate.code === code);
+
+    if (!transition) {
+      throw new BadRequestException(`Workflow transition ${code} was not found.`);
+    }
+
+    return transition;
+  }
+
+  private normalizeWorkflowStateTypes(workflow: WorkflowDefinition): void {
+    const initial = workflow.states.find((state) => state.type === 'INITIAL') ?? workflow.states.find((state) => state.initial);
+
+    for (const state of workflow.states) {
+      if (initial) {
+        state.initial = state.code === initial.code;
+      }
+
+      if (state.code === initial?.code) {
+        state.type = 'INITIAL';
+        state.final = false;
+        continue;
+      }
+
+      if (state.type === 'FINAL') {
+        state.initial = false;
+        state.final = true;
+      }
+
+      if (state.type === 'NORMAL') {
+        state.initial = false;
+        state.final = false;
+      }
+    }
+  }
+
   private payloadLookup(payload: Record<string, unknown>): FormFieldDefinition['lookup'] | undefined {
     const lookup = payload.lookup;
 
@@ -1179,6 +1392,10 @@ export class DesignerEngine {
     return definition && typeof definition === 'object' && 'entityCode' in definition
       ? (definition as { entityCode?: string }).entityCode
       : undefined;
+  }
+
+  private definitionDisplayName(definition: DesignerDefinition, fallback: string): string {
+    return 'name' in definition && typeof definition.name === 'string' ? definition.name : fallback;
   }
 
   private draftEntityCode(draft: MetadataDraft<DesignerDefinition>): string {

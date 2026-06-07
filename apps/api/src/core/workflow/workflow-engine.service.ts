@@ -15,7 +15,7 @@ export class WorkflowEngine {
 
   async resolveInitialStatus(context: RuntimeContext, entityCode: string): Promise<string | undefined> {
     const workflow = await this.metadataResolver.resolveWorkflow(context, entityCode);
-    const initialState = workflow?.definition.states.find((state) => state.initial);
+    const initialState = workflow?.definition.states.find((state) => state.initial || state.type === 'INITIAL');
     return initialState?.code;
   }
 

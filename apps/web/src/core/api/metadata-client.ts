@@ -1,4 +1,4 @@
-import type { MetadataType } from '@redios/shared';
+import type { MetadataDefinition, MetadataType } from '@redios/shared';
 import type { RuntimeForm, RuntimeNavigation, RuntimeTheme, ResolvedUIPage } from '../renderer/runtime-types';
 import type { ApiClient } from './api-client';
 
@@ -28,6 +28,10 @@ export class MetadataClient {
 
   getMetadataTree(): Promise<MetadataDebugTree> {
     return this.api.get('/metadata/debug');
+  }
+
+  getMetadata<TDefinition>(type: MetadataType, code: string): Promise<MetadataDefinition<TDefinition>> {
+    return this.api.get(`/metadata/${type}/${code}`);
   }
 
   getTheme(): Promise<RuntimeTheme> {

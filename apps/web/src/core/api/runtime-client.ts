@@ -6,6 +6,7 @@ export interface SimulationRequest {
   applicationCode: string;
   entityCode: string;
   actionCode: string;
+  currentState?: string;
   platform?: 'WEB' | 'MOBILE' | 'TABLET';
   permissions?: string[];
   roles?: string[];

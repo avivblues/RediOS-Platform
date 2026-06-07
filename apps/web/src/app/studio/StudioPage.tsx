@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
+import type { MetadataDefinition, WorkflowDefinition } from '@redios/shared';
 import { EntityBuilder } from '../../builder/entity/EntityBuilder';
 import { FormBuilder } from '../../builder/form/FormBuilder';
+import { WorkflowBuilder } from '../../builder/workflow/WorkflowBuilder';
 import { Button } from '../../components/atomic/atoms/Atoms';
 import { StudioLayout } from '../../components/atomic/templates/StudioLayout';
 import { createApiClient } from '../../core/api/api-client';
@@ -29,6 +31,7 @@ export function StudioPage() {
   const [selection, setSelection] = useState<ExplorerSelection | undefined>();
   const [form, setForm] = useState<RuntimeForm | undefined>();
   const [page, setPage] = useState<ResolvedUIPage | undefined>();
+  const [workflow, setWorkflow] = useState<MetadataDefinition<WorkflowDefinition> | undefined>();
   const [preview, setPreview] = useState<DesignerPreviewResult | undefined>();
   const [error, setError] = useState<string | undefined>();
 
@@ -79,6 +82,7 @@ export function StudioPage() {
       try {
         const nextForm = await resolveForm(activeSelection, activeState.tree, metadataClient);
         const nextPage = await resolvePage(activeSelection, metadataClient);
+        const nextWorkflow = await resolveWorkflow(activeSelection, metadataClient);
 
         if (!mounted) {
           return;
@@ -86,6 +90,7 @@ export function StudioPage() {
 
         setForm(nextForm);
         setPage(nextPage);
+        setWorkflow(nextWorkflow);
       } catch (selectionError) {
         if (mounted) {
           setError(selectionError instanceof Error ? selectionError.message : String(selectionError));
@@ -125,6 +130,7 @@ export function StudioPage() {
           <EntityBuilder entityCode={form?.entityCode ?? selection?.code} form={form} designer={designerClient} onPreview={setPreview} />
           <FormBuilder form={form} designer={designerClient} onPreview={setPreview} />
         </div>
+        <WorkflowBuilder metadata={workflow} designer={designerClient} runtime={runtimeClient} context={context} onPreview={setPreview} />
         <StudioPreview preview={preview} form={form} page={page} />
       </StudioLayout>
     </ThemeProvider>
@@ -156,6 +162,17 @@ async function resolveForm(
 async function resolvePage(selection: ExplorerSelection, metadataClient: MetadataClient): Promise<ResolvedUIPage | undefined> {
   if (selection.type === 'PAGES') {
     return metadataClient.getPage(selection.code).catch(() => undefined);
+  }
+
+  return undefined;
+}
+
+async function resolveWorkflow(
+  selection: ExplorerSelection,
+  metadataClient: MetadataClient,
+): Promise<MetadataDefinition<WorkflowDefinition> | undefined> {
+  if (selection.type === 'WORKFLOWS') {
+    return metadataClient.getMetadata<WorkflowDefinition>('WORKFLOW', selection.code).catch(() => undefined);
   }
 
   return undefined;

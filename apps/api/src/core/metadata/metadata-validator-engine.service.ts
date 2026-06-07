@@ -317,6 +317,17 @@ export class MetadataValidatorEngine {
       }
 
       for (const [transitionIndex, transition] of workflow.transitions.entries()) {
+        if (transition.from === transition.to) {
+          this.addIssue(
+            issues,
+            'INVALID_TRANSITION',
+            'ERROR',
+            `Transition ${transition.code} cannot target the same state.`,
+            `WORKFLOW.${workflow.code}.transitions[${transitionIndex}]`,
+            'Choose a different target state.',
+          );
+        }
+
         if (!stateCodes.has(transition.from)) {
           this.addIssue(
             issues,
@@ -339,6 +350,18 @@ export class MetadataValidatorEngine {
           );
         }
 
+        if (!transition.actionCode) {
+          this.addIssue(
+            issues,
+            'MISSING_ACTION',
+            'ERROR',
+            `Workflow transition ${transition.code} must reference an action.`,
+            `WORKFLOW.${workflow.code}.transitions[${transitionIndex}].actionCode`,
+            'Select an action metadata code for this transition.',
+          );
+          continue;
+        }
+
         if (!index.actionsByEntity.get(workflow.entityCode)?.has(transition.actionCode)) {
           this.addIssue(
             issues,
@@ -351,7 +374,18 @@ export class MetadataValidatorEngine {
         }
       }
 
-      const initialStates = workflow.states.filter((state) => state.initial);
+      if (this.hasCircularWorkflowPath(workflow)) {
+        this.addIssue(
+          issues,
+          'CIRCULAR_FLOW',
+          'WARNING',
+          'Workflow contains a circular transition path.',
+          `WORKFLOW.${workflow.code}.transitions`,
+          'Confirm the loop is intentional or add a final exit transition.',
+        );
+      }
+
+      const initialStates = workflow.states.filter((state) => state.initial || state.type === 'INITIAL');
 
       if (initialStates.length !== 1) {
         this.addIssue(
@@ -364,7 +398,7 @@ export class MetadataValidatorEngine {
         );
       }
 
-      if (!workflow.states.some((state) => state.final)) {
+      if (!workflow.states.some((state) => state.final || state.type === 'FINAL')) {
         this.addIssue(
           issues,
           'FINAL_STATE_MISSING',
@@ -1899,6 +1933,41 @@ export class MetadataValidatorEngine {
 
   private workflowHasState(index: MetadataIndex, entityCode: string, stateCode: string): boolean {
     return Boolean(index.workflowsByEntity.get(entityCode)?.definition.states.some((state) => state.code === stateCode));
+  }
+
+  private hasCircularWorkflowPath(workflow: WorkflowDefinition): boolean {
+    const adjacency = workflow.transitions.reduce<Map<string, string[]>>((graph, transition) => {
+      const targets = graph.get(transition.from) ?? [];
+      targets.push(transition.to);
+      graph.set(transition.from, targets);
+      return graph;
+    }, new Map());
+    const visiting = new Set<string>();
+    const visited = new Set<string>();
+
+    const visit = (stateCode: string): boolean => {
+      if (visiting.has(stateCode)) {
+        return true;
+      }
+
+      if (visited.has(stateCode)) {
+        return false;
+      }
+
+      visiting.add(stateCode);
+
+      for (const target of adjacency.get(stateCode) ?? []) {
+        if (visit(target)) {
+          return true;
+        }
+      }
+
+      visiting.delete(stateCode);
+      visited.add(stateCode);
+      return false;
+    };
+
+    return workflow.states.some((state) => visit(state.code));
   }
 
   private definitionEntityCode(definition: unknown): string | undefined {

@@ -1,4 +1,4 @@
-import { Controller, Get, Headers, Inject } from '@nestjs/common';
+import { Controller, Get, Headers, Inject, NotFoundException, Param } from '@nestjs/common';
 import type { MetadataDefinition, MetadataType, RuntimeContext } from '@redios/shared';
 import type { RuntimeHeaders } from '../core/context/context.engine';
 import { METADATA_PROVIDER, type MetadataProvider } from '../core/metadata/metadata-provider.interface';
@@ -63,6 +63,35 @@ export class MetadataDebugController {
       conflictPolicies: this.codes(records, 'CONFLICT_POLICY'),
       counts: this.counts(records),
     };
+  }
+
+  @Get(':type/:code')
+  async getMetadata(
+    @Headers() headers: RuntimeHeaders,
+    @Param('type') type: MetadataType,
+    @Param('code') code: string,
+  ): Promise<MetadataDefinition> {
+    const context: RuntimeContext = {
+      userId: this.headerValue(headers['x-user-id'], 'debug'),
+      tenantId: this.headerValue(headers['x-tenant-id'], 'demo'),
+      domainCode: this.headerValue(headers['x-domain-code'], 'DEFAULT'),
+      applicationCode: this.headerValue(headers['x-application-code'], 'DEBUG'),
+      permissions: [],
+      capabilities: [],
+    };
+    const records = await this.metadataProvider.findMetadata(context, {
+      allApplications: true,
+      enabledOnly: true,
+      type,
+      code,
+    });
+    const metadata = records.find((record) => record.type === type && record.code === code);
+
+    if (!metadata) {
+      throw new NotFoundException(`Metadata ${type}:${code} was not found.`);
+    }
+
+    return metadata;
   }
 
   private codes(records: MetadataDefinition[], type: MetadataType): string[] {

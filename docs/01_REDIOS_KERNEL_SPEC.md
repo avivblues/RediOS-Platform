@@ -85,7 +85,7 @@ WorkOrderService
 
 TicketWorkflow
 
-InventoryProcess
+EntitySpecificProcess
 
 AssetPermission
 
