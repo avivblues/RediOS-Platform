@@ -70,3 +70,211 @@ textarea {
   opacity: 0.6;
   cursor: not-allowed;
 }
+
+.studio-shell {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--redios-color-background);
+  color: var(--redios-color-text);
+}
+
+.studio-header {
+  border-bottom: 1px solid color-mix(in srgb, var(--redios-color-text), transparent 86%);
+  background: var(--redios-color-surface);
+  padding: var(--redios-spacing-md) var(--redios-spacing-lg);
+}
+
+.studio-header h1 {
+  margin: 0 0 var(--redios-spacing-xs);
+}
+
+.studio-body {
+  min-height: 0;
+  flex: 1;
+  display: grid;
+  grid-template-columns: 280px minmax(0, 1fr);
+}
+
+.studio-sidebar {
+  border-right: 1px solid color-mix(in srgb, var(--redios-color-text), transparent 86%);
+  background: color-mix(in srgb, var(--redios-color-surface), var(--redios-color-background) 22%);
+  padding: var(--redios-spacing-md);
+  overflow: auto;
+}
+
+.studio-workspace {
+  padding: var(--redios-spacing-lg);
+  overflow: auto;
+}
+
+.studio-workspace-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--redios-spacing-md);
+  margin-bottom: var(--redios-spacing-md);
+}
+
+.studio-builder-grid,
+.studio-preview-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--redios-spacing-md);
+}
+
+.studio-panel,
+.studio-card,
+.studio-builder-canvas {
+  background: var(--redios-color-surface);
+  border: 1px solid color-mix(in srgb, var(--redios-color-text), transparent 86%);
+  border-radius: var(--redios-radius-medium);
+  padding: var(--redios-spacing-md);
+}
+
+.studio-panel {
+  margin-bottom: var(--redios-spacing-md);
+}
+
+.studio-panel h3,
+.studio-card h4 {
+  margin-top: 0;
+}
+
+.studio-section-header,
+.studio-action-row,
+.studio-list-row {
+  display: flex;
+  align-items: center;
+  gap: var(--redios-spacing-sm);
+}
+
+.studio-section-header {
+  justify-content: space-between;
+  margin-bottom: var(--redios-spacing-sm);
+}
+
+.studio-action-row {
+  flex-wrap: wrap;
+  margin: var(--redios-spacing-sm) 0;
+}
+
+.studio-form-field {
+  display: grid;
+  gap: var(--redios-spacing-xs);
+  margin-bottom: var(--redios-spacing-sm);
+}
+
+.studio-property-row,
+.studio-list-row {
+  justify-content: space-between;
+  border-top: 1px solid color-mix(in srgb, var(--redios-color-text), transparent 90%);
+  padding: var(--redios-spacing-sm) 0;
+}
+
+.studio-label,
+.studio-muted {
+  color: color-mix(in srgb, var(--redios-color-text), transparent 32%);
+}
+
+.studio-input,
+.studio-button,
+.studio-tree-item {
+  border: 1px solid color-mix(in srgb, var(--redios-color-text), transparent 75%);
+  border-radius: var(--redios-radius-medium);
+  padding: var(--redios-spacing-sm);
+  background: var(--redios-color-surface);
+  color: var(--redios-color-text);
+}
+
+.studio-button {
+  cursor: pointer;
+}
+
+.studio-button-primary {
+  border-color: var(--redios-color-primary);
+  background: var(--redios-color-primary);
+  color: var(--redios-color-surface);
+}
+
+.studio-button-danger {
+  border-color: #b42318;
+  background: #b42318;
+  color: var(--redios-color-surface);
+}
+
+.studio-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.studio-tree-group {
+  display: grid;
+  gap: var(--redios-spacing-xs);
+  margin-bottom: var(--redios-spacing-md);
+}
+
+.studio-tree-item {
+  text-align: left;
+  cursor: pointer;
+}
+
+.studio-tree-item-active {
+  border-color: var(--redios-color-primary);
+  background: color-mix(in srgb, var(--redios-color-primary), transparent 88%);
+}
+
+.studio-badge {
+  display: inline-flex;
+  border-radius: 999px;
+  padding: 0.25rem 0.625rem;
+  background: color-mix(in srgb, var(--redios-color-text), transparent 90%);
+}
+
+.studio-badge-success {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.studio-badge-warning,
+.studio-impact-warning {
+  background: #fef9c3;
+  color: #854d0e;
+}
+
+.studio-badge-danger,
+.studio-impact-breaking,
+.studio-error {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.studio-impact-info {
+  background: color-mix(in srgb, var(--redios-color-text), transparent 92%);
+}
+
+.studio-impact,
+.studio-error,
+.studio-empty,
+.studio-drop-zone {
+  border-radius: var(--redios-radius-medium);
+  padding: var(--redios-spacing-sm);
+  margin-bottom: var(--redios-spacing-sm);
+}
+
+.studio-drop-zone {
+  border: 1px dashed color-mix(in srgb, var(--redios-color-primary), transparent 35%);
+}
+
+.studio-card pre {
+  white-space: pre-wrap;
+  overflow: auto;
+}
+
+@media (max-width: 1100px) {
+  .studio-body,
+  .studio-workspace-grid,
+  .studio-builder-grid,
+  .studio-preview-grid {
+    grid-template-columns: 1fr;
+  }
+}

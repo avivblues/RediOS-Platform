@@ -76,6 +76,7 @@ export interface RuntimeFormField {
   fieldCode: string;
   component: string;
   order: number;
+  required?: boolean;
   readonly: boolean;
   visible: boolean;
   binding?: {

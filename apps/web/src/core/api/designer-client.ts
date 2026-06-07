@@ -1,0 +1,65 @@
+import type { DesignerOperation, DesignerTargetType, MetadataDraft } from '@redios/shared';
+import type { ApiClient } from './api-client';
+
+export interface CreateDraftRequest {
+  targetType: DesignerTargetType;
+  targetCode: string;
+  entityCode?: string;
+}
+
+export interface DesignerPreviewResult {
+  valid: boolean;
+  validation: {
+    valid: boolean;
+    errors: number;
+    warnings: number;
+    issues: Array<{
+      code: string;
+      severity: string;
+      message: string;
+      path: string;
+    }>;
+  };
+  simulation: unknown;
+  affected: string[];
+  dependencies: {
+    safe: boolean;
+    impacts: Array<{
+      type: string;
+      code: string;
+      impact: 'BREAKING' | 'WARNING' | 'INFO';
+      reason: string;
+    }>;
+  };
+  draft: MetadataDraft;
+}
+
+export interface DesignerPublishResult {
+  draft: MetadataDraft;
+  published: {
+    code: string;
+    type: string;
+    version: number;
+  };
+  traceId?: string;
+}
+
+export class DesignerClient {
+  constructor(private readonly api: ApiClient) {}
+
+  createDraft(request: CreateDraftRequest): Promise<MetadataDraft> {
+    return this.api.post('/designer/drafts', request);
+  }
+
+  applyOperation(draftId: string, operation: DesignerOperation): Promise<MetadataDraft> {
+    return this.api.post(`/designer/${draftId}/operations`, operation);
+  }
+
+  preview(draftId: string): Promise<DesignerPreviewResult> {
+    return this.api.post(`/designer/${draftId}/preview`);
+  }
+
+  publish(draftId: string): Promise<DesignerPublishResult> {
+    return this.api.post(`/designer/${draftId}/publish`);
+  }
+}
