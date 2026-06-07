@@ -6,6 +6,7 @@ import type {
   EntityDefinition,
   EventDefinition,
   FieldDefinition,
+  FormDefinition,
   LedgerDefinition,
   MetadataDefinition,
   ProcessDefinition,
@@ -34,6 +35,7 @@ type MetadataIndex = {
   relations: Map<string, MetadataDefinition<RelationDefinition>[]>;
   views: Map<string, MetadataDefinition<ViewDefinition>[]>;
   ui: Map<string, MetadataDefinition<UIDefinition>[]>;
+  forms: Map<string, MetadataDefinition<FormDefinition>[]>;
 };
 
 @Injectable()
@@ -53,6 +55,7 @@ export class MetadataValidatorEngine {
     this.validateFieldRelationReferences(index, issues);
     this.validateViewDefinitions(metadataDefinitions, index, issues);
     this.validateUIDefinitions(metadataDefinitions, index, issues);
+    this.validateFormDefinitions(metadataDefinitions, index, issues);
 
     const errors = issues.filter((issue) => issue.severity === 'ERROR').length;
     const warnings = issues.filter((issue) => issue.severity === 'WARNING').length;
@@ -78,6 +81,7 @@ export class MetadataValidatorEngine {
       relations: new Map(),
       views: new Map(),
       ui: new Map(),
+      forms: new Map(),
     };
 
     for (const metadata of metadataDefinitions) {
@@ -139,6 +143,14 @@ export class MetadataValidatorEngine {
         const records = index.ui.get(key) ?? [];
         records.push(metadata as MetadataDefinition<UIDefinition>);
         index.ui.set(key, records);
+      }
+
+      if (metadata.type === 'FORM') {
+        const form = metadata.definition as FormDefinition;
+        const key = this.formKey(form.entityCode, form.code);
+        const records = index.forms.get(key) ?? [];
+        records.push(metadata as MetadataDefinition<FormDefinition>);
+        index.forms.set(key, records);
       }
     }
 
@@ -887,6 +899,119 @@ export class MetadataValidatorEngine {
     }
   }
 
+  private validateFormDefinitions(metadataDefinitions: MetadataDefinition[], index: MetadataIndex, issues: ValidationIssue[]): void {
+    for (const [key, definitions] of index.forms.entries()) {
+      if (definitions.length > 1) {
+        this.addIssue(
+          issues,
+          'DUPLICATE_FORM_CODE',
+          'ERROR',
+          `Duplicate form definition ${key}.`,
+          `FORM.${key}`,
+          'Keep one FORM definition per entity and code.',
+        );
+      }
+    }
+
+    for (const metadata of metadataDefinitions.filter((candidate) => candidate.type === 'FORM')) {
+      const form = metadata.definition as FormDefinition;
+      const entityFields = index.fieldsByEntity.get(form.entityCode);
+      const fieldCounts = new Map<string, number>();
+      const sectionOrderCounts = new Map<number, number>();
+
+      if (!index.entities.has(form.entityCode)) {
+        this.addIssue(
+          issues,
+          'ENTITY_NOT_FOUND',
+          'ERROR',
+          `Form references missing entity ${form.entityCode}.`,
+          `FORM.${form.code}.entityCode`,
+          `Create ${form.entityCode} entity metadata.`,
+        );
+      }
+
+      for (const section of form.layout.sections) {
+        sectionOrderCounts.set(section.order, (sectionOrderCounts.get(section.order) ?? 0) + 1);
+
+        for (const [fieldIndex, field] of section.fields.entries()) {
+          fieldCounts.set(field.fieldCode, (fieldCounts.get(field.fieldCode) ?? 0) + 1);
+
+          if (!this.fieldExists(entityFields, field.fieldCode)) {
+            this.addIssue(
+              issues,
+              'FORM_FIELD_NOT_FOUND',
+              'ERROR',
+              `Form field ${field.fieldCode} does not exist on entity ${form.entityCode}.`,
+              `FORM.${form.code}.sections.${section.code}.fields[${fieldIndex}].fieldCode`,
+              `Create ${field.fieldCode} field metadata on ${form.entityCode}.`,
+            );
+          }
+
+          if (!this.hasUI(index, 'ATOM', field.component)) {
+            this.addIssue(
+              issues,
+              'FORM_COMPONENT_NOT_FOUND',
+              'ERROR',
+              `Form field ${field.fieldCode} references missing UI component ${field.component}.`,
+              `FORM.${form.code}.sections.${section.code}.fields[${fieldIndex}].component`,
+              `Create UI atom ${field.component}.`,
+            );
+          }
+
+          if (field.lookup) {
+            if (!index.relations.has(field.lookup.relationCode)) {
+              this.addIssue(
+                issues,
+                'FORM_RELATION_NOT_FOUND',
+                'ERROR',
+                `Form lookup references missing relation ${field.lookup.relationCode}.`,
+                `FORM.${form.code}.sections.${section.code}.fields[${fieldIndex}].lookup.relationCode`,
+                `Create relation ${field.lookup.relationCode}.`,
+              );
+            }
+
+            if (!index.views.has(field.lookup.viewCode)) {
+              this.addIssue(
+                issues,
+                'FORM_VIEW_NOT_FOUND',
+                'ERROR',
+                `Form lookup references missing view ${field.lookup.viewCode}.`,
+                `FORM.${form.code}.sections.${section.code}.fields[${fieldIndex}].lookup.viewCode`,
+                `Create view ${field.lookup.viewCode}.`,
+              );
+            }
+          }
+        }
+      }
+
+      for (const [fieldCode, count] of fieldCounts.entries()) {
+        if (count > 1) {
+          this.addIssue(
+            issues,
+            'DUPLICATE_FORM_FIELD',
+            'ERROR',
+            `Form has duplicate field ${fieldCode}.`,
+            `FORM.${form.code}.layout.sections`,
+            'Keep one form field per entity field.',
+          );
+        }
+      }
+
+      for (const [order, count] of sectionOrderCounts.entries()) {
+        if (count > 1) {
+          this.addIssue(
+            issues,
+            'DUPLICATE_FORM_SECTION_ORDER',
+            'ERROR',
+            `Form has duplicate section order ${order}.`,
+            `FORM.${form.code}.layout.sections`,
+            'Use unique section order values.',
+          );
+        }
+      }
+    }
+  }
+
   private workflowHasState(index: MetadataIndex, entityCode: string, stateCode: string): boolean {
     return Boolean(index.workflowsByEntity.get(entityCode)?.definition.states.some((state) => state.code === stateCode));
   }
@@ -905,6 +1030,10 @@ export class MetadataValidatorEngine {
 
   private uiKey(kind: UIDefinition['kind'], code: string): string {
     return `${kind}:${code}`;
+  }
+
+  private formKey(entityCode: string, code: string): string {
+    return `${entityCode}:${code}`;
   }
 
   private fieldExists(fields: Map<string, MetadataDefinition<FieldDefinition>> | undefined, fieldCode: string): boolean {

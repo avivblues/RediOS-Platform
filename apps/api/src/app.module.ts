@@ -7,6 +7,7 @@ import { ApplicationModule } from './core/application/application.module';
 import { BusinessModule } from './core/business/business.module';
 import { ContextModule } from './core/context/context.module';
 import { EventModule } from './core/event/event.module';
+import { FormModule as CoreFormModule } from './core/form/form.module';
 import { LedgerModule } from './core/ledger/ledger.module';
 import { MetadataModule } from './core/metadata/metadata.module';
 import { ProcessModule } from './core/process/process.module';
@@ -17,6 +18,7 @@ import { SecurityModule } from './core/security/security.module';
 import { StorageModule } from './core/storage/storage.module';
 import { UIModule as CoreUIModule } from './core/ui/ui.module';
 import { WorkflowModule } from './core/workflow/workflow.module';
+import { FormsModule } from './forms/forms.module';
 import { HealthModule } from './health/health.module';
 import { KernelLoggerModule } from './logger/kernel-logger.module';
 import { MetadataDebugModule } from './metadata/metadata-debug.module';
@@ -58,6 +60,7 @@ import { UIModule } from './ui/ui.module';
     RelationsModule,
     SimulationModule,
     UIModule,
+    FormsModule,
     ContextModule,
     ApplicationModule,
     MetadataModule,
@@ -73,6 +76,7 @@ import { UIModule } from './ui/ui.module';
     LedgerModule,
     EventModule,
     CoreUIModule,
+    CoreFormModule,
   ],
 })
 export class AppModule {}

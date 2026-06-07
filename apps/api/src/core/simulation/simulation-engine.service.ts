@@ -13,6 +13,7 @@ import type {
 import { ActionEngine } from '../action/action-engine.service';
 import { BusinessEngine } from '../business/business-engine.service';
 import { EventEngine } from '../event/event-engine.service';
+import { FormEngine } from '../form/form-engine.service';
 import { LedgerEngine } from '../ledger/ledger-engine.service';
 import { METADATA_PROVIDER, type MetadataProvider } from '../metadata/metadata-provider.interface';
 import { MetadataResolver } from '../metadata/metadata-resolver.service';
@@ -39,6 +40,7 @@ export class SimulationEngine {
     private readonly ledgerEngine: LedgerEngine,
     private readonly relationEngine: RelationEngine,
     private readonly uiEngine: UIEngine,
+    private readonly formEngine: FormEngine,
     private readonly traceEngine: TraceEngine,
   ) {}
 
@@ -259,6 +261,22 @@ export class SimulationEngine {
       })),
     };
 
+    const forms = await this.runStep(steps, 'VALIDATION', 'Form metadata resolved.', () =>
+      this.formEngine.compose(context, request.entityCode),
+    );
+
+    if (!forms.ok) {
+      return this.finalize(request, context, this.failed(validation, steps, predicted));
+    }
+
+    predicted.forms = [
+      {
+        code: forms.value.form,
+        fields: this.formEngine.countFields(forms.value),
+        lookups: this.formEngine.countLookups(forms.value),
+      },
+    ];
+
     return this.finalize(request, context, {
       success: steps.every((step) => step.status !== 'FAILED'),
       validation,
@@ -276,6 +294,7 @@ export class SimulationEngine {
 
   private relevantMetadata(metadata: MetadataDefinition[], entityCode: string): MetadataDefinition[] {
     const relatedEntityCodes = new Set<string>([entityCode]);
+    const referencedViewCodes = new Set<string>();
 
     for (const metadataDefinition of metadata) {
       if (metadataDefinition.type === 'LEDGER' && this.definitionEntityCode(metadataDefinition.definition) === entityCode) {
@@ -289,6 +308,12 @@ export class SimulationEngine {
 
         if (targetEntityCode) {
           relatedEntityCodes.add(targetEntityCode);
+        }
+      }
+
+      if (metadataDefinition.type === 'FORM' && this.definitionEntityCode(metadataDefinition.definition) === entityCode) {
+        for (const viewCode of this.formLookupViewCodes(metadataDefinition.definition)) {
+          referencedViewCodes.add(viewCode);
         }
       }
     }
@@ -329,9 +354,18 @@ export class SimulationEngine {
         metadataDefinition.type === 'PROCESS' ||
         metadataDefinition.type === 'BUSINESS' ||
         metadataDefinition.type === 'EVENT' ||
-        metadataDefinition.type === 'LEDGER' ||
-        metadataDefinition.type === 'VIEW'
+        metadataDefinition.type === 'LEDGER'
       ) {
+        const metadataEntityCode = this.definitionEntityCode(metadataDefinition.definition);
+        return metadataEntityCode === entityCode ? [metadataDefinition] : [];
+      }
+
+      if (metadataDefinition.type === 'VIEW') {
+        const metadataEntityCode = this.definitionEntityCode(metadataDefinition.definition);
+        return metadataEntityCode === entityCode || referencedViewCodes.has(metadataDefinition.code) ? [metadataDefinition] : [];
+      }
+
+      if (metadataDefinition.type === 'FORM') {
         const metadataEntityCode = this.definitionEntityCode(metadataDefinition.definition);
         return metadataEntityCode === entityCode ? [metadataDefinition] : [];
       }
@@ -378,6 +412,25 @@ export class SimulationEngine {
     }
 
     return undefined;
+  }
+
+  private formLookupViewCodes(definition: unknown): string[] {
+    if (!definition || typeof definition !== 'object' || !('layout' in definition)) {
+      return [];
+    }
+
+    const sections = (definition as { layout?: { sections?: Array<{ fields?: Array<{ lookup?: { viewCode?: string } }> }> } }).layout
+      ?.sections;
+
+    if (!Array.isArray(sections)) {
+      return [];
+    }
+
+    return sections.flatMap((section) =>
+      (section.fields ?? [])
+        .map((field) => field.lookup?.viewCode)
+        .filter((viewCode): viewCode is string => Boolean(viewCode)),
+    );
   }
 
   private async runStep<T>(

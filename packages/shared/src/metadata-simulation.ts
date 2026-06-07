@@ -80,5 +80,10 @@ export interface SimulationResult {
         atoms: number;
       }>;
     };
+    forms?: Array<{
+      code: string;
+      fields: number;
+      lookups: number;
+    }>;
   };
 }

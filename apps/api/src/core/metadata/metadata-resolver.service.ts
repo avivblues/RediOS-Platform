@@ -7,6 +7,7 @@ import type {
   EventDefinition,
   EventTriggerDefinition,
   FieldDefinition,
+  FormDefinition,
   LedgerDefinition,
   MetadataDefinition,
   MetadataType,
@@ -263,6 +264,31 @@ export class MetadataResolver {
     }
 
     return matchingDefinitions as MetadataDefinition<ViewDefinition>[];
+  }
+
+  async resolveForm(
+    context: RuntimeContext,
+    entityCode: string,
+    formCode?: string,
+  ): Promise<MetadataDefinition<FormDefinition> | null> {
+    const definitions = await this.registry.findByType(context, 'FORM');
+    const matchingDefinitions = definitions.filter((candidate) => {
+      const form = candidate.definition as FormDefinition;
+      return form.entityCode === entityCode && form.enabled && (!formCode || form.code === formCode);
+    });
+    const definition = matchingDefinitions[0];
+
+    if (!definition) {
+      return null;
+    }
+
+    const validation = this.validator.validate(definition);
+
+    if (!validation.valid) {
+      throw new UnprocessableEntityException(validation.errors);
+    }
+
+    return definition as MetadataDefinition<FormDefinition>;
   }
 
   async resolveUI(

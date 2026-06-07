@@ -1,0 +1,20 @@
+@baseUrl = http://localhost:3001/api
+
+### Compose WORK_ORDER form from metadata
+### Expected:
+### - WORK_ORDER_FORM resolved
+### - GENERAL section returned
+### - title, description, priority, assetId, assignedTo fields returned
+### - assetId lookup resolved via WORK_ORDER_ASSET_RELATION + ASSET_LOOKUP
+GET {{baseUrl}}/forms/WORK_ORDER
+x-tenant-id: demo
+x-domain-code: DEFAULT
+x-application-code: ASSET_MAINTENANCE
+x-user-id: admin
+
+### Compose WORK_ORDER form by explicit form code
+GET {{baseUrl}}/forms/WORK_ORDER?formCode=WORK_ORDER_FORM
+x-tenant-id: demo
+x-domain-code: DEFAULT
+x-application-code: ASSET_MAINTENANCE
+x-user-id: admin

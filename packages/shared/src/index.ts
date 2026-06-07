@@ -5,6 +5,7 @@ export * from './engine-interface';
 export * from './entity-definition';
 export * from './event-definition';
 export * from './field-definition';
+export * from './form-definition';
 export * from './ledger-definition';
 export * from './metadata-definition';
 export * from './metadata-simulation';

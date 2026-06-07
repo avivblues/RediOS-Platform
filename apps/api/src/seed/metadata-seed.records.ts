@@ -8,6 +8,7 @@ import type {
   EventDefinition,
   FieldDataType,
   FieldDefinition,
+  FormDefinition,
   LedgerDefinition,
   MetadataDefinition,
   ProcessDefinition,
@@ -39,6 +40,7 @@ type EntitySeed = {
   events?: EventDefinition[];
   ledgers?: LedgerDefinition[];
   views?: ViewDefinition[];
+  forms?: FormDefinition[];
 };
 
 type ApplicationSeed = {
@@ -56,6 +58,7 @@ const commonUIDefinitions: UIDefinition[] = [
     'NUMBER_INPUT',
     'DATE_PICKER',
     'SELECT',
+    'LOOKUP',
     'BUTTON',
     'BADGE',
     'LABEL',
@@ -320,6 +323,58 @@ const applications: ApplicationSeed[] = [
               direction: 'ASC',
             },
             enabled: true,
+          },
+        ],
+        forms: [
+          {
+            code: 'WORK_ORDER_FORM',
+            entityCode: 'WORK_ORDER',
+            name: 'Work Order Form',
+            version: 1,
+            enabled: true,
+            layout: {
+              type: 'SECTION',
+              sections: [
+                {
+                  code: 'GENERAL',
+                  title: 'General',
+                  order: 1,
+                  fields: [
+                    {
+                      fieldCode: 'title',
+                      component: 'TEXT_INPUT',
+                      order: 1,
+                      required: true,
+                    },
+                    {
+                      fieldCode: 'description',
+                      component: 'TEXT_AREA',
+                      order: 2,
+                    },
+                    {
+                      fieldCode: 'priority',
+                      component: 'SELECT',
+                      order: 3,
+                    },
+                    {
+                      fieldCode: 'assetId',
+                      component: 'LOOKUP',
+                      order: 4,
+                      required: true,
+                      lookup: {
+                        relationCode: 'WORK_ORDER_ASSET_RELATION',
+                        viewCode: 'ASSET_LOOKUP',
+                      },
+                    },
+                    {
+                      fieldCode: 'assignedTo',
+                      component: 'TEXT_INPUT',
+                      order: 5,
+                    },
+                  ],
+                },
+              ],
+            },
           },
         ],
       },
@@ -724,6 +779,49 @@ const applications: ApplicationSeed[] = [
             enabled: true,
           },
         ],
+        forms: [
+          {
+            code: 'TICKET_FORM',
+            entityCode: 'TICKET',
+            name: 'Ticket Form',
+            version: 1,
+            enabled: true,
+            layout: {
+              type: 'SECTION',
+              sections: [
+                {
+                  code: 'GENERAL',
+                  title: 'General',
+                  order: 1,
+                  fields: [
+                    {
+                      fieldCode: 'title',
+                      component: 'TEXT_INPUT',
+                      order: 1,
+                      required: true,
+                    },
+                    {
+                      fieldCode: 'priority',
+                      component: 'SELECT',
+                      order: 2,
+                    },
+                    {
+                      fieldCode: 'assignee',
+                      component: 'TEXT_INPUT',
+                      order: 3,
+                    },
+                    {
+                      fieldCode: 'status',
+                      component: 'BADGE',
+                      order: 4,
+                      readonly: true,
+                    },
+                  ],
+                },
+              ],
+            },
+          },
+        ],
       },
     ],
     uis: [
@@ -784,6 +882,7 @@ function createEntityRecords(application: ApplicationSeed, entity: EntitySeed): 
     ...(entity.events ?? []).map((event) => createEventRecord(application, event)),
     ...(entity.ledgers ?? []).map((ledger) => createLedgerRecord(application, ledger)),
     ...(entity.views ?? []).map((view) => createViewRecord(application, view)),
+    ...(entity.forms ?? []).map((form) => createFormRecord(application, form)),
   ];
 }
 
@@ -987,6 +1086,23 @@ function createViewRecord(
   };
 }
 
+function createFormRecord(
+  application: ApplicationSeed,
+  form: FormDefinition,
+): MetadataDefinition<FormDefinition> {
+  return {
+    tenantId,
+    domainCode,
+    applicationCode: application.code,
+    type: 'FORM',
+    code: form.code,
+    name: form.name,
+    version: form.version,
+    enabled: form.enabled,
+    definition: form,
+  };
+}
+
 function createUIRecord(
   application: ApplicationSeed,
   ui: UIDefinition,
@@ -1013,7 +1129,7 @@ function toActionType(actionCode: string): ActionType {
 }
 
 function toAtomCategory(code: string): 'INPUT' | 'ACTION' | 'DISPLAY' | 'DATA' | 'VISUAL' {
-  if (['TEXT_INPUT', 'TEXT_AREA', 'NUMBER_INPUT', 'DATE_PICKER', 'SELECT'].includes(code)) {
+  if (['TEXT_INPUT', 'TEXT_AREA', 'NUMBER_INPUT', 'DATE_PICKER', 'SELECT', 'LOOKUP'].includes(code)) {
     return 'INPUT';
   }
 
@@ -1040,7 +1156,7 @@ function toRendererName(code: string): string {
 }
 
 function defaultPropsSchema(code: string): Record<string, string> {
-  if (['TEXT_INPUT', 'TEXT_AREA', 'NUMBER_INPUT', 'DATE_PICKER', 'SELECT'].includes(code)) {
+  if (['TEXT_INPUT', 'TEXT_AREA', 'NUMBER_INPUT', 'DATE_PICKER', 'SELECT', 'LOOKUP'].includes(code)) {
     return {
       placeholder: 'string',
       disabled: 'boolean',

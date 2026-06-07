@@ -14,6 +14,7 @@ type MetadataDebugResult = {
   relations: string[];
   views: string[];
   ui: string[];
+  forms: string[];
   counts: Record<string, number>;
 };
 
@@ -47,6 +48,7 @@ export class MetadataDebugController {
       relations: this.codes(records, 'RELATION'),
       views: this.codes(records, 'VIEW'),
       ui: this.codes(records, 'UI'),
+      forms: this.codes(records, 'FORM'),
       counts: this.counts(records),
     };
   }
