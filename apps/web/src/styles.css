@@ -1,0 +1,72 @@
+:root {
+  color: var(--redios-color-text);
+  background: var(--redios-color-background);
+  font-family: var(--redios-font-family);
+}
+
+body {
+  margin: 0;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+.runtime-shell {
+  min-height: 100vh;
+  display: flex;
+  background: var(--redios-color-background);
+}
+
+.runtime-shell[data-navigation='TOPBAR'],
+.runtime-shell[data-navigation='HYBRID'] {
+  flex-direction: column;
+}
+
+.runtime-main {
+  flex: 1;
+  padding: var(--redios-spacing-lg);
+}
+
+.runtime-region {
+  margin-bottom: var(--redios-spacing-md);
+}
+
+.runtime-card {
+  background: var(--redios-color-surface);
+  border: 1px solid color-mix(in srgb, var(--redios-color-text), transparent 86%);
+  border-radius: var(--redios-radius-medium);
+  padding: var(--redios-spacing-md);
+}
+
+.runtime-form-field {
+  display: grid;
+  gap: var(--redios-spacing-xs);
+  margin-bottom: var(--redios-spacing-sm);
+}
+
+.runtime-control {
+  border: 1px solid color-mix(in srgb, var(--redios-color-text), transparent 75%);
+  border-radius: var(--redios-radius-medium);
+  padding: var(--redios-spacing-sm);
+  background: var(--redios-color-surface);
+  color: var(--redios-color-text);
+}
+
+.runtime-button {
+  border: 0;
+  border-radius: var(--redios-radius-medium);
+  padding: var(--redios-spacing-sm) var(--redios-spacing-md);
+  background: var(--redios-color-primary);
+  color: var(--redios-color-surface);
+  cursor: pointer;
+}
+
+.runtime-button:disabled,
+.runtime-control:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
