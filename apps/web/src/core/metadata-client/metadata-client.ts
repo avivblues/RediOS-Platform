@@ -3,6 +3,7 @@ import type {
   ResolvedUIPage,
   RuntimeContext,
   RuntimeForm,
+  RuntimeExperience,
   RuntimeNavigation,
   RuntimeTheme,
 } from '../renderer/runtime-types';
@@ -23,16 +24,20 @@ export class MetadataClient {
     return this.get(`/ui/pages/${pageCode}`);
   }
 
+  getExperience(entityCode: string, platform: RuntimeExperience['platform'] = 'WEB'): Promise<RuntimeExperience> {
+    return this.get(`/experience/${entityCode}?platform=${platform}`);
+  }
+
   getForm(entityCode: string): Promise<RuntimeForm> {
     return this.get(`/forms/${entityCode}`);
   }
 
-  getNavigation(): Promise<RuntimeNavigation> {
-    return this.get('/navigation/current');
+  getNavigation(navigationCode?: string): Promise<RuntimeNavigation> {
+    return this.get(navigationCode ? `/navigation/${navigationCode}` : '/navigation/current');
   }
 
-  getTheme(): Promise<RuntimeTheme> {
-    return this.get('/themes/current');
+  getTheme(themeCode?: string): Promise<RuntimeTheme> {
+    return this.get(themeCode ? `/themes/${themeCode}` : '/themes/current');
   }
 
   query(entityCode: string, viewCode?: string): Promise<QueryResult> {

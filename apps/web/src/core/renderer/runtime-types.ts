@@ -12,6 +12,7 @@ import type {
   ResolvedUIPage as CoreResolvedUIPage,
   ResolvedUIRegion,
   RuntimeDocumentState,
+  RuntimeExperience,
   RuntimeFormField,
   RuntimeFormSection,
 } from '@redios/runtime-renderer-core';
@@ -71,7 +72,16 @@ export interface RuntimeNavigation {
   items: RuntimeNavigationItem[];
 }
 
-export type { ResolvedUIAtom, ResolvedUIMolecule, ResolvedUIOrganism, ResolvedUIRegion, RuntimeDocumentState, RuntimeFormField, RuntimeFormSection };
+export type {
+  ResolvedUIAtom,
+  ResolvedUIMolecule,
+  ResolvedUIOrganism,
+  ResolvedUIRegion,
+  RuntimeDocumentState,
+  RuntimeExperience,
+  RuntimeFormField,
+  RuntimeFormSection,
+};
 
 export interface ResolvedUIPage extends CoreResolvedUIPage {
   page: UIPageDefinition;

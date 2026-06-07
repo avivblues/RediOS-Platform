@@ -5,6 +5,8 @@ import type {
   BusinessDefinition,
   EntityDefinition,
   EventDefinition,
+  ExperienceConditions,
+  ExperienceDefinition,
   FieldDefinition,
   FormDefinition,
   LedgerDefinition,
@@ -43,6 +45,7 @@ type MetadataIndex = {
   themes: Map<string, MetadataDefinition<ThemeDefinition>[]>;
   navigation: Map<string, MetadataDefinition<NavigationDefinition>[]>;
   securityPolicies: Map<string, MetadataDefinition<SecurityPolicyDefinition>[]>;
+  experiences: Map<string, MetadataDefinition<ExperienceDefinition>[]>;
 };
 
 @Injectable()
@@ -66,6 +69,7 @@ export class MetadataValidatorEngine {
     this.validateThemeDefinitions(metadataDefinitions, index, issues);
     this.validateNavigationDefinitions(metadataDefinitions, index, issues);
     this.validateSecurityPolicyDefinitions(metadataDefinitions, index, issues);
+    this.validateExperienceDefinitions(metadataDefinitions, index, issues);
     this.validateDependencyIntegrity(metadataDefinitions, index, issues);
 
     const errors = issues.filter((issue) => issue.severity === 'ERROR').length;
@@ -96,6 +100,7 @@ export class MetadataValidatorEngine {
       themes: new Map(),
       navigation: new Map(),
       securityPolicies: new Map(),
+      experiences: new Map(),
     };
 
     for (const metadata of metadataDefinitions) {
@@ -177,6 +182,14 @@ export class MetadataValidatorEngine {
         const records = index.navigation.get(metadata.code) ?? [];
         records.push(metadata as MetadataDefinition<NavigationDefinition>);
         index.navigation.set(metadata.code, records);
+      }
+
+      if (metadata.type === 'EXPERIENCE') {
+        const experience = metadata.definition as ExperienceDefinition;
+        const key = this.experienceKey(experience.entityCode, experience.code);
+        const records = index.experiences.get(key) ?? [];
+        records.push(metadata as MetadataDefinition<ExperienceDefinition>);
+        index.experiences.set(key, records);
       }
 
       if (metadata.type === 'SECURITY_POLICY') {
@@ -1305,6 +1318,120 @@ export class MetadataValidatorEngine {
     }
   }
 
+  private validateExperienceDefinitions(
+    metadataDefinitions: MetadataDefinition[],
+    index: MetadataIndex,
+    issues: ValidationIssue[],
+  ): void {
+    for (const [experienceKey, experiences] of index.experiences.entries()) {
+      if (experiences.length > 1) {
+        this.addIssue(
+          issues,
+          'EXPERIENCE_DUPLICATE',
+          'ERROR',
+          `Duplicate experience definition ${experienceKey}.`,
+          `EXPERIENCE.${experienceKey}`,
+          'Keep one EXPERIENCE definition per entity and code.',
+        );
+      }
+    }
+
+    for (const metadata of metadataDefinitions.filter((candidate) => candidate.type === 'EXPERIENCE')) {
+      const experience = metadata.definition as ExperienceDefinition;
+      const variantPlatforms = new Map<string, number>();
+
+      if (!index.entities.has(experience.entityCode)) {
+        this.addIssue(
+          issues,
+          'ENTITY_NOT_FOUND',
+          'ERROR',
+          `Experience ${experience.code} references missing entity ${experience.entityCode}.`,
+          `EXPERIENCE.${experience.code}.entityCode`,
+          `Create ${experience.entityCode} entity metadata.`,
+        );
+      }
+
+      this.validateExperienceConditions(experience.conditions, `EXPERIENCE.${experience.code}.conditions`, issues);
+
+      for (const [variantIndex, variant] of experience.variants.entries()) {
+        const platformCount = (variantPlatforms.get(variant.platform) ?? 0) + 1;
+        variantPlatforms.set(variant.platform, platformCount);
+
+        if (platformCount > 1) {
+          this.addIssue(
+            issues,
+            'EXPERIENCE_VARIANT_DUPLICATE',
+            'ERROR',
+            `Experience ${experience.code} has duplicate ${variant.platform} variants.`,
+            `EXPERIENCE.${experience.code}.variants[${variantIndex}].platform`,
+            'Keep one variant per platform.',
+          );
+        }
+
+        if (!['WEB', 'MOBILE', 'TABLET'].includes(variant.platform)) {
+          this.addIssue(
+            issues,
+            'EXPERIENCE_CONDITION_INVALID',
+            'ERROR',
+            `Experience ${experience.code} has invalid platform ${variant.platform}.`,
+            `EXPERIENCE.${experience.code}.variants[${variantIndex}].platform`,
+            'Use WEB, MOBILE, or TABLET.',
+          );
+        }
+
+        if (!this.hasUI(index, 'PAGE', variant.pageCode)) {
+          this.addIssue(
+            issues,
+            'EXPERIENCE_PAGE_NOT_FOUND',
+            'ERROR',
+            `Experience ${experience.code} references missing page ${variant.pageCode}.`,
+            `EXPERIENCE.${experience.code}.variants[${variantIndex}].pageCode`,
+            `Create page metadata ${variant.pageCode}.`,
+          );
+        }
+
+        if (variant.templateCode && !this.hasUI(index, 'TEMPLATE', variant.templateCode)) {
+          this.addIssue(
+            issues,
+            'EXPERIENCE_TEMPLATE_NOT_FOUND',
+            'ERROR',
+            `Experience ${experience.code} references missing template ${variant.templateCode}.`,
+            `EXPERIENCE.${experience.code}.variants[${variantIndex}].templateCode`,
+            `Create template metadata ${variant.templateCode}.`,
+          );
+        }
+
+        if (variant.navigationCode && !index.navigation.has(variant.navigationCode)) {
+          this.addIssue(
+            issues,
+            'NAVIGATION_NOT_FOUND',
+            'ERROR',
+            `Experience ${experience.code} references missing navigation ${variant.navigationCode}.`,
+            `EXPERIENCE.${experience.code}.variants[${variantIndex}].navigationCode`,
+            `Create navigation metadata ${variant.navigationCode}.`,
+          );
+        }
+
+        if (variant.themeCode && !index.themes.has(variant.themeCode)) {
+          this.addIssue(
+            issues,
+            'THEME_NOT_FOUND',
+            'ERROR',
+            `Experience ${experience.code} references missing theme ${variant.themeCode}.`,
+            `EXPERIENCE.${experience.code}.variants[${variantIndex}].themeCode`,
+            `Create theme metadata ${variant.themeCode}.`,
+          );
+        }
+
+        this.validateExperienceConditions(
+          variant.conditions,
+          `EXPERIENCE.${experience.code}.variants[${variantIndex}].conditions`,
+          issues,
+        );
+      }
+    }
+  }
+
   private validateDependencyIntegrity(
     metadataDefinitions: MetadataDefinition[],
     index: MetadataIndex,
@@ -1464,6 +1591,32 @@ export class MetadataValidatorEngine {
         ];
       }
 
+      if (metadata.type === 'EXPERIENCE') {
+        const experience = metadata.definition as ExperienceDefinition;
+        return [
+          this.dependency(metadata, 'ENTITY', experience.entityCode, `EXPERIENCE.${experience.code}.entityCode`),
+          ...experience.variants.flatMap((variant, variantIndex) => [
+            this.dependency(metadata, 'UI', variant.pageCode, `EXPERIENCE.${experience.code}.variants[${variantIndex}].pageCode`),
+            ...(variant.templateCode
+              ? [this.dependency(metadata, 'UI', variant.templateCode, `EXPERIENCE.${experience.code}.variants[${variantIndex}].templateCode`)]
+              : []),
+            ...(variant.navigationCode
+              ? [
+                  this.dependency(
+                    metadata,
+                    'NAVIGATION',
+                    variant.navigationCode,
+                    `EXPERIENCE.${experience.code}.variants[${variantIndex}].navigationCode`,
+                  ),
+                ]
+              : []),
+            ...(variant.themeCode
+              ? [this.dependency(metadata, 'THEME', variant.themeCode, `EXPERIENCE.${experience.code}.variants[${variantIndex}].themeCode`)]
+              : []),
+          ]),
+        ];
+      }
+
       return [];
     });
   }
@@ -1574,6 +1727,10 @@ export class MetadataValidatorEngine {
     return `${entityCode}:${code}`;
   }
 
+  private experienceKey(entityCode: string, code: string): string {
+    return `${entityCode}:${code}`;
+  }
+
   private fieldExists(fields: Map<string, MetadataDefinition<FieldDefinition>> | undefined, fieldCode: string): boolean {
     return fieldCode === 'id' || fieldCode === 'status' || Boolean(fields?.has(fieldCode));
   }
@@ -1618,6 +1775,60 @@ export class MetadataValidatorEngine {
     }
 
     return false;
+  }
+
+  private validateExperienceConditions(
+    conditions: ExperienceConditions | undefined,
+    path: string,
+    issues: ValidationIssue[],
+  ): void {
+    if (!conditions) {
+      return;
+    }
+
+    if (conditions.platform && !['WEB', 'MOBILE', 'TABLET'].includes(conditions.platform)) {
+      this.addIssue(
+        issues,
+        'EXPERIENCE_CONDITION_INVALID',
+        'ERROR',
+        `Experience condition has invalid platform ${conditions.platform}.`,
+        `${path}.platform`,
+        'Use WEB, MOBILE, or TABLET.',
+      );
+    }
+
+    if (conditions.role && conditions.role.trim().length === 0) {
+      this.addIssue(
+        issues,
+        'EXPERIENCE_CONDITION_INVALID',
+        'ERROR',
+        'Experience condition role must be non-empty.',
+        `${path}.role`,
+        'Set a role value or remove the condition.',
+      );
+    }
+
+    if (conditions.roles?.some((role) => role.trim().length === 0)) {
+      this.addIssue(
+        issues,
+        'EXPERIENCE_CONDITION_INVALID',
+        'ERROR',
+        'Experience condition roles must be non-empty.',
+        `${path}.roles`,
+        'Remove empty role values.',
+      );
+    }
+
+    if (conditions.attribute && !conditions.attribute.key) {
+      this.addIssue(
+        issues,
+        'EXPERIENCE_CONDITION_INVALID',
+        'ERROR',
+        'Experience condition attribute must define a key.',
+        `${path}.attribute.key`,
+        'Set attribute.key or remove the attribute condition.',
+      );
+    }
   }
 
   private configString(config: Record<string, unknown> | undefined, key: string): string | undefined {

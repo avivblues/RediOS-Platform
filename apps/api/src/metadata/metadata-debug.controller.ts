@@ -18,6 +18,7 @@ type MetadataDebugResult = {
   themes: string[];
   navigation: string[];
   securityPolicies: string[];
+  experiences: string[];
   counts: Record<string, number>;
 };
 
@@ -55,6 +56,7 @@ export class MetadataDebugController {
       themes: this.codes(records, 'THEME'),
       navigation: this.codes(records, 'NAVIGATION'),
       securityPolicies: this.codes(records, 'SECURITY_POLICY'),
+      experiences: this.codes(records, 'EXPERIENCE'),
       counts: this.counts(records),
     };
   }

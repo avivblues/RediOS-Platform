@@ -4,8 +4,8 @@
   "private": true,
   "description": "RediOS metadata-driven ERP runtime platform monorepo.",
   "workspaces": [
-    "apps/*",
-    "packages/*"
+    "packages/*",
+    "apps/*"
   ],
   "scripts": {
     "build": "npm run build --workspaces --if-present",

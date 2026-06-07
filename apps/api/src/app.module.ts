@@ -9,6 +9,7 @@ import { ContextModule } from './core/context/context.module';
 import { DependencyModule as CoreDependencyModule } from './core/dependency/dependency.module';
 import { DesignerModule as CoreDesignerModule } from './core/designer/designer.module';
 import { EventModule } from './core/event/event.module';
+import { ExperienceModule as CoreExperienceModule } from './core/experience/experience.module';
 import { FormModule as CoreFormModule } from './core/form/form.module';
 import { LedgerModule } from './core/ledger/ledger.module';
 import { MetadataModule } from './core/metadata/metadata.module';
@@ -25,6 +26,7 @@ import { UIModule as CoreUIModule } from './core/ui/ui.module';
 import { WorkflowModule } from './core/workflow/workflow.module';
 import { DesignerModule } from './designer/designer.module';
 import { DependenciesModule } from './dependencies/dependencies.module';
+import { ExperienceModule } from './experience/experience.module';
 import { FormsModule } from './forms/forms.module';
 import { HealthModule } from './health/health.module';
 import { KernelLoggerModule } from './logger/kernel-logger.module';
@@ -76,6 +78,7 @@ import { UIModule } from './ui/ui.module';
     ThemesModule,
     NavigationModule,
     SecurityPolicyModule,
+    ExperienceModule,
     ContextModule,
     ApplicationModule,
     MetadataModule,
@@ -97,6 +100,7 @@ import { UIModule } from './ui/ui.module';
     CoreThemeModule,
     CoreNavigationModule,
     CoreSecurityPolicyModule,
+    CoreExperienceModule,
   ],
 })
 export class AppModule {}

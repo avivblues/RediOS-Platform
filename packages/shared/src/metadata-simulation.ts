@@ -30,6 +30,8 @@ export interface SimulationRequest {
   roles?: string[];
   groups?: string[];
   attributes?: Record<string, unknown>;
+  platform?: 'WEB' | 'MOBILE' | 'TABLET';
+  device?: string;
   traceMode?: SimulationTraceMode;
 }
 
@@ -112,6 +114,11 @@ export interface SimulationResult {
       hiddenFields: number;
       readonlyFields: number;
       deniedActions: string[];
+    };
+    experience?: {
+      selected: string;
+      platform: string;
+      page: string;
     };
   };
 }

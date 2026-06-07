@@ -1,4 +1,4 @@
-import { Controller, Get, Headers } from '@nestjs/common';
+import { Controller, Get, Headers, Param } from '@nestjs/common';
 import { ContextEngine, type RuntimeHeaders } from '../core/context/context.engine';
 import { NavigationEngine, type RuntimeNavigation } from '../core/navigation/navigation-engine.service';
 
@@ -12,5 +12,10 @@ export class NavigationController {
   @Get('current')
   current(@Headers() headers: RuntimeHeaders): Promise<RuntimeNavigation> {
     return this.navigationEngine.compose(this.contextEngine.resolve(headers));
+  }
+
+  @Get(':navigationCode')
+  byCode(@Headers() headers: RuntimeHeaders, @Param('navigationCode') navigationCode: string): Promise<RuntimeNavigation> {
+    return this.navigationEngine.compose(this.contextEngine.resolve(headers), navigationCode);
   }
 }

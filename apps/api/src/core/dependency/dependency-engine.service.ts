@@ -11,6 +11,7 @@ import type {
   DependencyRelationship,
   EntityDefinition,
   EventDefinition,
+  ExperienceDefinition,
   FieldDefinition,
   FormDefinition,
   LedgerDefinition,
@@ -154,6 +155,10 @@ export class DependencyEngine {
 
     if (record.type === 'SECURITY_POLICY') {
       return this.securityPolicyReferences(record.definition as SecurityPolicyDefinition, source);
+    }
+
+    if (record.type === 'EXPERIENCE') {
+      return this.experienceReferences(record.definition as ExperienceDefinition, source);
     }
 
     if (record.type === 'FIELD') {
@@ -326,6 +331,18 @@ export class DependencyEngine {
     return [
       this.reference(source, 'REFERENCES', definition.target.type, definition.target.code),
       ...(definition.target.entityCode ? [this.reference(source, 'REFERENCES', 'ENTITY', definition.target.entityCode)] : []),
+    ];
+  }
+
+  private experienceReferences(definition: ExperienceDefinition, source: DependencyNode): DependencyReference[] {
+    return [
+      this.reference(source, 'REFERENCES', 'ENTITY', definition.entityCode),
+      ...definition.variants.flatMap((variant) => [
+        this.reference(source, 'RENDERS', 'UI', variant.pageCode),
+        ...(variant.templateCode ? [this.reference(source, 'RENDERS', 'UI', variant.templateCode)] : []),
+        ...(variant.navigationCode ? [this.reference(source, 'REFERENCES', 'NAVIGATION', variant.navigationCode)] : []),
+        ...(variant.themeCode ? [this.reference(source, 'REFERENCES', 'THEME', variant.themeCode)] : []),
+      ]),
     ];
   }
 

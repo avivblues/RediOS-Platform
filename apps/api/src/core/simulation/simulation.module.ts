@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { ActionModule } from '../action/action.module';
 import { BusinessModule } from '../business/business.module';
 import { EventModule } from '../event/event.module';
+import { ExperienceModule } from '../experience/experience.module';
 import { FormModule } from '../form/form.module';
 import { LedgerModule } from '../ledger/ledger.module';
 import { MetadataModule } from '../metadata/metadata.module';
@@ -26,6 +27,7 @@ import { SimulationEngine } from './simulation-engine.service';
     ProcessModule,
     BusinessModule,
     EventModule,
+    ExperienceModule,
     LedgerModule,
     RelationModule,
     TraceModule,

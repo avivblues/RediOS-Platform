@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
-import { createDocumentState } from '@redios/runtime-renderer-core';
+import { createDocumentState, resolveExperienceForRuntime } from '@redios/runtime-renderer-core';
 import { createMetadataClient } from '../core/metadata-client/metadata-client';
 import type {
   ResolvedUIPage,
   RuntimeDocumentState,
+  RuntimeExperience,
   RuntimeForm,
   RuntimeNavigation,
   RuntimeTheme,
@@ -15,13 +16,14 @@ import { NavigationRenderer } from '../components/organisms/navigation/Navigatio
 
 interface RuntimePageState {
   page: ResolvedUIPage;
+  experience?: RuntimeExperience;
   form?: RuntimeForm;
   theme: RuntimeTheme;
   navigation: RuntimeNavigation;
 }
 
 export function RuntimePage() {
-  const pageCode = pageCodeFromLocation(window.location.pathname);
+  const runtimeCode = runtimeCodeFromLocation(window.location.pathname);
   const { context } = useRuntimeContext();
   const client = useMemo(() => createMetadataClient(context), [context]);
   const [state, setState] = useState<RuntimePageState | undefined>();
@@ -35,14 +37,26 @@ export function RuntimePage() {
       setError(undefined);
 
       try {
-        if (!pageCode) {
-          throw new Error('Runtime route must include /runtime/:pageCode.');
+        if (!runtimeCode) {
+          throw new Error('Runtime route must include /runtime/:entityCode or /runtime/:pageCode.');
         }
 
+        const rendererContext = {
+          tenantId: context.tenantId,
+          domainCode: context.domainCode,
+          applicationCode: context.applicationCode,
+          userId: context.userId,
+          roles: context.roles,
+          groups: context.groups,
+          attributes: context.attributes,
+          platform: 'WEB' as const,
+        };
+        const experience = await resolveRuntimeExperience(runtimeCode, rendererContext);
+        const pageCode = experience?.page ?? runtimeCode;
         const [page, theme, navigation] = await Promise.all([
           client.getPage(pageCode),
-          client.getTheme(),
-          client.getNavigation(),
+          client.getTheme(experience?.theme),
+          client.getNavigation(experience?.navigation),
         ]);
         const form = page.page.entityCode ? await client.getForm(page.page.entityCode) : undefined;
 
@@ -52,6 +66,7 @@ export function RuntimePage() {
 
         setState({
           page,
+          experience,
           form,
           theme,
           navigation,
@@ -64,12 +79,38 @@ export function RuntimePage() {
       }
     }
 
+    async function resolveRuntimeExperience(
+      entityCode: string,
+      rendererContext: {
+        tenantId: string;
+        domainCode: string;
+        applicationCode: string;
+        userId: string;
+        roles: string[];
+        groups: string[];
+        attributes: Record<string, unknown>;
+        platform: 'WEB';
+      },
+    ): Promise<RuntimeExperience | undefined> {
+      try {
+        return await resolveExperienceForRuntime({
+          entityCode,
+          context: rendererContext,
+          resolver: {
+            resolveExperience: ({ entityCode: code }) => client.getExperience(code, 'WEB'),
+          },
+        });
+      } catch {
+        return undefined;
+      }
+    }
+
     void loadRuntime();
 
     return () => {
       mounted = false;
     };
-  }, [client, pageCode]);
+  }, [client, context, runtimeCode]);
 
   if (error) {
     return <main className="runtime-card">Runtime metadata load failed: {error}</main>;
@@ -112,7 +153,7 @@ export function RuntimePage() {
   );
 }
 
-function pageCodeFromLocation(pathname: string): string {
-  const [, route, pageCode] = pathname.split('/');
-  return route === 'runtime' && pageCode ? pageCode : '';
+function runtimeCodeFromLocation(pathname: string): string {
+  const [, route, code] = pathname.split('/');
+  return route === 'runtime' && code ? code : '';
 }

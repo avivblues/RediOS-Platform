@@ -6,6 +6,7 @@ import type {
   EntityType,
   EntityDefinition,
   EventDefinition,
+  ExperienceDefinition,
   FieldDataType,
   FieldDefinition,
   FormDefinition,
@@ -55,6 +56,7 @@ type ApplicationSeed = {
   themes?: ThemeDefinition[];
   navigations?: NavigationDefinition[];
   securityPolicies?: SecurityPolicyDefinition[];
+  experiences?: ExperienceDefinition[];
 };
 
 const commonThemeDefinitions: ThemeDefinition[] = [
@@ -240,6 +242,23 @@ function commonNavigationDefinitions(application: ApplicationSeed): NavigationDe
       enabled: true,
       items,
     },
+    {
+      code: 'MOBILE_NAV',
+      name: 'Mobile Navigation',
+      type: 'MOBILE_TAB',
+      enabled: true,
+      items: items.flatMap((item) =>
+        (item.children ?? []).map((child) => ({
+          ...child,
+          target:
+            child.target.type === 'PAGE' && child.target.code === 'WORK_ORDER_DETAIL_PAGE'
+              ? { type: 'PAGE' as const, code: 'WORK_ORDER_MOBILE_PAGE' }
+              : child.target.type === 'PAGE' && child.target.code === 'ASSET_DETAIL_PAGE'
+                ? { type: 'PAGE' as const, code: 'ASSET_MOBILE_PAGE' }
+                : child.target,
+        })),
+      ),
+    },
   ];
 }
 
@@ -351,6 +370,12 @@ const commonUIDefinitions: UIDefinition[] = [
     kind: 'TEMPLATE',
     code: 'DASHBOARD_LAYOUT',
     regions: [{ code: 'HEADER' }, { code: 'CONTENT' }, { code: 'SIDEBAR' }],
+    enabled: true,
+  },
+  {
+    kind: 'TEMPLATE',
+    code: 'MOBILE_STACK',
+    regions: [{ code: 'HEADER' }, { code: 'CONTENT' }],
     enabled: true,
   },
 ];
@@ -633,6 +658,90 @@ const applications: ApplicationSeed[] = [
         actions: ['ACTIVATE', 'DISABLE'],
         relations: [],
         enabled: true,
+      },
+      {
+        kind: 'PAGE',
+        code: 'WORK_ORDER_MOBILE_PAGE',
+        entityCode: 'WORK_ORDER',
+        viewCode: 'WORK_ORDER_LIST',
+        themeCode: 'COMPACT_THEME',
+        template: 'MOBILE_STACK',
+        regions: {
+          HEADER: ['ACTION_BAR'],
+          CONTENT: ['DETAIL_CARD'],
+        },
+        actions: ['START', 'COMPLETE', 'CANCEL'],
+        relations: ['WORK_ORDER_ASSET_RELATION'],
+        enabled: true,
+      },
+      {
+        kind: 'PAGE',
+        code: 'ASSET_MOBILE_PAGE',
+        entityCode: 'ASSET',
+        viewCode: 'ASSET_LOOKUP',
+        themeCode: 'COMPACT_THEME',
+        template: 'MOBILE_STACK',
+        regions: {
+          HEADER: ['ACTION_BAR'],
+          CONTENT: ['DETAIL_CARD'],
+        },
+        actions: ['ACTIVATE', 'DISABLE'],
+        relations: [],
+        enabled: true,
+      },
+    ],
+    experiences: [
+      {
+        code: 'WORK_ORDER_EXPERIENCE',
+        entityCode: 'WORK_ORDER',
+        enabled: true,
+        priority: 100,
+        variants: [
+          {
+            platform: 'WEB',
+            pageCode: 'WORK_ORDER_DETAIL_PAGE',
+            templateCode: 'MASTER_DETAIL',
+            navigationCode: 'MAIN_NAVIGATION',
+            themeCode: 'DEFAULT_THEME',
+            layoutMode: 'DESKTOP_WORKSPACE',
+            interaction: 'MOUSE_KEYBOARD',
+          },
+          {
+            platform: 'MOBILE',
+            pageCode: 'WORK_ORDER_MOBILE_PAGE',
+            templateCode: 'MOBILE_STACK',
+            navigationCode: 'MOBILE_NAV',
+            themeCode: 'COMPACT_THEME',
+            layoutMode: 'MOBILE_STACK',
+            interaction: 'TOUCH',
+          },
+        ],
+      },
+      {
+        code: 'ASSET_EXPERIENCE',
+        entityCode: 'ASSET',
+        enabled: true,
+        priority: 100,
+        variants: [
+          {
+            platform: 'WEB',
+            pageCode: 'ASSET_DETAIL_PAGE',
+            templateCode: 'MASTER_DETAIL',
+            navigationCode: 'MAIN_NAVIGATION',
+            themeCode: 'DEFAULT_THEME',
+            layoutMode: 'DESKTOP_WORKSPACE',
+            interaction: 'MOUSE_KEYBOARD',
+          },
+          {
+            platform: 'MOBILE',
+            pageCode: 'ASSET_MOBILE_PAGE',
+            templateCode: 'MOBILE_STACK',
+            navigationCode: 'MOBILE_NAV',
+            themeCode: 'COMPACT_THEME',
+            layoutMode: 'MOBILE_STACK',
+            interaction: 'TOUCH',
+          },
+        ],
       },
     ],
     securityPolicies: [
@@ -1163,6 +1272,7 @@ export const metadataSeedRecords: MetadataDefinition[] = applications.flatMap((a
     createNavigationRecord(application, navigation),
   ),
   ...(application.securityPolicies ?? []).map((policy) => createSecurityPolicyRecord(application, policy)),
+  ...(application.experiences ?? []).map((experience) => createExperienceRecord(application, experience)),
   ...[...commonUIDefinitions, ...(application.uis ?? [])].map((ui) => createUIRecord(application, ui)),
 ]);
 
@@ -1466,6 +1576,23 @@ function createSecurityPolicyRecord(
     version: policy.version,
     enabled: policy.enabled,
     definition: policy,
+  };
+}
+
+function createExperienceRecord(
+  application: ApplicationSeed,
+  experience: ExperienceDefinition,
+): MetadataDefinition<ExperienceDefinition> {
+  return {
+    tenantId,
+    domainCode,
+    applicationCode: application.code,
+    type: 'EXPERIENCE',
+    code: experience.code,
+    name: toLabel(experience.code),
+    version: 1,
+    enabled: experience.enabled,
+    definition: experience,
   };
 }
 

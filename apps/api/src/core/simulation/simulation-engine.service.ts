@@ -3,6 +3,8 @@ import type {
   FieldDefinition,
   DependencyImpact,
   MetadataDefinition,
+  NavigationDefinition,
+  NavigationItemDefinition,
   RuntimeContext,
   RuntimeDocument,
   RuntimeTraceStepEngine,
@@ -14,6 +16,7 @@ import type {
 import { ActionEngine } from '../action/action-engine.service';
 import { BusinessEngine } from '../business/business-engine.service';
 import { EventEngine } from '../event/event-engine.service';
+import { ExperienceEngine } from '../experience/experience-engine.service';
 import { FormEngine } from '../form/form-engine.service';
 import { LedgerEngine } from '../ledger/ledger-engine.service';
 import { METADATA_PROVIDER, type MetadataProvider } from '../metadata/metadata-provider.interface';
@@ -48,6 +51,7 @@ export class SimulationEngine {
     private readonly themeEngine: ThemeEngine,
     private readonly navigationEngine: NavigationEngine,
     private readonly securityPolicyEngine: SecurityPolicyEngine,
+    private readonly experienceEngine: ExperienceEngine,
     private readonly traceEngine: TraceEngine,
   ) {}
 
@@ -318,6 +322,23 @@ export class SimulationEngine {
       })),
     };
 
+    const experience = await this.runStep(steps, 'VALIDATION', 'Experience metadata resolved.', () =>
+      this.experienceEngine.resolveExperience(context, request.entityCode, {
+        platform: request.platform ?? 'WEB',
+        device: request.device,
+      }),
+    );
+
+    if (!experience.ok) {
+      return this.finalize(request, context, this.failed(validation, steps, predicted));
+    }
+
+    predicted.experience = {
+      selected: experience.value.selected,
+      platform: experience.value.platform,
+      page: experience.value.page,
+    };
+
     const forms = await this.runStep(steps, 'VALIDATION', 'Form metadata resolved.', () =>
       this.formEngine.compose(context, request.entityCode),
     );
@@ -376,8 +397,13 @@ export class SimulationEngine {
   private relevantMetadata(metadata: MetadataDefinition[], entityCode: string): MetadataDefinition[] {
     const relatedEntityCodes = new Set<string>([entityCode]);
     const referencedViewCodes = new Set<string>();
+    const scopedPageCodes = new Set<string>();
 
     for (const metadataDefinition of metadata) {
+      if (metadataDefinition.type === 'UI' && this.uiEntityCode(metadataDefinition.definition) === entityCode) {
+        scopedPageCodes.add(metadataDefinition.code);
+      }
+
       if (metadataDefinition.type === 'LEDGER' && this.definitionEntityCode(metadataDefinition.definition) === entityCode) {
         for (const impact of this.ledgerImpacts(metadataDefinition.definition)) {
           relatedEntityCodes.add(impact.target.entityCode);
@@ -464,8 +490,26 @@ export class SimulationEngine {
         return [metadataDefinition];
       }
 
+      if (metadataDefinition.type === 'NAVIGATION') {
+        const navigation = metadataDefinition.definition as NavigationDefinition;
+        return [
+          {
+            ...metadataDefinition,
+            definition: {
+              ...navigation,
+              items: this.filterNavigationItems(navigation.items, scopedPageCodes),
+            },
+          },
+        ];
+      }
+
       if (metadataDefinition.type === 'SECURITY_POLICY') {
         return [metadataDefinition];
+      }
+
+      if (metadataDefinition.type === 'EXPERIENCE') {
+        const metadataEntityCode = this.definitionEntityCode(metadataDefinition.definition);
+        return metadataEntityCode === entityCode ? [metadataDefinition] : [];
       }
 
       return [];
@@ -529,6 +573,29 @@ export class SimulationEngine {
     }
 
     return undefined;
+  }
+
+  private filterNavigationItems(items: NavigationItemDefinition[], allowedPageCodes: Set<string>): NavigationItemDefinition[] {
+    return items.flatMap((item): NavigationItemDefinition[] => {
+      const children = this.filterNavigationItems(item.children ?? [], allowedPageCodes);
+      const targetAllowed =
+        item.target.type !== 'PAGE' || allowedPageCodes.has(item.target.code);
+
+      if (!targetAllowed && children.length === 0) {
+        return [];
+      }
+
+      if (item.target.type === 'URL' && children.length === 0) {
+        return [];
+      }
+
+      return [
+        {
+          ...item,
+          children,
+        },
+      ];
+    });
   }
 
   private async runStep<T>(

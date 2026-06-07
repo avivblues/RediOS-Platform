@@ -1,0 +1,78 @@
+@baseUrl = http://localhost:3001/api
+@tenantId = demo
+@domainCode = DEFAULT
+@applicationCode = ASSET_MAINTENANCE
+
+### WEB experience resolves desktop page
+GET {{baseUrl}}/experience/WORK_ORDER?platform=WEB
+x-tenant-id: {{tenantId}}
+x-domain-code: {{domainCode}}
+x-application-code: {{applicationCode}}
+x-user-id: technician-1
+x-roles: TECHNICIAN
+x-permissions: WORK_ORDER.READ,ASSET.READ
+
+### Expected
+### selected: WORK_ORDER_EXPERIENCE
+### page: WORK_ORDER_DETAIL_PAGE
+### layout: DESKTOP_WORKSPACE
+### navigation: MAIN_NAVIGATION
+### theme: DEFAULT_THEME
+
+### MOBILE experience resolves mobile page
+GET {{baseUrl}}/experience/WORK_ORDER?platform=MOBILE&device=PHONE
+x-tenant-id: {{tenantId}}
+x-domain-code: {{domainCode}}
+x-application-code: {{applicationCode}}
+x-user-id: technician-1
+x-roles: TECHNICIAN
+x-permissions: WORK_ORDER.READ,ASSET.READ
+
+### Expected
+### selected: WORK_ORDER_EXPERIENCE
+### page: WORK_ORDER_MOBILE_PAGE
+### layout: MOBILE_STACK
+### navigation: MOBILE_NAV
+### theme: COMPACT_THEME
+
+### ASSET mobile experience resolves mobile page
+GET {{baseUrl}}/experience/ASSET?platform=MOBILE
+x-tenant-id: {{tenantId}}
+x-domain-code: {{domainCode}}
+x-application-code: {{applicationCode}}
+x-user-id: technician-1
+x-roles: TECHNICIAN
+x-permissions: WORK_ORDER.READ,ASSET.READ
+
+### Expected
+### selected: ASSET_EXPERIENCE
+### page: ASSET_MOBILE_PAGE
+### layout: MOBILE_STACK
+
+### Simulation includes predicted experience
+POST {{baseUrl}}/simulation/run
+content-type: application/json
+
+{
+  "tenantId": "{{tenantId}}",
+  "domainCode": "{{domainCode}}",
+  "applicationCode": "{{applicationCode}}",
+  "entityCode": "WORK_ORDER",
+  "actionCode": "START",
+  "currentState": "OPEN",
+  "platform": "MOBILE",
+  "roles": ["TECHNICIAN"],
+  "permissions": ["WORK_ORDER.READ", "WORK_ORDER.START", "ASSET.READ"],
+  "mockDocument": {
+    "data": {
+      "title": "Inspect compressor",
+      "priority": "HIGH",
+      "assetId": "asset001"
+    }
+  }
+}
+
+### Expected
+### predicted.experience.selected: WORK_ORDER_EXPERIENCE
+### predicted.experience.platform: MOBILE
+### predicted.experience.page: WORK_ORDER_MOBILE_PAGE

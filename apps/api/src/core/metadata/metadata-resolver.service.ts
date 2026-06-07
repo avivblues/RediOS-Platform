@@ -6,6 +6,7 @@ import type {
   EntityDefinition,
   EventDefinition,
   EventTriggerDefinition,
+  ExperienceDefinition,
   FieldDefinition,
   FormDefinition,
   LedgerDefinition,
@@ -370,6 +371,35 @@ export class MetadataResolver {
     }
 
     return definition as MetadataDefinition<SecurityPolicyDefinition>;
+  }
+
+  async resolveExperience(
+    context: RuntimeContext,
+    entityCode: string,
+  ): Promise<MetadataDefinition<ExperienceDefinition> | null> {
+    const definitions = await this.registry.findByType(context, 'EXPERIENCE');
+    const matchingDefinitions = definitions
+      .filter((candidate) => {
+        const experience = candidate.definition as ExperienceDefinition;
+        return experience.enabled && experience.entityCode === entityCode;
+      })
+      .sort(
+        (left, right) =>
+          (right.definition as ExperienceDefinition).priority - (left.definition as ExperienceDefinition).priority,
+      );
+    const definition = matchingDefinitions[0];
+
+    if (!definition) {
+      return null;
+    }
+
+    const validation = this.validator.validate(definition);
+
+    if (!validation.valid) {
+      throw new UnprocessableEntityException(validation.errors);
+    }
+
+    return definition as MetadataDefinition<ExperienceDefinition>;
   }
 
   async resolveUI(
