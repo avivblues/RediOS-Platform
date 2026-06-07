@@ -14,6 +14,7 @@ export type MetadataType =
   | 'FORM'
   | 'THEME'
   | 'NAVIGATION'
+  | 'SECURITY_POLICY'
   | 'REPORT'
   | 'EXPERIENCE'
   | 'RULE';

@@ -14,6 +14,7 @@ import type {
   NavigationItemDefinition,
   RuntimeContext,
   RuntimeDocument,
+  SecurityPolicyDefinition,
   SimulationResult,
   ThemeDefinition,
   ValidationResult,
@@ -33,7 +34,7 @@ import { METADATA_VERSION_MODEL } from './schemas/metadata-version.schema';
 
 type MetadataDraftRecord = MetadataDraft & { _id?: unknown };
 type MetadataVersionRecord = MetadataVersion & { _id?: unknown };
-type DesignerDefinition = FormDefinition | ThemeDefinition | NavigationDefinition;
+type DesignerDefinition = FormDefinition | ThemeDefinition | NavigationDefinition | SecurityPolicyDefinition;
 
 export interface CreateDesignerDraftRequest {
   targetType: DesignerTargetType;
@@ -369,14 +370,22 @@ export class DesignerEngine {
     const metadata = await this.metadataProvider.findMetadata(context, {
       enabledOnly: true,
     });
-    const replaced = metadata.map((candidate) =>
-      candidate.type === draft.targetType &&
-      candidate.code === draft.targetCode &&
-      this.sameDefinitionScope(candidate.definition, draft.draft.definition)
-        ? draft.draft
-        : candidate,
-    );
-    return this.metadataValidatorEngine.validate(replaced);
+    let replacedExisting = false;
+    const replaced = metadata.map((candidate) => {
+      const matches =
+        candidate.type === draft.targetType &&
+        candidate.code === draft.targetCode &&
+        this.sameDefinitionScope(candidate.definition, draft.draft.definition);
+
+      if (matches) {
+        replacedExisting = true;
+        return draft.draft;
+      }
+
+      return candidate;
+    });
+    const validationSet = replacedExisting ? replaced : [...replaced, draft.draft];
+    return this.metadataValidatorEngine.validate(validationSet);
   }
 
   private async analyzeDraftDependencies(
@@ -415,6 +424,10 @@ export class DesignerEngine {
       return ['NAVIGATION', 'UI_SHELL', 'VALIDATION'];
     }
 
+    if (draft.targetType === 'SECURITY_POLICY') {
+      return ['SECURITY_POLICY', 'RUNTIME_AUTHORIZATION', 'VALIDATION'];
+    }
+
     if (draft.targetType === 'THEME') {
       return ['THEME', 'UI_RENDER', 'NAVIGATION', 'VALIDATION'];
     }
@@ -425,7 +438,7 @@ export class DesignerEngine {
   private dependencyTargetFromOperation(
     draft: MetadataDraft<DesignerDefinition>,
     operation: DesignerOperation | undefined,
-  ): { type: 'FIELD' | 'THEME' | 'NAVIGATION'; code: string } | undefined {
+  ): { type: 'FIELD' | 'THEME' | 'NAVIGATION' | 'SECURITY_POLICY'; code: string } | undefined {
     if (!operation) {
       return undefined;
     }
@@ -457,6 +470,13 @@ export class DesignerEngine {
       };
     }
 
+    if (operation.type === 'CREATE_POLICY' || operation.type === 'UPDATE_POLICY' || operation.type === 'DELETE_POLICY') {
+      return {
+        type: 'SECURITY_POLICY',
+        code: draft.targetCode,
+      };
+    }
+
     return undefined;
   }
 
@@ -476,7 +496,11 @@ export class DesignerEngine {
       return this.metadataResolver.resolveTheme(context, request.targetCode);
     }
 
-    return this.metadataResolver.resolveNavigation(context, request.targetCode);
+    if (request.targetType === 'NAVIGATION') {
+      return this.metadataResolver.resolveNavigation(context, request.targetCode);
+    }
+
+    return (await this.metadataResolver.resolveSecurityPolicy(context, request.targetCode)) ?? this.createPolicySource(context, request);
   }
 
   private async resolveCurrentDraftSource(
@@ -492,7 +516,11 @@ export class DesignerEngine {
       return this.metadataResolver.resolveTheme(context, draft.targetCode);
     }
 
-    return this.metadataResolver.resolveNavigation(context, draft.targetCode);
+    if (draft.targetType === 'NAVIGATION') {
+      return this.metadataResolver.resolveNavigation(context, draft.targetCode);
+    }
+
+    return (await this.metadataResolver.resolveSecurityPolicy(context, draft.targetCode)) ?? draft.draft;
   }
 
   private applyDraftOperation(
@@ -510,7 +538,85 @@ export class DesignerEngine {
       return;
     }
 
+    if (targetType === 'SECURITY_POLICY') {
+      this.applySecurityPolicyOperation(definition as SecurityPolicyDefinition, operation);
+      return;
+    }
+
     this.applyFormOperation(definition as FormDefinition, operation);
+  }
+
+  private createPolicySource(
+    context: RuntimeContext,
+    request: CreateDesignerDraftRequest,
+  ): MetadataDefinition<SecurityPolicyDefinition> {
+    const definition: SecurityPolicyDefinition = {
+      code: request.targetCode,
+      name: request.targetCode,
+      version: 1,
+      target: {
+        type: 'APPLICATION',
+        code: context.applicationCode,
+      },
+      effect: 'ALLOW',
+      subjects: [],
+      rules: {
+        read: true,
+        create: true,
+        update: true,
+        delete: true,
+        visible: true,
+        editable: true,
+      },
+      enabled: true,
+    };
+
+    return {
+      tenantId: context.tenantId,
+      domainCode: context.domainCode,
+      applicationCode: context.applicationCode,
+      type: 'SECURITY_POLICY',
+      code: request.targetCode,
+      name: request.targetCode,
+      version: 1,
+      enabled: true,
+      definition,
+    };
+  }
+
+  private applySecurityPolicyOperation(policy: SecurityPolicyDefinition, operation: DesignerOperation): void {
+    const payload = operation.payload ?? {};
+
+    if (operation.type === 'CREATE_POLICY' || operation.type === 'UPDATE_POLICY') {
+      const definition = this.payloadPolicyDefinition(payload);
+
+      if (definition) {
+        Object.assign(policy, definition);
+        return;
+      }
+
+      for (const key of ['name', 'target', 'effect', 'subjects', 'rules', 'conditions', 'enabled'] as const) {
+        if (key in payload) {
+          (policy as unknown as Record<string, unknown>)[key] = payload[key];
+        }
+      }
+
+      const path = operation.path ?? this.payloadOptionalString(payload, 'path');
+
+      if (path) {
+        const value = 'after' in operation ? operation.after : payload.value;
+        this.setPath(policy as unknown as Record<string, unknown>, path, value);
+      }
+
+      return;
+    }
+
+    if (operation.type === 'DELETE_POLICY') {
+      policy.enabled = false;
+      return;
+    }
+
+    throw new BadRequestException(`Unsupported security policy designer operation: ${operation.type}`);
   }
 
   private applyNavigationOperation(navigation: NavigationDefinition, operation: DesignerOperation): void {
@@ -862,6 +968,16 @@ export class DesignerEngine {
     return Array.isArray(permissions) ? { permissions: permissions.filter((permission): permission is string => typeof permission === 'string') } : undefined;
   }
 
+  private payloadPolicyDefinition(payload: Record<string, unknown>): Partial<SecurityPolicyDefinition> | undefined {
+    const definition = payload.definition;
+
+    if (!definition || typeof definition !== 'object' || Array.isArray(definition)) {
+      return undefined;
+    }
+
+    return definition as Partial<SecurityPolicyDefinition>;
+  }
+
   private async saveVersion(
     context: RuntimeContext,
     metadata: MetadataDefinition<DesignerDefinition>,
@@ -935,7 +1051,7 @@ export class DesignerEngine {
   }
 
   private assertSupportedTarget(targetType: DesignerTargetType): void {
-    if (targetType !== 'FORM' && targetType !== 'THEME' && targetType !== 'NAVIGATION') {
+    if (targetType !== 'FORM' && targetType !== 'THEME' && targetType !== 'NAVIGATION' && targetType !== 'SECURITY_POLICY') {
       throw new BadRequestException(`Unsupported designer target type: ${targetType}`);
     }
   }
@@ -981,6 +1097,10 @@ export class DesignerEngine {
       operationType === 'CHANGE_TARGET'
     ) {
       return `NAVIGATION_${operationType}`;
+    }
+
+    if (operationType === 'CREATE_POLICY' || operationType === 'UPDATE_POLICY' || operationType === 'DELETE_POLICY') {
+      return `SECURITY_POLICY_${operationType}`;
     }
 
     return `DESIGNER_${operationType}`;

@@ -15,6 +15,7 @@ import type {
   ProcessDefinition,
   RelationDefinition,
   RuntimeContext,
+  SecurityPolicyDefinition,
   ThemeDefinition,
   UIDefinition,
   UIKind,
@@ -346,6 +347,29 @@ export class MetadataResolver {
     }
 
     return definition as MetadataDefinition<NavigationDefinition>;
+  }
+
+  async resolveSecurityPolicy(
+    context: RuntimeContext,
+    policyCode: string,
+  ): Promise<MetadataDefinition<SecurityPolicyDefinition> | null> {
+    const definitions = await this.registry.findByType(context, 'SECURITY_POLICY');
+    const definition = definitions.find((candidate) => {
+      const policy = candidate.definition as SecurityPolicyDefinition;
+      return policy.enabled && policy.code === policyCode;
+    });
+
+    if (!definition) {
+      return null;
+    }
+
+    const validation = this.validator.validate(definition);
+
+    if (!validation.valid) {
+      throw new UnprocessableEntityException(validation.errors);
+    }
+
+    return definition as MetadataDefinition<SecurityPolicyDefinition>;
   }
 
   async resolveUI(

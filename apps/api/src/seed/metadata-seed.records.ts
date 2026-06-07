@@ -14,6 +14,7 @@ import type {
   NavigationDefinition,
   ProcessDefinition,
   RelationDefinition,
+  SecurityPolicyDefinition,
   ThemeDefinition,
   UIDefinition,
   ViewDefinition,
@@ -53,6 +54,7 @@ type ApplicationSeed = {
   uis?: UIDefinition[];
   themes?: ThemeDefinition[];
   navigations?: NavigationDefinition[];
+  securityPolicies?: SecurityPolicyDefinition[];
 };
 
 const commonThemeDefinitions: ThemeDefinition[] = [
@@ -414,7 +416,7 @@ const applications: ApplicationSeed[] = [
           { code: 'assignedTo' },
           { code: 'assetId', dataType: 'REFERENCE', relation: 'WORK_ORDER_ASSET_RELATION' },
         ],
-        actions: ['CREATE', 'READ', 'UPDATE', 'START', 'COMPLETE', 'CANCEL'],
+        actions: ['CREATE', 'READ', 'UPDATE', 'START', 'COMPLETE', 'CANCEL', 'DELETE'],
         workflow: {
           code: 'WORK_ORDER_LIFECYCLE',
           entityCode: 'WORK_ORDER',
@@ -498,6 +500,7 @@ const applications: ApplicationSeed[] = [
             columns: [
               { field: 'title', label: 'Title', visible: true, sortable: true, filterable: true },
               { field: 'priority', label: 'Priority', visible: true, sortable: true, filterable: true },
+              { field: 'estimatedCost', label: 'Estimated Cost', visible: true, sortable: true, filterable: false },
               { field: 'status', label: 'Status', visible: true, sortable: true, filterable: true },
               {
                 field: 'assetId',
@@ -562,6 +565,11 @@ const applications: ApplicationSeed[] = [
                       component: 'TEXT_INPUT',
                       order: 5,
                     },
+                    {
+                      fieldCode: 'estimatedCost',
+                      component: 'NUMBER_INPUT',
+                      order: 6,
+                    },
                   ],
                 },
               ],
@@ -624,6 +632,114 @@ const applications: ApplicationSeed[] = [
         },
         actions: ['ACTIVATE', 'DISABLE'],
         relations: [],
+        enabled: true,
+      },
+    ],
+    securityPolicies: [
+      {
+        code: 'WORK_ORDER_TECHNICIAN_POLICY',
+        name: 'Work Order Technician Estimated Cost Policy',
+        version: 1,
+        target: {
+          type: 'FIELD',
+          entityCode: 'WORK_ORDER',
+          code: 'estimatedCost',
+        },
+        effect: 'ALLOW',
+        subjects: [{ type: 'ROLE', value: 'TECHNICIAN' }],
+        rules: {
+          read: true,
+          visible: true,
+          editable: false,
+        },
+        enabled: true,
+      },
+      {
+        code: 'WORK_ORDER_TECHNICIAN_TITLE_POLICY',
+        name: 'Work Order Technician Title Policy',
+        version: 1,
+        target: {
+          type: 'FIELD',
+          entityCode: 'WORK_ORDER',
+          code: 'title',
+        },
+        effect: 'ALLOW',
+        subjects: [{ type: 'ROLE', value: 'TECHNICIAN' }],
+        rules: {
+          read: true,
+          visible: true,
+          editable: true,
+        },
+        enabled: true,
+      },
+      {
+        code: 'WORK_ORDER_ASSIGNEE_HIDDEN_POLICY',
+        name: 'Work Order Assignee Hidden Policy',
+        version: 1,
+        target: {
+          type: 'FIELD',
+          entityCode: 'WORK_ORDER',
+          code: 'assignedTo',
+        },
+        effect: 'DENY',
+        subjects: [{ type: 'ROLE', value: 'COST_RESTRICTED' }],
+        rules: {
+          read: false,
+          visible: false,
+          editable: false,
+        },
+        enabled: true,
+      },
+      {
+        code: 'WORK_ORDER_COST_HIDDEN_POLICY',
+        name: 'Work Order Cost Hidden Policy',
+        version: 1,
+        target: {
+          type: 'FIELD',
+          entityCode: 'WORK_ORDER',
+          code: 'estimatedCost',
+        },
+        effect: 'DENY',
+        subjects: [{ type: 'ROLE', value: 'COST_RESTRICTED' }],
+        rules: {
+          read: false,
+          visible: false,
+          editable: false,
+        },
+        enabled: true,
+      },
+      {
+        code: 'WORK_ORDER_DELETE_DENY_POLICY',
+        name: 'Work Order Delete Deny Policy',
+        version: 1,
+        target: {
+          type: 'ACTION',
+          entityCode: 'WORK_ORDER',
+          code: 'DELETE',
+        },
+        effect: 'DENY',
+        subjects: [{ type: 'ROLE', value: 'TECHNICIAN' }],
+        rules: {
+          read: false,
+          delete: false,
+          visible: false,
+        },
+        enabled: true,
+      },
+      {
+        code: 'WORK_ORDER_MENU_HIDDEN_POLICY',
+        name: 'Work Order Menu Hidden Policy',
+        version: 1,
+        target: {
+          type: 'UI',
+          code: 'WORK_ORDER_DETAIL_PAGE',
+        },
+        effect: 'DENY',
+        subjects: [{ type: 'ROLE', value: 'NO_WORK_ORDER' }],
+        rules: {
+          read: false,
+          visible: false,
+        },
         enabled: true,
       },
     ],
@@ -1046,6 +1162,7 @@ export const metadataSeedRecords: MetadataDefinition[] = applications.flatMap((a
   ...[...commonNavigationDefinitions(application), ...(application.navigations ?? [])].map((navigation) =>
     createNavigationRecord(application, navigation),
   ),
+  ...(application.securityPolicies ?? []).map((policy) => createSecurityPolicyRecord(application, policy)),
   ...[...commonUIDefinitions, ...(application.uis ?? [])].map((ui) => createUIRecord(application, ui)),
 ]);
 
@@ -1332,6 +1449,23 @@ function createNavigationRecord(
     version: 1,
     enabled: navigation.enabled,
     definition: navigation,
+  };
+}
+
+function createSecurityPolicyRecord(
+  application: ApplicationSeed,
+  policy: SecurityPolicyDefinition,
+): MetadataDefinition<SecurityPolicyDefinition> {
+  return {
+    tenantId,
+    domainCode,
+    applicationCode: application.code,
+    type: 'SECURITY_POLICY',
+    code: policy.code,
+    name: policy.name,
+    version: policy.version,
+    enabled: policy.enabled,
+    definition: policy,
   };
 }
 

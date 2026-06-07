@@ -23,6 +23,7 @@ import { NavigationEngine } from '../navigation/navigation-engine.service';
 import { ProcessEngine } from '../process/process-engine.service';
 import { RelationEngine } from '../relation/relation-engine.service';
 import { SecurityEngine } from '../security/security-engine.service';
+import { SecurityPolicyEngine } from '../security-policy/security-policy-engine.service';
 import { ThemeEngine } from '../theme/theme-engine.service';
 import { TraceEngine } from '../trace/trace-engine.service';
 import { UIEngine } from '../ui/ui-engine.service';
@@ -46,6 +47,7 @@ export class SimulationEngine {
     private readonly formEngine: FormEngine,
     private readonly themeEngine: ThemeEngine,
     private readonly navigationEngine: NavigationEngine,
+    private readonly securityPolicyEngine: SecurityPolicyEngine,
     private readonly traceEngine: TraceEngine,
   ) {}
 
@@ -155,6 +157,21 @@ export class SimulationEngine {
     if (!security.ok) {
       return this.finalize(request, context, this.failed(validation, steps, predicted));
     }
+
+    const securityPolicy = await this.runStep(steps, 'SECURITY_POLICY', 'Security policy is valid.', () =>
+      this.securityPolicyEngine.assertActionAllowed(context, request.actionCode, request.entityCode),
+    );
+
+    if (!securityPolicy.ok) {
+      return this.finalize(request, context, this.failed(validation, steps, predicted));
+    }
+
+    predicted.security = await this.securityPolicyEngine.summarizeEntityAccess(
+      context,
+      request.entityCode,
+      entity.value.definition.fieldCodes,
+      entity.value.definition.actionCodes,
+    );
 
     const document = await this.createMockDocument(context, request);
     const workflow = await this.runStep(steps, 'WORKFLOW', 'Workflow transition predicted.', () =>
@@ -447,6 +464,10 @@ export class SimulationEngine {
         return [metadataDefinition];
       }
 
+      if (metadataDefinition.type === 'SECURITY_POLICY') {
+        return [metadataDefinition];
+      }
+
       return [];
     });
   }
@@ -552,6 +573,9 @@ export class SimulationEngine {
       applicationCode: request.applicationCode,
       permissions: request.permissions ?? [],
       capabilities: [],
+      roles: request.roles ?? [],
+      groups: request.groups ?? [],
+      attributes: request.attributes ?? {},
     };
   }
 

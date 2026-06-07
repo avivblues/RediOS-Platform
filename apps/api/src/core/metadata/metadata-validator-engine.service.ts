@@ -13,6 +13,7 @@ import type {
   NavigationItemDefinition,
   ProcessDefinition,
   RelationDefinition,
+  SecurityPolicyDefinition,
   ThemeDefinition,
   UIAtomDefinition,
   UIDefinition,
@@ -41,6 +42,7 @@ type MetadataIndex = {
   forms: Map<string, MetadataDefinition<FormDefinition>[]>;
   themes: Map<string, MetadataDefinition<ThemeDefinition>[]>;
   navigation: Map<string, MetadataDefinition<NavigationDefinition>[]>;
+  securityPolicies: Map<string, MetadataDefinition<SecurityPolicyDefinition>[]>;
 };
 
 @Injectable()
@@ -63,6 +65,7 @@ export class MetadataValidatorEngine {
     this.validateFormDefinitions(metadataDefinitions, index, issues);
     this.validateThemeDefinitions(metadataDefinitions, index, issues);
     this.validateNavigationDefinitions(metadataDefinitions, index, issues);
+    this.validateSecurityPolicyDefinitions(metadataDefinitions, index, issues);
     this.validateDependencyIntegrity(metadataDefinitions, index, issues);
 
     const errors = issues.filter((issue) => issue.severity === 'ERROR').length;
@@ -92,6 +95,7 @@ export class MetadataValidatorEngine {
       forms: new Map(),
       themes: new Map(),
       navigation: new Map(),
+      securityPolicies: new Map(),
     };
 
     for (const metadata of metadataDefinitions) {
@@ -173,6 +177,12 @@ export class MetadataValidatorEngine {
         const records = index.navigation.get(metadata.code) ?? [];
         records.push(metadata as MetadataDefinition<NavigationDefinition>);
         index.navigation.set(metadata.code, records);
+      }
+
+      if (metadata.type === 'SECURITY_POLICY') {
+        const records = index.securityPolicies.get(metadata.code) ?? [];
+        records.push(metadata as MetadataDefinition<SecurityPolicyDefinition>);
+        index.securityPolicies.set(metadata.code, records);
       }
     }
 
@@ -1223,6 +1233,78 @@ export class MetadataValidatorEngine {
     }
   }
 
+  private validateSecurityPolicyDefinitions(
+    metadataDefinitions: MetadataDefinition[],
+    index: MetadataIndex,
+    issues: ValidationIssue[],
+  ): void {
+    for (const [policyCode, policies] of index.securityPolicies.entries()) {
+      if (policies.length > 1) {
+        this.addIssue(
+          issues,
+          'POLICY_DUPLICATE',
+          'ERROR',
+          `Duplicate security policy code ${policyCode}.`,
+          `SECURITY_POLICY.${policyCode}`,
+          'Keep one SECURITY_POLICY definition per code.',
+        );
+      }
+    }
+
+    const conflicts = new Map<string, SecurityPolicyDefinition[]>();
+
+    for (const metadata of metadataDefinitions.filter((candidate) => candidate.type === 'SECURITY_POLICY')) {
+      const policy = metadata.definition as SecurityPolicyDefinition;
+
+      if (!this.policyTargetExists(policy, index)) {
+        this.addIssue(
+          issues,
+          'POLICY_TARGET_NOT_FOUND',
+          'ERROR',
+          `Security policy ${policy.code} references missing ${policy.target.type} ${policy.target.code}.`,
+          `SECURITY_POLICY.${policy.code}.target`,
+          'Create the target metadata or update the policy target.',
+        );
+      }
+
+      for (const [subjectIndex, subject] of policy.subjects.entries()) {
+        if (!['ROLE', 'USER', 'GROUP', 'ATTRIBUTE'].includes(subject.type) || !subject.value) {
+          this.addIssue(
+            issues,
+            'POLICY_SUBJECT_INVALID',
+            'ERROR',
+            `Security policy ${policy.code} has invalid subject.`,
+            `SECURITY_POLICY.${policy.code}.subjects[${subjectIndex}]`,
+            'Use ROLE, USER, GROUP, or ATTRIBUTE with a non-empty value.',
+          );
+        }
+      }
+
+      for (const rule of Object.keys(policy.rules) as Array<keyof SecurityPolicyDefinition['rules']>) {
+        const key = `${policy.target.type}:${policy.target.entityCode ?? ''}:${policy.target.code}:${rule}:${policy.subjects
+          .map((subject) => `${subject.type}:${subject.value}`)
+          .sort()
+          .join('|')}`;
+        conflicts.set(key, [...(conflicts.get(key) ?? []), policy]);
+      }
+    }
+
+    for (const [key, policies] of conflicts.entries()) {
+      const effects = new Set(policies.map((policy) => policy.effect));
+
+      if (effects.has('ALLOW') && effects.has('DENY')) {
+        this.addIssue(
+          issues,
+          'POLICY_CONFLICT',
+          'ERROR',
+          `Conflicting ALLOW and DENY security policies for ${key}.`,
+          'SECURITY_POLICY',
+          'Remove one policy or narrow the subject/target/rule.',
+        );
+      }
+    }
+  }
+
   private validateDependencyIntegrity(
     metadataDefinitions: MetadataDefinition[],
     index: MetadataIndex,
@@ -1372,6 +1454,16 @@ export class MetadataValidatorEngine {
         );
       }
 
+      if (metadata.type === 'SECURITY_POLICY') {
+        const policy = metadata.definition as SecurityPolicyDefinition;
+        return [
+          this.dependency(metadata, policy.target.type, policy.target.code, `SECURITY_POLICY.${policy.code}.target.code`),
+          ...(policy.target.entityCode
+            ? [this.dependency(metadata, 'ENTITY', policy.target.entityCode, `SECURITY_POLICY.${policy.code}.target.entityCode`)]
+            : []),
+        ];
+      }
+
       return [];
     });
   }
@@ -1488,6 +1580,44 @@ export class MetadataValidatorEngine {
 
   private actionExists(index: MetadataIndex, actionCode: string): boolean {
     return [...index.actionsByEntity.values()].some((actions) => actions.has(actionCode));
+  }
+
+  private policyTargetExists(policy: SecurityPolicyDefinition, index: MetadataIndex): boolean {
+    if (policy.target.type === 'APPLICATION') {
+      return index.applications.has(policy.target.code);
+    }
+
+    if (policy.target.type === 'ENTITY') {
+      return index.entities.has(policy.target.code);
+    }
+
+    if (policy.target.type === 'FIELD') {
+      return policy.target.entityCode
+        ? this.fieldExists(index.fieldsByEntity.get(policy.target.entityCode), policy.target.code)
+        : [...index.fieldsByEntity.values()].some((fields) => this.fieldExists(fields, policy.target.code));
+    }
+
+    if (policy.target.type === 'ACTION') {
+      return policy.target.entityCode
+        ? Boolean(index.actionsByEntity.get(policy.target.entityCode)?.has(policy.target.code))
+        : this.actionExists(index, policy.target.code);
+    }
+
+    if (policy.target.type === 'VIEW') {
+      return index.views.has(policy.target.code);
+    }
+
+    if (policy.target.type === 'FORM') {
+      return [...index.forms.values()].some((forms) => forms.some((form) => form.definition.code === policy.target.code));
+    }
+
+    if (policy.target.type === 'UI') {
+      return ['ATOM', 'MOLECULE', 'ORGANISM', 'TEMPLATE', 'PAGE'].some((kind) =>
+        this.hasUI(index, kind as UIDefinition['kind'], policy.target.code),
+      );
+    }
+
+    return false;
   }
 
   private configString(config: Record<string, unknown> | undefined, key: string): string | undefined {

@@ -19,6 +19,7 @@ import type {
   ProcessDefinition,
   RelationDefinition,
   RuntimeContext,
+  SecurityPolicyDefinition,
   ThemeDefinition,
   UIDefinition,
   ViewDefinition,
@@ -149,6 +150,10 @@ export class DependencyEngine {
 
     if (record.type === 'NAVIGATION') {
       return this.navigationReferences(record.definition as NavigationDefinition, source);
+    }
+
+    if (record.type === 'SECURITY_POLICY') {
+      return this.securityPolicyReferences(record.definition as SecurityPolicyDefinition, source);
     }
 
     if (record.type === 'FIELD') {
@@ -315,6 +320,13 @@ export class DependencyEngine {
           : [];
 
     return [...target, ...(item.children ?? []).flatMap((child) => this.navigationItemReferences(child, source))];
+  }
+
+  private securityPolicyReferences(definition: SecurityPolicyDefinition, source: DependencyNode): DependencyReference[] {
+    return [
+      this.reference(source, 'REFERENCES', definition.target.type, definition.target.code),
+      ...(definition.target.entityCode ? [this.reference(source, 'REFERENCES', 'ENTITY', definition.target.entityCode)] : []),
+    ];
   }
 
   private toImpact(reference: DependencyReference): DependencyImpact {

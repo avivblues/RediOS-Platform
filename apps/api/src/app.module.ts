@@ -18,6 +18,7 @@ import { QueryModule as CoreQueryModule } from './core/query/query.module';
 import { RelationModule } from './core/relation/relation.module';
 import { RuntimeModule as CoreRuntimeModule } from './core/runtime/runtime.module';
 import { SecurityModule } from './core/security/security.module';
+import { SecurityPolicyModule as CoreSecurityPolicyModule } from './core/security-policy/security-policy.module';
 import { StorageModule } from './core/storage/storage.module';
 import { ThemeModule as CoreThemeModule } from './core/theme/theme.module';
 import { UIModule as CoreUIModule } from './core/ui/ui.module';
@@ -33,6 +34,7 @@ import { NavigationModule } from './navigation/navigation.module';
 import { QueryModule } from './query/query.module';
 import { RuntimeModule as RuntimeApiModule } from './runtime/runtime.module';
 import { RuntimeTracesModule } from './runtime-traces/runtime-traces.module';
+import { SecurityPolicyModule } from './security-policy/security-policy.module';
 import { RelationsModule } from './relations/relations.module';
 import { SimulationModule } from './simulation/simulation.module';
 import { ThemesModule } from './themes/themes.module';
@@ -73,6 +75,7 @@ import { UIModule } from './ui/ui.module';
     DependenciesModule,
     ThemesModule,
     NavigationModule,
+    SecurityPolicyModule,
     ContextModule,
     ApplicationModule,
     MetadataModule,
@@ -93,6 +96,7 @@ import { UIModule } from './ui/ui.module';
     CoreDependencyModule,
     CoreThemeModule,
     CoreNavigationModule,
+    CoreSecurityPolicyModule,
   ],
 })
 export class AppModule {}

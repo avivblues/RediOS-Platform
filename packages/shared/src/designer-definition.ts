@@ -1,6 +1,6 @@
 import type { MetadataDefinition, MetadataType } from './metadata-definition';
 
-export type DesignerTargetType = Extract<MetadataType, 'FORM' | 'THEME' | 'NAVIGATION'>;
+export type DesignerTargetType = Extract<MetadataType, 'FORM' | 'THEME' | 'NAVIGATION' | 'SECURITY_POLICY'>;
 
 export type DesignerDraftStatus = 'DRAFT' | 'VALIDATED' | 'PUBLISHED' | 'REJECTED';
 
@@ -17,7 +17,10 @@ export type DesignerOperationType =
   | 'REMOVE_MENU'
   | 'MOVE_MENU'
   | 'CHANGE_ICON'
-  | 'CHANGE_TARGET';
+  | 'CHANGE_TARGET'
+  | 'CREATE_POLICY'
+  | 'UPDATE_POLICY'
+  | 'DELETE_POLICY';
 
 export interface DesignerOperation {
   type: DesignerOperationType;

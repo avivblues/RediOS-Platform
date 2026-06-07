@@ -4,6 +4,7 @@ import { ActionEngine } from '../action/action-engine.service';
 import { MetadataResolver } from '../metadata/metadata-resolver.service';
 import { RelationEngine, type RelationPlan } from '../relation/relation-engine.service';
 import { SecurityEngine } from '../security/security-engine.service';
+import { SecurityPolicyEngine } from '../security-policy/security-policy-engine.service';
 import { StorageEngine } from '../storage/storage.engine';
 import { FieldSecurityEngine } from './field-security-engine.service';
 
@@ -38,12 +39,14 @@ export class QueryEngine {
     private readonly fieldSecurityEngine: FieldSecurityEngine,
     private readonly actionEngine: ActionEngine,
     private readonly securityEngine: SecurityEngine,
+    private readonly securityPolicyEngine: SecurityPolicyEngine,
   ) {}
 
   async execute(context: RuntimeContext, entityCode: string, request: QueryRequest = {}): Promise<QueryResult> {
     this.securityEngine.validateContext(context);
     const action = await this.actionEngine.resolve(context, entityCode, 'READ');
     this.securityEngine.validateActionAccess(context, action);
+    await this.securityPolicyEngine.assertActionAllowed(context, 'READ', entityCode);
 
     const viewMetadata = await this.metadataResolver.resolveView(context, entityCode, request.viewCode);
 
@@ -52,9 +55,9 @@ export class QueryEngine {
     }
 
     const view = viewMetadata.definition;
-    const visibleColumns = this.fieldSecurityEngine
-      .filterVisibleColumns(context, view.columns)
-      .filter((column) => column.visible);
+    const visibleColumns = (await this.fieldSecurityEngine.filterVisibleColumns(context, entityCode, view.columns)).filter(
+      (column) => column.visible,
+    );
     const filters = request.filters ?? {};
 
     this.validateFilters(view, visibleColumns, filters);

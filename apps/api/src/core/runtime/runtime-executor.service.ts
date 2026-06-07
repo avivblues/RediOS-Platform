@@ -17,6 +17,7 @@ import { LedgerEngine, type LedgerExecutionResult } from '../ledger/ledger-engin
 import { MetadataResolver } from '../metadata/metadata-resolver.service';
 import { ProcessEngine, type ProcessExecutionPlan } from '../process/process-engine.service';
 import { SecurityEngine } from '../security/security-engine.service';
+import { SecurityPolicyEngine } from '../security-policy/security-policy-engine.service';
 import { StorageEngine } from '../storage/storage.engine';
 import { TraceEngine } from '../trace/trace-engine.service';
 import { WorkflowEngine, type WorkflowTransitionResult } from '../workflow/workflow-engine.service';
@@ -83,6 +84,7 @@ export class RuntimeExecutor {
     private readonly ledgerEngine: LedgerEngine,
     private readonly traceEngine: TraceEngine,
     private readonly storageEngine: StorageEngine,
+    private readonly securityPolicyEngine: SecurityPolicyEngine,
   ) {}
 
   async create(input: RuntimeExecutionInput): Promise<RuntimeExecutionResult> {
@@ -90,6 +92,7 @@ export class RuntimeExecutor {
     const { application, entity, fields } = await this.resolveRuntimeTarget(context, entityCode);
     const action = await this.actionEngine.resolve(context, entityCode, 'CREATE');
     this.securityEngine.validateActionAccess(context, action);
+    await this.securityPolicyEngine.assertActionAllowed(context, 'CREATE', entityCode);
     const actionPlan = this.actionEngine.prepare(action, payload);
     const initialStatus = await this.workflowEngine.resolveInitialStatus(context, entityCode);
     const document = await this.storageEngine.create(context, entityCode, {
@@ -97,6 +100,7 @@ export class RuntimeExecutor {
       data: this.toData(payload),
       metadataVersion: entity.version,
     });
+    const maskedDocument = await this.securityPolicyEngine.maskDocument(context, document);
 
     return {
       stage: 'STORED',
@@ -106,7 +110,7 @@ export class RuntimeExecutor {
       fields,
       action,
       actionPlan,
-      document,
+      document: maskedDocument,
     };
   }
 
@@ -114,14 +118,16 @@ export class RuntimeExecutor {
     const { context, entityCode, query } = input;
     await this.resolveRuntimeTarget(context, entityCode);
     await this.validateReadAccess(context, entityCode);
-    return this.storageEngine.findMany(context, entityCode, query);
+    const documents = await this.storageEngine.findMany(context, entityCode, query);
+    return this.securityPolicyEngine.maskDocuments(context, documents);
   }
 
   async findOne(input: RuntimeReadInput): Promise<RuntimeDocument | null> {
     const { context, entityCode, id } = input;
     await this.resolveRuntimeTarget(context, entityCode);
     await this.validateReadAccess(context, entityCode);
-    return id ? this.storageEngine.findOne(context, entityCode, id) : null;
+    const document = id ? await this.storageEngine.findOne(context, entityCode, id) : null;
+    return document ? this.securityPolicyEngine.maskDocument(context, document) : null;
   }
 
   async update(input: RuntimeUpdateInput): Promise<RuntimeDocument | null> {
@@ -129,10 +135,12 @@ export class RuntimeExecutor {
     const { entity } = await this.resolveRuntimeTarget(context, entityCode);
     const action = await this.actionEngine.resolve(context, entityCode, 'UPDATE');
     this.securityEngine.validateActionAccess(context, action);
-    return this.storageEngine.update(context, entityCode, id, {
+    await this.securityPolicyEngine.assertActionAllowed(context, 'UPDATE', entityCode);
+    const document = await this.storageEngine.update(context, entityCode, id, {
       data: this.toData(payload),
       metadataVersion: entity.version,
     });
+    return document ? this.securityPolicyEngine.maskDocument(context, document) : null;
   }
 
   async prepareAction(input: RuntimeActionInput): Promise<RuntimeActionResult> {
@@ -172,6 +180,10 @@ export class RuntimeExecutor {
           permissions: action.definition.permissions ?? [],
         };
       });
+
+      await this.traceEngine.recordStep(trace.id!, 'SECURITY_POLICY', () =>
+        this.securityPolicyEngine.assertActionAllowed(context, actionCode, entityCode),
+      );
 
       let workflowDocument = document;
       const workflow = await this.traceEngine.recordStep(trace.id!, 'WORKFLOW', async () => {
@@ -274,6 +286,7 @@ export class RuntimeExecutor {
   private async validateReadAccess(context: RuntimeContext, entityCode: string): Promise<void> {
     const action = await this.actionEngine.resolve(context, entityCode, 'READ');
     this.securityEngine.validateActionAccess(context, action);
+    await this.securityPolicyEngine.assertActionAllowed(context, 'READ', entityCode);
   }
 
   private toData(payload: unknown): Record<string, unknown> {

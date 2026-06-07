@@ -3,6 +3,7 @@ export type RuntimeTraceStatus = 'RUNNING' | 'SUCCESS' | 'FAILED';
 export type RuntimeTraceStepEngine =
   | 'ACTION'
   | 'SECURITY'
+  | 'SECURITY_POLICY'
   | 'WORKFLOW'
   | 'PROCESS'
   | 'BUSINESS'

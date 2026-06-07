@@ -7,6 +7,7 @@ export type SimulationStepStage =
   | 'VALIDATION'
   | 'ACTION'
   | 'SECURITY'
+  | 'SECURITY_POLICY'
   | 'WORKFLOW'
   | 'PROCESS'
   | 'BUSINESS'
@@ -26,6 +27,9 @@ export interface SimulationRequest {
   mockDocument?: Record<string, unknown>;
   userId?: string;
   permissions?: string[];
+  roles?: string[];
+  groups?: string[];
+  attributes?: Record<string, unknown>;
   traceMode?: SimulationTraceMode;
 }
 
@@ -103,6 +107,11 @@ export interface SimulationResult {
     navigation?: {
       code: string;
       affectedMenus: number;
+    };
+    security?: {
+      hiddenFields: number;
+      readonlyFields: number;
+      deniedActions: string[];
     };
   };
 }

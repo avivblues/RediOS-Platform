@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import type { NavigationDefinition, NavigationItemDefinition, RuntimeContext } from '@redios/shared';
 import { MetadataResolver } from '../metadata/metadata-resolver.service';
 import { SecurityEngine } from '../security/security-engine.service';
+import { SecurityPolicyEngine } from '../security-policy/security-policy-engine.service';
 import { ThemeEngine, type RuntimeTheme } from '../theme/theme-engine.service';
 
 export interface RuntimeNavigationItem {
@@ -33,6 +34,7 @@ export class NavigationEngine {
     private readonly metadataResolver: MetadataResolver,
     private readonly themeEngine: ThemeEngine,
     private readonly securityEngine: SecurityEngine,
+    private readonly securityPolicyEngine: SecurityPolicyEngine,
   ) {}
 
   async compose(context: RuntimeContext, navigationCode?: string): Promise<RuntimeNavigation> {
@@ -54,18 +56,28 @@ export class NavigationEngine {
         code: theme.theme,
         density: theme.layout.density,
       },
-      items: this.filterItems(context, navigation.items),
+      items: await this.filterItems(context, navigation.items),
     };
   }
 
-  private filterItems(context: RuntimeContext, items: NavigationItemDefinition[]): RuntimeNavigationItem[] {
-    return items
-      .filter((item) => this.visible(context, item))
-      .sort((left, right) => left.order - right.order)
-      .map((item) => this.toRuntimeItem(context, item));
+  private async filterItems(context: RuntimeContext, items: NavigationItemDefinition[]): Promise<RuntimeNavigationItem[]> {
+    const visibleItems = await Promise.all(
+      items.map(async (item) => ({
+        item,
+        visible: await this.visible(context, item),
+      })),
+    );
+
+    return Promise.all(
+      visibleItems
+        .filter((candidate) => candidate.visible)
+        .map((candidate) => candidate.item)
+        .sort((left, right) => left.order - right.order)
+        .map((item) => this.toRuntimeItem(context, item)),
+    );
   }
 
-  private toRuntimeItem(context: RuntimeContext, item: NavigationItemDefinition): RuntimeNavigationItem {
+  private async toRuntimeItem(context: RuntimeContext, item: NavigationItemDefinition): Promise<RuntimeNavigationItem> {
     return {
       code: item.code,
       label: item.label,
@@ -75,12 +87,31 @@ export class NavigationEngine {
       page: item.target.type === 'PAGE' ? item.target.code : undefined,
       action: item.target.type === 'ACTION' ? item.target.code : undefined,
       url: item.target.type === 'URL' ? item.target.code : undefined,
-      children: this.filterItems(context, item.children ?? []),
+      children: await this.filterItems(context, item.children ?? []),
     };
   }
 
-  private visible(context: RuntimeContext, item: NavigationItemDefinition): boolean {
+  private async visible(context: RuntimeContext, item: NavigationItemDefinition): Promise<boolean> {
     const permissions = item.visibleWhen?.permissions ?? [];
-    return permissions.every((permission) => context.permissions.includes(permission));
+    const permissionAllowed = permissions.every((permission) => context.permissions.includes(permission));
+
+    if (!permissionAllowed) {
+      return false;
+    }
+
+    if (item.target.type === 'PAGE') {
+      const access = await this.securityPolicyEngine.evaluate(context, {
+        type: 'UI',
+        code: item.target.code,
+      });
+      return access.visible && access.allowed;
+    }
+
+    if (item.target.type === 'ACTION') {
+      const access = await this.securityPolicyEngine.evaluateActionAccess(context, item.target.code);
+      return access.visible && access.allowed;
+    }
+
+    return true;
   }
 }

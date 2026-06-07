@@ -5,4 +5,7 @@ export interface RuntimeContext {
   applicationCode: string;
   permissions: string[];
   capabilities: string[];
+  roles?: string[];
+  groups?: string[];
+  attributes?: Record<string, unknown>;
 }

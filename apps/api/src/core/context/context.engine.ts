@@ -13,6 +13,9 @@ export class ContextEngine {
       applicationCode: this.required(headers, 'x-application-code'),
       permissions: this.list(headers, 'x-permissions'),
       capabilities: this.list(headers, 'x-capabilities'),
+      roles: this.list(headers, 'x-roles'),
+      groups: this.list(headers, 'x-groups'),
+      attributes: this.attributes(headers, 'x-attributes'),
     };
   }
 
@@ -34,5 +37,28 @@ export class ContextEngine {
   private single(headers: RuntimeHeaders, key: string): string | undefined {
     const value = headers[key] ?? headers[key.toLowerCase()];
     return Array.isArray(value) ? value[0] : value;
+  }
+
+  private attributes(headers: RuntimeHeaders, key: string): Record<string, unknown> {
+    const value = this.single(headers, key);
+
+    if (!value) {
+      return {};
+    }
+
+    try {
+      const parsed = JSON.parse(value) as unknown;
+      return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? (parsed as Record<string, unknown>) : {};
+    } catch {
+      return value.split(',').reduce<Record<string, string>>((attributes, entry) => {
+        const [attributeKey, attributeValue] = entry.split(':');
+
+        if (attributeKey && attributeValue) {
+          attributes[attributeKey.trim()] = attributeValue.trim();
+        }
+
+        return attributes;
+      }, {});
+    }
   }
 }

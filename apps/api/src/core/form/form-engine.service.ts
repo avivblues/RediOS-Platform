@@ -10,6 +10,7 @@ import type {
 } from '@redios/shared';
 import { MetadataResolver } from '../metadata/metadata-resolver.service';
 import { RelationEngine, type RelationPlan } from '../relation/relation-engine.service';
+import { SecurityPolicyEngine } from '../security-policy/security-policy-engine.service';
 import { ThemeEngine, type RuntimeTheme } from '../theme/theme-engine.service';
 
 export interface ComposedFormField {
@@ -75,6 +76,7 @@ export class FormEngine {
     private readonly metadataResolver: MetadataResolver,
     private readonly relationEngine: RelationEngine,
     private readonly themeEngine: ThemeEngine,
+    private readonly securityPolicyEngine: SecurityPolicyEngine,
   ) {}
 
   async compose(context: RuntimeContext, entityCode: string, formCode?: string): Promise<ComposedForm> {
@@ -150,14 +152,17 @@ export class FormEngine {
     }
 
     const lookup = field.lookup ? await this.composeLookup(context, field.lookup.relationCode, field.lookup.viewCode, relations) : {};
+    const policy = await this.securityPolicyEngine.evaluateFieldAccess(context, metadata.entityCode, field.fieldCode);
+    const visible = Boolean(field.visible ?? metadata.visible) && policy.visible && policy.allowed;
+    const readonly = Boolean(field.readonly ?? metadata.readonly) || !policy.editable;
 
     return {
       fieldCode: field.fieldCode,
       component: field.component,
       order: field.order,
       required: field.required ?? metadata.required,
-      readonly: field.readonly ?? metadata.readonly,
-      visible: field.visible ?? metadata.visible,
+      readonly,
+      visible,
       binding: {
         source: field.binding?.source ?? 'FORM',
         fieldCode: field.binding?.fieldCode ?? field.fieldCode,

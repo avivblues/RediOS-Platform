@@ -1,0 +1,146 @@
+@baseUrl = http://localhost:3001/api
+
+### Evaluate readonly field policy
+### Expected: visible true, editable false for TECHNICIAN estimatedCost
+GET {{baseUrl}}/security-policy/evaluate?type=FIELD&entityCode=WORK_ORDER&code=estimatedCost
+x-tenant-id: demo
+x-domain-code: DEFAULT
+x-application-code: ASSET_MAINTENANCE
+x-user-id: technician
+x-roles: TECHNICIAN
+x-permissions: WORK_ORDER.READ,WORK_ORDER.UPDATE
+
+### Form policy proof
+### Expected: estimatedCost visible true readonly true
+GET {{baseUrl}}/forms/WORK_ORDER
+x-tenant-id: demo
+x-domain-code: DEFAULT
+x-application-code: ASSET_MAINTENANCE
+x-user-id: technician
+x-roles: TECHNICIAN
+x-permissions: WORK_ORDER.READ,WORK_ORDER.UPDATE
+
+### Query masking proof
+### Expected: estimatedCost omitted for COST_RESTRICTED
+POST {{baseUrl}}/query/WORK_ORDER
+x-tenant-id: demo
+x-domain-code: DEFAULT
+x-application-code: ASSET_MAINTENANCE
+x-user-id: cost-viewer
+x-roles: COST_RESTRICTED
+x-permissions: WORK_ORDER.READ
+content-type: application/json
+
+{
+  "viewCode": "WORK_ORDER_LIST"
+}
+
+### Navigation policy proof
+### Expected: Work Orders menu hidden even when WORK_ORDER.READ permission exists
+GET {{baseUrl}}/navigation/current
+x-tenant-id: demo
+x-domain-code: DEFAULT
+x-application-code: ASSET_MAINTENANCE
+x-user-id: restricted
+x-roles: NO_WORK_ORDER
+x-permissions: ASSET.READ,WORK_ORDER.READ
+
+### Action denied proof
+### Expected: allowed false for TECHNICIAN DELETE
+GET {{baseUrl}}/security-policy/evaluate?type=ACTION&entityCode=WORK_ORDER&code=DELETE
+x-tenant-id: demo
+x-domain-code: DEFAULT
+x-application-code: ASSET_MAINTENANCE
+x-user-id: technician
+x-roles: TECHNICIAN
+x-permissions: WORK_ORDER.DELETE
+
+### Security simulation proof
+### Expected: readonlyFields >= 1, deniedActions includes DELETE
+POST {{baseUrl}}/security-policy/simulate
+x-tenant-id: demo
+x-domain-code: DEFAULT
+x-application-code: ASSET_MAINTENANCE
+x-user-id: technician
+x-roles: TECHNICIAN
+x-permissions: WORK_ORDER.READ,WORK_ORDER.START,WORK_ORDER.DELETE
+content-type: application/json
+
+{
+  "entityCode": "WORK_ORDER",
+  "fieldCodes": ["title", "estimatedCost", "assignedTo"],
+  "actionCodes": ["READ", "START", "DELETE"]
+}
+
+### Canonical simulation includes predicted.security
+POST {{baseUrl}}/simulation/run
+content-type: application/json
+
+{
+  "tenantId": "demo",
+  "domainCode": "DEFAULT",
+  "applicationCode": "ASSET_MAINTENANCE",
+  "userId": "technician",
+  "entityCode": "WORK_ORDER",
+  "actionCode": "START",
+  "payload": {
+    "title": "Simulated work order"
+  },
+  "permissions": ["WORK_ORDER.READ", "WORK_ORDER.START", "WORK_ORDER.DELETE"],
+  "roles": ["TECHNICIAN"]
+}
+
+### Designer draft for security policy
+POST {{baseUrl}}/designer/drafts
+x-tenant-id: demo
+x-domain-code: DEFAULT
+x-application-code: ASSET_MAINTENANCE
+x-user-id: designer
+x-permissions: FORM.DESIGN,FORM.PUBLISH
+content-type: application/json
+
+{
+  "targetType": "SECURITY_POLICY",
+  "targetCode": "WORK_ORDER_TEMP_POLICY"
+}
+
+### Create policy in draft
+POST {{baseUrl}}/designer/replace-with-policy-draft-id/operations
+x-tenant-id: demo
+x-domain-code: DEFAULT
+x-application-code: ASSET_MAINTENANCE
+x-user-id: designer
+x-permissions: FORM.DESIGN,FORM.PUBLISH
+content-type: application/json
+
+{
+  "type": "CREATE_POLICY",
+  "payload": {
+    "definition": {
+      "code": "WORK_ORDER_TEMP_POLICY",
+      "name": "Work Order Temp Policy",
+      "version": 1,
+      "target": {
+        "type": "FIELD",
+        "entityCode": "WORK_ORDER",
+        "code": "priority"
+      },
+      "effect": "ALLOW",
+      "subjects": [{ "type": "ROLE", "value": "TECHNICIAN" }],
+      "rules": {
+        "read": true,
+        "visible": true,
+        "editable": false
+      },
+      "enabled": true
+    }
+  }
+}
+
+### Preview security policy draft
+POST {{baseUrl}}/designer/replace-with-policy-draft-id/preview
+x-tenant-id: demo
+x-domain-code: DEFAULT
+x-application-code: ASSET_MAINTENANCE
+x-user-id: designer
+x-permissions: FORM.DESIGN,FORM.PUBLISH

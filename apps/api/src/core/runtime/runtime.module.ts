@@ -7,6 +7,7 @@ import { LedgerModule } from '../ledger/ledger.module';
 import { MetadataModule } from '../metadata/metadata.module';
 import { ProcessModule } from '../process/process.module';
 import { SecurityModule } from '../security/security.module';
+import { SecurityPolicyModule } from '../security-policy/security-policy.module';
 import { StorageModule } from '../storage/storage.module';
 import { TraceModule } from '../trace/trace.module';
 import { WorkflowModule } from '../workflow/workflow.module';
@@ -17,6 +18,7 @@ import { RuntimeExecutor } from './runtime-executor.service';
     ApplicationModule,
     MetadataModule,
     SecurityModule,
+    SecurityPolicyModule,
     ActionModule,
     WorkflowModule,
     ProcessModule,
