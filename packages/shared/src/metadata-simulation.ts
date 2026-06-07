@@ -136,5 +136,11 @@ export interface SimulationResult {
       possible: boolean;
       policy: string;
     };
+    runtimePackage?: {
+      version: number;
+      optimized: boolean;
+      compiledObjects: number;
+      estimatedLookup: 'O(1)' | 'DYNAMIC';
+    };
   };
 }

@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
+import { CompilerModule } from '../compiler/compiler.module';
 import { DependencyModule } from '../dependency/dependency.module';
 import { EventModule } from '../event/event.module';
 import { FormModule } from '../form/form.module';
@@ -23,6 +24,7 @@ import { METADATA_VERSION_MODEL, MetadataVersionSchema } from './schemas/metadat
         schema: MetadataVersionSchema,
       },
     ]),
+    CompilerModule,
     MetadataModule,
     FormModule,
     DependencyModule,

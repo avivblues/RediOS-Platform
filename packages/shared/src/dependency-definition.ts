@@ -20,6 +20,7 @@ export type DependencyNodeType = Extract<
   | 'SECURITY_POLICY'
   | 'INTEGRATION'
   | 'CONNECTOR'
+  | 'RUNTIME_PACKAGE'
   | 'EXPERIENCE'
   | 'SYNC_POLICY'
   | 'CONFLICT_POLICY'

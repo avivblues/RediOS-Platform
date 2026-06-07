@@ -19,6 +19,7 @@ export interface MetadataDebugTree {
   securityPolicies: string[];
   integrations: string[];
   connectors: string[];
+  runtimePackages: string[];
   experiences: string[];
   syncPolicies: string[];
   conflictPolicies: string[];

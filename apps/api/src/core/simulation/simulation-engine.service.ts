@@ -7,6 +7,7 @@ import type {
   NavigationItemDefinition,
   RuntimeContext,
   RuntimeDocument,
+  RuntimePackageContent,
   RuntimeTraceStepEngine,
   SimulationRequest,
   SimulationResult,
@@ -15,6 +16,7 @@ import type {
 } from '@redios/shared';
 import { ActionEngine } from '../action/action-engine.service';
 import { BusinessEngine } from '../business/business-engine.service';
+import { RuntimePackageProvider } from '../compiler/runtime-package-provider.service';
 import { ConflictEngine } from '../conflict/conflict-engine.service';
 import { EventEngine } from '../event/event-engine.service';
 import { ExperienceEngine } from '../experience/experience-engine.service';
@@ -57,6 +59,7 @@ export class SimulationEngine {
     private readonly syncPolicyEngine: SyncPolicyEngine,
     private readonly conflictEngine: ConflictEngine,
     private readonly traceEngine: TraceEngine,
+    private readonly runtimePackageProvider: RuntimePackageProvider,
   ) {}
 
   simulateDesigner(input: {
@@ -385,6 +388,21 @@ export class SimulationEngine {
       possible: syncPolicy.value.offline,
       policy: conflictPolicy.value.strategy,
     };
+
+    const runtimePackage = await this.runtimePackageProvider.getActive(context);
+    predicted.runtimePackage = runtimePackage
+      ? {
+          version: runtimePackage.definition.metadataVersion,
+          optimized: true,
+          compiledObjects: this.compiledObjectCount(runtimePackage.definition.content),
+          estimatedLookup: 'O(1)',
+        }
+      : {
+          version: 0,
+          optimized: false,
+          compiledObjects: 0,
+          estimatedLookup: 'DYNAMIC',
+        };
 
     const forms = await this.runStep(steps, 'VALIDATION', 'Form metadata resolved.', () =>
       this.formEngine.compose(context, request.entityCode),
@@ -743,6 +761,16 @@ export class SimulationEngine {
         ...document.data,
       },
     };
+  }
+
+  private compiledObjectCount(content: RuntimePackageContent): number {
+    return Object.values(content as unknown as Record<string, unknown>).reduce<number>((count, value) => {
+      if (value && typeof value === 'object' && !Array.isArray(value)) {
+        return count + Object.keys(value).length;
+      }
+
+      return count;
+    }, 0);
   }
 
   private validateRequiredFields(request: SimulationRequest, fields: FieldDefinition[]): string[] {

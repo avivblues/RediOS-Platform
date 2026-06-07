@@ -18,6 +18,7 @@ import type {
   NavigationItemDefinition,
   ProcessDefinition,
   RelationDefinition,
+  RuntimePackageDefinition,
   SecurityPolicyDefinition,
   SyncDefinition,
   ThemeDefinition,
@@ -54,6 +55,7 @@ type MetadataIndex = {
   conflictPolicies: Map<string, MetadataDefinition<ConflictPolicyDefinition>[]>;
   integrations: Map<string, MetadataDefinition<IntegrationDefinition>[]>;
   connectors: Map<string, MetadataDefinition<ConnectorDefinition>[]>;
+  runtimePackages: Map<string, MetadataDefinition<RuntimePackageDefinition>>;
 };
 
 @Injectable()
@@ -82,6 +84,7 @@ export class MetadataValidatorEngine {
     this.validateConflictPolicyDefinitions(metadataDefinitions, index, issues);
     this.validateConnectorDefinitions(metadataDefinitions, index, issues);
     this.validateIntegrationDefinitions(metadataDefinitions, index, issues);
+    this.validateRuntimePackageDefinitions(index, issues);
     this.validateDependencyIntegrity(metadataDefinitions, index, issues);
 
     const errors = issues.filter((issue) => issue.severity === 'ERROR').length;
@@ -117,6 +120,7 @@ export class MetadataValidatorEngine {
       conflictPolicies: new Map(),
       integrations: new Map(),
       connectors: new Map(),
+      runtimePackages: new Map(),
     };
 
     for (const metadata of metadataDefinitions) {
@@ -240,6 +244,10 @@ export class MetadataValidatorEngine {
         const records = index.connectors.get(metadata.code) ?? [];
         records.push(metadata as MetadataDefinition<ConnectorDefinition>);
         index.connectors.set(metadata.code, records);
+      }
+
+      if (metadata.type === 'RUNTIME_PACKAGE') {
+        index.runtimePackages.set(metadata.code, metadata as MetadataDefinition<RuntimePackageDefinition>);
       }
     }
 
@@ -1784,6 +1792,61 @@ export class MetadataValidatorEngine {
     }
   }
 
+  private validateRuntimePackageDefinitions(index: MetadataIndex, issues: ValidationIssue[]): void {
+    const packages = [...index.runtimePackages.values()];
+    const activePackages = packages.filter((runtimePackage) => runtimePackage.definition.status === 'ACTIVE');
+
+    if (activePackages.length > 1) {
+      this.addIssue(
+        issues,
+        'MULTIPLE_ACTIVE_PACKAGE',
+        'ERROR',
+        'Only one runtime package can be active per application scope.',
+        'RUNTIME_PACKAGE.status',
+        'Expire older runtime packages before activating a new one.',
+      );
+    }
+
+    for (const runtimePackage of packages) {
+      const definition = runtimePackage.definition;
+
+      if (definition.metadataVersion !== runtimePackage.version) {
+        this.addIssue(
+          issues,
+          'PACKAGE_VERSION_INVALID',
+          'ERROR',
+          `Runtime package ${definition.code} metadataVersion must match metadata version.`,
+          `RUNTIME_PACKAGE.${definition.code}.metadataVersion`,
+          'Recompile the package from current metadata.',
+        );
+      }
+
+      if (!definition.content || Object.keys(definition.content.entities ?? {}).length === 0) {
+        this.addIssue(
+          issues,
+          'PACKAGE_DEPENDENCY_INVALID',
+          'ERROR',
+          `Runtime package ${definition.code} has no compiled entity content.`,
+          `RUNTIME_PACKAGE.${definition.code}.content`,
+          'Recompile after metadata validation succeeds.',
+        );
+      }
+
+      const expectedChecksum = this.runtimePackageChecksum(definition);
+
+      if (definition.checksum !== expectedChecksum) {
+        this.addIssue(
+          issues,
+          'PACKAGE_VERSION_INVALID',
+          'ERROR',
+          `Runtime package ${definition.code} checksum does not match compiled content.`,
+          `RUNTIME_PACKAGE.${definition.code}.checksum`,
+          'Recompile the runtime package.',
+        );
+      }
+    }
+  }
+
   private validateDependencyIntegrity(
     metadataDefinitions: MetadataDefinition[],
     index: MetadataIndex,
@@ -2265,6 +2328,36 @@ export class MetadataValidatorEngine {
     }
 
     return Object.entries(mapping).every(([source, target]) => source.length > 0 && typeof target === 'string' && target.length > 0);
+  }
+
+  private runtimePackageChecksum(definition: RuntimePackageDefinition): string {
+    const json = JSON.stringify(
+      {
+        metadataVersion: definition.metadataVersion,
+        content: definition.content,
+      },
+      this.stableSort,
+    );
+    let hash = 0;
+
+    for (let index = 0; index < json.length; index += 1) {
+      hash = (hash * 31 + json.charCodeAt(index)) >>> 0;
+    }
+
+    return hash.toString(16).padStart(8, '0');
+  }
+
+  private stableSort(_key: string, value: unknown): unknown {
+    if (!value || typeof value !== 'object' || Array.isArray(value)) {
+      return value;
+    }
+
+    return Object.keys(value)
+      .sort()
+      .reduce<Record<string, unknown>>((sorted, key) => {
+        sorted[key] = (value as Record<string, unknown>)[key];
+        return sorted;
+      }, {});
   }
 
   private addIssue(

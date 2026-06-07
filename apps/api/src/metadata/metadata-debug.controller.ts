@@ -20,6 +20,7 @@ type MetadataDebugResult = {
   securityPolicies: string[];
   integrations: string[];
   connectors: string[];
+  runtimePackages: string[];
   experiences: string[];
   syncPolicies: string[];
   conflictPolicies: string[];
@@ -62,6 +63,7 @@ export class MetadataDebugController {
       securityPolicies: this.codes(records, 'SECURITY_POLICY'),
       integrations: this.codes(records, 'INTEGRATION'),
       connectors: this.codes(records, 'CONNECTOR'),
+      runtimePackages: this.codes(records, 'RUNTIME_PACKAGE'),
       experiences: this.codes(records, 'EXPERIENCE'),
       syncPolicies: this.codes(records, 'SYNC_POLICY'),
       conflictPolicies: this.codes(records, 'CONFLICT_POLICY'),

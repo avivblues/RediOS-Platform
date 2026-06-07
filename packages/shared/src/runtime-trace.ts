@@ -11,6 +11,7 @@ export type RuntimeTraceStepEngine =
   | 'INTEGRATION'
   | 'LEDGER'
   | 'CONFLICT_CHECK'
+  | 'RUNTIME_PACKAGE'
   | 'SYNC_REPLAY'
   | 'DESIGNER'
   | 'VALIDATION'

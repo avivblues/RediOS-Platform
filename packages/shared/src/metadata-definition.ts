@@ -17,6 +17,7 @@ export type MetadataType =
   | 'SECURITY_POLICY'
   | 'INTEGRATION'
   | 'CONNECTOR'
+  | 'RUNTIME_PACKAGE'
   | 'SYNC_POLICY'
   | 'CONFLICT_POLICY'
   | 'REPORT'

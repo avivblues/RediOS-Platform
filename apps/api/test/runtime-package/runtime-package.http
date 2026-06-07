@@ -1,0 +1,38 @@
+### Compile current metadata into an active runtime package
+POST http://localhost:3001/api/runtime-package/compile
+x-tenant-id: demo
+x-domain-code: DEFAULT
+x-application-code: MAINTENANCE
+x-user-id: studio-user
+x-permissions: FORM.DESIGN,FORM.PUBLISH
+
+### Current runtime package
+GET http://localhost:3001/api/runtime-package/current
+x-tenant-id: demo
+x-domain-code: DEFAULT
+x-application-code: MAINTENANCE
+x-user-id: studio-user
+x-permissions: FORM.DESIGN,FORM.PUBLISH
+
+### Execute action and verify trace contains RUNTIME_PACKAGE
+POST http://localhost:3001/api/runtime/WORK_ORDER/actions/replace-with-document-id/START
+content-type: application/json
+x-tenant-id: demo
+x-domain-code: DEFAULT
+x-application-code: MAINTENANCE
+x-user-id: studio-user
+x-permissions: WORK_ORDER.START,WORK_ORDER.READ,FORM.DESIGN,FORM.PUBLISH
+
+{
+  "payload": {
+    "startedBy": "runtime-package-proof"
+  }
+}
+
+### Proof expectations
+# 1. POST /api/runtime-package/compile returns definition.status ACTIVE.
+# 2. GET /api/runtime-package/current returns the same ACTIVE package.
+# 3. Runtime action trace contains:
+#    RUNTIME_PACKAGE SUCCESS
+#    output.source COMPILED when a package is active.
+# 4. Publishing metadata through Designer expires the previous package and activates the new version.

@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { ActionModule } from '../action/action.module';
 import { ApplicationModule } from '../application/application.module';
 import { BusinessModule } from '../business/business.module';
+import { CompilerModule } from '../compiler/compiler.module';
 import { ConflictModule } from '../conflict/conflict.module';
 import { EventModule } from '../event/event.module';
 import { LedgerModule } from '../ledger/ledger.module';
@@ -17,6 +18,7 @@ import { RuntimeExecutor } from './runtime-executor.service';
 @Module({
   imports: [
     ApplicationModule,
+    CompilerModule,
     ConflictModule,
     MetadataModule,
     SecurityModule,

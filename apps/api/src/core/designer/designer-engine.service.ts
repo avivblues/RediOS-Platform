@@ -23,6 +23,7 @@ import type {
   WorkflowDefinition,
 } from '@redios/shared';
 import { Model } from 'mongoose';
+import { RuntimeCompiler } from '../compiler/runtime-compiler.service';
 import { EventEngine } from '../event/event-engine.service';
 import { FormEngine, type ComposedForm } from '../form/form-engine.service';
 import { DependencyEngine } from '../dependency/dependency-engine.service';
@@ -86,6 +87,7 @@ export class DesignerEngine {
     private readonly eventEngine: EventEngine,
     private readonly traceEngine: TraceEngine,
     private readonly permissionGuard: DesignerPermissionGuard,
+    private readonly runtimeCompiler: RuntimeCompiler,
   ) {}
 
   async createDraft(context: RuntimeContext, request: CreateDesignerDraftRequest): Promise<MetadataDraft<DesignerDefinition>> {
@@ -286,6 +288,11 @@ export class DesignerEngine {
         await this.saveVersion(context, saved as MetadataDefinition<DesignerDefinition>, context.userId);
         return saved as MetadataDefinition<DesignerDefinition>;
       });
+      await this.traceEngine.recordStep(trace.id!, 'RUNTIME_PACKAGE', () => this.runtimeCompiler.compile(context), {
+        source: 'DESIGNER_PUBLISH',
+        metadataType: published.type,
+        metadataCode: published.code,
+      });
       const updatedDraft = await this.markDraftStatus(context, draft.id!, 'PUBLISHED');
       await this.audit(context, this.definitionEntityCode(published.definition) ?? published.type, `${published.type}_PUBLISHED`, {
         draftId,
@@ -350,6 +357,11 @@ export class DesignerEngine {
         const saved = await this.metadataProvider.saveMetadata(context, restored);
         await this.saveVersion(context, saved as MetadataDefinition<DesignerDefinition>, context.userId);
         return saved as MetadataDefinition<DesignerDefinition>;
+      });
+      await this.traceEngine.recordStep(trace.id!, 'RUNTIME_PACKAGE', () => this.runtimeCompiler.compile(context), {
+        source: 'DESIGNER_ROLLBACK',
+        metadataType: published.type,
+        metadataCode: published.code,
       });
       const updatedDraft = await this.markDraftStatus(context, draft.id!, 'REJECTED');
       await this.audit(context, this.definitionEntityCode(published.definition) ?? published.type, `${published.type}_PUBLISHED`, {

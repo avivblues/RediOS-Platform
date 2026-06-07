@@ -5,6 +5,7 @@ import { databaseConfig } from './config/database.config';
 import { ActionModule } from './core/action/action.module';
 import { ApplicationModule } from './core/application/application.module';
 import { BusinessModule } from './core/business/business.module';
+import { CompilerModule as CoreCompilerModule } from './core/compiler/compiler.module';
 import { ConflictModule as CoreConflictModule } from './core/conflict/conflict.module';
 import { ContextModule } from './core/context/context.module';
 import { DependencyModule as CoreDependencyModule } from './core/dependency/dependency.module';
@@ -41,6 +42,7 @@ import { MetadataValidationModule } from './metadata/metadata-validation.module'
 import { NavigationModule } from './navigation/navigation.module';
 import { QueryModule } from './query/query.module';
 import { RuntimeModule as RuntimeApiModule } from './runtime/runtime.module';
+import { RuntimePackageModule } from './runtime-package/runtime-package.module';
 import { RuntimeTracesModule } from './runtime-traces/runtime-traces.module';
 import { SecurityPolicyModule } from './security-policy/security-policy.module';
 import { RelationsModule } from './relations/relations.module';
@@ -78,6 +80,7 @@ import { UIModule } from './ui/ui.module';
     IntegrationsModule,
     QueryModule,
     RuntimeApiModule,
+    RuntimePackageModule,
     RuntimeTracesModule,
     RelationsModule,
     SimulationModule,
@@ -96,6 +99,7 @@ import { UIModule } from './ui/ui.module';
     SecurityModule,
     ActionModule,
     CoreRuntimeModule,
+    CoreCompilerModule,
     CoreConflictModule,
     WorkflowModule,
     ProcessModule,

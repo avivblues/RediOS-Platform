@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ActionModule } from '../action/action.module';
 import { BusinessModule } from '../business/business.module';
+import { CompilerModule } from '../compiler/compiler.module';
 import { ConflictModule } from '../conflict/conflict.module';
 import { EventModule } from '../event/event.module';
 import { ExperienceModule } from '../experience/experience.module';
@@ -22,6 +23,7 @@ import { SimulationEngine } from './simulation-engine.service';
 @Module({
   imports: [
     MetadataModule,
+    CompilerModule,
     ConflictModule,
     ActionModule,
     SecurityModule,

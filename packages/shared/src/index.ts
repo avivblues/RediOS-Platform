@@ -20,6 +20,7 @@ export * from './process-definition';
 export * from './relation-definition';
 export * from './runtime-context';
 export * from './runtime-document';
+export * from './runtime-package-definition';
 export * from './runtime-trace';
 export * from './security-policy-definition';
 export * from './sync-definition';

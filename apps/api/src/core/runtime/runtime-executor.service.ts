@@ -7,11 +7,13 @@ import type {
   MetadataDefinition,
   RuntimeContext,
   RuntimeDocument,
+  RuntimePackageDefinition,
   RuntimeTrace,
 } from '@redios/shared';
 import { ActionEngine, type RuntimeActionPlan } from '../action/action-engine.service';
 import { ApplicationEngine } from '../application/application-engine.service';
 import { BusinessEngine, type BusinessExecutionResult } from '../business/business-engine.service';
+import { RuntimePackageProvider } from '../compiler/runtime-package-provider.service';
 import { ConflictEngine } from '../conflict/conflict-engine.service';
 import { EventEngine, type RuntimeEventPublishResult } from '../event/event-engine.service';
 import { LedgerEngine, type LedgerExecutionResult } from '../ledger/ledger-engine.service';
@@ -91,6 +93,7 @@ export class RuntimeExecutor {
     private readonly storageEngine: StorageEngine,
     private readonly securityPolicyEngine: SecurityPolicyEngine,
     private readonly conflictEngine: ConflictEngine,
+    private readonly runtimePackageProvider: RuntimePackageProvider,
   ) {}
 
   async create(input: RuntimeExecutionInput): Promise<RuntimeExecutionResult> {
@@ -158,7 +161,12 @@ export class RuntimeExecutor {
     });
 
     try {
-      await this.resolveRuntimeTarget(context, entityCode);
+      const runtimeTarget = await this.resolveRuntimeTarget(context, entityCode);
+      await this.traceEngine.recordStepResult(trace.id!, 'RUNTIME_PACKAGE', 'SUCCESS', {
+        status: 'RUNTIME_PACKAGE',
+        version: runtimeTarget.runtimePackage?.metadataVersion,
+        source: runtimeTarget.runtimePackage ? 'COMPILED' : 'METADATA_RESOLVER',
+      });
 
       if (source === 'OFFLINE_SYNC') {
         await this.traceEngine.recordStep(trace.id!, 'CONFLICT_CHECK', () =>
@@ -304,15 +312,52 @@ export class RuntimeExecutor {
     application: MetadataDefinition<ApplicationDefinition>;
     entity: MetadataDefinition<EntityDefinition>;
     fields: MetadataDefinition<FieldDefinition>[];
+    runtimePackage?: RuntimePackageDefinition;
   }> {
     this.securityEngine.validateContext(context);
 
     const application = await this.applicationEngine.resolve(context);
+    const activeRuntimePackage = await this.runtimePackageProvider.getActive(context);
+    const compiledTarget = activeRuntimePackage
+      ? {
+          packageDefinition: activeRuntimePackage.definition,
+          target: this.compiledRuntimeTarget(activeRuntimePackage.definition, entityCode),
+        }
+      : undefined;
+
+    if (compiledTarget?.target) {
+      return {
+        application,
+        ...compiledTarget.target,
+        runtimePackage: compiledTarget.packageDefinition,
+      };
+    }
+
     const entity = await this.metadataResolver.resolveEntity(context, entityCode);
     const fields = await this.metadataResolver.resolveFields(context, entity.definition.fieldCodes);
 
     return {
       application,
+      entity,
+      fields,
+    };
+  }
+
+  private compiledRuntimeTarget(
+    runtimePackage: RuntimePackageDefinition,
+    entityCode: string,
+  ): { entity: MetadataDefinition<EntityDefinition>; fields: MetadataDefinition<FieldDefinition>[] } | undefined {
+    const entity = runtimePackage.content.entities[entityCode] as MetadataDefinition<EntityDefinition> | undefined;
+
+    if (!entity) {
+      return undefined;
+    }
+
+    const fields = entity.definition.fieldCodes
+      .map((fieldCode) => runtimePackage.content.fields[`${entityCode}:${fieldCode}`] as MetadataDefinition<FieldDefinition> | undefined)
+      .filter((field): field is MetadataDefinition<FieldDefinition> => Boolean(field));
+
+    return {
       entity,
       fields,
     };
