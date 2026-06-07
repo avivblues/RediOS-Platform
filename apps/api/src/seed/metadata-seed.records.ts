@@ -13,6 +13,7 @@ import type {
   MetadataDefinition,
   ProcessDefinition,
   RelationDefinition,
+  ThemeDefinition,
   UIDefinition,
   ViewDefinition,
   WorkflowDefinition,
@@ -49,7 +50,102 @@ type ApplicationSeed = {
   entities: EntitySeed[];
   relations?: RelationDefinition[];
   uis?: UIDefinition[];
+  themes?: ThemeDefinition[];
 };
+
+const commonThemeDefinitions: ThemeDefinition[] = [
+  {
+    code: 'DEFAULT_THEME',
+    name: 'Default Theme',
+    version: 1,
+    enabled: true,
+    tokens: {
+      colors: {
+        primary: '#00AEEF',
+        secondary: '#0F172A',
+        success: '#22C55E',
+        warning: '#F59E0B',
+        danger: '#EF4444',
+        background: '#F8FAFC',
+        surface: '#FFFFFF',
+        text: '#0F172A',
+      },
+      typography: {
+        fontFamily: 'Inter',
+        size: {
+          small: '12px',
+          medium: '14px',
+          large: '18px',
+        },
+      },
+      spacing: {
+        xs: '4px',
+        sm: '8px',
+        md: '16px',
+        lg: '24px',
+      },
+      radius: {
+        small: '4px',
+        medium: '8px',
+        large: '12px',
+      },
+    },
+    layout: {
+      navigation: 'SIDEBAR',
+      density: 'NORMAL',
+    },
+    assets: {
+      logo: 'redios-logo',
+      favicon: 'redios-favicon',
+    },
+  },
+  {
+    code: 'COMPACT_THEME',
+    name: 'Compact Theme',
+    version: 1,
+    enabled: true,
+    extends: 'DEFAULT_THEME',
+    tokens: {
+      colors: {
+        primary: '#00AEEF',
+        secondary: '#0F172A',
+        success: '#22C55E',
+        warning: '#F59E0B',
+        danger: '#EF4444',
+        background: '#F8FAFC',
+        surface: '#FFFFFF',
+        text: '#0F172A',
+      },
+      typography: {
+        fontFamily: 'Inter',
+        size: {
+          small: '11px',
+          medium: '13px',
+          large: '16px',
+        },
+      },
+      spacing: {
+        xs: '2px',
+        sm: '4px',
+        md: '8px',
+        lg: '16px',
+      },
+      radius: {
+        small: '3px',
+        medium: '6px',
+        large: '10px',
+      },
+    },
+    layout: {
+      navigation: 'TOPBAR',
+      density: 'COMPACT',
+    },
+    assets: {
+      logo: 'redios-logo',
+      favicon: 'redios-favicon',
+    },
+  },
+];
 
 const commonUIDefinitions: UIDefinition[] = [
   ...[
@@ -409,6 +505,7 @@ const applications: ApplicationSeed[] = [
         code: 'WORK_ORDER_DETAIL_PAGE',
         entityCode: 'WORK_ORDER',
         viewCode: 'WORK_ORDER_LIST',
+        themeCode: 'DEFAULT_THEME',
         template: 'MASTER_DETAIL',
         regions: {
           HEADER: ['ACTION_BAR'],
@@ -424,6 +521,7 @@ const applications: ApplicationSeed[] = [
         code: 'ASSET_DETAIL_PAGE',
         entityCode: 'ASSET',
         viewCode: 'ASSET_LOOKUP',
+        themeCode: 'DEFAULT_THEME',
         template: 'MASTER_DETAIL',
         regions: {
           HEADER: ['ACTION_BAR'],
@@ -831,6 +929,7 @@ const applications: ApplicationSeed[] = [
         code: 'TICKET_DETAIL_PAGE',
         entityCode: 'TICKET',
         viewCode: 'TICKET_LIST',
+        themeCode: 'DEFAULT_THEME',
         template: 'MASTER_DETAIL',
         regions: {
           HEADER: ['ACTION_BAR'],
@@ -849,6 +948,7 @@ export const metadataSeedRecords: MetadataDefinition[] = applications.flatMap((a
   createApplicationRecord(application),
   ...application.entities.flatMap((entity) => createEntityRecords(application, entity)),
   ...(application.relations ?? []).map((relation) => createRelationRecord(application, relation)),
+  ...[...commonThemeDefinitions, ...(application.themes ?? [])].map((theme) => createThemeRecord(application, theme)),
   ...[...commonUIDefinitions, ...(application.uis ?? [])].map((ui) => createUIRecord(application, ui)),
 ]);
 
@@ -1101,6 +1201,23 @@ function createFormRecord(
     version: form.version,
     enabled: form.enabled,
     definition: form,
+  };
+}
+
+function createThemeRecord(
+  application: ApplicationSeed,
+  theme: ThemeDefinition,
+): MetadataDefinition<ThemeDefinition> {
+  return {
+    tenantId,
+    domainCode,
+    applicationCode: application.code,
+    type: 'THEME',
+    code: theme.code,
+    name: theme.name,
+    version: theme.version,
+    enabled: theme.enabled,
+    definition: theme,
   };
 }
 

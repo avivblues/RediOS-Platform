@@ -54,6 +54,7 @@ export interface UIPageDefinition {
   code: string;
   entityCode?: string;
   viewCode?: string;
+  themeCode?: string;
   template: string;
   regions: Record<string, string[]>;
   actions?: string[];

@@ -10,6 +10,7 @@ import type {
 } from '@redios/shared';
 import { MetadataResolver } from '../metadata/metadata-resolver.service';
 import { RelationEngine, type RelationPlan } from '../relation/relation-engine.service';
+import { ThemeEngine, type RuntimeTheme } from '../theme/theme-engine.service';
 
 export interface ComposedFormField {
   fieldCode: string;
@@ -32,6 +33,10 @@ export interface ComposedFormField {
       source: 'FORM';
       fieldCode: string;
     };
+  };
+  themeToken: {
+    radius: keyof RuntimeTheme['tokens']['radius'];
+    density: RuntimeTheme['layout']['density'];
   };
   relation?: {
     code: string;
@@ -60,6 +65,7 @@ export interface ComposedForm {
   name: string;
   version: number;
   layout: FormDefinition['layout']['type'];
+  theme: RuntimeTheme;
   sections: ComposedFormSection[];
 }
 
@@ -68,6 +74,7 @@ export class FormEngine {
   constructor(
     private readonly metadataResolver: MetadataResolver,
     private readonly relationEngine: RelationEngine,
+    private readonly themeEngine: ThemeEngine,
   ) {}
 
   async compose(context: RuntimeContext, entityCode: string, formCode?: string): Promise<ComposedForm> {
@@ -82,6 +89,7 @@ export class FormEngine {
     const fields = await this.metadataResolver.resolveFields(context, entity.definition.fieldCodes);
     const relations = await this.relationEngine.resolve(context, entityCode);
     const fieldsByCode = new Map(fields.map((field) => [field.definition.code, field.definition]));
+    const theme = await this.themeEngine.compose(context);
 
     return {
       entityCode,
@@ -89,10 +97,11 @@ export class FormEngine {
       name: form.name,
       version: form.version,
       layout: form.layout.type,
+      theme,
       sections: await Promise.all(
         [...form.layout.sections]
           .sort((left, right) => left.order - right.order)
-          .map((section) => this.composeSection(context, section, fieldsByCode, relations.relations)),
+          .map((section) => this.composeSection(context, section, fieldsByCode, relations.relations, theme)),
       ),
     };
   }
@@ -113,6 +122,7 @@ export class FormEngine {
     section: FormSectionDefinition,
     fieldsByCode: Map<string, FieldDefinition>,
     relations: RelationPlan[],
+    theme: RuntimeTheme,
   ): Promise<ComposedFormSection> {
     return {
       code: section.code,
@@ -121,7 +131,7 @@ export class FormEngine {
       fields: await Promise.all(
         [...section.fields]
           .sort((left, right) => left.order - right.order)
-          .map((field) => this.composeField(context, field, fieldsByCode, relations)),
+          .map((field) => this.composeField(context, field, fieldsByCode, relations, theme)),
       ),
     };
   }
@@ -131,6 +141,7 @@ export class FormEngine {
     field: FormFieldDefinition,
     fieldsByCode: Map<string, FieldDefinition>,
     relations: RelationPlan[],
+    theme: RuntimeTheme,
   ): Promise<ComposedFormField> {
     const metadata = fieldsByCode.get(field.fieldCode);
 
@@ -161,6 +172,10 @@ export class FormEngine {
           source: 'FORM',
           fieldCode: field.binding?.fieldCode ?? field.fieldCode,
         },
+      },
+      themeToken: {
+        radius: 'medium',
+        density: theme.layout.density,
       },
       ...lookup,
     };

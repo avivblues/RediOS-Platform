@@ -12,6 +12,7 @@ export type MetadataType =
   | 'VIEW'
   | 'UI'
   | 'FORM'
+  | 'THEME'
   | 'REPORT'
   | 'EXPERIENCE'
   | 'RULE';

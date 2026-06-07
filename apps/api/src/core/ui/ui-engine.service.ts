@@ -8,6 +8,7 @@ import type {
   UITemplateDefinition,
 } from '@redios/shared';
 import { MetadataResolver } from '../metadata/metadata-resolver.service';
+import { ThemeEngine, type RuntimeTheme } from '../theme/theme-engine.service';
 
 export interface ResolvedUIAtom {
   code: string;
@@ -36,20 +37,26 @@ export interface ResolvedUIRegion {
 export interface ResolvedUIPage {
   page: UIPageDefinition;
   template: UITemplateDefinition;
+  theme: RuntimeTheme;
   regions: ResolvedUIRegion[];
 }
 
 @Injectable()
 export class UIEngine {
-  constructor(private readonly metadataResolver: MetadataResolver) {}
+  constructor(
+    private readonly metadataResolver: MetadataResolver,
+    private readonly themeEngine: ThemeEngine,
+  ) {}
 
   async resolvePage(context: RuntimeContext, pageCode: string): Promise<ResolvedUIPage> {
     const page = await this.resolveDefinition<UIPageDefinition>(context, 'PAGE', pageCode);
     const template = await this.resolveDefinition<UITemplateDefinition>(context, 'TEMPLATE', page.template);
+    const theme = await this.themeEngine.compose(context, page.themeCode);
 
     return {
       page,
       template,
+      theme,
       regions: await Promise.all(
         template.regions.map(async (region) => ({
           code: region.code,

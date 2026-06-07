@@ -14,6 +14,7 @@ import type {
   ProcessDefinition,
   RelationDefinition,
   RuntimeContext,
+  ThemeDefinition,
   UIDefinition,
   UIKind,
   UIPageDefinition,
@@ -289,6 +290,32 @@ export class MetadataResolver {
     }
 
     return definition as MetadataDefinition<FormDefinition>;
+  }
+
+  async resolveTheme(context: RuntimeContext, themeCode?: string): Promise<MetadataDefinition<ThemeDefinition> | null> {
+    const definitions = await this.registry.findByType(context, 'THEME');
+    const matchingDefinitions = definitions.filter((candidate) => {
+      const theme = candidate.definition as ThemeDefinition;
+      return theme.enabled && (!themeCode || theme.code === themeCode);
+    });
+    const definition =
+      (themeCode
+        ? matchingDefinitions[0]
+        : definitions.find((candidate) => (candidate.definition as ThemeDefinition).code === 'DEFAULT_THEME')) ??
+      matchingDefinitions[0] ??
+      definitions[0];
+
+    if (!definition) {
+      return null;
+    }
+
+    const validation = this.validator.validate(definition);
+
+    if (!validation.valid) {
+      throw new UnprocessableEntityException(validation.errors);
+    }
+
+    return definition as MetadataDefinition<ThemeDefinition>;
   }
 
   async resolveUI(

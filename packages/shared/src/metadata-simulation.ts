@@ -96,5 +96,9 @@ export interface SimulationResult {
       warnings: number;
       impacts: DependencyImpact[];
     }>;
+    theme?: {
+      code: string;
+      affectedPages: number;
+    };
   };
 }

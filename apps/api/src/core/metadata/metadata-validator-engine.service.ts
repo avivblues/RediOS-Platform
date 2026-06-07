@@ -11,6 +11,7 @@ import type {
   MetadataDefinition,
   ProcessDefinition,
   RelationDefinition,
+  ThemeDefinition,
   UIAtomDefinition,
   UIDefinition,
   UIMoleculeDefinition,
@@ -36,6 +37,7 @@ type MetadataIndex = {
   views: Map<string, MetadataDefinition<ViewDefinition>[]>;
   ui: Map<string, MetadataDefinition<UIDefinition>[]>;
   forms: Map<string, MetadataDefinition<FormDefinition>[]>;
+  themes: Map<string, MetadataDefinition<ThemeDefinition>[]>;
 };
 
 @Injectable()
@@ -56,6 +58,7 @@ export class MetadataValidatorEngine {
     this.validateViewDefinitions(metadataDefinitions, index, issues);
     this.validateUIDefinitions(metadataDefinitions, index, issues);
     this.validateFormDefinitions(metadataDefinitions, index, issues);
+    this.validateThemeDefinitions(metadataDefinitions, index, issues);
     this.validateDependencyIntegrity(metadataDefinitions, index, issues);
 
     const errors = issues.filter((issue) => issue.severity === 'ERROR').length;
@@ -83,6 +86,7 @@ export class MetadataValidatorEngine {
       views: new Map(),
       ui: new Map(),
       forms: new Map(),
+      themes: new Map(),
     };
 
     for (const metadata of metadataDefinitions) {
@@ -152,6 +156,12 @@ export class MetadataValidatorEngine {
         const records = index.forms.get(key) ?? [];
         records.push(metadata as MetadataDefinition<FormDefinition>);
         index.forms.set(key, records);
+      }
+
+      if (metadata.type === 'THEME') {
+        const records = index.themes.get(metadata.code) ?? [];
+        records.push(metadata as MetadataDefinition<ThemeDefinition>);
+        index.themes.set(metadata.code, records);
       }
     }
 
@@ -1032,6 +1042,75 @@ export class MetadataValidatorEngine {
     }
   }
 
+  private validateThemeDefinitions(
+    metadataDefinitions: MetadataDefinition[],
+    index: MetadataIndex,
+    issues: ValidationIssue[],
+  ): void {
+    const requiredColorTokens: Array<keyof ThemeDefinition['tokens']['colors']> = [
+      'primary',
+      'secondary',
+      'success',
+      'warning',
+      'danger',
+      'background',
+      'surface',
+      'text',
+    ];
+
+    for (const [themeCode, themes] of index.themes.entries()) {
+      if (themes.length > 1) {
+        this.addIssue(
+          issues,
+          'THEME_DUPLICATE',
+          'ERROR',
+          `Duplicate theme code ${themeCode}.`,
+          `THEME.${themeCode}`,
+          'Keep one THEME definition per code.',
+        );
+      }
+    }
+
+    for (const metadata of metadataDefinitions.filter((candidate) => candidate.type === 'THEME')) {
+      const theme = metadata.definition as ThemeDefinition;
+
+      for (const token of requiredColorTokens) {
+        if (!theme.tokens.colors[token]) {
+          this.addIssue(
+            issues,
+            'THEME_TOKEN_MISSING',
+            'ERROR',
+            `Theme ${theme.code} is missing color token ${token}.`,
+            `THEME.${theme.code}.tokens.colors.${token}`,
+            `Set tokens.colors.${token}.`,
+          );
+        }
+      }
+
+      if (!['SIDEBAR', 'TOPBAR', 'HYBRID'].includes(theme.layout.navigation)) {
+        this.addIssue(
+          issues,
+          'THEME_LAYOUT_INVALID',
+          'ERROR',
+          `Theme ${theme.code} has invalid navigation mode ${theme.layout.navigation}.`,
+          `THEME.${theme.code}.layout.navigation`,
+          'Use SIDEBAR, TOPBAR, or HYBRID.',
+        );
+      }
+
+      if (!['COMPACT', 'NORMAL', 'COMFORTABLE'].includes(theme.layout.density)) {
+        this.addIssue(
+          issues,
+          'THEME_LAYOUT_INVALID',
+          'ERROR',
+          `Theme ${theme.code} has invalid density ${theme.layout.density}.`,
+          `THEME.${theme.code}.layout.density`,
+          'Use COMPACT, NORMAL, or COMFORTABLE.',
+        );
+      }
+    }
+  }
+
   private validateDependencyIntegrity(
     metadataDefinitions: MetadataDefinition[],
     index: MetadataIndex,
@@ -1156,6 +1235,7 @@ export class MetadataValidatorEngine {
         if (ui.kind === 'PAGE') {
           return [
             this.dependency(metadata, 'UI', ui.template, `UI.${ui.code}.template`),
+            ...(ui.themeCode ? [this.dependency(metadata, 'THEME', ui.themeCode, `UI.${ui.code}.themeCode`)] : []),
             ...(ui.viewCode ? [this.dependency(metadata, 'VIEW', ui.viewCode, `UI.${ui.code}.viewCode`)] : []),
             ...(ui.actions ?? []).map((actionCode) => this.dependency(metadata, 'ACTION', actionCode, `UI.${ui.code}.actions`)),
             ...(ui.relations ?? []).map((relationCode) =>
@@ -1166,6 +1246,11 @@ export class MetadataValidatorEngine {
             ),
           ];
         }
+      }
+
+      if (metadata.type === 'THEME') {
+        const theme = metadata.definition as ThemeDefinition;
+        return theme.extends ? [this.dependency(metadata, 'THEME', theme.extends, `THEME.${theme.code}.extends`)] : [];
       }
 
       return [];

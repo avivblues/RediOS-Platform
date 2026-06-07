@@ -8,6 +8,7 @@ import { MetadataModule } from '../metadata/metadata.module';
 import { ProcessModule } from '../process/process.module';
 import { RelationModule } from '../relation/relation.module';
 import { SecurityModule } from '../security/security.module';
+import { ThemeModule } from '../theme/theme.module';
 import { TraceModule } from '../trace/trace.module';
 import { UIModule } from '../ui/ui.module';
 import { WorkflowModule } from '../workflow/workflow.module';
@@ -27,6 +28,7 @@ import { SimulationEngine } from './simulation-engine.service';
     TraceModule,
     UIModule,
     FormModule,
+    ThemeModule,
   ],
   providers: [SimulationEngine],
   exports: [SimulationEngine],

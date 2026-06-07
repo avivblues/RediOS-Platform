@@ -18,6 +18,7 @@ import type {
   ProcessDefinition,
   RelationDefinition,
   RuntimeContext,
+  ThemeDefinition,
   UIDefinition,
   ViewDefinition,
   WorkflowDefinition,
@@ -139,6 +140,10 @@ export class DependencyEngine {
 
     if (record.type === 'UI') {
       return this.uiReferences(record.definition as UIDefinition, source);
+    }
+
+    if (record.type === 'THEME') {
+      return this.themeReferences(record.definition as ThemeDefinition, source);
     }
 
     if (record.type === 'FIELD') {
@@ -271,6 +276,7 @@ export class DependencyEngine {
     if (definition.kind === 'PAGE') {
       return [
         this.reference(source, 'RENDERS', 'UI', definition.template),
+        ...(definition.themeCode ? [this.reference(source, 'RENDERS', 'THEME', definition.themeCode)] : []),
         ...(definition.entityCode ? [this.reference(source, 'REFERENCES', 'ENTITY', definition.entityCode)] : []),
         ...(definition.viewCode ? [this.reference(source, 'REFERENCES', 'VIEW', definition.viewCode)] : []),
         ...(definition.actions ?? []).map((actionCode) => this.reference(source, 'TRIGGERS', 'ACTION', actionCode)),
@@ -282,6 +288,10 @@ export class DependencyEngine {
     }
 
     return [];
+  }
+
+  private themeReferences(definition: ThemeDefinition, source: DependencyNode): DependencyReference[] {
+    return definition.extends ? [this.reference(source, 'REFERENCES', 'THEME', definition.extends)] : [];
   }
 
   private toImpact(reference: DependencyReference): DependencyImpact {

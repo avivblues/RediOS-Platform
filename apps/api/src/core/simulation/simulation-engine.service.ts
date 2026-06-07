@@ -22,6 +22,7 @@ import { MetadataValidatorEngine } from '../metadata/metadata-validator-engine.s
 import { ProcessEngine } from '../process/process-engine.service';
 import { RelationEngine } from '../relation/relation-engine.service';
 import { SecurityEngine } from '../security/security-engine.service';
+import { ThemeEngine } from '../theme/theme-engine.service';
 import { TraceEngine } from '../trace/trace-engine.service';
 import { UIEngine } from '../ui/ui-engine.service';
 import { WorkflowEngine } from '../workflow/workflow-engine.service';
@@ -42,6 +43,7 @@ export class SimulationEngine {
     private readonly relationEngine: RelationEngine,
     private readonly uiEngine: UIEngine,
     private readonly formEngine: FormEngine,
+    private readonly themeEngine: ThemeEngine,
     private readonly traceEngine: TraceEngine,
   ) {}
 
@@ -313,6 +315,17 @@ export class SimulationEngine {
       },
     ];
 
+    const theme = await this.runStep(steps, 'VALIDATION', 'Theme metadata resolved.', () => this.themeEngine.compose(context));
+
+    if (!theme.ok) {
+      return this.finalize(request, context, this.failed(validation, steps, predicted));
+    }
+
+    predicted.theme = {
+      code: theme.value.theme,
+      affectedPages: pages.value.length,
+    };
+
     return this.finalize(request, context, {
       success: steps.every((step) => step.status !== 'FAILED'),
       validation,
@@ -411,6 +424,11 @@ export class SimulationEngine {
       }
 
       if (metadataDefinition.type === 'UI') {
+        const uiEntityCode = this.uiEntityCode(metadataDefinition.definition);
+        return !uiEntityCode || uiEntityCode === entityCode ? [metadataDefinition] : [];
+      }
+
+      if (metadataDefinition.type === 'THEME') {
         return [metadataDefinition];
       }
 
@@ -467,6 +485,14 @@ export class SimulationEngine {
         .map((field) => field.lookup?.viewCode)
         .filter((viewCode): viewCode is string => Boolean(viewCode)),
     );
+  }
+
+  private uiEntityCode(definition: unknown): string | undefined {
+    if (definition && typeof definition === 'object' && 'kind' in definition && (definition as { kind?: string }).kind === 'PAGE') {
+      return (definition as { entityCode?: string }).entityCode;
+    }
+
+    return undefined;
   }
 
   private async runStep<T>(

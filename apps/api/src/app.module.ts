@@ -18,6 +18,7 @@ import { RelationModule } from './core/relation/relation.module';
 import { RuntimeModule as CoreRuntimeModule } from './core/runtime/runtime.module';
 import { SecurityModule } from './core/security/security.module';
 import { StorageModule } from './core/storage/storage.module';
+import { ThemeModule as CoreThemeModule } from './core/theme/theme.module';
 import { UIModule as CoreUIModule } from './core/ui/ui.module';
 import { WorkflowModule } from './core/workflow/workflow.module';
 import { DesignerModule } from './designer/designer.module';
@@ -32,6 +33,7 @@ import { RuntimeModule as RuntimeApiModule } from './runtime/runtime.module';
 import { RuntimeTracesModule } from './runtime-traces/runtime-traces.module';
 import { RelationsModule } from './relations/relations.module';
 import { SimulationModule } from './simulation/simulation.module';
+import { ThemesModule } from './themes/themes.module';
 import { UIModule } from './ui/ui.module';
 
 @Module({
@@ -67,6 +69,7 @@ import { UIModule } from './ui/ui.module';
     FormsModule,
     DesignerModule,
     DependenciesModule,
+    ThemesModule,
     ContextModule,
     ApplicationModule,
     MetadataModule,
@@ -85,6 +88,7 @@ import { UIModule } from './ui/ui.module';
     CoreFormModule,
     CoreDesignerModule,
     CoreDependencyModule,
+    CoreThemeModule,
   ],
 })
 export class AppModule {}

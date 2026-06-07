@@ -1,0 +1,67 @@
+@baseUrl = http://localhost:3001/api
+
+### Current runtime theme
+### Expected: DEFAULT_THEME with primary RediOS color and SIDEBAR / NORMAL layout
+GET {{baseUrl}}/themes/current
+x-tenant-id: demo
+x-domain-code: DEFAULT
+x-application-code: ASSET_MAINTENANCE
+x-user-id: designer
+
+### Explicit compact theme
+GET {{baseUrl}}/themes/COMPACT_THEME
+x-tenant-id: demo
+x-domain-code: DEFAULT
+x-application-code: ASSET_MAINTENANCE
+x-user-id: designer
+
+### UI composition includes theme
+GET {{baseUrl}}/ui/pages/WORK_ORDER_DETAIL_PAGE
+x-tenant-id: demo
+x-domain-code: DEFAULT
+x-application-code: ASSET_MAINTENANCE
+x-user-id: designer
+
+### Form composition includes theme binding per field
+GET {{baseUrl}}/forms/WORK_ORDER
+x-tenant-id: demo
+x-domain-code: DEFAULT
+x-application-code: ASSET_MAINTENANCE
+x-user-id: designer
+
+### Theme designer draft
+POST {{baseUrl}}/designer/drafts
+x-tenant-id: demo
+x-domain-code: DEFAULT
+x-application-code: ASSET_MAINTENANCE
+x-user-id: designer
+x-permissions: FORM.DESIGN,FORM.PUBLISH
+content-type: application/json
+
+{
+  "targetType": "THEME",
+  "targetCode": "DEFAULT_THEME"
+}
+
+### Update primary color on theme draft
+POST {{baseUrl}}/designer/replace-with-theme-draft-id/operations
+x-tenant-id: demo
+x-domain-code: DEFAULT
+x-application-code: ASSET_MAINTENANCE
+x-user-id: designer
+x-permissions: FORM.DESIGN,FORM.PUBLISH
+content-type: application/json
+
+{
+  "type": "UPDATE_THEME_TOKEN",
+  "path": "colors.primary",
+  "after": "#22C55E"
+}
+
+### Preview theme draft impact
+POST {{baseUrl}}/designer/replace-with-theme-draft-id/preview
+x-tenant-id: demo
+x-domain-code: DEFAULT
+x-application-code: ASSET_MAINTENANCE
+x-user-id: designer
+x-permissions: FORM.DESIGN,FORM.PUBLISH

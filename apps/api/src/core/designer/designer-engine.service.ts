@@ -13,6 +13,7 @@ import type {
   RuntimeContext,
   RuntimeDocument,
   SimulationResult,
+  ThemeDefinition,
   ValidationResult,
 } from '@redios/shared';
 import { Model } from 'mongoose';
@@ -34,7 +35,7 @@ type MetadataVersionRecord = MetadataVersion & { _id?: unknown };
 export interface CreateDesignerDraftRequest {
   targetType: DesignerTargetType;
   targetCode: string;
-  entityCode: string;
+  entityCode?: string;
 }
 
 export interface DesignerPreviewResult {
@@ -46,12 +47,12 @@ export interface DesignerPreviewResult {
     safe: boolean;
     impacts: DependencyImpact[];
   };
-  draft: MetadataDraft<FormDefinition>;
+  draft: MetadataDraft<FormDefinition | ThemeDefinition>;
 }
 
 export interface DesignerPublishResult {
-  draft: MetadataDraft<FormDefinition>;
-  published: MetadataDefinition<FormDefinition>;
+  draft: MetadataDraft<FormDefinition | ThemeDefinition>;
+  published: MetadataDefinition<FormDefinition | ThemeDefinition>;
   traceId?: string;
 }
 
@@ -73,18 +74,18 @@ export class DesignerEngine {
     private readonly permissionGuard: DesignerPermissionGuard,
   ) {}
 
-  async createDraft(context: RuntimeContext, request: CreateDesignerDraftRequest): Promise<MetadataDraft<FormDefinition>> {
+  async createDraft(context: RuntimeContext, request: CreateDesignerDraftRequest): Promise<MetadataDraft<FormDefinition | ThemeDefinition>> {
     this.permissionGuard.assert(context, 'FORM.DESIGN');
-    this.assertFormTarget(request.targetType);
+    this.assertSupportedTarget(request.targetType);
 
-    const source = await this.metadataResolver.resolveForm(context, request.entityCode, request.targetCode);
+    const source = await this.resolveDesignerSource(context, request);
 
     if (!source) {
-      throw new NotFoundException(`Metadata FORM:${request.entityCode}:${request.targetCode} was not found.`);
+      throw new NotFoundException(`Metadata ${request.targetType}:${request.targetCode} was not found.`);
     }
 
     const trace = await this.traceEngine.start(context, {
-      entityCode: request.entityCode,
+      entityCode: request.entityCode ?? request.targetType,
       documentId: source.id,
       actionCode: 'DESIGNER_CREATE_DRAFT',
     });
@@ -116,7 +117,7 @@ export class DesignerEngine {
     context: RuntimeContext,
     draftId: string,
     operation: DesignerOperation,
-  ): Promise<MetadataDraft<FormDefinition>> {
+  ): Promise<MetadataDraft<FormDefinition | ThemeDefinition>> {
     this.permissionGuard.assert(context, 'FORM.DESIGN');
     const draft = await this.findDraft(context, draftId);
     this.assertDraftEditable(draft);
@@ -126,11 +127,11 @@ export class DesignerEngine {
       userId: context.userId,
       timestamp: new Date(),
     };
-    const form = this.clone(draft.draft.definition);
-    const before = this.clone(form);
-    this.applyFormOperation(form, normalizedOperation);
+    const definition = this.clone(draft.draft.definition);
+    const before = this.clone(definition);
+    this.applyDraftOperation(draft.targetType, definition, normalizedOperation);
     normalizedOperation.before = normalizedOperation.before ?? before;
-    normalizedOperation.after = normalizedOperation.after ?? this.clone(form);
+    normalizedOperation.after = normalizedOperation.after ?? this.clone(definition);
 
     const updated = await this.draftModel
       .findOneAndUpdate(
@@ -141,8 +142,8 @@ export class DesignerEngine {
         {
           $set: {
             status: 'DRAFT',
-            'draft.definition': form,
-            'draft.name': form.name,
+            'draft.definition': definition,
+            'draft.name': definition.name,
             updatedBy: context.userId,
           },
           $push: {
@@ -160,7 +161,7 @@ export class DesignerEngine {
       throw new NotFoundException('Metadata draft was not found.');
     }
 
-    await this.audit(context, form.entityCode, this.auditEvent(normalizedOperation.type), normalizedOperation);
+    await this.audit(context, this.draftEntityCode(draft), this.auditEvent(normalizedOperation.type), normalizedOperation);
     return this.toDraft(updated);
   }
 
@@ -168,7 +169,7 @@ export class DesignerEngine {
     this.permissionGuard.assert(context, 'FORM.DESIGN');
     const draft = await this.findDraft(context, draftId);
     const trace = await this.traceEngine.start(context, {
-      entityCode: draft.entityCode ?? draft.draft.definition.entityCode,
+      entityCode: this.draftEntityCode(draft),
       documentId: draft.id,
       actionCode: 'DESIGNER_PREVIEW',
     });
@@ -223,7 +224,7 @@ export class DesignerEngine {
     this.permissionGuard.assert(context, 'FORM.PUBLISH');
     const draft = await this.findDraft(context, draftId);
     const trace = await this.traceEngine.start(context, {
-      entityCode: draft.entityCode ?? draft.draft.definition.entityCode,
+      entityCode: this.draftEntityCode(draft),
       documentId: draft.id,
       actionCode: 'DESIGNER_PUBLISH',
     });
@@ -249,15 +250,15 @@ export class DesignerEngine {
       }
 
       const published = await this.traceEngine.recordStep(trace.id!, 'PUBLISH', async () => {
-        const current = await this.metadataResolver.resolveForm(context, draft.draft.definition.entityCode, draft.targetCode);
+        const current = await this.resolveCurrentDraftSource(context, draft);
 
         if (!current) {
-          throw new NotFoundException(`Metadata FORM:${draft.draft.definition.entityCode}:${draft.targetCode} was not found.`);
+          throw new NotFoundException(`Metadata ${draft.targetType}:${draft.targetCode} was not found.`);
         }
 
         await this.saveVersion(context, current, context.userId);
 
-        const next: MetadataDefinition<FormDefinition> = {
+        const next: MetadataDefinition<FormDefinition | ThemeDefinition> = {
           ...current,
           name: draft.draft.name,
           version: current.version + 1,
@@ -268,11 +269,11 @@ export class DesignerEngine {
           },
         };
         const saved = await this.metadataProvider.saveMetadata(context, next);
-        await this.saveVersion(context, saved as MetadataDefinition<FormDefinition>, context.userId);
-        return saved as MetadataDefinition<FormDefinition>;
+        await this.saveVersion(context, saved as MetadataDefinition<FormDefinition | ThemeDefinition>, context.userId);
+        return saved as MetadataDefinition<FormDefinition | ThemeDefinition>;
       });
       const updatedDraft = await this.markDraftStatus(context, draft.id!, 'PUBLISHED');
-      await this.audit(context, published.definition.entityCode, 'FORM_PUBLISHED', {
+      await this.audit(context, this.definitionEntityCode(published.definition) ?? published.type, 'FORM_PUBLISHED', {
         draftId,
         formCode: published.definition.code,
         version: published.version,
@@ -309,35 +310,35 @@ export class DesignerEngine {
     }
 
     const trace = await this.traceEngine.start(context, {
-      entityCode: draft.entityCode ?? draft.draft.definition.entityCode,
+      entityCode: this.draftEntityCode(draft),
       documentId: draft.id,
       actionCode: 'DESIGNER_ROLLBACK',
     });
 
     try {
       const published = await this.traceEngine.recordStep(trace.id!, 'PUBLISH', async () => {
-        const current = await this.metadataResolver.resolveForm(context, draft.draft.definition.entityCode, draft.targetCode);
+        const current = await this.resolveCurrentDraftSource(context, draft);
 
         if (!current) {
-          throw new NotFoundException(`Metadata FORM:${draft.draft.definition.entityCode}:${draft.targetCode} was not found.`);
+          throw new NotFoundException(`Metadata ${draft.targetType}:${draft.targetCode} was not found.`);
         }
 
         await this.saveVersion(context, current, context.userId);
-        const restored: MetadataDefinition<FormDefinition> = {
-          ...(snapshot.metadata as MetadataDefinition<FormDefinition>),
+        const restored: MetadataDefinition<FormDefinition | ThemeDefinition> = {
+          ...(snapshot.metadata as MetadataDefinition<FormDefinition | ThemeDefinition>),
           id: current.id,
           version: current.version + 1,
           definition: {
-            ...(snapshot.metadata as MetadataDefinition<FormDefinition>).definition,
+            ...(snapshot.metadata as MetadataDefinition<FormDefinition | ThemeDefinition>).definition,
             version: current.version + 1,
-          },
+          } as FormDefinition | ThemeDefinition,
         };
         const saved = await this.metadataProvider.saveMetadata(context, restored);
-        await this.saveVersion(context, saved as MetadataDefinition<FormDefinition>, context.userId);
-        return saved as MetadataDefinition<FormDefinition>;
+        await this.saveVersion(context, saved as MetadataDefinition<FormDefinition | ThemeDefinition>, context.userId);
+        return saved as MetadataDefinition<FormDefinition | ThemeDefinition>;
       });
       const updatedDraft = await this.markDraftStatus(context, draft.id!, 'REJECTED');
-      await this.audit(context, published.definition.entityCode, 'FORM_PUBLISHED', {
+      await this.audit(context, this.definitionEntityCode(published.definition) ?? published.type, 'FORM_PUBLISHED', {
         draftId,
         rollbackToVersion: version,
         version: published.version,
@@ -357,17 +358,18 @@ export class DesignerEngine {
 
   async composeDraft(context: RuntimeContext, draftId: string): Promise<ComposedForm> {
     const draft = await this.findDraft(context, draftId);
-    return this.formEngine.compose(context, draft.draft.definition.entityCode, draft.draft.definition.code);
+    const form = draft.draft.definition as FormDefinition;
+    return this.formEngine.compose(context, form.entityCode, form.code);
   }
 
-  private async validateDraft(context: RuntimeContext, draft: MetadataDraft<FormDefinition>): Promise<ValidationResult> {
+  private async validateDraft(context: RuntimeContext, draft: MetadataDraft<FormDefinition | ThemeDefinition>): Promise<ValidationResult> {
     const metadata = await this.metadataProvider.findMetadata(context, {
       enabledOnly: true,
     });
     const replaced = metadata.map((candidate) =>
       candidate.type === draft.targetType &&
       candidate.code === draft.targetCode &&
-      this.definitionEntityCode(candidate.definition) === draft.draft.definition.entityCode
+      this.sameDefinitionScope(candidate.definition, draft.draft.definition)
         ? draft.draft
         : candidate,
     );
@@ -376,10 +378,10 @@ export class DesignerEngine {
 
   private async analyzeDraftDependencies(
     context: RuntimeContext,
-    draft: MetadataDraft<FormDefinition>,
+    draft: MetadataDraft<FormDefinition | ThemeDefinition>,
   ): Promise<{ safe: boolean; impacts: DependencyImpact[] }> {
     const lastChange = draft.changes.at(-1);
-    const target = this.dependencyTargetFromOperation(lastChange);
+    const target = this.dependencyTargetFromOperation(draft, lastChange);
 
     if (!target) {
       return {
@@ -390,7 +392,14 @@ export class DesignerEngine {
 
     const analysis = await this.dependencyEngine.analyzeImpact(context, target);
     const impacts =
-      lastChange?.type === 'REMOVE_FIELD' ? analysis.impacts : analysis.impacts.filter((impact) => impact.impact === 'WARNING');
+      lastChange?.type === 'UPDATE_THEME_TOKEN'
+        ? analysis.impacts.map((impact) => ({
+            ...impact,
+            impact: 'INFO' as const,
+          }))
+        : lastChange?.type === 'REMOVE_FIELD'
+          ? analysis.impacts
+          : analysis.impacts.filter((impact) => impact.impact === 'WARNING');
 
     return {
       safe: impacts.every((impact) => impact.impact !== 'BREAKING'),
@@ -398,7 +407,10 @@ export class DesignerEngine {
     };
   }
 
-  private dependencyTargetFromOperation(operation: DesignerOperation | undefined): { type: 'FIELD'; code: string } | undefined {
+  private dependencyTargetFromOperation(
+    draft: MetadataDraft<FormDefinition | ThemeDefinition>,
+    operation: DesignerOperation | undefined,
+  ): { type: 'FIELD' | 'THEME'; code: string } | undefined {
     if (!operation) {
       return undefined;
     }
@@ -410,7 +422,65 @@ export class DesignerEngine {
       };
     }
 
+    if (operation.type === 'UPDATE_THEME_TOKEN') {
+      return {
+        type: 'THEME',
+        code: draft.targetCode,
+      };
+    }
+
     return undefined;
+  }
+
+  private async resolveDesignerSource(
+    context: RuntimeContext,
+    request: CreateDesignerDraftRequest,
+  ): Promise<MetadataDefinition<FormDefinition | ThemeDefinition> | null> {
+    if (request.targetType === 'FORM') {
+      if (!request.entityCode) {
+        throw new BadRequestException('FORM designer drafts require entityCode.');
+      }
+
+      return this.metadataResolver.resolveForm(context, request.entityCode, request.targetCode);
+    }
+
+    return this.metadataResolver.resolveTheme(context, request.targetCode);
+  }
+
+  private async resolveCurrentDraftSource(
+    context: RuntimeContext,
+    draft: MetadataDraft<FormDefinition | ThemeDefinition>,
+  ): Promise<MetadataDefinition<FormDefinition | ThemeDefinition> | null> {
+    if (draft.targetType === 'FORM') {
+      const form = draft.draft.definition as FormDefinition;
+      return this.metadataResolver.resolveForm(context, form.entityCode, draft.targetCode);
+    }
+
+    return this.metadataResolver.resolveTheme(context, draft.targetCode);
+  }
+
+  private applyDraftOperation(
+    targetType: DesignerTargetType,
+    definition: FormDefinition | ThemeDefinition,
+    operation: DesignerOperation,
+  ): void {
+    if (targetType === 'THEME') {
+      this.applyThemeOperation(definition as ThemeDefinition, operation);
+      return;
+    }
+
+    this.applyFormOperation(definition as FormDefinition, operation);
+  }
+
+  private applyThemeOperation(theme: ThemeDefinition, operation: DesignerOperation): void {
+    if (operation.type !== 'UPDATE_THEME_TOKEN') {
+      throw new BadRequestException(`Unsupported theme designer operation: ${operation.type}`);
+    }
+
+    const payload = operation.payload ?? {};
+    const path = operation.path ?? this.payloadString(payload, 'path');
+    const value = 'after' in operation ? operation.after : payload.value;
+    this.setPath(theme as unknown as Record<string, unknown>, path.startsWith('tokens.') || path.startsWith('layout.') || path.startsWith('assets.') ? path : `tokens.${path}`, value);
   }
 
   private applyFormOperation(form: FormDefinition, operation: DesignerOperation): void {
@@ -584,7 +654,7 @@ export class DesignerEngine {
 
   private async saveVersion(
     context: RuntimeContext,
-    metadata: MetadataDefinition<FormDefinition>,
+    metadata: MetadataDefinition<FormDefinition | ThemeDefinition>,
     userId: string,
   ): Promise<void> {
     await this.versionModel.create({
@@ -592,9 +662,9 @@ export class DesignerEngine {
       domainCode: context.domainCode,
       applicationCode: context.applicationCode,
       sourceMetadataId: metadata.id,
-      targetType: 'FORM',
+      targetType: metadata.type,
       targetCode: metadata.code,
-      entityCode: metadata.definition.entityCode,
+      entityCode: this.definitionEntityCode(metadata.definition),
       version: metadata.version,
       metadata: this.clone(metadata),
       createdBy: userId,
@@ -605,7 +675,7 @@ export class DesignerEngine {
     context: RuntimeContext,
     draftId: string,
     status: MetadataDraft['status'],
-  ): Promise<MetadataDraft<FormDefinition>> {
+  ): Promise<MetadataDraft<FormDefinition | ThemeDefinition>> {
     const updated = await this.draftModel
       .findOneAndUpdate(
         {
@@ -632,7 +702,7 @@ export class DesignerEngine {
     return this.toDraft(updated);
   }
 
-  private async findDraft(context: RuntimeContext, draftId: string): Promise<MetadataDraft<FormDefinition>> {
+  private async findDraft(context: RuntimeContext, draftId: string): Promise<MetadataDraft<FormDefinition | ThemeDefinition>> {
     const draft = await this.draftModel
       .findOne({
         _id: draftId,
@@ -654,8 +724,8 @@ export class DesignerEngine {
     }
   }
 
-  private assertFormTarget(targetType: DesignerTargetType): void {
-    if (targetType !== 'FORM') {
+  private assertSupportedTarget(targetType: DesignerTargetType): void {
+    if (targetType !== 'FORM' && targetType !== 'THEME') {
       throw new BadRequestException(`Unsupported designer target type: ${targetType}`);
     }
   }
@@ -762,6 +832,21 @@ export class DesignerEngine {
       : undefined;
   }
 
+  private draftEntityCode(draft: MetadataDraft<FormDefinition | ThemeDefinition>): string {
+    return draft.entityCode ?? this.definitionEntityCode(draft.draft.definition) ?? draft.targetType;
+  }
+
+  private sameDefinitionScope(left: unknown, right: unknown): boolean {
+    const leftEntity = this.definitionEntityCode(left);
+    const rightEntity = this.definitionEntityCode(right);
+
+    if (leftEntity || rightEntity) {
+      return leftEntity === rightEntity;
+    }
+
+    return true;
+  }
+
   private scope(context: RuntimeContext): Record<string, string> {
     return {
       tenantId: context.tenantId,
@@ -770,7 +855,7 @@ export class DesignerEngine {
     };
   }
 
-  private toDraft(record: MetadataDraftRecord): MetadataDraft<FormDefinition> {
+  private toDraft(record: MetadataDraftRecord): MetadataDraft<FormDefinition | ThemeDefinition> {
     return {
       id: String(record._id ?? record.id ?? ''),
       tenantId: record.tenantId,
@@ -781,7 +866,7 @@ export class DesignerEngine {
       targetCode: record.targetCode,
       entityCode: record.entityCode,
       status: record.status,
-      draft: record.draft as MetadataDefinition<FormDefinition>,
+      draft: record.draft as MetadataDefinition<FormDefinition | ThemeDefinition>,
       changes: record.changes,
       createdBy: record.createdBy,
       updatedBy: record.updatedBy,
