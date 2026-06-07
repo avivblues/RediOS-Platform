@@ -1,4 +1,5 @@
 import type { ValidationResult } from './metadata-validation';
+import type { DependencyImpact } from './dependency-definition';
 
 export type SimulationTraceMode = 'NONE' | 'RETURN_ONLY' | 'STORE';
 
@@ -89,5 +90,11 @@ export interface SimulationResult {
       operation: string;
       impact: string[];
     };
+    dependencies?: Array<{
+      change: string;
+      breaking: number;
+      warnings: number;
+      impacts: DependencyImpact[];
+    }>;
   };
 }

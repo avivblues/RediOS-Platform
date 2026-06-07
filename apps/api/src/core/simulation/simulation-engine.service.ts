@@ -1,6 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import type {
   FieldDefinition,
+  DependencyImpact,
   MetadataDefinition,
   RuntimeContext,
   RuntimeDocument,
@@ -48,6 +49,10 @@ export class SimulationEngine {
     validation: ValidationResult;
     operation: string;
     impact: string[];
+    dependencies?: Array<{
+      change: string;
+      impacts: DependencyImpact[];
+    }>;
   }): SimulationResult {
     return {
       success: input.validation.valid,
@@ -65,6 +70,12 @@ export class SimulationEngine {
           operation: input.operation,
           impact: input.impact,
         },
+        dependencies: input.dependencies?.map((dependency) => ({
+          change: dependency.change,
+          breaking: dependency.impacts.filter((impact) => impact.impact === 'BREAKING').length,
+          warnings: dependency.impacts.filter((impact) => impact.impact === 'WARNING').length,
+          impacts: dependency.impacts,
+        })),
       },
     };
   }

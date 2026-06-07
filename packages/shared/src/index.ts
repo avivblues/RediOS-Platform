@@ -1,6 +1,7 @@
 export * from './action-definition';
 export * from './application-definition';
 export * from './business-definition';
+export * from './dependency-definition';
 export * from './designer-definition';
 export * from './engine-interface';
 export * from './entity-definition';

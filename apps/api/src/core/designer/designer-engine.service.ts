@@ -2,6 +2,7 @@ import { BadRequestException, Inject, Injectable, NotFoundException, Unprocessab
 import { InjectModel } from '@nestjs/mongoose';
 import type {
   DesignerOperation,
+  DependencyImpact,
   DesignerTargetType,
   FormDefinition,
   FormFieldDefinition,
@@ -17,6 +18,7 @@ import type {
 import { Model } from 'mongoose';
 import { EventEngine } from '../event/event-engine.service';
 import { FormEngine, type ComposedForm } from '../form/form-engine.service';
+import { DependencyEngine } from '../dependency/dependency-engine.service';
 import { METADATA_PROVIDER, type MetadataProvider } from '../metadata/metadata-provider.interface';
 import { MetadataResolver } from '../metadata/metadata-resolver.service';
 import { MetadataValidatorEngine } from '../metadata/metadata-validator-engine.service';
@@ -40,6 +42,10 @@ export interface DesignerPreviewResult {
   validation: ValidationResult;
   simulation: SimulationResult;
   affected: string[];
+  dependencies: {
+    safe: boolean;
+    impacts: DependencyImpact[];
+  };
   draft: MetadataDraft<FormDefinition>;
 }
 
@@ -61,6 +67,7 @@ export class DesignerEngine {
     private readonly metadataValidatorEngine: MetadataValidatorEngine,
     private readonly simulationEngine: SimulationEngine,
     private readonly formEngine: FormEngine,
+    private readonly dependencyEngine: DependencyEngine,
     private readonly eventEngine: EventEngine,
     private readonly traceEngine: TraceEngine,
     private readonly permissionGuard: DesignerPermissionGuard,
@@ -171,27 +178,39 @@ export class DesignerEngine {
         draftId,
         targetCode: draft.targetCode,
       });
+      const dependency = await this.traceEngine.recordStep(trace.id!, 'DEPENDENCY_CHECK', () =>
+        this.analyzeDraftDependencies(context, draft),
+      );
       const affected = ['FORM', 'UI_RENDER', 'VALIDATION'];
       const simulation = await this.traceEngine.recordStep(trace.id!, 'SIMULATION', () =>
         this.simulationEngine.simulateDesigner({
           validation,
           operation: draft.changes.at(-1)?.type ?? 'PREVIEW',
           impact: affected,
+          dependencies: [
+            {
+              change: draft.changes.at(-1)?.type ?? 'PREVIEW',
+              impacts: dependency.impacts,
+            },
+          ],
         }),
       );
 
-      if (validation.valid) {
+      const valid = validation.valid && dependency.safe;
+
+      if (valid) {
         await this.markDraftStatus(context, draft.id!, 'VALIDATED');
         await this.traceEngine.complete(trace.id!);
       } else {
-        await this.traceEngine.fail(trace.id!, validation);
+        await this.traceEngine.fail(trace.id!, { validation, dependency });
       }
 
       return {
-        valid: validation.valid,
+        valid,
         validation,
         simulation,
         affected,
+        dependencies: dependency,
         draft,
       };
     } catch (error) {
@@ -216,6 +235,17 @@ export class DesignerEngine {
 
       if (!validation.valid) {
         throw new UnprocessableEntityException(validation);
+      }
+
+      const dependency = await this.traceEngine.recordStep(trace.id!, 'DEPENDENCY_CHECK', () =>
+        this.analyzeDraftDependencies(context, draft),
+      );
+
+      if (!dependency.safe) {
+        throw new UnprocessableEntityException({
+          code: 'DEPENDENCY_BREAKING_IMPACT',
+          impacts: dependency.impacts,
+        });
       }
 
       const published = await this.traceEngine.recordStep(trace.id!, 'PUBLISH', async () => {
@@ -342,6 +372,45 @@ export class DesignerEngine {
         : candidate,
     );
     return this.metadataValidatorEngine.validate(replaced);
+  }
+
+  private async analyzeDraftDependencies(
+    context: RuntimeContext,
+    draft: MetadataDraft<FormDefinition>,
+  ): Promise<{ safe: boolean; impacts: DependencyImpact[] }> {
+    const lastChange = draft.changes.at(-1);
+    const target = this.dependencyTargetFromOperation(lastChange);
+
+    if (!target) {
+      return {
+        safe: true,
+        impacts: [],
+      };
+    }
+
+    const analysis = await this.dependencyEngine.analyzeImpact(context, target);
+    const impacts =
+      lastChange?.type === 'REMOVE_FIELD' ? analysis.impacts : analysis.impacts.filter((impact) => impact.impact === 'WARNING');
+
+    return {
+      safe: impacts.every((impact) => impact.impact !== 'BREAKING'),
+      impacts,
+    };
+  }
+
+  private dependencyTargetFromOperation(operation: DesignerOperation | undefined): { type: 'FIELD'; code: string } | undefined {
+    if (!operation) {
+      return undefined;
+    }
+
+    if (operation.type === 'REMOVE_FIELD' || operation.type === 'CHANGE_COMPONENT' || operation.type === 'MOVE_FIELD') {
+      return {
+        type: 'FIELD',
+        code: this.payloadString(operation.payload ?? {}, 'fieldCode'),
+      };
+    }
+
+    return undefined;
   }
 
   private applyFormOperation(form: FormDefinition, operation: DesignerOperation): void {

@@ -1,0 +1,51 @@
+@baseUrl = http://localhost:3001/api
+
+### Analyze impact for FIELD assetId
+### Expected impacts:
+### - FORM WORK_ORDER_FORM
+### - VIEW WORK_ORDER_LIST
+### - RELATION WORK_ORDER_ASSET_RELATION
+GET {{baseUrl}}/dependencies/FIELD/assetId
+x-tenant-id: demo
+x-domain-code: DEFAULT
+x-application-code: ASSET_MAINTENANCE
+x-user-id: designer
+
+### Designer preview proof: removing assetId should show breaking dependency impacts before publish
+POST {{baseUrl}}/designer/drafts
+x-tenant-id: demo
+x-domain-code: DEFAULT
+x-application-code: ASSET_MAINTENANCE
+x-user-id: designer
+x-permissions: FORM.DESIGN,FORM.PUBLISH
+content-type: application/json
+
+{
+  "targetType": "FORM",
+  "targetCode": "WORK_ORDER_FORM",
+  "entityCode": "WORK_ORDER"
+}
+
+### Apply REMOVE_FIELD assetId to returned draft id
+POST {{baseUrl}}/designer/replace-with-draft-id/operations
+x-tenant-id: demo
+x-domain-code: DEFAULT
+x-application-code: ASSET_MAINTENANCE
+x-user-id: designer
+x-permissions: FORM.DESIGN,FORM.PUBLISH
+content-type: application/json
+
+{
+  "type": "REMOVE_FIELD",
+  "payload": {
+    "fieldCode": "assetId"
+  }
+}
+
+### Preview dependency impact
+POST {{baseUrl}}/designer/replace-with-draft-id/preview
+x-tenant-id: demo
+x-domain-code: DEFAULT
+x-application-code: ASSET_MAINTENANCE
+x-user-id: designer
+x-permissions: FORM.DESIGN,FORM.PUBLISH

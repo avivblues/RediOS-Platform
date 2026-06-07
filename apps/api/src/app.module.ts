@@ -6,6 +6,7 @@ import { ActionModule } from './core/action/action.module';
 import { ApplicationModule } from './core/application/application.module';
 import { BusinessModule } from './core/business/business.module';
 import { ContextModule } from './core/context/context.module';
+import { DependencyModule as CoreDependencyModule } from './core/dependency/dependency.module';
 import { DesignerModule as CoreDesignerModule } from './core/designer/designer.module';
 import { EventModule } from './core/event/event.module';
 import { FormModule as CoreFormModule } from './core/form/form.module';
@@ -20,6 +21,7 @@ import { StorageModule } from './core/storage/storage.module';
 import { UIModule as CoreUIModule } from './core/ui/ui.module';
 import { WorkflowModule } from './core/workflow/workflow.module';
 import { DesignerModule } from './designer/designer.module';
+import { DependenciesModule } from './dependencies/dependencies.module';
 import { FormsModule } from './forms/forms.module';
 import { HealthModule } from './health/health.module';
 import { KernelLoggerModule } from './logger/kernel-logger.module';
@@ -64,6 +66,7 @@ import { UIModule } from './ui/ui.module';
     UIModule,
     FormsModule,
     DesignerModule,
+    DependenciesModule,
     ContextModule,
     ApplicationModule,
     MetadataModule,
@@ -81,6 +84,7 @@ import { UIModule } from './ui/ui.module';
     CoreUIModule,
     CoreFormModule,
     CoreDesignerModule,
+    CoreDependencyModule,
   ],
 })
 export class AppModule {}

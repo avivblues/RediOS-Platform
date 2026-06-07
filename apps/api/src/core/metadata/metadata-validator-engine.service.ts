@@ -56,6 +56,7 @@ export class MetadataValidatorEngine {
     this.validateViewDefinitions(metadataDefinitions, index, issues);
     this.validateUIDefinitions(metadataDefinitions, index, issues);
     this.validateFormDefinitions(metadataDefinitions, index, issues);
+    this.validateDependencyIntegrity(metadataDefinitions, index, issues);
 
     const errors = issues.filter((issue) => issue.severity === 'ERROR').length;
     const warnings = issues.filter((issue) => issue.severity === 'WARNING').length;
@@ -1031,8 +1032,210 @@ export class MetadataValidatorEngine {
     }
   }
 
+  private validateDependencyIntegrity(
+    metadataDefinitions: MetadataDefinition[],
+    index: MetadataIndex,
+    issues: ValidationIssue[],
+  ): void {
+    const nodes = new Set(metadataDefinitions.map((metadata) => `${metadata.type}:${metadata.code}`));
+    const references = this.dependencyReferences(metadataDefinitions);
+
+    for (const reference of references) {
+      if (reference.target === 'FIELD:id' || reference.target === 'FIELD:status') {
+        continue;
+      }
+
+      if (!nodes.has(reference.target)) {
+        this.addIssue(
+          issues,
+          'DEPENDENCY_NOT_FOUND',
+          'ERROR',
+          `Missing dependency ${reference.target} referenced by ${reference.source}.`,
+          reference.path,
+          `Create ${reference.target} metadata or update the reference.`,
+        );
+      }
+    }
+
+    for (const metadata of metadataDefinitions) {
+      const entityCode = this.definitionEntityCode(metadata.definition);
+
+      if (entityCode && metadata.type !== 'ENTITY' && !index.entities.has(entityCode)) {
+        this.addIssue(
+          issues,
+          'ORPHAN_METADATA',
+          'ERROR',
+          `${metadata.type} ${metadata.code} references missing entity ${entityCode}.`,
+          `${metadata.type}.${metadata.code}.entityCode`,
+          `Create ${entityCode} entity metadata or remove the orphan metadata.`,
+        );
+      }
+    }
+
+    const cycle = this.findDependencyCycle(references);
+
+    if (cycle) {
+      this.addIssue(
+        issues,
+        'DEPENDENCY_CYCLE_FOUND',
+        'ERROR',
+        `Dependency cycle found: ${cycle.join(' -> ')}.`,
+        'metadata.dependencies',
+        'Remove one of the circular references.',
+      );
+    }
+  }
+
+  private dependencyReferences(metadataDefinitions: MetadataDefinition[]): Array<{ source: string; target: string; path: string }> {
+    return metadataDefinitions.flatMap((metadata) => {
+      if (metadata.type === 'ENTITY') {
+        const entity = metadata.definition as EntityDefinition;
+        return [
+          ...entity.fieldCodes.map((fieldCode) => this.dependency(metadata, 'FIELD', fieldCode, `ENTITY.${entity.code}.fieldCodes`)),
+          ...entity.actionCodes.map((actionCode) => this.dependency(metadata, 'ACTION', actionCode, `ENTITY.${entity.code}.actionCodes`)),
+          ...(entity.workflowCode ? [this.dependency(metadata, 'WORKFLOW', entity.workflowCode, `ENTITY.${entity.code}.workflowCode`)] : []),
+        ];
+      }
+
+      if (metadata.type === 'FORM') {
+        const form = metadata.definition as FormDefinition;
+        return form.layout.sections.flatMap((section) =>
+          section.fields.flatMap((field, fieldIndex) => [
+            this.dependency(metadata, 'FIELD', field.fieldCode, `FORM.${form.code}.sections.${section.code}.fields[${fieldIndex}]`),
+            this.dependency(metadata, 'UI', field.component, `FORM.${form.code}.sections.${section.code}.fields[${fieldIndex}].component`),
+            ...(field.lookup
+              ? [
+                  this.dependency(metadata, 'RELATION', field.lookup.relationCode, `FORM.${form.code}.lookup.relationCode`),
+                  this.dependency(metadata, 'VIEW', field.lookup.viewCode, `FORM.${form.code}.lookup.viewCode`),
+                ]
+              : []),
+          ]),
+        );
+      }
+
+      if (metadata.type === 'VIEW') {
+        const view = metadata.definition as ViewDefinition;
+        return [
+          this.dependency(metadata, 'ENTITY', view.entityCode, `VIEW.${view.code}.entityCode`),
+          ...view.columns.flatMap((column, columnIndex) => [
+            this.dependency(metadata, 'FIELD', column.field, `VIEW.${view.code}.columns[${columnIndex}].field`),
+            ...(column.relation
+              ? [this.dependency(metadata, 'RELATION', column.relation, `VIEW.${view.code}.columns[${columnIndex}].relation`)]
+              : []),
+          ]),
+          ...view.filters.map((filter, filterIndex) =>
+            this.dependency(metadata, 'FIELD', filter.field, `VIEW.${view.code}.filters[${filterIndex}].field`),
+          ),
+          ...(view.sorting ? [this.dependency(metadata, 'FIELD', view.sorting.field, `VIEW.${view.code}.sorting.field`)] : []),
+        ];
+      }
+
+      if (metadata.type === 'RELATION') {
+        const relation = metadata.definition as RelationDefinition;
+        return [
+          this.dependency(metadata, 'ENTITY', relation.source.entityCode, `RELATION.${relation.code}.source.entityCode`),
+          this.dependency(metadata, 'ENTITY', relation.target.entityCode, `RELATION.${relation.code}.target.entityCode`),
+          this.dependency(metadata, 'FIELD', relation.mapping.sourceField, `RELATION.${relation.code}.mapping.sourceField`),
+          this.dependency(metadata, 'FIELD', relation.mapping.targetField, `RELATION.${relation.code}.mapping.targetField`),
+        ];
+      }
+
+      if (metadata.type === 'UI') {
+        const ui = metadata.definition as UIDefinition;
+
+        if (ui.kind === 'MOLECULE') {
+          return ui.atoms.map((atom, atomIndex) => this.dependency(metadata, 'UI', atom.atom, `UI.${ui.code}.atoms[${atomIndex}]`));
+        }
+
+        if (ui.kind === 'ORGANISM') {
+          return ui.molecules.map((molecule, moleculeIndex) =>
+            this.dependency(metadata, 'UI', molecule.molecule, `UI.${ui.code}.molecules[${moleculeIndex}]`),
+          );
+        }
+
+        if (ui.kind === 'PAGE') {
+          return [
+            this.dependency(metadata, 'UI', ui.template, `UI.${ui.code}.template`),
+            ...(ui.viewCode ? [this.dependency(metadata, 'VIEW', ui.viewCode, `UI.${ui.code}.viewCode`)] : []),
+            ...(ui.actions ?? []).map((actionCode) => this.dependency(metadata, 'ACTION', actionCode, `UI.${ui.code}.actions`)),
+            ...(ui.relations ?? []).map((relationCode) =>
+              this.dependency(metadata, 'RELATION', relationCode, `UI.${ui.code}.relations`),
+            ),
+            ...Object.values(ui.regions).flatMap((organisms) =>
+              organisms.map((organismCode) => this.dependency(metadata, 'UI', organismCode, `UI.${ui.code}.regions`)),
+            ),
+          ];
+        }
+      }
+
+      return [];
+    });
+  }
+
+  private dependency(
+    metadata: MetadataDefinition,
+    targetType: string,
+    targetCode: string,
+    path: string,
+  ): { source: string; target: string; path: string } {
+    return {
+      source: `${metadata.type}:${metadata.code}`,
+      target: `${targetType}:${targetCode}`,
+      path,
+    };
+  }
+
+  private findDependencyCycle(references: Array<{ source: string; target: string }>): string[] | undefined {
+    const graph = references.reduce<Map<string, string[]>>((edges, reference) => {
+      edges.set(reference.source, [...(edges.get(reference.source) ?? []), reference.target]);
+      return edges;
+    }, new Map());
+    const visiting = new Set<string>();
+    const visited = new Set<string>();
+
+    const visit = (node: string, path: string[]): string[] | undefined => {
+      if (visiting.has(node)) {
+        return [...path, node];
+      }
+
+      if (visited.has(node)) {
+        return undefined;
+      }
+
+      visiting.add(node);
+
+      for (const next of graph.get(node) ?? []) {
+        const cycle = visit(next, [...path, node]);
+
+        if (cycle) {
+          return cycle;
+        }
+      }
+
+      visiting.delete(node);
+      visited.add(node);
+      return undefined;
+    };
+
+    for (const node of graph.keys()) {
+      const cycle = visit(node, []);
+
+      if (cycle) {
+        return cycle;
+      }
+    }
+
+    return undefined;
+  }
+
   private workflowHasState(index: MetadataIndex, entityCode: string, stateCode: string): boolean {
     return Boolean(index.workflowsByEntity.get(entityCode)?.definition.states.some((state) => state.code === stateCode));
+  }
+
+  private definitionEntityCode(definition: unknown): string | undefined {
+    return definition && typeof definition === 'object' && 'entityCode' in definition
+      ? (definition as { entityCode?: string }).entityCode
+      : undefined;
   }
 
   private hasUI(index: MetadataIndex, kind: UIDefinition['kind'], code: string): boolean {

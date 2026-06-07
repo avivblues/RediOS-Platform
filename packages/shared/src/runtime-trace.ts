@@ -10,6 +10,7 @@ export type RuntimeTraceStepEngine =
   | 'LEDGER'
   | 'DESIGNER'
   | 'VALIDATION'
+  | 'DEPENDENCY_CHECK'
   | 'SIMULATION'
   | 'PUBLISH';
 
