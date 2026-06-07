@@ -12,6 +12,7 @@ import { EventModule } from './core/event/event.module';
 import { FormModule as CoreFormModule } from './core/form/form.module';
 import { LedgerModule } from './core/ledger/ledger.module';
 import { MetadataModule } from './core/metadata/metadata.module';
+import { NavigationModule as CoreNavigationModule } from './core/navigation/navigation.module';
 import { ProcessModule } from './core/process/process.module';
 import { QueryModule as CoreQueryModule } from './core/query/query.module';
 import { RelationModule } from './core/relation/relation.module';
@@ -28,6 +29,7 @@ import { HealthModule } from './health/health.module';
 import { KernelLoggerModule } from './logger/kernel-logger.module';
 import { MetadataDebugModule } from './metadata/metadata-debug.module';
 import { MetadataValidationModule } from './metadata/metadata-validation.module';
+import { NavigationModule } from './navigation/navigation.module';
 import { QueryModule } from './query/query.module';
 import { RuntimeModule as RuntimeApiModule } from './runtime/runtime.module';
 import { RuntimeTracesModule } from './runtime-traces/runtime-traces.module';
@@ -70,6 +72,7 @@ import { UIModule } from './ui/ui.module';
     DesignerModule,
     DependenciesModule,
     ThemesModule,
+    NavigationModule,
     ContextModule,
     ApplicationModule,
     MetadataModule,
@@ -89,6 +92,7 @@ import { UIModule } from './ui/ui.module';
     CoreDesignerModule,
     CoreDependencyModule,
     CoreThemeModule,
+    CoreNavigationModule,
   ],
 })
 export class AppModule {}

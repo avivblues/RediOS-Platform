@@ -11,6 +11,7 @@ import type {
   FormDefinition,
   LedgerDefinition,
   MetadataDefinition,
+  NavigationDefinition,
   ProcessDefinition,
   RelationDefinition,
   ThemeDefinition,
@@ -51,6 +52,7 @@ type ApplicationSeed = {
   relations?: RelationDefinition[];
   uis?: UIDefinition[];
   themes?: ThemeDefinition[];
+  navigations?: NavigationDefinition[];
 };
 
 const commonThemeDefinitions: ThemeDefinition[] = [
@@ -146,6 +148,98 @@ const commonThemeDefinitions: ThemeDefinition[] = [
     },
   },
 ];
+
+function commonNavigationDefinitions(application: ApplicationSeed): NavigationDefinition[] {
+  const entityCodes = new Set(application.entities.map((entity) => entity.code));
+  const items: NavigationDefinition['items'] = [];
+
+  if (entityCodes.has('ASSET') || entityCodes.has('WORK_ORDER')) {
+    items.push({
+      code: 'ASSET_MANAGEMENT',
+      label: 'Asset Management',
+      icon: 'assets',
+      order: 1,
+      target: {
+        type: 'URL',
+        code: '#asset-management',
+      },
+      children: [
+        ...(entityCodes.has('ASSET')
+          ? [
+              {
+                code: 'ASSETS',
+                label: 'Assets',
+                icon: 'asset',
+                order: 1,
+                target: {
+                  type: 'PAGE' as const,
+                  code: 'ASSET_DETAIL_PAGE',
+                },
+                visibleWhen: {
+                  permissions: ['ASSET.READ'],
+                },
+              },
+            ]
+          : []),
+        ...(entityCodes.has('WORK_ORDER')
+          ? [
+              {
+                code: 'WORK_ORDERS',
+                label: 'Work Orders',
+                icon: 'work-order',
+                order: 2,
+                target: {
+                  type: 'PAGE' as const,
+                  code: 'WORK_ORDER_DETAIL_PAGE',
+                },
+                visibleWhen: {
+                  permissions: ['WORK_ORDER.READ'],
+                },
+              },
+            ]
+          : []),
+      ],
+    });
+  }
+
+  if (entityCodes.has('TICKET')) {
+    items.push({
+      code: 'HELPDESK',
+      label: 'Helpdesk',
+      icon: 'helpdesk',
+      order: 2,
+      target: {
+        type: 'URL',
+        code: '#helpdesk',
+      },
+      children: [
+        {
+          code: 'TICKETS',
+          label: 'Tickets',
+          icon: 'ticket',
+          order: 1,
+          target: {
+            type: 'PAGE',
+            code: 'TICKET_DETAIL_PAGE',
+          },
+          visibleWhen: {
+            permissions: ['TICKET.READ'],
+          },
+        },
+      ],
+    });
+  }
+
+  return [
+    {
+      code: 'MAIN_NAVIGATION',
+      name: 'Main Navigation',
+      type: 'SIDEBAR',
+      enabled: true,
+      items,
+    },
+  ];
+}
 
 const commonUIDefinitions: UIDefinition[] = [
   ...[
@@ -949,6 +1043,9 @@ export const metadataSeedRecords: MetadataDefinition[] = applications.flatMap((a
   ...application.entities.flatMap((entity) => createEntityRecords(application, entity)),
   ...(application.relations ?? []).map((relation) => createRelationRecord(application, relation)),
   ...[...commonThemeDefinitions, ...(application.themes ?? [])].map((theme) => createThemeRecord(application, theme)),
+  ...[...commonNavigationDefinitions(application), ...(application.navigations ?? [])].map((navigation) =>
+    createNavigationRecord(application, navigation),
+  ),
   ...[...commonUIDefinitions, ...(application.uis ?? [])].map((ui) => createUIRecord(application, ui)),
 ]);
 
@@ -1218,6 +1315,23 @@ function createThemeRecord(
     version: theme.version,
     enabled: theme.enabled,
     definition: theme,
+  };
+}
+
+function createNavigationRecord(
+  application: ApplicationSeed,
+  navigation: NavigationDefinition,
+): MetadataDefinition<NavigationDefinition> {
+  return {
+    tenantId,
+    domainCode,
+    applicationCode: application.code,
+    type: 'NAVIGATION',
+    code: navigation.code,
+    name: navigation.name,
+    version: 1,
+    enabled: navigation.enabled,
+    definition: navigation,
   };
 }
 

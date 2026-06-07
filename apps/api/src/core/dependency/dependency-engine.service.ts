@@ -15,6 +15,7 @@ import type {
   FormDefinition,
   LedgerDefinition,
   MetadataDefinition,
+  NavigationDefinition,
   ProcessDefinition,
   RelationDefinition,
   RuntimeContext,
@@ -144,6 +145,10 @@ export class DependencyEngine {
 
     if (record.type === 'THEME') {
       return this.themeReferences(record.definition as ThemeDefinition, source);
+    }
+
+    if (record.type === 'NAVIGATION') {
+      return this.navigationReferences(record.definition as NavigationDefinition, source);
     }
 
     if (record.type === 'FIELD') {
@@ -292,6 +297,24 @@ export class DependencyEngine {
 
   private themeReferences(definition: ThemeDefinition, source: DependencyNode): DependencyReference[] {
     return definition.extends ? [this.reference(source, 'REFERENCES', 'THEME', definition.extends)] : [];
+  }
+
+  private navigationReferences(definition: NavigationDefinition, source: DependencyNode): DependencyReference[] {
+    return definition.items.flatMap((item) => this.navigationItemReferences(item, source));
+  }
+
+  private navigationItemReferences(
+    item: NavigationDefinition['items'][number],
+    source: DependencyNode,
+  ): DependencyReference[] {
+    const target =
+      item.target.type === 'PAGE'
+        ? [this.reference(source, 'RENDERS', 'UI', item.target.code)]
+        : item.target.type === 'ACTION'
+          ? [this.reference(source, 'TRIGGERS', 'ACTION', item.target.code)]
+          : [];
+
+    return [...target, ...(item.children ?? []).flatMap((child) => this.navigationItemReferences(child, source))];
   }
 
   private toImpact(reference: DependencyReference): DependencyImpact {

@@ -10,6 +10,8 @@ import type {
   MetadataDefinition,
   MetadataDraft,
   MetadataVersion,
+  NavigationDefinition,
+  NavigationItemDefinition,
   RuntimeContext,
   RuntimeDocument,
   SimulationResult,
@@ -31,6 +33,7 @@ import { METADATA_VERSION_MODEL } from './schemas/metadata-version.schema';
 
 type MetadataDraftRecord = MetadataDraft & { _id?: unknown };
 type MetadataVersionRecord = MetadataVersion & { _id?: unknown };
+type DesignerDefinition = FormDefinition | ThemeDefinition | NavigationDefinition;
 
 export interface CreateDesignerDraftRequest {
   targetType: DesignerTargetType;
@@ -47,12 +50,12 @@ export interface DesignerPreviewResult {
     safe: boolean;
     impacts: DependencyImpact[];
   };
-  draft: MetadataDraft<FormDefinition | ThemeDefinition>;
+  draft: MetadataDraft<DesignerDefinition>;
 }
 
 export interface DesignerPublishResult {
-  draft: MetadataDraft<FormDefinition | ThemeDefinition>;
-  published: MetadataDefinition<FormDefinition | ThemeDefinition>;
+  draft: MetadataDraft<DesignerDefinition>;
+  published: MetadataDefinition<DesignerDefinition>;
   traceId?: string;
 }
 
@@ -74,7 +77,7 @@ export class DesignerEngine {
     private readonly permissionGuard: DesignerPermissionGuard,
   ) {}
 
-  async createDraft(context: RuntimeContext, request: CreateDesignerDraftRequest): Promise<MetadataDraft<FormDefinition | ThemeDefinition>> {
+  async createDraft(context: RuntimeContext, request: CreateDesignerDraftRequest): Promise<MetadataDraft<DesignerDefinition>> {
     this.permissionGuard.assert(context, 'FORM.DESIGN');
     this.assertSupportedTarget(request.targetType);
 
@@ -117,7 +120,7 @@ export class DesignerEngine {
     context: RuntimeContext,
     draftId: string,
     operation: DesignerOperation,
-  ): Promise<MetadataDraft<FormDefinition | ThemeDefinition>> {
+  ): Promise<MetadataDraft<DesignerDefinition>> {
     this.permissionGuard.assert(context, 'FORM.DESIGN');
     const draft = await this.findDraft(context, draftId);
     this.assertDraftEditable(draft);
@@ -182,7 +185,7 @@ export class DesignerEngine {
       const dependency = await this.traceEngine.recordStep(trace.id!, 'DEPENDENCY_CHECK', () =>
         this.analyzeDraftDependencies(context, draft),
       );
-      const affected = ['FORM', 'UI_RENDER', 'VALIDATION'];
+      const affected = this.affectedForDraft(draft);
       const simulation = await this.traceEngine.recordStep(trace.id!, 'SIMULATION', () =>
         this.simulationEngine.simulateDesigner({
           validation,
@@ -258,7 +261,7 @@ export class DesignerEngine {
 
         await this.saveVersion(context, current, context.userId);
 
-        const next: MetadataDefinition<FormDefinition | ThemeDefinition> = {
+        const next: MetadataDefinition<DesignerDefinition> = {
           ...current,
           name: draft.draft.name,
           version: current.version + 1,
@@ -269,13 +272,13 @@ export class DesignerEngine {
           },
         };
         const saved = await this.metadataProvider.saveMetadata(context, next);
-        await this.saveVersion(context, saved as MetadataDefinition<FormDefinition | ThemeDefinition>, context.userId);
-        return saved as MetadataDefinition<FormDefinition | ThemeDefinition>;
+        await this.saveVersion(context, saved as MetadataDefinition<DesignerDefinition>, context.userId);
+        return saved as MetadataDefinition<DesignerDefinition>;
       });
       const updatedDraft = await this.markDraftStatus(context, draft.id!, 'PUBLISHED');
-      await this.audit(context, this.definitionEntityCode(published.definition) ?? published.type, 'FORM_PUBLISHED', {
+      await this.audit(context, this.definitionEntityCode(published.definition) ?? published.type, `${published.type}_PUBLISHED`, {
         draftId,
-        formCode: published.definition.code,
+        targetCode: published.definition.code,
         version: published.version,
       });
       await this.traceEngine.complete(trace.id!);
@@ -324,21 +327,21 @@ export class DesignerEngine {
         }
 
         await this.saveVersion(context, current, context.userId);
-        const restored: MetadataDefinition<FormDefinition | ThemeDefinition> = {
-          ...(snapshot.metadata as MetadataDefinition<FormDefinition | ThemeDefinition>),
+        const restored: MetadataDefinition<DesignerDefinition> = {
+          ...(snapshot.metadata as MetadataDefinition<DesignerDefinition>),
           id: current.id,
           version: current.version + 1,
           definition: {
-            ...(snapshot.metadata as MetadataDefinition<FormDefinition | ThemeDefinition>).definition,
+            ...(snapshot.metadata as MetadataDefinition<DesignerDefinition>).definition,
             version: current.version + 1,
-          } as FormDefinition | ThemeDefinition,
+          } as DesignerDefinition,
         };
         const saved = await this.metadataProvider.saveMetadata(context, restored);
-        await this.saveVersion(context, saved as MetadataDefinition<FormDefinition | ThemeDefinition>, context.userId);
-        return saved as MetadataDefinition<FormDefinition | ThemeDefinition>;
+        await this.saveVersion(context, saved as MetadataDefinition<DesignerDefinition>, context.userId);
+        return saved as MetadataDefinition<DesignerDefinition>;
       });
       const updatedDraft = await this.markDraftStatus(context, draft.id!, 'REJECTED');
-      await this.audit(context, this.definitionEntityCode(published.definition) ?? published.type, 'FORM_PUBLISHED', {
+      await this.audit(context, this.definitionEntityCode(published.definition) ?? published.type, `${published.type}_PUBLISHED`, {
         draftId,
         rollbackToVersion: version,
         version: published.version,
@@ -362,7 +365,7 @@ export class DesignerEngine {
     return this.formEngine.compose(context, form.entityCode, form.code);
   }
 
-  private async validateDraft(context: RuntimeContext, draft: MetadataDraft<FormDefinition | ThemeDefinition>): Promise<ValidationResult> {
+  private async validateDraft(context: RuntimeContext, draft: MetadataDraft<DesignerDefinition>): Promise<ValidationResult> {
     const metadata = await this.metadataProvider.findMetadata(context, {
       enabledOnly: true,
     });
@@ -378,7 +381,7 @@ export class DesignerEngine {
 
   private async analyzeDraftDependencies(
     context: RuntimeContext,
-    draft: MetadataDraft<FormDefinition | ThemeDefinition>,
+    draft: MetadataDraft<DesignerDefinition>,
   ): Promise<{ safe: boolean; impacts: DependencyImpact[] }> {
     const lastChange = draft.changes.at(-1);
     const target = this.dependencyTargetFromOperation(draft, lastChange);
@@ -407,10 +410,22 @@ export class DesignerEngine {
     };
   }
 
+  private affectedForDraft(draft: MetadataDraft<DesignerDefinition>): string[] {
+    if (draft.targetType === 'NAVIGATION') {
+      return ['NAVIGATION', 'UI_SHELL', 'VALIDATION'];
+    }
+
+    if (draft.targetType === 'THEME') {
+      return ['THEME', 'UI_RENDER', 'NAVIGATION', 'VALIDATION'];
+    }
+
+    return ['FORM', 'UI_RENDER', 'VALIDATION'];
+  }
+
   private dependencyTargetFromOperation(
-    draft: MetadataDraft<FormDefinition | ThemeDefinition>,
+    draft: MetadataDraft<DesignerDefinition>,
     operation: DesignerOperation | undefined,
-  ): { type: 'FIELD' | 'THEME'; code: string } | undefined {
+  ): { type: 'FIELD' | 'THEME' | 'NAVIGATION'; code: string } | undefined {
     if (!operation) {
       return undefined;
     }
@@ -429,13 +444,26 @@ export class DesignerEngine {
       };
     }
 
+    if (
+      operation.type === 'ADD_MENU' ||
+      operation.type === 'REMOVE_MENU' ||
+      operation.type === 'MOVE_MENU' ||
+      operation.type === 'CHANGE_ICON' ||
+      operation.type === 'CHANGE_TARGET'
+    ) {
+      return {
+        type: 'NAVIGATION',
+        code: draft.targetCode,
+      };
+    }
+
     return undefined;
   }
 
   private async resolveDesignerSource(
     context: RuntimeContext,
     request: CreateDesignerDraftRequest,
-  ): Promise<MetadataDefinition<FormDefinition | ThemeDefinition> | null> {
+  ): Promise<MetadataDefinition<DesignerDefinition> | null> {
     if (request.targetType === 'FORM') {
       if (!request.entityCode) {
         throw new BadRequestException('FORM designer drafts require entityCode.');
@@ -444,24 +472,32 @@ export class DesignerEngine {
       return this.metadataResolver.resolveForm(context, request.entityCode, request.targetCode);
     }
 
-    return this.metadataResolver.resolveTheme(context, request.targetCode);
+    if (request.targetType === 'THEME') {
+      return this.metadataResolver.resolveTheme(context, request.targetCode);
+    }
+
+    return this.metadataResolver.resolveNavigation(context, request.targetCode);
   }
 
   private async resolveCurrentDraftSource(
     context: RuntimeContext,
-    draft: MetadataDraft<FormDefinition | ThemeDefinition>,
-  ): Promise<MetadataDefinition<FormDefinition | ThemeDefinition> | null> {
+    draft: MetadataDraft<DesignerDefinition>,
+  ): Promise<MetadataDefinition<DesignerDefinition> | null> {
     if (draft.targetType === 'FORM') {
       const form = draft.draft.definition as FormDefinition;
       return this.metadataResolver.resolveForm(context, form.entityCode, draft.targetCode);
     }
 
-    return this.metadataResolver.resolveTheme(context, draft.targetCode);
+    if (draft.targetType === 'THEME') {
+      return this.metadataResolver.resolveTheme(context, draft.targetCode);
+    }
+
+    return this.metadataResolver.resolveNavigation(context, draft.targetCode);
   }
 
   private applyDraftOperation(
     targetType: DesignerTargetType,
-    definition: FormDefinition | ThemeDefinition,
+    definition: DesignerDefinition,
     operation: DesignerOperation,
   ): void {
     if (targetType === 'THEME') {
@@ -469,7 +505,44 @@ export class DesignerEngine {
       return;
     }
 
+    if (targetType === 'NAVIGATION') {
+      this.applyNavigationOperation(definition as NavigationDefinition, operation);
+      return;
+    }
+
     this.applyFormOperation(definition as FormDefinition, operation);
+  }
+
+  private applyNavigationOperation(navigation: NavigationDefinition, operation: DesignerOperation): void {
+    const payload = operation.payload ?? {};
+
+    if (operation.type === 'ADD_MENU') {
+      this.addMenu(navigation, payload);
+      return;
+    }
+
+    if (operation.type === 'REMOVE_MENU') {
+      this.removeMenu(navigation, this.payloadString(payload, 'code'));
+      return;
+    }
+
+    if (operation.type === 'MOVE_MENU') {
+      this.moveMenu(navigation, payload);
+      return;
+    }
+
+    if (operation.type === 'CHANGE_ICON') {
+      this.findMenu(navigation.items, this.payloadString(payload, 'code')).icon = this.payloadString(payload, 'icon');
+      return;
+    }
+
+    if (operation.type === 'CHANGE_TARGET') {
+      const item = this.findMenu(navigation.items, this.payloadString(payload, 'code'));
+      item.target = this.payloadNavigationTarget(payload);
+      return;
+    }
+
+    throw new BadRequestException(`Unsupported navigation designer operation: ${operation.type}`);
   }
 
   private applyThemeOperation(theme: ThemeDefinition, operation: DesignerOperation): void {
@@ -652,9 +725,146 @@ export class DesignerEngine {
     }
   }
 
+  private addMenu(navigation: NavigationDefinition, payload: Record<string, unknown>): void {
+    const item: NavigationItemDefinition = {
+      code: this.payloadString(payload, 'code'),
+      label: this.payloadString(payload, 'label'),
+      icon: this.payloadOptionalString(payload, 'icon'),
+      order: this.payloadNumber(payload, 'order', this.nextMenuOrder(navigation.items)),
+      target: this.payloadNavigationTarget(payload),
+      children: [],
+      visibleWhen: this.payloadVisibleWhen(payload),
+    };
+    const parentCode = this.payloadOptionalString(payload, 'parentCode');
+    const siblings = parentCode ? this.findMenu(navigation.items, parentCode).children ?? [] : navigation.items;
+
+    if (parentCode) {
+      this.findMenu(navigation.items, parentCode).children = siblings;
+    }
+
+    siblings.push(item);
+  }
+
+  private removeMenu(navigation: NavigationDefinition, itemCode: string): void {
+    const removed = this.removeMenuFromItems(navigation.items, itemCode);
+
+    if (!removed) {
+      throw new BadRequestException(`Navigation menu ${itemCode} was not found.`);
+    }
+  }
+
+  private moveMenu(navigation: NavigationDefinition, payload: Record<string, unknown>): void {
+    const itemCode = this.payloadString(payload, 'code');
+    const item = this.detachMenu(navigation.items, itemCode);
+
+    if (!item) {
+      throw new BadRequestException(`Navigation menu ${itemCode} was not found.`);
+    }
+
+    item.order = this.payloadNumber(payload, 'order', item.order);
+    const parentCode = this.payloadOptionalString(payload, 'parentCode');
+    const siblings = parentCode ? this.findMenu(navigation.items, parentCode).children ?? [] : navigation.items;
+
+    if (parentCode) {
+      this.findMenu(navigation.items, parentCode).children = siblings;
+    }
+
+    siblings.push(item);
+  }
+
+  private findMenu(items: NavigationItemDefinition[], itemCode: string): NavigationItemDefinition {
+    for (const item of items) {
+      if (item.code === itemCode) {
+        return item;
+      }
+
+      const child = this.findMenuOptional(item.children ?? [], itemCode);
+
+      if (child) {
+        return child;
+      }
+    }
+
+    throw new BadRequestException(`Navigation menu ${itemCode} was not found.`);
+  }
+
+  private findMenuOptional(items: NavigationItemDefinition[], itemCode: string): NavigationItemDefinition | undefined {
+    for (const item of items) {
+      if (item.code === itemCode) {
+        return item;
+      }
+
+      const child = this.findMenuOptional(item.children ?? [], itemCode);
+
+      if (child) {
+        return child;
+      }
+    }
+
+    return undefined;
+  }
+
+  private detachMenu(items: NavigationItemDefinition[], itemCode: string): NavigationItemDefinition | undefined {
+    const index = items.findIndex((item) => item.code === itemCode);
+
+    if (index >= 0) {
+      return items.splice(index, 1)[0];
+    }
+
+    for (const item of items) {
+      const child = this.detachMenu(item.children ?? [], itemCode);
+
+      if (child) {
+        return child;
+      }
+    }
+
+    return undefined;
+  }
+
+  private removeMenuFromItems(items: NavigationItemDefinition[], itemCode: string): boolean {
+    const index = items.findIndex((item) => item.code === itemCode);
+
+    if (index >= 0) {
+      items.splice(index, 1);
+      return true;
+    }
+
+    return items.some((item) => this.removeMenuFromItems(item.children ?? [], itemCode));
+  }
+
+  private payloadNavigationTarget(payload: Record<string, unknown>): NavigationItemDefinition['target'] {
+    const target = payload.target;
+
+    if (target && typeof target === 'object' && !Array.isArray(target)) {
+      const targetPayload = target as Record<string, unknown>;
+      return {
+        type: this.payloadString(targetPayload, 'type') as NavigationItemDefinition['target']['type'],
+        code: this.payloadString(targetPayload, 'code'),
+      };
+    }
+
+    return {
+      type: this.payloadString(payload, 'targetType') as NavigationItemDefinition['target']['type'],
+      code: this.payloadString(payload, 'targetCode'),
+    };
+  }
+
+  private payloadVisibleWhen(payload: Record<string, unknown>): NavigationItemDefinition['visibleWhen'] | undefined {
+    const visibleWhen = payload.visibleWhen;
+
+    if (!visibleWhen || typeof visibleWhen !== 'object' || Array.isArray(visibleWhen)) {
+      return undefined;
+    }
+
+    const permissions = (visibleWhen as { permissions?: unknown }).permissions;
+
+    return Array.isArray(permissions) ? { permissions: permissions.filter((permission): permission is string => typeof permission === 'string') } : undefined;
+  }
+
   private async saveVersion(
     context: RuntimeContext,
-    metadata: MetadataDefinition<FormDefinition | ThemeDefinition>,
+    metadata: MetadataDefinition<DesignerDefinition>,
     userId: string,
   ): Promise<void> {
     await this.versionModel.create({
@@ -675,7 +885,7 @@ export class DesignerEngine {
     context: RuntimeContext,
     draftId: string,
     status: MetadataDraft['status'],
-  ): Promise<MetadataDraft<FormDefinition | ThemeDefinition>> {
+  ): Promise<MetadataDraft<DesignerDefinition>> {
     const updated = await this.draftModel
       .findOneAndUpdate(
         {
@@ -702,7 +912,7 @@ export class DesignerEngine {
     return this.toDraft(updated);
   }
 
-  private async findDraft(context: RuntimeContext, draftId: string): Promise<MetadataDraft<FormDefinition | ThemeDefinition>> {
+  private async findDraft(context: RuntimeContext, draftId: string): Promise<MetadataDraft<DesignerDefinition>> {
     const draft = await this.draftModel
       .findOne({
         _id: draftId,
@@ -725,7 +935,7 @@ export class DesignerEngine {
   }
 
   private assertSupportedTarget(targetType: DesignerTargetType): void {
-    if (targetType !== 'FORM' && targetType !== 'THEME') {
+    if (targetType !== 'FORM' && targetType !== 'THEME' && targetType !== 'NAVIGATION') {
       throw new BadRequestException(`Unsupported designer target type: ${targetType}`);
     }
   }
@@ -763,7 +973,17 @@ export class DesignerEngine {
       return 'FORM_FIELD_MOVED';
     }
 
-    return `FORM_${operationType}`;
+    if (
+      operationType === 'ADD_MENU' ||
+      operationType === 'REMOVE_MENU' ||
+      operationType === 'MOVE_MENU' ||
+      operationType === 'CHANGE_ICON' ||
+      operationType === 'CHANGE_TARGET'
+    ) {
+      return `NAVIGATION_${operationType}`;
+    }
+
+    return `DESIGNER_${operationType}`;
   }
 
   private payloadString(payload: Record<string, unknown>, key: string, fallback?: string): string {
@@ -778,6 +998,11 @@ export class DesignerEngine {
     }
 
     throw new BadRequestException(`Operation payload.${key} is required.`);
+  }
+
+  private payloadOptionalString(payload: Record<string, unknown>, key: string): string | undefined {
+    const value = payload[key];
+    return typeof value === 'string' && value.length > 0 ? value : undefined;
   }
 
   private payloadNumber(payload: Record<string, unknown>, key: string, fallback: number): number {
@@ -826,13 +1051,17 @@ export class DesignerEngine {
     return Math.max(0, ...form.layout.sections.map((section) => section.order)) + 1;
   }
 
+  private nextMenuOrder(items: NavigationItemDefinition[]): number {
+    return Math.max(0, ...items.map((item) => item.order)) + 1;
+  }
+
   private definitionEntityCode(definition: unknown): string | undefined {
     return definition && typeof definition === 'object' && 'entityCode' in definition
       ? (definition as { entityCode?: string }).entityCode
       : undefined;
   }
 
-  private draftEntityCode(draft: MetadataDraft<FormDefinition | ThemeDefinition>): string {
+  private draftEntityCode(draft: MetadataDraft<DesignerDefinition>): string {
     return draft.entityCode ?? this.definitionEntityCode(draft.draft.definition) ?? draft.targetType;
   }
 
@@ -855,7 +1084,7 @@ export class DesignerEngine {
     };
   }
 
-  private toDraft(record: MetadataDraftRecord): MetadataDraft<FormDefinition | ThemeDefinition> {
+  private toDraft(record: MetadataDraftRecord): MetadataDraft<DesignerDefinition> {
     return {
       id: String(record._id ?? record.id ?? ''),
       tenantId: record.tenantId,
@@ -866,7 +1095,7 @@ export class DesignerEngine {
       targetCode: record.targetCode,
       entityCode: record.entityCode,
       status: record.status,
-      draft: record.draft as MetadataDefinition<FormDefinition | ThemeDefinition>,
+      draft: record.draft as MetadataDefinition<DesignerDefinition>,
       changes: record.changes,
       createdBy: record.createdBy,
       updatedBy: record.updatedBy,

@@ -8,6 +8,7 @@ import type {
   UITemplateDefinition,
 } from '@redios/shared';
 import { MetadataResolver } from '../metadata/metadata-resolver.service';
+import { NavigationEngine, type RuntimeNavigation } from '../navigation/navigation-engine.service';
 import { ThemeEngine, type RuntimeTheme } from '../theme/theme-engine.service';
 
 export interface ResolvedUIAtom {
@@ -38,6 +39,12 @@ export interface ResolvedUIPage {
   page: UIPageDefinition;
   template: UITemplateDefinition;
   theme: RuntimeTheme;
+  navigation: RuntimeNavigation;
+  shell: {
+    theme: RuntimeTheme;
+    navigation: RuntimeNavigation;
+    page: UIPageDefinition;
+  };
   regions: ResolvedUIRegion[];
 }
 
@@ -46,17 +53,25 @@ export class UIEngine {
   constructor(
     private readonly metadataResolver: MetadataResolver,
     private readonly themeEngine: ThemeEngine,
+    private readonly navigationEngine: NavigationEngine,
   ) {}
 
   async resolvePage(context: RuntimeContext, pageCode: string): Promise<ResolvedUIPage> {
     const page = await this.resolveDefinition<UIPageDefinition>(context, 'PAGE', pageCode);
     const template = await this.resolveDefinition<UITemplateDefinition>(context, 'TEMPLATE', page.template);
     const theme = await this.themeEngine.compose(context, page.themeCode);
+    const navigation = await this.navigationEngine.compose(context);
 
     return {
       page,
       template,
       theme,
+      navigation,
+      shell: {
+        theme,
+        navigation,
+        page,
+      },
       regions: await Promise.all(
         template.regions.map(async (region) => ({
           code: region.code,

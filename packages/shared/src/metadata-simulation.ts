@@ -100,5 +100,9 @@ export interface SimulationResult {
       code: string;
       affectedPages: number;
     };
+    navigation?: {
+      code: string;
+      affectedMenus: number;
+    };
   };
 }

@@ -9,6 +9,8 @@ import type {
   FormDefinition,
   LedgerDefinition,
   MetadataDefinition,
+  NavigationDefinition,
+  NavigationItemDefinition,
   ProcessDefinition,
   RelationDefinition,
   ThemeDefinition,
@@ -38,6 +40,7 @@ type MetadataIndex = {
   ui: Map<string, MetadataDefinition<UIDefinition>[]>;
   forms: Map<string, MetadataDefinition<FormDefinition>[]>;
   themes: Map<string, MetadataDefinition<ThemeDefinition>[]>;
+  navigation: Map<string, MetadataDefinition<NavigationDefinition>[]>;
 };
 
 @Injectable()
@@ -59,6 +62,7 @@ export class MetadataValidatorEngine {
     this.validateUIDefinitions(metadataDefinitions, index, issues);
     this.validateFormDefinitions(metadataDefinitions, index, issues);
     this.validateThemeDefinitions(metadataDefinitions, index, issues);
+    this.validateNavigationDefinitions(metadataDefinitions, index, issues);
     this.validateDependencyIntegrity(metadataDefinitions, index, issues);
 
     const errors = issues.filter((issue) => issue.severity === 'ERROR').length;
@@ -87,6 +91,7 @@ export class MetadataValidatorEngine {
       ui: new Map(),
       forms: new Map(),
       themes: new Map(),
+      navigation: new Map(),
     };
 
     for (const metadata of metadataDefinitions) {
@@ -162,6 +167,12 @@ export class MetadataValidatorEngine {
         const records = index.themes.get(metadata.code) ?? [];
         records.push(metadata as MetadataDefinition<ThemeDefinition>);
         index.themes.set(metadata.code, records);
+      }
+
+      if (metadata.type === 'NAVIGATION') {
+        const records = index.navigation.get(metadata.code) ?? [];
+        records.push(metadata as MetadataDefinition<NavigationDefinition>);
+        index.navigation.set(metadata.code, records);
       }
     }
 
@@ -1111,6 +1122,107 @@ export class MetadataValidatorEngine {
     }
   }
 
+  private validateNavigationDefinitions(
+    metadataDefinitions: MetadataDefinition[],
+    index: MetadataIndex,
+    issues: ValidationIssue[],
+  ): void {
+    for (const [navigationCode, definitions] of index.navigation.entries()) {
+      if (definitions.length > 1) {
+        this.addIssue(
+          issues,
+          'NAVIGATION_DUPLICATE',
+          'ERROR',
+          `Duplicate navigation code ${navigationCode}.`,
+          `NAVIGATION.${navigationCode}`,
+          'Keep one NAVIGATION definition per code.',
+        );
+      }
+    }
+
+    for (const metadata of metadataDefinitions.filter((candidate) => candidate.type === 'NAVIGATION')) {
+      const navigation = metadata.definition as NavigationDefinition;
+
+      if (!['SIDEBAR', 'TOPBAR', 'MOBILE_TAB'].includes(navigation.type)) {
+        this.addIssue(
+          issues,
+          'NAVIGATION_TYPE_INVALID',
+          'ERROR',
+          `Navigation ${navigation.code} has invalid type ${navigation.type}.`,
+          `NAVIGATION.${navigation.code}.type`,
+          'Use SIDEBAR, TOPBAR, or MOBILE_TAB.',
+        );
+      }
+
+      this.validateNavigationItems(navigation, navigation.items, index, issues, new Set(), new Set(), `NAVIGATION.${navigation.code}.items`);
+    }
+  }
+
+  private validateNavigationItems(
+    navigation: NavigationDefinition,
+    items: NavigationItemDefinition[],
+    index: MetadataIndex,
+    issues: ValidationIssue[],
+    globalCodes: Set<string>,
+    pathCodes: Set<string>,
+    path: string,
+  ): void {
+    for (const [itemIndex, item] of items.entries()) {
+      const itemPath = `${path}[${itemIndex}]`;
+
+      if (globalCodes.has(item.code)) {
+        this.addIssue(
+          issues,
+          'NAVIGATION_DUPLICATE',
+          'ERROR',
+          `Navigation ${navigation.code} has duplicate menu item ${item.code}.`,
+          `${itemPath}.code`,
+          'Use unique menu item codes.',
+        );
+      }
+
+      globalCodes.add(item.code);
+
+      if (pathCodes.has(item.code)) {
+        this.addIssue(
+          issues,
+          'NAVIGATION_CYCLE',
+          'ERROR',
+          `Navigation ${navigation.code} has a circular menu tree at ${item.code}.`,
+          `${itemPath}.children`,
+          'Remove the repeated child reference.',
+        );
+      }
+
+      const nextPathCodes = new Set(pathCodes);
+      nextPathCodes.add(item.code);
+
+      if (item.target.type === 'PAGE' && !this.hasUI(index, 'PAGE', item.target.code)) {
+        this.addIssue(
+          issues,
+          'NAVIGATION_PAGE_NOT_FOUND',
+          'ERROR',
+          `Navigation item ${item.code} references missing page ${item.target.code}.`,
+          `${itemPath}.target.code`,
+          `Create page metadata ${item.target.code}.`,
+        );
+      }
+
+      if (item.target.type === 'ACTION' && !this.actionExists(index, item.target.code)) {
+        this.addIssue(
+          issues,
+          'NAVIGATION_ACTION_NOT_FOUND',
+          'ERROR',
+          `Navigation item ${item.code} references missing action ${item.target.code}.`,
+          `${itemPath}.target.code`,
+          `Create action metadata ${item.target.code}.`,
+        );
+      }
+
+      this.validateNavigationItems(navigation, item.children ?? [], index, issues, globalCodes, nextPathCodes, `${itemPath}.children`);
+    }
+  }
+
   private validateDependencyIntegrity(
     metadataDefinitions: MetadataDefinition[],
     index: MetadataIndex,
@@ -1253,8 +1365,35 @@ export class MetadataValidatorEngine {
         return theme.extends ? [this.dependency(metadata, 'THEME', theme.extends, `THEME.${theme.code}.extends`)] : [];
       }
 
+      if (metadata.type === 'NAVIGATION') {
+        const navigation = metadata.definition as NavigationDefinition;
+        return navigation.items.flatMap((item, itemIndex) =>
+          this.navigationDependencyReferences(metadata, item, `NAVIGATION.${navigation.code}.items[${itemIndex}]`),
+        );
+      }
+
       return [];
     });
+  }
+
+  private navigationDependencyReferences(
+    metadata: MetadataDefinition,
+    item: NavigationItemDefinition,
+    path: string,
+  ): Array<{ source: string; target: string; path: string }> {
+    const target =
+      item.target.type === 'PAGE'
+        ? [this.dependency(metadata, 'UI', item.target.code, `${path}.target.code`)]
+        : item.target.type === 'ACTION'
+          ? [this.dependency(metadata, 'ACTION', item.target.code, `${path}.target.code`)]
+          : [];
+
+    return [
+      ...target,
+      ...(item.children ?? []).flatMap((child, childIndex) =>
+        this.navigationDependencyReferences(metadata, child, `${path}.children[${childIndex}]`),
+      ),
+    ];
   }
 
   private dependency(
@@ -1345,6 +1484,10 @@ export class MetadataValidatorEngine {
 
   private fieldExists(fields: Map<string, MetadataDefinition<FieldDefinition>> | undefined, fieldCode: string): boolean {
     return fieldCode === 'id' || fieldCode === 'status' || Boolean(fields?.has(fieldCode));
+  }
+
+  private actionExists(index: MetadataIndex, actionCode: string): boolean {
+    return [...index.actionsByEntity.values()].some((actions) => actions.has(actionCode));
   }
 
   private configString(config: Record<string, unknown> | undefined, key: string): string | undefined {

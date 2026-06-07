@@ -12,6 +12,7 @@ export * from './ledger-definition';
 export * from './metadata-definition';
 export * from './metadata-simulation';
 export * from './metadata-validation';
+export * from './navigation-definition';
 export * from './process-definition';
 export * from './relation-definition';
 export * from './runtime-context';

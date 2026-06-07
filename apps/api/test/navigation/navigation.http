@@ -1,0 +1,92 @@
+@baseUrl = http://localhost:3001/api
+
+### Current runtime navigation
+### Expected: MAIN_NAVIGATION, SIDEBAR layout from DEFAULT_THEME, Asset Management page targets linked
+GET {{baseUrl}}/navigation/current
+x-tenant-id: demo
+x-domain-code: DEFAULT
+x-application-code: ASSET_MAINTENANCE
+x-user-id: designer
+x-permissions: ASSET.READ,WORK_ORDER.READ,TICKET.READ
+
+### Helpdesk runtime navigation
+### Expected: MAIN_NAVIGATION with Tickets linked to TICKET_DETAIL_PAGE
+GET {{baseUrl}}/navigation/current
+x-tenant-id: demo
+x-domain-code: DEFAULT
+x-application-code: HELPDESK
+x-user-id: designer
+x-permissions: TICKET.READ
+
+### Permission filtering proof
+### Expected: Work Orders visible, Assets and Tickets hidden
+GET {{baseUrl}}/navigation/current
+x-tenant-id: demo
+x-domain-code: DEFAULT
+x-application-code: ASSET_MAINTENANCE
+x-user-id: technician
+x-permissions: WORK_ORDER.READ
+
+### UI shell includes theme + navigation + page
+GET {{baseUrl}}/ui/pages/WORK_ORDER_DETAIL_PAGE
+x-tenant-id: demo
+x-domain-code: DEFAULT
+x-application-code: ASSET_MAINTENANCE
+x-user-id: designer
+x-permissions: ASSET.READ,WORK_ORDER.READ,TICKET.READ
+
+### Dependency proof: deleting UI page shows navigation menu impact
+GET {{baseUrl}}/dependencies/UI/WORK_ORDER_DETAIL_PAGE
+x-tenant-id: demo
+x-domain-code: DEFAULT
+x-application-code: ASSET_MAINTENANCE
+x-user-id: designer
+
+### Navigation designer draft
+POST {{baseUrl}}/designer/drafts
+x-tenant-id: demo
+x-domain-code: DEFAULT
+x-application-code: ASSET_MAINTENANCE
+x-user-id: designer
+x-permissions: FORM.DESIGN,FORM.PUBLISH
+content-type: application/json
+
+{
+  "targetType": "NAVIGATION",
+  "targetCode": "MAIN_NAVIGATION"
+}
+
+### Add menu item to navigation draft
+POST {{baseUrl}}/designer/replace-with-navigation-draft-id/operations
+x-tenant-id: demo
+x-domain-code: DEFAULT
+x-application-code: ASSET_MAINTENANCE
+x-user-id: designer
+x-permissions: FORM.DESIGN,FORM.PUBLISH
+content-type: application/json
+
+{
+  "type": "ADD_MENU",
+  "payload": {
+    "parentCode": "ASSET_MANAGEMENT",
+    "code": "WORK_ORDER_FAST_LINK",
+    "label": "Work Order Fast Link",
+    "icon": "bolt",
+    "order": 3,
+    "target": {
+      "type": "PAGE",
+      "code": "WORK_ORDER_DETAIL_PAGE"
+    },
+    "visibleWhen": {
+      "permissions": ["WORK_ORDER.READ"]
+    }
+  }
+}
+
+### Preview navigation draft
+POST {{baseUrl}}/designer/replace-with-navigation-draft-id/preview
+x-tenant-id: demo
+x-domain-code: DEFAULT
+x-application-code: ASSET_MAINTENANCE
+x-user-id: designer
+x-permissions: FORM.DESIGN,FORM.PUBLISH

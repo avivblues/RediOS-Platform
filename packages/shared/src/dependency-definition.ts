@@ -16,6 +16,7 @@ export type DependencyNodeType = Extract<
   | 'UI'
   | 'FORM'
   | 'THEME'
+  | 'NAVIGATION'
 >;
 
 export interface DependencyNode {

@@ -19,6 +19,7 @@ import { LedgerEngine } from '../ledger/ledger-engine.service';
 import { METADATA_PROVIDER, type MetadataProvider } from '../metadata/metadata-provider.interface';
 import { MetadataResolver } from '../metadata/metadata-resolver.service';
 import { MetadataValidatorEngine } from '../metadata/metadata-validator-engine.service';
+import { NavigationEngine } from '../navigation/navigation-engine.service';
 import { ProcessEngine } from '../process/process-engine.service';
 import { RelationEngine } from '../relation/relation-engine.service';
 import { SecurityEngine } from '../security/security-engine.service';
@@ -44,6 +45,7 @@ export class SimulationEngine {
     private readonly uiEngine: UIEngine,
     private readonly formEngine: FormEngine,
     private readonly themeEngine: ThemeEngine,
+    private readonly navigationEngine: NavigationEngine,
     private readonly traceEngine: TraceEngine,
   ) {}
 
@@ -326,6 +328,19 @@ export class SimulationEngine {
       affectedPages: pages.value.length,
     };
 
+    const navigation = await this.runStep(steps, 'VALIDATION', 'Navigation metadata resolved.', () =>
+      this.navigationEngine.compose(context),
+    );
+
+    if (!navigation.ok) {
+      return this.finalize(request, context, this.failed(validation, steps, predicted));
+    }
+
+    predicted.navigation = {
+      code: navigation.value.navigation,
+      affectedMenus: this.countNavigationItems(navigation.value.items),
+    };
+
     return this.finalize(request, context, {
       success: steps.every((step) => step.status !== 'FAILED'),
       validation,
@@ -588,6 +603,10 @@ export class SimulationEngine {
       .filter((field) => field.required)
       .map((field) => field.code)
       .filter((fieldCode) => payload[fieldCode] === undefined || payload[fieldCode] === null || payload[fieldCode] === '');
+  }
+
+  private countNavigationItems(items: Array<{ children: unknown[] }>): number {
+    return items.reduce((total, item) => total + 1 + this.countNavigationItems(item.children as Array<{ children: unknown[] }>), 0);
   }
 
   private errorCode(stage: SimulationStep['stage'], error: unknown): string {

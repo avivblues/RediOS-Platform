@@ -5,6 +5,7 @@ import { EventModule } from '../event/event.module';
 import { FormModule } from '../form/form.module';
 import { LedgerModule } from '../ledger/ledger.module';
 import { MetadataModule } from '../metadata/metadata.module';
+import { NavigationModule } from '../navigation/navigation.module';
 import { ProcessModule } from '../process/process.module';
 import { RelationModule } from '../relation/relation.module';
 import { SecurityModule } from '../security/security.module';
@@ -29,6 +30,7 @@ import { SimulationEngine } from './simulation-engine.service';
     UIModule,
     FormModule,
     ThemeModule,
+    NavigationModule,
   ],
   providers: [SimulationEngine],
   exports: [SimulationEngine],

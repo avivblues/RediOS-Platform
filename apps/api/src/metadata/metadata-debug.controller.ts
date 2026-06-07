@@ -15,6 +15,8 @@ type MetadataDebugResult = {
   views: string[];
   ui: string[];
   forms: string[];
+  themes: string[];
+  navigation: string[];
   counts: Record<string, number>;
 };
 
@@ -49,6 +51,8 @@ export class MetadataDebugController {
       views: this.codes(records, 'VIEW'),
       ui: this.codes(records, 'UI'),
       forms: this.codes(records, 'FORM'),
+      themes: this.codes(records, 'THEME'),
+      navigation: this.codes(records, 'NAVIGATION'),
       counts: this.counts(records),
     };
   }

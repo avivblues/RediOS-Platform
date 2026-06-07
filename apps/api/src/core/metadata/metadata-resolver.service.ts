@@ -11,6 +11,7 @@ import type {
   LedgerDefinition,
   MetadataDefinition,
   MetadataType,
+  NavigationDefinition,
   ProcessDefinition,
   RelationDefinition,
   RuntimeContext,
@@ -316,6 +317,35 @@ export class MetadataResolver {
     }
 
     return definition as MetadataDefinition<ThemeDefinition>;
+  }
+
+  async resolveNavigation(
+    context: RuntimeContext,
+    navigationCode?: string,
+  ): Promise<MetadataDefinition<NavigationDefinition> | null> {
+    const definitions = await this.registry.findByType(context, 'NAVIGATION');
+    const matchingDefinitions = definitions.filter((candidate) => {
+      const navigation = candidate.definition as NavigationDefinition;
+      return navigation.enabled && (!navigationCode || navigation.code === navigationCode);
+    });
+    const definition =
+      (navigationCode
+        ? matchingDefinitions[0]
+        : definitions.find((candidate) => (candidate.definition as NavigationDefinition).code === 'MAIN_NAVIGATION')) ??
+      matchingDefinitions[0] ??
+      definitions[0];
+
+    if (!definition) {
+      return null;
+    }
+
+    const validation = this.validator.validate(definition);
+
+    if (!validation.valid) {
+      throw new UnprocessableEntityException(validation.errors);
+    }
+
+    return definition as MetadataDefinition<NavigationDefinition>;
   }
 
   async resolveUI(
