@@ -3,6 +3,7 @@ import type {
   ActionDefinition,
   ApplicationDefinition,
   BusinessDefinition,
+  ConflictPolicyDefinition,
   EntityDefinition,
   EventDefinition,
   EventTriggerDefinition,
@@ -427,6 +428,29 @@ export class MetadataResolver {
     }
 
     return definition as MetadataDefinition<SyncDefinition>;
+  }
+
+  async resolveConflictPolicy(
+    context: RuntimeContext,
+    entityCode: string,
+  ): Promise<MetadataDefinition<ConflictPolicyDefinition> | null> {
+    const definitions = await this.registry.findByType(context, 'CONFLICT_POLICY');
+    const definition = definitions.find((candidate) => {
+      const policy = candidate.definition as ConflictPolicyDefinition;
+      return policy.enabled && policy.entityCode === entityCode;
+    });
+
+    if (!definition) {
+      return null;
+    }
+
+    const validation = this.validator.validate(definition);
+
+    if (!validation.valid) {
+      throw new UnprocessableEntityException(validation.errors);
+    }
+
+    return definition as MetadataDefinition<ConflictPolicyDefinition>;
   }
 
   async resolveUI(

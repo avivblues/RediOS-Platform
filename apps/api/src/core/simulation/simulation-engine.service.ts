@@ -15,6 +15,7 @@ import type {
 } from '@redios/shared';
 import { ActionEngine } from '../action/action-engine.service';
 import { BusinessEngine } from '../business/business-engine.service';
+import { ConflictEngine } from '../conflict/conflict-engine.service';
 import { EventEngine } from '../event/event-engine.service';
 import { ExperienceEngine } from '../experience/experience-engine.service';
 import { FormEngine } from '../form/form-engine.service';
@@ -54,6 +55,7 @@ export class SimulationEngine {
     private readonly securityPolicyEngine: SecurityPolicyEngine,
     private readonly experienceEngine: ExperienceEngine,
     private readonly syncPolicyEngine: SyncPolicyEngine,
+    private readonly conflictEngine: ConflictEngine,
     private readonly traceEngine: TraceEngine,
   ) {}
 
@@ -355,6 +357,19 @@ export class SimulationEngine {
       conflict: syncPolicy.value.conflict,
     };
 
+    const conflictPolicy = await this.runStep(steps, 'VALIDATION', 'Conflict policy metadata resolved.', () =>
+      this.conflictEngine.resolvePolicy(context, request.entityCode),
+    );
+
+    if (!conflictPolicy.ok) {
+      return this.finalize(request, context, this.failed(validation, steps, predicted));
+    }
+
+    predicted.conflict = {
+      possible: syncPolicy.value.offline,
+      policy: conflictPolicy.value.strategy,
+    };
+
     const forms = await this.runStep(steps, 'VALIDATION', 'Form metadata resolved.', () =>
       this.formEngine.compose(context, request.entityCode),
     );
@@ -529,6 +544,11 @@ export class SimulationEngine {
       }
 
       if (metadataDefinition.type === 'SYNC_POLICY') {
+        const metadataEntityCode = this.definitionEntityCode(metadataDefinition.definition);
+        return metadataEntityCode === entityCode ? [metadataDefinition] : [];
+      }
+
+      if (metadataDefinition.type === 'CONFLICT_POLICY') {
         const metadataEntityCode = this.definitionEntityCode(metadataDefinition.definition);
         return metadataEntityCode === entityCode ? [metadataDefinition] : [];
       }

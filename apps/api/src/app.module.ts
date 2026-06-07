@@ -5,6 +5,7 @@ import { databaseConfig } from './config/database.config';
 import { ActionModule } from './core/action/action.module';
 import { ApplicationModule } from './core/application/application.module';
 import { BusinessModule } from './core/business/business.module';
+import { ConflictModule as CoreConflictModule } from './core/conflict/conflict.module';
 import { ContextModule } from './core/context/context.module';
 import { DependencyModule as CoreDependencyModule } from './core/dependency/dependency.module';
 import { DesignerModule as CoreDesignerModule } from './core/designer/designer.module';
@@ -25,6 +26,7 @@ import { SyncModule as CoreSyncModule } from './core/sync/sync.module';
 import { ThemeModule as CoreThemeModule } from './core/theme/theme.module';
 import { UIModule as CoreUIModule } from './core/ui/ui.module';
 import { WorkflowModule } from './core/workflow/workflow.module';
+import { ConflictsModule } from './conflicts/conflicts.module';
 import { DesignerModule } from './designer/designer.module';
 import { DependenciesModule } from './dependencies/dependencies.module';
 import { ExperienceModule } from './experience/experience.module';
@@ -68,6 +70,7 @@ import { UIModule } from './ui/ui.module';
     HealthModule,
     MetadataDebugModule,
     MetadataValidationModule,
+    ConflictsModule,
     QueryModule,
     RuntimeApiModule,
     RuntimeTracesModule,
@@ -88,6 +91,7 @@ import { UIModule } from './ui/ui.module';
     SecurityModule,
     ActionModule,
     CoreRuntimeModule,
+    CoreConflictModule,
     WorkflowModule,
     ProcessModule,
     CoreQueryModule,

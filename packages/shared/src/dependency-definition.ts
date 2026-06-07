@@ -20,6 +20,7 @@ export type DependencyNodeType = Extract<
   | 'SECURITY_POLICY'
   | 'EXPERIENCE'
   | 'SYNC_POLICY'
+  | 'CONFLICT_POLICY'
 >;
 
 export interface DependencyNode {

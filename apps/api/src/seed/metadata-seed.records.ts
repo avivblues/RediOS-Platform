@@ -3,6 +3,7 @@ import type {
   ActionType,
   ApplicationDefinition,
   BusinessDefinition,
+  ConflictPolicyDefinition,
   EntityType,
   EntityDefinition,
   EventDefinition,
@@ -59,6 +60,7 @@ type ApplicationSeed = {
   securityPolicies?: SecurityPolicyDefinition[];
   experiences?: ExperienceDefinition[];
   syncPolicies?: SyncDefinition[];
+  conflictPolicies?: ConflictPolicyDefinition[];
 };
 
 const commonThemeDefinitions: ThemeDefinition[] = [
@@ -797,6 +799,31 @@ const applications: ApplicationSeed[] = [
         priority: 10,
       },
     ],
+    conflictPolicies: [
+      {
+        code: 'WORK_ORDER_CONFLICT_POLICY',
+        entityCode: 'WORK_ORDER',
+        enabled: true,
+        strategy: 'MANUAL_REVIEW',
+        rules: [
+          {
+            fieldCode: 'description',
+            strategy: 'CLIENT_WINS',
+          },
+          {
+            fieldCode: 'status',
+            strategy: 'SERVER_WINS',
+          },
+        ],
+      },
+      {
+        code: 'ASSET_CONFLICT_POLICY',
+        entityCode: 'ASSET',
+        enabled: true,
+        strategy: 'SERVER_WINS',
+        rules: [],
+      },
+    ],
     securityPolicies: [
       {
         code: 'WORK_ORDER_TECHNICIAN_POLICY',
@@ -1327,6 +1354,7 @@ export const metadataSeedRecords: MetadataDefinition[] = applications.flatMap((a
   ...(application.securityPolicies ?? []).map((policy) => createSecurityPolicyRecord(application, policy)),
   ...(application.experiences ?? []).map((experience) => createExperienceRecord(application, experience)),
   ...(application.syncPolicies ?? []).map((syncPolicy) => createSyncPolicyRecord(application, syncPolicy)),
+  ...(application.conflictPolicies ?? []).map((conflictPolicy) => createConflictPolicyRecord(application, conflictPolicy)),
   ...[...commonUIDefinitions, ...(application.uis ?? [])].map((ui) => createUIRecord(application, ui)),
 ]);
 
@@ -1664,6 +1692,23 @@ function createSyncPolicyRecord(
     version: 1,
     enabled: syncPolicy.enabled,
     definition: syncPolicy,
+  };
+}
+
+function createConflictPolicyRecord(
+  application: ApplicationSeed,
+  conflictPolicy: ConflictPolicyDefinition,
+): MetadataDefinition<ConflictPolicyDefinition> {
+  return {
+    tenantId,
+    domainCode,
+    applicationCode: application.code,
+    type: 'CONFLICT_POLICY',
+    code: conflictPolicy.code,
+    name: toLabel(conflictPolicy.code),
+    version: 1,
+    enabled: conflictPolicy.enabled,
+    definition: conflictPolicy,
   };
 }
 

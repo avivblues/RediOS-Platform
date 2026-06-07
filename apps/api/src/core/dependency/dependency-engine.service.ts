@@ -3,6 +3,7 @@ import type {
   ActionDefinition,
   ApplicationDefinition,
   BusinessDefinition,
+  ConflictPolicyDefinition,
   DependencyGraph,
   DependencyImpact,
   DependencyNode,
@@ -164,6 +165,10 @@ export class DependencyEngine {
 
     if (record.type === 'SYNC_POLICY') {
       return this.syncPolicyReferences(record.definition as SyncDefinition, source);
+    }
+
+    if (record.type === 'CONFLICT_POLICY') {
+      return this.conflictPolicyReferences(record.definition as ConflictPolicyDefinition, source);
     }
 
     if (record.type === 'FIELD') {
@@ -353,6 +358,13 @@ export class DependencyEngine {
 
   private syncPolicyReferences(definition: SyncDefinition, source: DependencyNode): DependencyReference[] {
     return [this.reference(source, 'REFERENCES', 'ENTITY', definition.entityCode)];
+  }
+
+  private conflictPolicyReferences(definition: ConflictPolicyDefinition, source: DependencyNode): DependencyReference[] {
+    return [
+      this.reference(source, 'REFERENCES', 'ENTITY', definition.entityCode),
+      ...definition.rules.map((rule) => this.reference(source, 'BINDS', 'FIELD', rule.fieldCode)),
+    ];
   }
 
   private toImpact(reference: DependencyReference): DependencyImpact {

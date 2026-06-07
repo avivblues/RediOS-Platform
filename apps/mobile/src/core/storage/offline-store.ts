@@ -1,6 +1,6 @@
 import type { MobileResolvedUIPage, MobileRuntimeForm, MobileRuntimeTheme } from '../api/mobile-runtime-types';
 
-export type OfflineActionStatus = 'PENDING' | 'SYNCING' | 'SYNCED' | 'FAILED';
+export type OfflineActionStatus = 'PENDING' | 'SYNCING' | 'SYNCED' | 'FAILED' | 'CONFLICT';
 
 export interface OfflineAction {
   id: string;
@@ -8,9 +8,13 @@ export interface OfflineAction {
   documentId?: string;
   actionCode: string;
   payload: Record<string, unknown>;
+  clientVersion?: number;
+  serverVersion?: number;
+  clientData?: Record<string, unknown>;
   status: OfflineActionStatus;
   createdAt: string;
   error?: string;
+  conflictId?: string;
 }
 
 export interface OfflineMetadataSnapshot {
@@ -39,6 +43,7 @@ export interface OfflineStore {
   markSyncing(actionId: string): Promise<void>;
   markSynced(actionId: string): Promise<void>;
   markFailed(actionId: string, error: string): Promise<void>;
+  markConflict(actionId: string, conflictId: string): Promise<void>;
   saveConflict(conflict: SyncConflict): Promise<void>;
   getConflicts(): Promise<SyncConflict[]>;
 }
@@ -100,6 +105,10 @@ export class SQLiteOfflineStore implements OfflineStore {
 
   async markFailed(actionId: string, error: string): Promise<void> {
     await this.updateAction(actionId, { status: 'FAILED', error });
+  }
+
+  async markConflict(actionId: string, conflictId: string): Promise<void> {
+    await this.updateAction(actionId, { status: 'CONFLICT', conflictId, error: undefined });
   }
 
   async saveConflict(conflict: SyncConflict): Promise<void> {

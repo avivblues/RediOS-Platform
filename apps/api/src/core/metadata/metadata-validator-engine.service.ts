@@ -3,6 +3,7 @@ import type {
   ActionDefinition,
   ApplicationDefinition,
   BusinessDefinition,
+  ConflictPolicyDefinition,
   EntityDefinition,
   EventDefinition,
   ExperienceConditions,
@@ -48,6 +49,7 @@ type MetadataIndex = {
   securityPolicies: Map<string, MetadataDefinition<SecurityPolicyDefinition>[]>;
   experiences: Map<string, MetadataDefinition<ExperienceDefinition>[]>;
   syncPolicies: Map<string, MetadataDefinition<SyncDefinition>[]>;
+  conflictPolicies: Map<string, MetadataDefinition<ConflictPolicyDefinition>[]>;
 };
 
 @Injectable()
@@ -73,6 +75,7 @@ export class MetadataValidatorEngine {
     this.validateSecurityPolicyDefinitions(metadataDefinitions, index, issues);
     this.validateExperienceDefinitions(metadataDefinitions, index, issues);
     this.validateSyncPolicyDefinitions(metadataDefinitions, index, issues);
+    this.validateConflictPolicyDefinitions(metadataDefinitions, index, issues);
     this.validateDependencyIntegrity(metadataDefinitions, index, issues);
 
     const errors = issues.filter((issue) => issue.severity === 'ERROR').length;
@@ -105,6 +108,7 @@ export class MetadataValidatorEngine {
       securityPolicies: new Map(),
       experiences: new Map(),
       syncPolicies: new Map(),
+      conflictPolicies: new Map(),
     };
 
     for (const metadata of metadataDefinitions) {
@@ -208,6 +212,14 @@ export class MetadataValidatorEngine {
         const records = index.syncPolicies.get(key) ?? [];
         records.push(metadata as MetadataDefinition<SyncDefinition>);
         index.syncPolicies.set(key, records);
+      }
+
+      if (metadata.type === 'CONFLICT_POLICY') {
+        const conflictPolicy = metadata.definition as ConflictPolicyDefinition;
+        const key = this.conflictPolicyKey(conflictPolicy.entityCode, conflictPolicy.code);
+        const records = index.conflictPolicies.get(key) ?? [];
+        records.push(metadata as MetadataDefinition<ConflictPolicyDefinition>);
+        index.conflictPolicies.set(key, records);
       }
     }
 
@@ -1533,6 +1545,78 @@ export class MetadataValidatorEngine {
     }
   }
 
+  private validateConflictPolicyDefinitions(
+    metadataDefinitions: MetadataDefinition[],
+    index: MetadataIndex,
+    issues: ValidationIssue[],
+  ): void {
+    const strategies = ['SERVER_WINS', 'CLIENT_WINS', 'MANUAL_REVIEW', 'MERGE_FIELDS'];
+
+    for (const [policyKey, policies] of index.conflictPolicies.entries()) {
+      if (policies.length > 1) {
+        this.addIssue(
+          issues,
+          'CONFLICT_POLICY_INVALID',
+          'ERROR',
+          `Duplicate conflict policy definition ${policyKey}.`,
+          `CONFLICT_POLICY.${policyKey}`,
+          'Keep one CONFLICT_POLICY definition per entity and code.',
+        );
+      }
+    }
+
+    for (const metadata of metadataDefinitions.filter((candidate) => candidate.type === 'CONFLICT_POLICY')) {
+      const policy = metadata.definition as ConflictPolicyDefinition;
+      const fields = index.fieldsByEntity.get(policy.entityCode);
+
+      if (!index.entities.has(policy.entityCode)) {
+        this.addIssue(
+          issues,
+          'CONFLICT_ENTITY_NOT_FOUND',
+          'ERROR',
+          `Conflict policy ${policy.code} references missing entity ${policy.entityCode}.`,
+          `CONFLICT_POLICY.${policy.code}.entityCode`,
+          `Create ${policy.entityCode} entity metadata.`,
+        );
+      }
+
+      if (!strategies.includes(policy.strategy)) {
+        this.addIssue(
+          issues,
+          'CONFLICT_POLICY_INVALID',
+          'ERROR',
+          `Conflict policy ${policy.code} has invalid strategy ${policy.strategy}.`,
+          `CONFLICT_POLICY.${policy.code}.strategy`,
+          'Use SERVER_WINS, CLIENT_WINS, MANUAL_REVIEW, or MERGE_FIELDS.',
+        );
+      }
+
+      for (const [ruleIndex, rule] of policy.rules.entries()) {
+        if (!this.fieldExists(fields, rule.fieldCode)) {
+          this.addIssue(
+            issues,
+            'CONFLICT_FIELD_NOT_FOUND',
+            'ERROR',
+            `Conflict policy ${policy.code} references missing field ${rule.fieldCode}.`,
+            `CONFLICT_POLICY.${policy.code}.rules[${ruleIndex}].fieldCode`,
+            `Create ${rule.fieldCode} field metadata on ${policy.entityCode}.`,
+          );
+        }
+
+        if (!strategies.includes(rule.strategy)) {
+          this.addIssue(
+            issues,
+            'CONFLICT_POLICY_INVALID',
+            'ERROR',
+            `Conflict policy ${policy.code} rule has invalid strategy ${rule.strategy}.`,
+            `CONFLICT_POLICY.${policy.code}.rules[${ruleIndex}].strategy`,
+            'Use SERVER_WINS, CLIENT_WINS, MANUAL_REVIEW, or MERGE_FIELDS.',
+          );
+        }
+      }
+    }
+  }
+
   private validateDependencyIntegrity(
     metadataDefinitions: MetadataDefinition[],
     index: MetadataIndex,
@@ -1723,6 +1807,16 @@ export class MetadataValidatorEngine {
         return [this.dependency(metadata, 'ENTITY', policy.entityCode, `SYNC_POLICY.${policy.code}.entityCode`)];
       }
 
+      if (metadata.type === 'CONFLICT_POLICY') {
+        const policy = metadata.definition as ConflictPolicyDefinition;
+        return [
+          this.dependency(metadata, 'ENTITY', policy.entityCode, `CONFLICT_POLICY.${policy.code}.entityCode`),
+          ...policy.rules.map((rule, ruleIndex) =>
+            this.dependency(metadata, 'FIELD', rule.fieldCode, `CONFLICT_POLICY.${policy.code}.rules[${ruleIndex}].fieldCode`),
+          ),
+        ];
+      }
+
       return [];
     });
   }
@@ -1838,6 +1932,10 @@ export class MetadataValidatorEngine {
   }
 
   private syncPolicyKey(entityCode: string, code: string): string {
+    return `${entityCode}:${code}`;
+  }
+
+  private conflictPolicyKey(entityCode: string, code: string): string {
     return `${entityCode}:${code}`;
   }
 

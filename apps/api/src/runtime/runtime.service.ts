@@ -78,10 +78,19 @@ export class RuntimeService {
       actionCode,
       payload: actionPayload.payload,
       source: actionPayload.source,
+      clientVersion: actionPayload.clientVersion,
+      serverVersion: actionPayload.serverVersion,
+      clientData: actionPayload.clientData,
     });
   }
 
-  private actionPayload(payload: unknown): { payload: unknown; source?: 'OFFLINE_SYNC' } {
+  private actionPayload(payload: unknown): {
+    payload: unknown;
+    source?: 'OFFLINE_SYNC';
+    clientVersion?: number;
+    serverVersion?: number;
+    clientData?: Record<string, unknown>;
+  } {
     if (!payload || typeof payload !== 'object' || Array.isArray(payload)) {
       return { payload };
     }
@@ -96,6 +105,12 @@ export class RuntimeService {
     return {
       source,
       payload: record.payload ?? record.data ?? {},
+      clientVersion: typeof record.clientVersion === 'number' ? record.clientVersion : undefined,
+      serverVersion: typeof record.serverVersion === 'number' ? record.serverVersion : undefined,
+      clientData:
+        record.clientData && typeof record.clientData === 'object' && !Array.isArray(record.clientData)
+          ? (record.clientData as Record<string, unknown>)
+          : undefined,
     };
   }
 }

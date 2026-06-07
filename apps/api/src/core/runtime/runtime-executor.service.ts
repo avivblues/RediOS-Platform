@@ -12,6 +12,7 @@ import type {
 import { ActionEngine, type RuntimeActionPlan } from '../action/action-engine.service';
 import { ApplicationEngine } from '../application/application-engine.service';
 import { BusinessEngine, type BusinessExecutionResult } from '../business/business-engine.service';
+import { ConflictEngine } from '../conflict/conflict-engine.service';
 import { EventEngine, type RuntimeEventPublishResult } from '../event/event-engine.service';
 import { LedgerEngine, type LedgerExecutionResult } from '../ledger/ledger-engine.service';
 import { MetadataResolver } from '../metadata/metadata-resolver.service';
@@ -57,6 +58,9 @@ export interface RuntimeActionInput {
   actionCode: string;
   payload: unknown;
   source?: 'OFFLINE_SYNC';
+  clientVersion?: number;
+  serverVersion?: number;
+  clientData?: Record<string, unknown>;
 }
 
 export interface RuntimeActionResult {
@@ -86,6 +90,7 @@ export class RuntimeExecutor {
     private readonly traceEngine: TraceEngine,
     private readonly storageEngine: StorageEngine,
     private readonly securityPolicyEngine: SecurityPolicyEngine,
+    private readonly conflictEngine: ConflictEngine,
   ) {}
 
   async create(input: RuntimeExecutionInput): Promise<RuntimeExecutionResult> {
@@ -154,6 +159,21 @@ export class RuntimeExecutor {
 
     try {
       await this.resolveRuntimeTarget(context, entityCode);
+
+      if (source === 'OFFLINE_SYNC') {
+        await this.traceEngine.recordStep(trace.id!, 'CONFLICT_CHECK', () =>
+          this.conflictEngine.assertNoConflict(context, {
+            entityCode,
+            documentId: id,
+            actionCode,
+            payload: this.toActionData(payload),
+            clientVersion: input.clientVersion,
+            serverVersion: input.serverVersion,
+            clientData: input.clientData,
+          }),
+        );
+      }
+
       const document = await this.storageEngine.findOne(context, entityCode, id);
 
       if (!document) {

@@ -1,0 +1,80 @@
+@baseUrl = http://localhost:3001/api
+@tenantId = demo
+@domainCode = DEFAULT
+@applicationCode = ASSET_MAINTENANCE
+@documentId = replace-with-runtime-document-id
+@conflictId = replace-with-conflict-id
+
+### 1. Server document is changed while mobile is offline
+PATCH {{baseUrl}}/runtime/WORK_ORDER/{{documentId}}
+content-type: application/json
+x-tenant-id: {{tenantId}}
+x-domain-code: {{domainCode}}
+x-application-code: {{applicationCode}}
+x-user-id: dispatcher
+x-permissions: WORK_ORDER.UPDATE,WORK_ORDER.READ
+
+{
+  "data": {
+    "status": "CANCELLED",
+    "description": "Cancelled by dispatcher"
+  }
+}
+
+### 2. Offline action replay detects conflict before runtime execution
+POST {{baseUrl}}/runtime/WORK_ORDER/{{documentId}}/actions/COMPLETE
+content-type: application/json
+x-tenant-id: {{tenantId}}
+x-domain-code: {{domainCode}}
+x-application-code: {{applicationCode}}
+x-user-id: mobile-tech
+x-roles: TECHNICIAN
+x-permissions: WORK_ORDER.READ,WORK_ORDER.COMPLETE,ASSET.READ
+
+{
+  "source": "OFFLINE_SYNC",
+  "clientVersion": 0,
+  "clientData": {
+    "status": "DONE",
+    "description": "Completed offline"
+  },
+  "payload": {
+    "status": "DONE",
+    "description": "Completed offline"
+  }
+}
+
+### Expected
+### HTTP 409
+### status: CONFLICT
+### conflictId: exists
+### policy: MANUAL_REVIEW
+### Runtime ACTION/WORKFLOW/LEDGER not executed
+### Trace includes CONFLICT_CHECK FAILED
+
+### 3. Conflict is stored
+GET {{baseUrl}}/conflicts
+x-tenant-id: {{tenantId}}
+x-domain-code: {{domainCode}}
+x-application-code: {{applicationCode}}
+x-user-id: mobile-tech
+
+### Expected
+### status: OPEN
+### entityCode: WORK_ORDER
+### policy: MANUAL_REVIEW
+
+### 4. Resolve marker only, no advanced merge engine in this phase
+POST {{baseUrl}}/conflicts/{{conflictId}}/resolve
+content-type: application/json
+x-tenant-id: {{tenantId}}
+x-domain-code: {{domainCode}}
+x-application-code: {{applicationCode}}
+x-user-id: supervisor
+
+{
+  "resolution": "USE_SERVER"
+}
+
+### Expected
+### status: RESOLVED

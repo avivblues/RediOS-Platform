@@ -20,6 +20,7 @@ type MetadataDebugResult = {
   securityPolicies: string[];
   experiences: string[];
   syncPolicies: string[];
+  conflictPolicies: string[];
   counts: Record<string, number>;
 };
 
@@ -59,6 +60,7 @@ export class MetadataDebugController {
       securityPolicies: this.codes(records, 'SECURITY_POLICY'),
       experiences: this.codes(records, 'EXPERIENCE'),
       syncPolicies: this.codes(records, 'SYNC_POLICY'),
+      conflictPolicies: this.codes(records, 'CONFLICT_POLICY'),
       counts: this.counts(records),
     };
   }

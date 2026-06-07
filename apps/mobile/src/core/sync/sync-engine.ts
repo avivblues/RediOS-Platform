@@ -1,4 +1,4 @@
-import type { MobileMetadataClient } from '../api/mobile-metadata-client';
+import { MobileConflictResponseError, type MobileMetadataClient } from '../api/mobile-metadata-client';
 import type { OfflineAction, OfflineStore } from '../storage/offline-store';
 
 export interface SyncResult {
@@ -27,6 +27,12 @@ export class MobileSyncEngine {
         await this.store.markSynced(action.id);
         synced += 1;
       } catch (error) {
+        if (error instanceof MobileConflictResponseError) {
+          await this.store.markConflict(action.id, error.conflictId);
+          failed += 1;
+          continue;
+        }
+
         await this.store.markFailed(action.id, error instanceof Error ? error.message : String(error));
         failed += 1;
       }

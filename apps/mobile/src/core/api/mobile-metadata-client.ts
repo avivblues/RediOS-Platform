@@ -14,6 +14,12 @@ import type { OfflineAction } from '../storage/offline-store';
 
 const API_BASE_URL = process.env.EXPO_PUBLIC_REDIOS_API_URL ?? 'http://localhost:3001/api';
 
+export class MobileConflictResponseError extends Error {
+  constructor(readonly conflictId: string) {
+    super(`Offline action replay conflict: ${conflictId}`);
+  }
+}
+
 export class MobileMetadataClient {
   constructor(private readonly context: MobileRuntimeContext) {}
 
@@ -70,6 +76,9 @@ export class MobileMetadataClient {
     return this.post(`/runtime/${action.entityCode}/${action.documentId}/actions/${action.actionCode}`, {
       source: 'OFFLINE_SYNC',
       payload: action.payload,
+      clientVersion: action.clientVersion,
+      serverVersion: action.serverVersion,
+      clientData: action.clientData,
     });
   }
 
@@ -102,6 +111,11 @@ export class MobileMetadataClient {
     });
 
     if (!response.ok) {
+      if (response.status === 409) {
+        const body = (await response.json().catch(() => undefined)) as { conflictId?: string } | undefined;
+        throw new MobileConflictResponseError(body?.conflictId ?? 'unknown');
+      }
+
       throw new Error(`Mobile metadata request failed: ${response.status} ${response.statusText}`);
     }
 

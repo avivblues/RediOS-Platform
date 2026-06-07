@@ -125,5 +125,9 @@ export interface SimulationResult {
       strategy: string;
       conflict: string;
     };
+    conflict?: {
+      possible: boolean;
+      policy: string;
+    };
   };
 }
