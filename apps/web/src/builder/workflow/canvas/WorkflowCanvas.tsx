@@ -23,10 +23,15 @@ export function WorkflowCanvas({
   return (
     <div>
       <Toolbar>
-        <Button variant="secondary" onClick={onAddState}>
+        <Button variant="secondary" onClick={onAddState} tooltip="Tambah status baru ke alur kerja.">
           Add State
         </Button>
-        <Button variant="secondary" onClick={onConnectTransition} disabled={!selectedState || model.workflow.states.length < 2}>
+        <Button
+          variant="secondary"
+          onClick={onConnectTransition}
+          disabled={!selectedState || model.workflow.states.length < 2}
+          tooltip={selectedState && model.workflow.states.length >= 2 ? 'Hubungkan status ini ke status lain.' : 'Pilih status dan pastikan ada minimal dua status.'}
+        >
           Connect Transition
         </Button>
       </Toolbar>

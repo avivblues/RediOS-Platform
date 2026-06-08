@@ -59,8 +59,12 @@ export function StudioHistoryPanel({
               <span className="studio-muted">{humanizeCode(entry.targetType)} {humanizeCode(entry.targetCode)}</span>
             </div>
             <div className="studio-action-row">
-              <Button variant="secondary" onClick={() => setSelected(entry)}>Preview</Button>
-              <Button onClick={draftId ? () => void restore(entry) : undefined} disabled={!draftId}>
+              <Button variant="secondary" onClick={() => setSelected(entry)} tooltip={`Lihat ringkasan versi ${entry.version} sebelum dipulihkan.`}>Preview</Button>
+              <Button
+                onClick={draftId ? () => void restore(entry) : undefined}
+                disabled={!draftId}
+                tooltip={draftId ? `Pulihkan rancangan ke versi ${entry.version}.` : 'Pemulihan membutuhkan rancangan aktif terlebih dahulu.'}
+              >
                 Restore
               </Button>
             </div>

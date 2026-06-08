@@ -211,7 +211,7 @@ export function CreationWizard({
                   <StudioEmptyState
                     title="No information fields yet"
                     description={`Information describes what is stored in ${selectedEntity.name}. Examples: Product Name, Price, Quantity.`}
-                    action={<StudioButton onClick={() => addSuggestedField('Product Name')}>Add First Information</StudioButton>}
+                    action={<StudioButton onClick={() => addSuggestedField('Product Name')} tooltip={`Tambah contoh informasi pertama untuk ${selectedEntity.name}, supaya bisa lanjut ke desain layar.`}>Add First Information</StudioButton>}
                   />
                 ) : null}
                 <FieldBuilder entities={draft.entities} objectName={selectedEntity.name} onAddField={addField} expertMode={expertMode} />
@@ -229,7 +229,11 @@ export function CreationWizard({
               <HelpTooltip label="Screen">A screen is what users see when entering or viewing data.</HelpTooltip>
             </h3>
             <p className="studio-muted">How should users enter and view this data?</p>
-            <StudioButton onClick={generateExperience} disabled={!isFieldsComplete(draft)}>
+            <StudioButton
+              onClick={generateExperience}
+              disabled={!isFieldsComplete(draft)}
+              tooltip={isFieldsComplete(draft) ? 'Buat layar input, layar daftar, dan menu dari informasi yang sudah kamu isi.' : 'Lengkapi minimal satu informasi untuk setiap data dulu.'}
+            >
               Design Screens
             </StudioButton>
           </section>
@@ -247,10 +251,13 @@ export function CreationWizard({
                 </p>
                 <ReadinessMeter draft={{ ...draft, generated }} runtimeCompiled expertMode={expertMode} />
                 <div className="studio-action-row">
-                  <StudioButton onClick={() => { window.location.href = `/apps/${generated.application?.code ?? codeFromLabel(draft.application.name)}`; }}>
+                  <StudioButton
+                    onClick={() => { window.location.href = `/apps/${generated.application?.code ?? codeFromLabel(draft.application.name)}`; }}
+                    tooltip="Buka aplikasi yang sudah aktif dan siap digunakan."
+                  >
                     Open Application
                   </StudioButton>
-                  <StudioButton variant="secondary" onClick={() => setStep(4)}>
+                  <StudioButton variant="secondary" onClick={() => setStep(4)} tooltip="Kembali ke halaman pemeriksaan jika masih ingin memperbaiki aplikasi.">
                     Continue Editing
                   </StudioButton>
                 </div>
@@ -272,7 +279,11 @@ export function CreationWizard({
                 <ReadinessMeter draft={{ ...draft, generated }} runtimeCompiled={false} expertMode={expertMode} />
                 <BuildCounts draft={{ ...draft, generated }} expertMode={expertMode} />
                 {publishError ? <div className="studio-inline-danger">{publishError}</div> : null}
-                <StudioButton onClick={() => void publish()} disabled={!isReviewComplete(draft)}>
+                <StudioButton
+                  onClick={() => void publish()}
+                  disabled={!isReviewComplete(draft)}
+                  tooltip={isReviewComplete(draft) ? 'Periksa kesiapan, terbitkan versi, lalu aktifkan aplikasi.' : 'Lengkapi aplikasi, data, informasi, dan layar dulu sebelum diluncurkan.'}
+                >
                   {publishState === 'publishing' ? (expertMode ? 'Publishing...' : 'Launching...') : expertMode ? 'Publish Application' : '🚀 Launch Application'}
                 </StudioButton>
               </>
@@ -281,10 +292,14 @@ export function CreationWizard({
         ) : null}
 
         <div className="studio-action-row">
-          <StudioButton variant="secondary" onClick={() => setStep((current) => Math.max(0, current - 1))} disabled={step === 0}>
+          <StudioButton variant="secondary" onClick={() => setStep((current) => Math.max(0, current - 1))} disabled={step === 0} tooltip="Kembali ke langkah sebelumnya.">
             Back
           </StudioButton>
-          <StudioButton onClick={() => goToStep(Math.min(steps.length - 1, step + 1))} disabled={step === steps.length - 1}>
+          <StudioButton
+            onClick={() => goToStep(Math.min(steps.length - 1, step + 1))}
+            disabled={step === steps.length - 1}
+            tooltip={canUseStep(Math.min(steps.length - 1, step + 1)) ? 'Lanjut ke langkah berikutnya.' : lockedStepMessage(step + 1, draft, expertMode)}
+          >
             Next
           </StudioButton>
         </div>
@@ -317,7 +332,7 @@ function ApplicationStep({
       </h3>
       <div className="studio-card-grid">
         {appStarterCards.map((card) => (
-          <StudioCard key={card.label} interactive onClick={() => onStarterSelect(card.label)}>
+          <StudioCard key={card.label} interactive onClick={() => onStarterSelect(card.label)} tooltip={`Pilih awal ${card.label} untuk mengisi contoh nama dan deskripsi aplikasi.`}>
             <span className="studio-kicker">{card.icon}</span>
             <h4>{card.label}</h4>
             <p>{card.description}</p>
@@ -351,12 +366,12 @@ function DataModelStep({
         <StudioEmptyState
           title={`Create your first ${term('ENTITY', mode)}`}
           description="What information do you want to manage?"
-          action={<StudioButton variant="secondary" onClick={() => setName('Product')}>Use Product Example</StudioButton>}
+          action={<StudioButton variant="secondary" onClick={() => setName('Product')} tooltip="Isi nama data dengan contoh Product.">Use Product Example</StudioButton>}
         />
       ) : null}
       <div className="studio-card-grid">
         {examples.map((example) => (
-          <StudioCard key={example} interactive onClick={() => setName(example)}>
+          <StudioCard key={example} interactive onClick={() => setName(example)} tooltip={`Gunakan ${example} sebagai contoh data yang dikelola aplikasi.`}>
             <strong>{example}</strong>
           </StudioCard>
         ))}
@@ -374,6 +389,7 @@ function DataModelStep({
           setDescription('');
         }}
         disabled={!name.trim()}
+        tooltip={name.trim() ? 'Buat data ini agar bisa menambahkan informasi.' : 'Isi nama data dulu, misalnya Product.'}
       >
         Create {term('ENTITY', mode)}
       </StudioButton>
@@ -546,7 +562,7 @@ function InformationCompletionChecklist({
           return (
             <div key={entity.name} className="studio-list-row">
               <span>{entity.name}</span>
-              <StudioButton variant="secondary" onClick={() => onAddSuggestion(index, suggestion)}>
+              <StudioButton variant="secondary" onClick={() => onAddSuggestion(index, suggestion)} tooltip={`Tambahkan ${suggestion.label} sebagai contoh informasi untuk ${entity.name}.`}>
                 Add {suggestion.label}
               </StudioButton>
             </div>

@@ -31,11 +31,11 @@ export function StudioHome({
           <p className="studio-muted">Choose an application, update its experience, preview impact, then launch safely through guided checks.</p>
         </div>
         <div className="studio-action-row">
-          <Button onClick={() => onSelect({ type: 'CREATE_APPLICATION', code: 'CREATE_APPLICATION' })}>Create Application</Button>
-          <Button variant="secondary" onClick={() => onSelect({ type: 'APPLICATION_BUILDER', code: tree.applications[0] ?? 'APPLICATIONS' })}>
+          <Button onClick={() => onSelect({ type: 'CREATE_APPLICATION', code: 'CREATE_APPLICATION' })} tooltip="Mulai panduan untuk membuat aplikasi baru.">Create Application</Button>
+          <Button variant="secondary" onClick={() => onSelect({ type: 'APPLICATION_BUILDER', code: tree.applications[0] ?? 'APPLICATIONS' })} tooltip="Buka aplikasi yang sudah ada untuk diubah dengan aman.">
             Modify Existing App
           </Button>
-          <Button variant="secondary" onClick={() => onSelect({ type: 'TEMPLATES', code: 'TEMPLATES' })}>Import Template</Button>
+          <Button variant="secondary" onClick={() => onSelect({ type: 'TEMPLATES', code: 'TEMPLATES' })} tooltip="Pilih template untuk membuat rancangan aplikasi.">Import Template</Button>
         </div>
       </section>
 
@@ -77,7 +77,7 @@ export function StudioHome({
                 />
                 <strong>{app.enabled ? 'Published' : 'Draft'}</strong>
                 <div className="studio-action-row">
-                  <Button onClick={() => onSelect({ type: 'APPLICATION_BUILDER', code: app.code })}>Customize</Button>
+                  <Button onClick={() => onSelect({ type: 'APPLICATION_BUILDER', code: app.code })} tooltip={`Ubah data, layar, alur kerja, dan izin akses untuk ${app.name || human.label}.`}>Customize</Button>
                 </div>
               </article>
             );
@@ -96,7 +96,14 @@ function EmptyWorkspaceCards({ onSelect }: { onSelect: (selection: ExplorerSelec
       <h3>What do you want to build?</h3>
       <div className="studio-card-grid">
         {starters.map((starter) => (
-          <button key={starter} className="studio-ds-card studio-ds-card-interactive" type="button" onClick={() => onSelect({ type: 'CREATE_APPLICATION', code: 'CREATE_APPLICATION' })}>
+          <button
+            key={starter}
+            className="studio-ds-card studio-ds-card-interactive"
+            type="button"
+            onClick={() => onSelect({ type: 'CREATE_APPLICATION', code: 'CREATE_APPLICATION' })}
+            title={`Mulai panduan pembuatan untuk ${starter}.`}
+            data-tooltip={`Mulai panduan pembuatan untuk ${starter}.`}
+          >
             <strong>{starter}</strong>
             <span className="studio-muted">Start guided creation</span>
           </button>
@@ -108,7 +115,7 @@ function EmptyWorkspaceCards({ onSelect }: { onSelect: (selection: ExplorerSelec
 
 function MetricCard({ label, value, onClick }: { label: string; value: string | number; onClick: () => void }) {
   return (
-    <button className="studio-metric-card" onClick={onClick}>
+    <button className="studio-metric-card" onClick={onClick} title={`Buka area ${label}.`}>
       <span className="studio-muted">{label}</span>
       <strong>{typeof value === 'number' ? value.toLocaleString() : humanizeCode(value)}</strong>
     </button>

@@ -30,7 +30,13 @@ export function StudioCommandCenter({
 
   return (
     <>
-      <button className="studio-command-button" type="button" aria-label="Open Studio command center" onClick={() => setOpen(true)}>
+      <button
+        className="studio-command-button"
+        type="button"
+        aria-label="Open Studio command center"
+        onClick={() => setOpen(true)}
+        title="Cari aksi cepat seperti buat aplikasi, tambah informasi, atau aktifkan aplikasi."
+      >
         Command Center <kbd>⌘K</kbd>
       </button>
       <CommandPalette commands={commands} open={open} onClose={() => setOpen(false)} />

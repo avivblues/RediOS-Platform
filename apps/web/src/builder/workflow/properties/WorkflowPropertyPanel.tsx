@@ -30,7 +30,7 @@ export function WorkflowPropertyPanel({
           <Input value={state.label} onChange={(value) => onUpdateState({ ...state, label: value })} />
           <Select value={state.type ?? (state.initial ? 'INITIAL' : state.final ? 'FINAL' : 'NORMAL')} options={['INITIAL', 'NORMAL', 'FINAL']} onChange={(value) => onUpdateState({ ...state, type: value as WorkflowStateDefinition['type'] })} />
           <Input value={state.colorToken ?? ''} placeholder="color token" onChange={(value) => onUpdateState({ ...state, colorToken: value })} />
-          <Button variant="danger" onClick={() => onRemoveState(state.code)}>
+          <Button variant="danger" onClick={() => onRemoveState(state.code)} tooltip="Hapus status ini dari rancangan alur kerja. Pratinjau dulu sebelum diterbitkan.">
             Remove State
           </Button>
         </div>
@@ -44,7 +44,7 @@ export function WorkflowPropertyPanel({
           <Input value={String(transition.condition ?? '')} placeholder="condition" onChange={(value) => onUpdateTransition({ ...transition, condition: value })} />
           <Input value={transition.securityPolicy ?? ''} placeholder="security policy" onChange={(value) => onUpdateTransition({ ...transition, securityPolicy: value })} />
           <Input value={transition.processBinding ?? ''} placeholder="process binding" onChange={(value) => onUpdateTransition({ ...transition, processBinding: value })} />
-          <Button variant="danger" onClick={() => onRemoveTransition(transition.code)}>
+          <Button variant="danger" onClick={() => onRemoveTransition(transition.code)} tooltip="Hapus hubungan antar status ini dari rancangan alur kerja.">
             Remove Transition
           </Button>
         </div>

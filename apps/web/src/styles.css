@@ -24,6 +24,34 @@ a:focus-visible {
   outline-offset: 2px;
 }
 
+.studio-button[data-tooltip],
+.studio-ds-card-interactive[data-tooltip] {
+  position: relative;
+}
+
+.studio-button[data-tooltip]:hover::after,
+.studio-button[data-tooltip]:focus-visible::after,
+.studio-ds-card-interactive[data-tooltip]:hover::after,
+.studio-ds-card-interactive[data-tooltip]:focus-visible::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  z-index: 100;
+  bottom: calc(100% + 0.5rem);
+  left: 0;
+  width: max-content;
+  max-width: 260px;
+  border: 1px solid color-mix(in srgb, var(--redios-color-text), transparent 82%);
+  border-radius: var(--redios-radius-medium);
+  padding: var(--redios-spacing-xs) var(--redios-spacing-sm);
+  background: var(--redios-color-surface);
+  color: var(--redios-color-text);
+  box-shadow: 0 14px 36px rgb(15 23 42 / 14%);
+  font-size: var(--redios-font-size-small);
+  line-height: 1.35;
+  text-transform: none;
+  pointer-events: none;
+}
+
 .runtime-shell {
   min-height: 100vh;
   display: flex;
@@ -641,6 +669,44 @@ a:focus-visible {
   margin-bottom: var(--redios-spacing-md);
 }
 
+.studio-edit-flow {
+  display: grid;
+  gap: var(--redios-spacing-md);
+}
+
+.studio-edit-hero {
+  align-items: flex-start;
+  border: 1px solid color-mix(in srgb, var(--redios-color-primary), transparent 80%);
+  border-radius: var(--redios-radius-large);
+  padding: var(--redios-spacing-md);
+  background: color-mix(in srgb, var(--redios-color-primary), var(--redios-color-surface) 96%);
+}
+
+.studio-edit-hero h3 {
+  margin: var(--redios-spacing-xs) 0;
+}
+
+.studio-edit-builder-grid {
+  display: grid;
+  grid-template-columns: minmax(240px, 0.8fr) minmax(360px, 1.4fr) minmax(260px, 0.9fr);
+  gap: var(--redios-spacing-md);
+  align-items: start;
+}
+
+.studio-edit-side-panel,
+.studio-edit-panel {
+  display: grid;
+  gap: var(--redios-spacing-md);
+}
+
+.studio-edit-context {
+  display: grid;
+  gap: var(--redios-spacing-xs);
+  border-radius: var(--redios-radius-medium);
+  padding: var(--redios-spacing-sm);
+  background: color-mix(in srgb, var(--redios-color-background), var(--redios-color-surface) 34%);
+}
+
 .studio-flow-indicator {
   flex-wrap: wrap;
 }
@@ -649,6 +715,7 @@ a:focus-visible {
   border-radius: 999px;
   padding: var(--redios-spacing-xs) var(--redios-spacing-sm);
   background: color-mix(in srgb, var(--redios-color-primary), transparent 88%);
+  font-weight: 700;
 }
 
 .studio-error-state {
@@ -741,6 +808,10 @@ a:focus-visible {
   margin-bottom: var(--redios-spacing-md);
 }
 
+.studio-edit-field-list {
+  margin-top: var(--redios-spacing-md);
+}
+
 .studio-canvas-section {
   display: grid;
   gap: var(--redios-spacing-sm);
@@ -781,8 +852,9 @@ a:focus-visible {
 .studio-builder-canvas {
   background: var(--redios-color-surface);
   border: 1px solid color-mix(in srgb, var(--redios-color-text), transparent 86%);
-  border-radius: var(--redios-radius-medium);
+  border-radius: var(--redios-radius-large);
   padding: var(--redios-spacing-md);
+  box-shadow: 0 8px 28px color-mix(in srgb, var(--redios-color-text), transparent 94%);
 }
 
 .studio-panel {
@@ -921,6 +993,10 @@ a:focus-visible {
 
 .studio-drop-zone {
   border: 1px dashed color-mix(in srgb, var(--redios-color-primary), transparent 35%);
+  background: color-mix(in srgb, var(--redios-color-primary), var(--redios-color-surface) 97%);
+  color: color-mix(in srgb, var(--redios-color-text), transparent 24%);
+  font-weight: 700;
+  text-align: center;
 }
 
 .studio-card pre {
@@ -1029,6 +1105,7 @@ a:focus-visible {
   .studio-runtime-grid,
   .studio-card-grid,
   .studio-create-grid,
+  .studio-edit-builder-grid,
   .studio-stepper,
   .studio-builder-grid,
   .studio-preview-grid,

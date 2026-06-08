@@ -23,12 +23,12 @@ export function ErrorState({
         <li>Missing metadata</li>
       </ul>
       <div className="studio-action-row">
-        <Button onClick={onRetry}>Retry</Button>
-        <Button variant="secondary" onClick={() => setShowDetails((current) => !current)}>
+        <Button onClick={onRetry} tooltip="Coba ambil data Studio lagi dari API.">Retry</Button>
+        <Button variant="secondary" onClick={() => setShowDetails((current) => !current)} tooltip="Tampilkan pesan teknis untuk pengembang atau admin.">
           View technical details
         </Button>
-        <Button variant="secondary" onClick={onRetry}>Fix Connection</Button>
-        <Button variant="secondary" disabled>Remove Connection</Button>
+        <Button variant="secondary" onClick={onRetry} tooltip="Muat ulang setelah koneksi atau data diperbaiki.">Fix Connection</Button>
+        <Button variant="secondary" disabled tooltip="Fitur ini akan tersedia ketika ada rancangan aktif yang bisa diedit.">Remove Connection</Button>
       </div>
       {showDetails ? <pre>{message}</pre> : null}
     </div>

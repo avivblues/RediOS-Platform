@@ -66,7 +66,7 @@ export function StudioTemplateGallery({ onCreateFromTemplate }: { onCreateFromTe
             <TemplateLine label="Information" values={template.information} />
             <TemplateLine label="Screens" values={template.screens} />
             <TemplateLine label="Process examples" values={template.processExamples} />
-            <Button variant="secondary" onClick={onCreateFromTemplate}>Use Template</Button>
+            <Button variant="secondary" onClick={onCreateFromTemplate} tooltip={`Gunakan template ${template.name} untuk membuat rancangan aplikasi, bukan file kode.`}>Use Template</Button>
           </article>
         ))}
       </div>

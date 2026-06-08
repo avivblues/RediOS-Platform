@@ -17,7 +17,7 @@ export function StudioLearningCoach({
   return (
     <aside className="studio-learning-coach" aria-label={title}>
       <div>
-        <span className="studio-kicker">Learning Coach</span>
+        <span className="studio-kicker">Panduan Belajar</span>
         <h3>{title}</h3>
         <p>{purpose}</p>
       </div>
@@ -30,7 +30,7 @@ export function StudioLearningCoach({
         ))}
       </ol>
       <div className="studio-guided-hint">
-        <strong>What should I do now?</strong>
+        <strong>Apa yang perlu saya lakukan sekarang?</strong>
         <p>{currentTip}</p>
       </div>
     </aside>

@@ -62,10 +62,10 @@ export function GuidedAppBuilder() {
         ) : null}
       </div>
       <div className="studio-action-row">
-        <Button variant="secondary" onClick={() => setStep((current) => Math.max(0, current - 1))} disabled={step === 0}>
+        <Button variant="secondary" onClick={() => setStep((current) => Math.max(0, current - 1))} disabled={step === 0} tooltip="Kembali ke langkah sebelumnya.">
           Back
         </Button>
-        <Button onClick={() => setStep((current) => Math.min(steps.length - 1, current + 1))} disabled={step === steps.length - 1}>
+        <Button onClick={() => setStep((current) => Math.min(steps.length - 1, current + 1))} disabled={step === steps.length - 1} tooltip="Lanjut ke langkah berikutnya.">
           Next
         </Button>
       </div>

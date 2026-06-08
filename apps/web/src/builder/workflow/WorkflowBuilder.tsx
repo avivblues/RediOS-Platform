@@ -207,13 +207,13 @@ export function WorkflowBuilder({
           <div className="studio-muted">Entity binding comes from workflow metadata: {workflow.entityCode}</div>
         </div>
         <div className="studio-action-row">
-          <Button variant="secondary" onClick={() => void ensureDraft()}>
+          <Button variant="secondary" onClick={() => void ensureDraft()} tooltip="Buat rancangan alur kerja sebelum melakukan perubahan.">
             Create Draft
           </Button>
-          <Button variant="secondary" onClick={() => void preview()} disabled={!draft}>
+          <Button variant="secondary" onClick={() => void preview()} disabled={!draft} tooltip={draft ? 'Cek dampak perubahan alur kerja sebelum diterbitkan.' : 'Buat rancangan alur kerja dulu.'}>
             Preview
           </Button>
-          <Button onClick={() => void publish()} disabled={!draft}>
+          <Button onClick={() => void publish()} disabled={!draft} tooltip={draft ? 'Terbitkan perubahan alur kerja agar aktif di aplikasi.' : 'Belum ada rancangan alur kerja yang bisa diterbitkan.'}>
             Publish
           </Button>
         </div>

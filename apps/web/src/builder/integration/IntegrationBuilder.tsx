@@ -157,10 +157,10 @@ export function IntegrationBuilder({
           ))}
           <div className="studio-action-row">
             <Input value={newCode} placeholder="metadata code" onChange={setNewCode} />
-            <Button variant="secondary" onClick={() => void createConnector()} disabled={!newCode}>
+            <Button variant="secondary" onClick={() => void createConnector()} disabled={!newCode} tooltip={newCode ? 'Buat rancangan konektor dari kode yang diisi.' : 'Isi kode konektor dulu.'}>
               Create Connector
             </Button>
-            <Button variant="secondary" onClick={() => void createIntegration()} disabled={!newCode}>
+            <Button variant="secondary" onClick={() => void createIntegration()} disabled={!newCode} tooltip={newCode ? 'Buat rancangan integrasi dari kode yang diisi.' : 'Isi kode integrasi dulu.'}>
               Create Integration
             </Button>
           </div>
@@ -168,13 +168,13 @@ export function IntegrationBuilder({
         <section className="studio-card">
           <h4>Integration Flow</h4>
           <Toolbar>
-            <Button variant="secondary" onClick={() => void preview()} disabled={!draft}>
+            <Button variant="secondary" onClick={() => void preview()} disabled={!draft} tooltip={draft ? 'Cek dampak integrasi sebelum diterbitkan.' : 'Buat atau ubah rancangan integrasi dulu.'}>
               Preview
             </Button>
-            <Button onClick={() => void publish()} disabled={!draft}>
+            <Button onClick={() => void publish()} disabled={!draft} tooltip={draft ? 'Terbitkan rancangan integrasi agar aktif di aplikasi.' : 'Belum ada rancangan yang bisa diterbitkan.'}>
               Publish
             </Button>
-            <Button variant="secondary" onClick={() => void test(runtime, integration, connector, setTestResult)} disabled={!integration && !connector}>
+            <Button variant="secondary" onClick={() => void test(runtime, integration, connector, setTestResult)} disabled={!integration && !connector} tooltip={integration || connector ? 'Uji konektor atau integrasi yang sedang dipilih.' : 'Pilih konektor atau integrasi dulu.'}>
               Test
             </Button>
           </Toolbar>

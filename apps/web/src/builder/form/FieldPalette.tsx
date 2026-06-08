@@ -29,25 +29,30 @@ export function FieldPalette({
   if (!entity) {
     return (
       <EmptyState
-        title="No Data Object selected yet"
-        description="Choose a Data Object or Input Screen to load available information."
+        title="Belum ada data yang dipilih"
+        description="Pilih data atau layar input agar daftar informasi bisa ditampilkan."
       />
     );
   }
 
   return (
-    <div className="studio-card">
-      <h4>
-        Data Object
-        <HelpTooltip label="Data Object">A Data Object is the thing your business manages, like Product, Asset, or Customer.</HelpTooltip>
-      </h4>
-      <div className="studio-muted">
-        {humanizeCode(entity.code)}
-        {expertMode ? ` | Technical Code: ${entity.code}` : ''}
+    <div className="studio-card studio-edit-panel">
+      <div className="studio-section-header">
+        <div>
+          <span className="studio-kicker">Panel Kiri</span>
+          <h4>
+            Pilih Informasi
+            <HelpTooltip label="Informasi">Informasi adalah detail yang disimpan aplikasi, seperti Nama, Harga, atau Status.</HelpTooltip>
+          </h4>
+        </div>
+      </div>
+      <div className="studio-edit-context">
+        <strong>{humanizeCode(entity.code)}</strong>
+        <span className="studio-muted">{expertMode ? `Technical Code: ${entity.code}` : 'Data yang sedang diedit'}</span>
       </div>
       <h4>
-        How should it appear?
-        <HelpTooltip label="Component">Choose the control users will see, such as text, number, date, or lookup.</HelpTooltip>
+        Bagaimana tampilnya?
+        <HelpTooltip label="Jenis Input">Pilih bentuk input yang dilihat pengguna, seperti teks, angka, tanggal, atau pilihan terhubung.</HelpTooltip>
       </h4>
       <div className="studio-component-palette">
         {componentOptions.slice(0, 4).map((component) => (
@@ -55,6 +60,7 @@ export function FieldPalette({
             key={component}
             className={selectedComponent === component ? 'studio-tree-item studio-tree-item-active' : 'studio-tree-item'}
             onClick={() => onComponentChange(component)}
+            title={`Gunakan jenis input ${humanizeCode(component)}.`}
           >
             {humanizeCode(component)}
           </button>
@@ -62,8 +68,8 @@ export function FieldPalette({
       </div>
       <Select value={selectedComponent} options={componentOptions} onChange={onComponentChange} />
       <h4>
-        Available Information
-        <HelpTooltip label="Information">Information is a detail stored inside the Data Object, such as Name, Price, or Status.</HelpTooltip>
+        Informasi Tersedia
+        <HelpTooltip label="Informasi Tersedia">Pilih atau seret informasi ini ke area tengah agar muncul di layar pengguna.</HelpTooltip>
       </h4>
       {entity.fieldCodes.map((fieldCode) => (
         <button
@@ -75,10 +81,11 @@ export function FieldPalette({
             onSelect(fieldCode);
           }}
           onClick={() => onSelect(fieldCode)}
+          title={`Pilih ${humanizeCode(fieldCode)} untuk ditambahkan ke layar.`}
         >
           <span>{humanizeCode(fieldCode)}</span>
           {expertMode ? <span className="studio-muted">{fieldCode}</span> : null}
-          {usedFields.has(fieldCode) ? <Badge>on screen</Badge> : null}
+          {usedFields.has(fieldCode) ? <Badge>Sudah di layar</Badge> : null}
         </button>
       ))}
     </div>

@@ -15,18 +15,21 @@ export function PropertyPanel({
   expertMode: boolean;
 }) {
   return (
-    <div className="studio-card">
+    <div className="studio-card studio-edit-panel">
       <div className="studio-section-header">
-        <h4>
-          Details
-          <HelpTooltip label="Details">This panel explains the selected information and how users will interact with it.</HelpTooltip>
-        </h4>
-        {valid !== undefined ? <Badge tone={valid ? 'success' : 'danger'}>{valid ? 'preview valid' : 'preview invalid'}</Badge> : null}
+        <div>
+          <span className="studio-kicker">Panel Kanan</span>
+          <h4>
+            Detail Informasi
+            <HelpTooltip label="Detail Informasi">Panel ini menjelaskan informasi yang dipilih dan bagaimana pengguna mengisinya.</HelpTooltip>
+          </h4>
+        </div>
+        {valid !== undefined ? <Badge tone={valid ? 'success' : 'danger'}>{valid ? 'Pratinjau valid' : 'Perlu diperiksa'}</Badge> : null}
       </div>
       {field ? (
         <>
           <div className="studio-list-row">
-            <strong>Display name</strong>
+            <strong>Nama tampilan</strong>
             <span>{humanizeCode(field.fieldCode)}</span>
           </div>
           {expertMode ? (
@@ -36,39 +39,39 @@ export function PropertyPanel({
             </div>
           ) : null}
           <div className="studio-list-row">
-            <strong>Input type</strong>
+            <strong>Jenis input</strong>
             <span>{humanizeCode(field.component)}</span>
           </div>
           <div className="studio-list-row">
-            <strong>Must be filled?</strong>
-            <span>{String(field.required ?? false)}</span>
+            <strong>Wajib diisi?</strong>
+            <span>{field.required ? 'Ya' : 'Tidak'}</span>
           </div>
           <div className="studio-list-row">
-            <strong>Visible to users?</strong>
-            <span>{field.visible === false ? 'Hidden' : 'Visible'}</span>
+            <strong>Terlihat oleh pengguna?</strong>
+            <span>{field.visible === false ? 'Disembunyikan' : 'Terlihat'}</span>
           </div>
           <div className="studio-list-row">
-            <strong>Editable?</strong>
-            <span>{String(field.readonly ?? false)}</span>
+            <strong>Bisa diedit?</strong>
+            <span>{field.readonly ? 'Tidak' : 'Ya'}</span>
           </div>
           <div className="studio-list-row">
-            <strong>Rule</strong>
-            <span>{field.required ? 'Required' : 'Optional'}</span>
+            <strong>Aturan</strong>
+            <span>{field.required ? 'Wajib' : 'Opsional'}</span>
           </div>
           <div className="studio-list-row">
-            <strong>Connection</strong>
+            <strong>Koneksi</strong>
             <span>{field.relation?.code ?? '-'}</span>
           </div>
           <div className="studio-list-row">
-            <strong>List screen</strong>
+            <strong>Layar daftar</strong>
             <span>{field.view?.code ?? '-'}</span>
           </div>
           <PropertyEditor node={field as unknown as Record<string, unknown>} onChange={() => undefined} />
         </>
       ) : (
         <EmptyState
-          title="No information selected yet"
-          description="Click information on the screen to understand its display name, input type, rules, and connections."
+          title="Belum ada informasi dipilih"
+          description="Klik informasi di area tengah untuk melihat nama tampilan, jenis input, aturan, dan koneksinya."
         />
       )}
     </div>

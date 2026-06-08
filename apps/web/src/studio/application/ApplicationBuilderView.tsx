@@ -54,12 +54,12 @@ export function ApplicationBuilderView({
       />
       <Panel title="Builder">
         <div className="studio-card-grid">
-          <BuilderCard title="Data Object" category="Data" description="The thing your business manages, such as Product, Asset, or Customer." help="Start here when you want to add or understand information." onClick={() => onSelect({ type: 'ENTITY', code: definition.entityCodes[0] ?? tree.entities[0] ?? 'ENTITY' })} />
-          <BuilderCard title="Input Screens" category="Experience" description="Where users enter and update information." help="Open this when users need a better form or layout." onClick={() => onSelect({ type: 'FORMS', code: tree.forms[0] ?? 'FORMS' })} />
-          <BuilderCard title="Pages" category="Experience" description="The app screens users navigate to." help="Use pages to organize lists, forms, and dashboards." onClick={() => onSelect({ type: 'PAGES', code: tree.ui[0] ?? 'PAGES' })} />
-          <BuilderCard title="Process" category="Automation" description="How work moves from one step to another." help="Use this for approval, status, and lifecycle flow." onClick={() => onSelect({ type: 'WORKFLOWS', code: workflowCode ?? 'WORKFLOWS' })} />
-          <BuilderCard title="Connector" category="Automation" description="How this app exchanges data with another system." help="Use this for webhook, API, and external system connections." onClick={() => onSelect({ type: 'INTEGRATIONS', code: tree.integrations[0] ?? 'INTEGRATIONS' })} />
-          <BuilderCard title="Permissions" category="Security" description="Who can see, edit, or launch parts of this app." help="Use permissions to keep business data safe." onClick={() => onSelect({ type: 'SECURITY', code: tree.securityPolicies[0] ?? 'SECURITY' })} />
+          <BuilderCard title="Data Object" category="Data" description="The thing your business manages, such as Product, Asset, or Customer." help="Mulai dari sini saat ingin menambah atau memahami informasi yang disimpan aplikasi." onClick={() => onSelect({ type: 'ENTITY', code: definition.entityCodes[0] ?? tree.entities[0] ?? 'ENTITY' })} />
+          <BuilderCard title="Input Screens" category="Experience" description="Where users enter and update information." help="Buka bagian ini saat pengguna membutuhkan layar input atau tata letak yang lebih baik." onClick={() => onSelect({ type: 'FORMS', code: tree.forms[0] ?? 'FORMS' })} />
+          <BuilderCard title="Pages" category="Experience" description="The app screens users navigate to." help="Gunakan halaman untuk mengatur daftar, input, dan dashboard aplikasi." onClick={() => onSelect({ type: 'PAGES', code: tree.ui[0] ?? 'PAGES' })} />
+          <BuilderCard title="Process" category="Automation" description="How work moves from one step to another." help="Gunakan ini untuk persetujuan, perubahan status, dan alur kerja." onClick={() => onSelect({ type: 'WORKFLOWS', code: workflowCode ?? 'WORKFLOWS' })} />
+          <BuilderCard title="Connector" category="Automation" description="How this app exchanges data with another system." help="Gunakan ini untuk menghubungkan aplikasi dengan sistem lain." onClick={() => onSelect({ type: 'INTEGRATIONS', code: tree.integrations[0] ?? 'INTEGRATIONS' })} />
+          <BuilderCard title="Permissions" category="Security" description="Who can see, edit, or launch parts of this app." help="Gunakan izin akses untuk menjaga data bisnis tetap aman." onClick={() => onSelect({ type: 'SECURITY', code: tree.securityPolicies[0] ?? 'SECURITY' })} />
         </div>
       </Panel>
       <Panel title="Data Objects">
@@ -102,7 +102,7 @@ function BuilderCard({
         <HelpTooltip label={title}>{help}</HelpTooltip>
       </h3>
       <p>{description}</p>
-      <Button onClick={onClick}>Open</Button>
+      <Button onClick={onClick} tooltip={help}>Open</Button>
     </article>
   );
 }

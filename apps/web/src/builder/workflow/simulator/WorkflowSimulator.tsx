@@ -64,7 +64,7 @@ export function WorkflowSimulator({
       <div className="studio-action-row">
         <Select value={currentState} options={workflow.states.map((state) => state.code)} onChange={setCurrentState} />
         <Select value={actionCode} options={[...new Set(workflow.transitions.map((transition) => transition.actionCode))]} onChange={setActionCode} />
-        <Button onClick={() => void simulate()} disabled={!currentState || !actionCode}>
+        <Button onClick={() => void simulate()} disabled={!currentState || !actionCode} tooltip={currentState && actionCode ? 'Jalankan simulasi alur kerja untuk status dan aksi ini.' : 'Pilih status dan aksi dulu.'}>
           Simulate
         </Button>
       </div>

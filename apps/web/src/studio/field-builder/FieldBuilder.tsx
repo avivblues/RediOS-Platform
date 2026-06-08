@@ -68,7 +68,7 @@ export function FieldBuilder({
           <h4>{objectName} {informationLabel}</h4>
           <p className="studio-muted">Add details users will see on screens and lists.</p>
         </div>
-        <StudioButton onClick={() => setOpen(true)}>+ Add {informationLabel}</StudioButton>
+        <StudioButton onClick={() => setOpen(true)} tooltip={`Buka isian untuk menambah ${informationLabel.toLowerCase()} baru pada ${objectName}.`}>+ Add {informationLabel}</StudioButton>
       </div>
       {!open ? (
         <StudioEmptyState title={`No ${informationLabel.toLowerCase()} dialog open`} description={`Click Add ${informationLabel} to define a name, type, and advanced options.`} />
@@ -109,10 +109,14 @@ export function FieldBuilder({
             <Input value={helpText} placeholder="Help text" onChange={setHelpText} />
           </details>
           <div className="studio-action-row">
-            <StudioButton onClick={addField} disabled={!label.trim() || (type === 'Lookup' && relatedObjectOptions.length === 0)}>
+            <StudioButton
+              onClick={addField}
+              disabled={!label.trim() || (type === 'Lookup' && relatedObjectOptions.length === 0)}
+              tooltip={!label.trim() ? `Isi nama ${informationLabel.toLowerCase()} dulu.` : type === 'Lookup' && relatedObjectOptions.length === 0 ? `Buat ${objectLabel.toLowerCase()} lain dulu untuk pilihan terhubung.` : `Simpan ${informationLabel.toLowerCase()} ini ke ${objectName}.`}
+            >
               Save {informationLabel}
             </StudioButton>
-            <StudioButton variant="secondary" onClick={() => setOpen(false)}>
+            <StudioButton variant="secondary" onClick={() => setOpen(false)} tooltip="Tutup isian tambah informasi tanpa menyimpan.">
               Cancel
             </StudioButton>
           </div>

@@ -40,10 +40,19 @@ export function StudioHeader({
         {applicationOptions.length > 0 ? (
           <Select value={activeApplication} options={applicationOptions} onChange={onApplicationSelect} />
         ) : null}
-        <Button variant="secondary" onClick={() => onModeChange(mode === 'EXPERT' ? 'SIMPLE' : 'EXPERT')}>
+        <Button
+          variant="secondary"
+          onClick={() => onModeChange(mode === 'EXPERT' ? 'SIMPLE' : 'EXPERT')}
+          tooltip={mode === 'EXPERT' ? 'Kembali ke bahasa sederhana untuk pengguna bisnis.' : 'Tampilkan istilah teknis dan detail struktur aplikasi untuk pengembang.'}
+        >
           {mode === 'EXPERT' ? 'Expert Mode' : 'Simple Mode'}
         </Button>
-        <Button variant="secondary" onClick={onSimulate} disabled={!canSimulate}>
+        <Button
+          variant="secondary"
+          onClick={onSimulate}
+          disabled={!canSimulate}
+          tooltip={canSimulate ? 'Pratinjau dampak perubahan sebelum diterbitkan.' : 'Pilih atau buat rancangan perubahan dulu agar pratinjau aktif.'}
+        >
           Preview
         </Button>
       </div>

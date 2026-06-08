@@ -1,5 +1,4 @@
 import type { ReactNode } from 'react';
-import { Button } from '../../components/atomic/atoms/Atoms';
 
 export function EmptyState({
   title,
@@ -12,14 +11,13 @@ export function EmptyState({
   primaryAction?: ReactNode;
   secondaryAction?: ReactNode;
 }) {
+  const hasActions = Boolean(primaryAction || secondaryAction);
+
   return (
     <div className="studio-empty-state">
       <strong>{title}</strong>
       <p>{description}</p>
-      <div className="studio-action-row">
-        {primaryAction ?? <Button variant="secondary">Create</Button>}
-        {secondaryAction ?? <Button variant="secondary">Learn More</Button>}
-      </div>
+      {hasActions ? <div className="studio-action-row">{primaryAction}{secondaryAction}</div> : null}
     </div>
   );
 }

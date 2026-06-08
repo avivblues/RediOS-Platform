@@ -4,13 +4,15 @@ export function StudioCard({
   children,
   interactive = false,
   onClick,
+  tooltip,
 }: PropsWithChildren<{
   interactive?: boolean;
   onClick?: () => void;
+  tooltip?: string;
 }>) {
   if (interactive) {
     return (
-      <button className="studio-ds-card studio-ds-card-interactive" onClick={onClick ?? comingSoon}>
+      <button className="studio-ds-card studio-ds-card-interactive" onClick={onClick ?? comingSoon} title={tooltip} data-tooltip={tooltip}>
         {children}
       </button>
     );
@@ -36,13 +38,21 @@ export function StudioButton({
   variant = 'primary',
   disabled,
   onClick,
+  tooltip,
 }: PropsWithChildren<{
   variant?: 'primary' | 'secondary' | 'danger';
   disabled?: boolean;
   onClick?: () => void;
+  tooltip?: string;
 }>) {
   return (
-    <button className={`studio-button studio-button-${variant}`} disabled={disabled || !onClick} onClick={onClick}>
+    <button
+      className={`studio-button studio-button-${variant}`}
+      disabled={disabled || !onClick}
+      onClick={onClick}
+      title={tooltip}
+      data-tooltip={tooltip}
+    >
       {children}
     </button>
   );
@@ -94,7 +104,7 @@ export function StudioEmptyState({
     <div className="studio-empty-state">
       <strong>{title}</strong>
       <p>{description}</p>
-      <div className="studio-action-row">{action ?? <StudioButton variant="secondary">Learn More</StudioButton>}</div>
+      {action ? <div className="studio-action-row">{action}</div> : null}
     </div>
   );
 }

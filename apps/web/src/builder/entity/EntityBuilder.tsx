@@ -105,14 +105,14 @@ export function EntityBuilder({
           <strong>{entityCode ?? 'No entity selected'}</strong>
           <div className="studio-muted">Fields are edited through form draft operations.</div>
         </div>
-        <Button variant="secondary" onClick={() => void ensureDraft()} disabled={!form}>
+        <Button variant="secondary" onClick={() => void ensureDraft()} disabled={!form} tooltip={form ? 'Buat rancangan perubahan untuk data ini.' : 'Pilih layar input atau data dulu.'}>
           Create Draft
         </Button>
       </div>
       <div className="studio-action-row">
         <Input value={fieldCode} placeholder="fieldCode" onChange={setFieldCode} />
         <Select value={component} options={['TEXT_INPUT', 'TEXT_AREA', 'NUMBER_INPUT', 'DATE_PICKER', 'SELECT', 'LOOKUP', 'BADGE']} onChange={setComponent} />
-        <Button onClick={() => void addField()} disabled={!form || !fieldCode}>
+        <Button onClick={() => void addField()} disabled={!form || !fieldCode} tooltip={form && fieldCode ? 'Tambahkan informasi ini ke rancangan layar.' : 'Pilih layar dan isi kode informasi dulu.'}>
           Add Field
         </Button>
       </div>
@@ -121,20 +121,20 @@ export function EntityBuilder({
           <div key={field.fieldCode} className="studio-list-row">
             <span>{field.fieldCode}</span>
             <span>{field.component}</span>
-            <Button variant="secondary" onClick={() => void toggleRequired(field, index)}>
+            <Button variant="secondary" onClick={() => void toggleRequired(field, index)} tooltip="Ubah apakah informasi ini wajib diisi pengguna.">
               Required: {String(field.required)}
             </Button>
-            <Button variant="danger" onClick={() => void removeField(field)}>
+            <Button variant="danger" onClick={() => void removeField(field)} tooltip="Hapus informasi ini dari rancangan layar. Pratinjau dulu sebelum diterbitkan.">
               Remove
             </Button>
           </div>
         ))}
       </div>
       <div className="studio-action-row">
-        <Button variant="secondary" onClick={() => void preview()} disabled={!draft}>
+        <Button variant="secondary" onClick={() => void preview()} disabled={!draft} tooltip={draft ? 'Cek dampak perubahan data sebelum diterbitkan.' : 'Buat rancangan perubahan dulu.'}>
           Preview
         </Button>
-        <Button onClick={() => void publish()} disabled={!draft}>
+        <Button onClick={() => void publish()} disabled={!draft} tooltip={draft ? 'Terbitkan rancangan perubahan agar aktif di aplikasi.' : 'Belum ada rancangan yang bisa diterbitkan.'}>
           Publish
         </Button>
       </div>

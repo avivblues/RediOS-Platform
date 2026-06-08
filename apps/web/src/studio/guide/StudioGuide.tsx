@@ -35,7 +35,7 @@ export function StudioGuide({ topic }: { topic: keyof typeof guideContent }) {
 
   return (
     <div className="studio-guide">
-      <StudioButton variant="secondary" onClick={() => setOpen((current) => !current)}>
+      <StudioButton variant="secondary" onClick={() => setOpen((current) => !current)} tooltip="Buka penjelasan singkat tentang bagian Studio ini.">
         Learn More
       </StudioButton>
       {open ? (

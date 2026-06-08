@@ -5,13 +5,21 @@ export function Button({
   variant = 'primary',
   disabled,
   onClick,
+  tooltip,
 }: PropsWithChildren<{
   variant?: 'primary' | 'secondary' | 'danger';
   disabled?: boolean;
   onClick?: () => void;
+  tooltip?: string;
 }>) {
   return (
-    <button className={`studio-button studio-button-${variant}`} disabled={disabled || !onClick} onClick={onClick}>
+    <button
+      className={`studio-button studio-button-${variant}`}
+      disabled={disabled || !onClick}
+      onClick={onClick}
+      title={tooltip}
+      data-tooltip={tooltip}
+    >
       {children}
     </button>
   );
