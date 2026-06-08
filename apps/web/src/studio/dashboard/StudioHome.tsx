@@ -27,7 +27,7 @@ export function StudioHome({
           <p className="studio-muted">Choose an application, update its experience, preview impact, then publish safely through metadata.</p>
         </div>
         <div className="studio-action-row">
-          <Button onClick={() => onSelect({ type: 'WIZARD', code: 'GUIDED_APP_BUILDER' })}>Create Application</Button>
+          <Button onClick={() => onSelect({ type: 'CREATE_APPLICATION', code: 'CREATE_APPLICATION' })}>Create Application</Button>
           <Button variant="secondary" onClick={() => onSelect({ type: 'APPLICATION_BUILDER', code: tree.applications[0] ?? 'APPLICATIONS' })}>
             Modify Existing App
           </Button>

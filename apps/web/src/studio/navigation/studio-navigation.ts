@@ -14,6 +14,7 @@ export const STUDIO_NAVIGATION = 'STUDIO_NAVIGATION';
 
 const registry: StudioNavigationItem[] = [
   { code: 'APPLICATIONS', label: 'Applications', group: 'BUILD', selectionType: 'HOME', metadataKey: 'applications' },
+  { code: 'CREATE_APPLICATION', label: 'Create Application', group: 'BUILD', selectionType: 'CREATE_APPLICATION' },
   { code: 'DATA_MODEL', label: 'Data Model', group: 'BUILD', selectionType: 'ENTITY', metadataKey: 'entities', expertOnly: true },
   { code: 'FORM_BUILDER', label: 'Form Builder', group: 'BUILD', selectionType: 'FORMS', metadataKey: 'forms' },
   { code: 'PAGE_BUILDER', label: 'Page Builder', group: 'BUILD', selectionType: 'PAGES', metadataKey: 'ui', expertOnly: true },

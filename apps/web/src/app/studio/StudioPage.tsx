@@ -22,6 +22,7 @@ import type { ResolvedUIPage, RuntimeForm, RuntimeNavigation, RuntimeTheme } fro
 import { ThemeProvider } from '../../core/theme/theme-provider';
 import { ApplicationBuilderView } from '../../studio/application/ApplicationBuilderView';
 import { StudioHome } from '../../studio/dashboard/StudioHome';
+import { CreationWizard } from '../../studio/create/CreationWizard';
 import { ErrorState } from '../../studio/error/ErrorState';
 import type { ExplorerSelection } from '../../studio/explorer/ApplicationExplorer';
 import { HelpPanel } from '../../studio/help/HelpPanel';
@@ -33,7 +34,6 @@ import { StudioSidebar } from '../../studio/StudioSidebar';
 import { StudioShell } from '../../studio/StudioShell';
 import { StudioWorkspace } from '../../studio/StudioWorkspace';
 import { TemplateGallery } from '../../studio/templates/TemplateGallery';
-import { GuidedAppBuilder } from '../../studio/wizard/GuidedAppBuilder';
 
 interface StudioState {
   theme: RuntimeTheme;
@@ -166,6 +166,11 @@ export function StudioPage() {
 
     if (nextSelection.type === 'APPLICATION_BUILDER') {
       window.history.pushState(null, '', `/studio/apps/${nextSelection.code}`);
+      return;
+    }
+
+    if (nextSelection.type === 'CREATE_APPLICATION') {
+      window.history.pushState(null, '', '/studio/create');
       return;
     }
 
@@ -311,17 +316,17 @@ function ActiveWorkspace({
     );
   }
 
-  if (selection.type === 'WIZARD') {
+  if (selection.type === 'CREATE_APPLICATION') {
     return (
       <>
-        <GuidedAppBuilder />
+        <CreationWizard designer={designerClient} context={context} />
         <HelpPanel topic="HOME" />
       </>
     );
   }
 
   if (selection.type === 'TEMPLATES') {
-    return <TemplateGallery />;
+    return <TemplateGallery onCreateFromTemplate={() => onSelect({ type: 'CREATE_APPLICATION', code: 'CREATE_APPLICATION' })} />;
   }
 
   if (selection.type === 'RUNTIME' || selection.type === 'HEALTH') {
@@ -394,6 +399,10 @@ function ActiveWorkspace({
 
 function initialSelection(tree: MetadataDebugTree): ExplorerSelection | undefined {
   const [, route, resource, applicationCode] = window.location.pathname.split('/');
+
+  if (route === 'studio' && resource === 'create') {
+    return { type: 'CREATE_APPLICATION', code: 'CREATE_APPLICATION' };
+  }
 
   if (route === 'studio' && resource === 'apps' && applicationCode) {
     return { type: 'APPLICATION_BUILDER', code: applicationCode };

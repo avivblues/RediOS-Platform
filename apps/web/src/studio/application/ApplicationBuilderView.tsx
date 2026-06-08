@@ -43,6 +43,18 @@ export function ApplicationBuilderView({
           <BuilderCard title="Access Control" category="Security" description="Manage policies and permissions." onClick={() => onSelect({ type: 'SECURITY', code: tree.securityPolicies[0] ?? 'SECURITY' })} />
         </div>
       </Panel>
+      <Panel title="Data Objects">
+        <div className="studio-card-grid">
+          {appEntities.map((entity) => (
+            <button key={entity.code} className="studio-app-card" onClick={() => onSelect({ type: 'ENTITY', code: entity.code })}>
+              <span className="studio-kicker">Object</span>
+              <h3>{humanizeCode(entity.code)}</h3>
+              <p className="studio-muted">{entity.fieldCodes.length} fields</p>
+              <strong>Open Form Builder</strong>
+            </button>
+          ))}
+        </div>
+      </Panel>
     </div>
   );
 }

@@ -119,6 +119,12 @@ textarea {
   gap: var(--redios-spacing-md);
 }
 
+.studio-create-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(320px, 0.9fr);
+  gap: var(--redios-spacing-md);
+}
+
 .studio-hero {
   display: flex;
   justify-content: space-between;
@@ -281,6 +287,22 @@ textarea {
   border-radius: var(--redios-radius-medium);
   padding: var(--redios-spacing-md);
   background: color-mix(in srgb, var(--redios-color-primary), transparent 92%);
+}
+
+.studio-check-row {
+  display: flex;
+  align-items: center;
+  gap: var(--redios-spacing-sm);
+}
+
+.studio-timeline {
+  display: grid;
+  gap: var(--redios-spacing-sm);
+}
+
+.studio-timeline-item {
+  border-left: 3px solid var(--redios-color-primary);
+  padding-left: var(--redios-spacing-sm);
 }
 
 .studio-form-canvas-preview {
@@ -576,6 +598,7 @@ textarea {
   .studio-home-grid,
   .studio-runtime-grid,
   .studio-card-grid,
+  .studio-create-grid,
   .studio-builder-grid,
   .studio-preview-grid,
   .studio-workflow-grid,

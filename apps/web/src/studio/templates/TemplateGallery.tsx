@@ -4,10 +4,10 @@ import { humanizeCode } from '../humanizer/HumanizerEngine';
 import { studioTemplatePackages } from './template-packages';
 import { studioUiTemplates } from './studio-ui-templates';
 
-export function TemplateGallery() {
+export function TemplateGallery({ onCreateFromTemplate }: { onCreateFromTemplate?: () => void }) {
   return (
     <Panel title="Template Gallery">
-      <p className="studio-muted">Templates are metadata packages that can be imported through Designer workflows.</p>
+      <p className="studio-muted">Template Package to metadata-generator to Designer Draft to Publish. Templates never create source files.</p>
       <div className="studio-card-grid">
         {studioTemplatePackages.map((template) => (
           <article key={template.code} className="studio-card">
@@ -17,7 +17,7 @@ export function TemplateGallery() {
             <div className="studio-muted">{template.entities.length} entities: {template.entities.map(humanizeCode).join(', ') || '-'}</div>
             <div className="studio-muted">{template.workflows.length} workflows</div>
             <div className="studio-muted">{template.forms.length} forms</div>
-            <Button variant="secondary">Preview Package</Button>
+            <Button variant="secondary" onClick={onCreateFromTemplate}>Install with Creation Journey</Button>
           </article>
         ))}
       </div>
