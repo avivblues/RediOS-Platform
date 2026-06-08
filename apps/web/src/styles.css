@@ -125,6 +125,77 @@ textarea {
   gap: var(--redios-spacing-md);
 }
 
+.studio-ds-panel,
+.studio-ds-card {
+  background: var(--redios-color-surface);
+  border: 1px solid color-mix(in srgb, var(--redios-color-text), transparent 86%);
+  border-radius: var(--redios-radius-large);
+  padding: var(--redios-spacing-md);
+  box-shadow: 0 8px 28px color-mix(in srgb, var(--redios-color-text), transparent 94%);
+}
+
+.studio-ds-card-interactive {
+  width: 100%;
+  text-align: left;
+  color: var(--redios-color-text);
+  cursor: pointer;
+}
+
+.studio-ds-card-interactive:hover,
+.studio-stepper-item:hover {
+  border-color: color-mix(in srgb, var(--redios-color-primary), transparent 35%);
+  background: color-mix(in srgb, var(--redios-color-primary), var(--redios-color-surface) 96%);
+}
+
+.studio-stepper {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: var(--redios-spacing-sm);
+  margin-bottom: var(--redios-spacing-md);
+}
+
+.studio-stepper-item {
+  display: grid;
+  gap: var(--redios-spacing-xs);
+  min-height: 82px;
+  border: 1px solid color-mix(in srgb, var(--redios-color-text), transparent 84%);
+  border-radius: var(--redios-radius-medium);
+  padding: var(--redios-spacing-sm);
+  background: var(--redios-color-surface);
+  color: var(--redios-color-text);
+  text-align: left;
+  cursor: pointer;
+}
+
+.studio-stepper-item span {
+  width: 26px;
+  height: 26px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--redios-color-primary), transparent 84%);
+  color: var(--redios-color-primary);
+}
+
+.studio-stepper-item-active {
+  border-color: var(--redios-color-primary);
+  background: color-mix(in srgb, var(--redios-color-primary), var(--redios-color-surface) 92%);
+}
+
+.studio-build-preview,
+.studio-field-dialog {
+  display: grid;
+  gap: var(--redios-spacing-sm);
+}
+
+.studio-preview-group {
+  display: grid;
+  gap: var(--redios-spacing-xs);
+  border-top: 1px solid color-mix(in srgb, var(--redios-color-text), transparent 90%);
+  padding-top: var(--redios-spacing-sm);
+}
+
 .studio-hero {
   display: flex;
   justify-content: space-between;
@@ -599,6 +670,7 @@ textarea {
   .studio-runtime-grid,
   .studio-card-grid,
   .studio-create-grid,
+  .studio-stepper,
   .studio-builder-grid,
   .studio-preview-grid,
   .studio-workflow-grid,

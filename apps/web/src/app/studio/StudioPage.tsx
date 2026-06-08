@@ -319,7 +319,7 @@ function ActiveWorkspace({
   if (selection.type === 'CREATE_APPLICATION') {
     return (
       <>
-        <CreationWizard designer={designerClient} context={context} />
+        <CreationWizard designer={designerClient} context={context} expertMode={mode === 'EXPERT'} />
         <HelpPanel topic="HOME" />
       </>
     );
