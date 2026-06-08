@@ -26,6 +26,7 @@ export function ScreenDesigner({
   const [selectedField, setSelectedField] = useState<DesignedScreenField | undefined>(layout.sections[0]?.fields[0]);
   const [device, setDevice] = useState<PreviewDevice>('Desktop');
   const [wizardOpen, setWizardOpen] = useState(false);
+  const [drawerOpen, setDrawerOpen] = useState(false);
   const [newField, setNewField] = useState<CreationFieldInput>({
     label: '',
     type: 'Text',
@@ -34,6 +35,7 @@ export function ScreenDesigner({
     searchable: true,
     showInList: true,
   });
+  const hasInformation = layout.sections.some((section) => section.fields.length > 0);
 
   function updateLayout(updater: (current: DesignedScreenLayout) => DesignedScreenLayout): DesignedScreenLayout {
     const nextLayout = updater(layout);
@@ -69,6 +71,7 @@ export function ScreenDesigner({
 
   function updateField(nextField: DesignedScreenField) {
     setSelectedField(nextField);
+    setDrawerOpen(true);
     updateLayout((current) => ({
       ...current,
       sections: current.sections.map((section) => ({
@@ -97,6 +100,7 @@ export function ScreenDesigner({
 
     setLayout(nextLayout);
     setSelectedField(designedField);
+    setDrawerOpen(true);
     setWizardOpen(false);
     setNewField({ label: '', type: 'Text', required: false, unique: false, searchable: true, showInList: true });
     onAddInformation?.(field, nextLayout);
@@ -153,31 +157,48 @@ export function ScreenDesigner({
 
   return (
     <StudioPanel title="Screen Design">
-      <div className="studio-section-header">
+      <div className="studio-section-header studio-screen-designer-header">
         <div>
           <h3>{layout.screen}</h3>
-        <p className="studio-muted">Tambah informasi, susun screen, dan lihat preview sebelum launch.</p>
+          <p className="studio-muted">Tambah informasi, susun screen, dan lihat preview sebelum launch.</p>
         </div>
         <div className="studio-action-row">
+          <StudioButton onClick={() => setWizardOpen(true)} tooltip="Tambah informasi dan langsung tampilkan di screen.">
+            + Add Information
+          </StudioButton>
           <StudioButton variant="secondary" onClick={applyAutoDesign} tooltip="Susun otomatis: name di atas, deskripsi besar, number/date dikelompokkan, status disorot.">
             Auto Design
           </StudioButton>
-          <StudioButton onClick={() => onApply(layout)} tooltip="Gunakan layout screen ini untuk generated FORM dan UI composition.">
+          <StudioButton
+            variant="secondary"
+            onClick={() => onApply(layout)}
+            disabled={!hasInformation}
+            tooltip={expertMode ? 'Use this layout for generated FORM and UI composition metadata.' : 'Gunakan desain screen ini untuk preview dan launch aplikasi.'}
+          >
             Use This Design
           </StudioButton>
         </div>
       </div>
-      <div className="studio-screen-designer-grid">
-        <ComponentPalette expertMode={expertMode} onSelect={handleComponentSelect} onAddInformation={() => setWizardOpen(true)} />
-        <Canvas layout={layout} selectedFieldId={selectedField?.id} onSelectField={setSelectedField} onMoveField={moveField} />
-        <PropertyPanel field={selectedField} onChange={updateField} />
+      {expertMode ? <ComponentPalette expertMode={expertMode} onSelect={handleComponentSelect} onAddInformation={() => setWizardOpen(true)} /> : null}
+      <div className={expertMode ? 'studio-screen-designer-grid studio-screen-designer-grid-expert' : 'studio-screen-designer-workspace'}>
+        <Canvas
+          layout={layout}
+          selectedFieldId={selectedField?.id}
+          onAddInformation={() => setWizardOpen(true)}
+          onSelectField={(field) => {
+            setSelectedField(field);
+            setDrawerOpen(true);
+          }}
+          onMoveField={moveField}
+        />
       </div>
+      <PropertyPanel field={selectedField} open={drawerOpen} expertMode={expertMode} onClose={() => setDrawerOpen(false)} onChange={updateField} />
       {wizardOpen ? (
         <section className="studio-card studio-field-wizard" aria-label="Add information wizard">
           <div className="studio-section-header">
             <div>
               <span className="studio-kicker">Add Information</span>
-              <h4>What information do you want to store?</h4>
+              <h4>What do you want to add?</h4>
               <p className="studio-muted">Examples: Product Name, Price, Quantity, Customer Email.</p>
             </div>
           </div>
@@ -186,14 +207,14 @@ export function ScreenDesigner({
             <Input value={newField.label} placeholder="Stock Quantity" onChange={(label) => setNewField((current) => ({ ...current, label }))} />
           </label>
           <div className="studio-field-type-grid">
-            {(['Text', 'Number', 'Date', 'Boolean', 'Choice', 'File'] as const).map((type) => (
+            {(['Text', 'Number', 'Date', 'Choice', 'File'] as const).map((type) => (
               <label key={type} className="studio-check-row">
                 <input
                   type="radio"
                   checked={fieldTypeLabel(newField.type) === type}
                   onChange={() => setNewField((current) => ({ ...current, type: creationTypeFromWizard(type) }))}
                 />
-                {type === 'Boolean' ? 'Yes / No' : type}
+                {type}
               </label>
             ))}
           </div>
@@ -212,7 +233,7 @@ export function ScreenDesigner({
             </label>
           </div>
           <div className="studio-action-row">
-            <StudioButton onClick={addInformationFromWizard} disabled={!newField.label.trim()} tooltip="Tambah informasi dan langsung tampilkan di screen.">Add</StudioButton>
+            <StudioButton onClick={addInformationFromWizard} disabled={!newField.label.trim()} tooltip="Tambah informasi dan langsung tampilkan di screen.">CREATE</StudioButton>
             <StudioButton variant="secondary" onClick={() => setWizardOpen(false)} tooltip="Tutup wizard tanpa menambahkan informasi.">Cancel</StudioButton>
           </div>
         </section>
@@ -222,11 +243,7 @@ export function ScreenDesigner({
   );
 }
 
-function creationTypeFromWizard(type: 'Text' | 'Number' | 'Date' | 'Boolean' | 'Choice' | 'File'): CreationFieldInput['type'] {
-  if (type === 'Boolean') {
-    return 'Boolean';
-  }
-
+function creationTypeFromWizard(type: 'Text' | 'Number' | 'Date' | 'Choice' | 'File'): CreationFieldInput['type'] {
   if (type === 'Choice') {
     return 'Text';
   }

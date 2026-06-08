@@ -56,6 +56,7 @@ export interface CreationScreenLayout {
       visible?: boolean;
       width?: string;
       showInList?: boolean;
+      searchable?: boolean;
     }>;
   }>;
 }

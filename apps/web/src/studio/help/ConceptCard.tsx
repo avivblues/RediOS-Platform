@@ -1,4 +1,4 @@
-export type StudioConcept = 'Application' | 'Data Object' | 'Information' | 'Screen' | 'Process' | 'Launch' | 'Published Version';
+export type StudioConcept = 'Application' | 'Data Object' | 'Information' | 'Screen' | 'Process' | 'Launch' | 'Launch Version';
 
 const conceptDescriptions: Record<StudioConcept, string> = {
   Application: 'A business app groups data, screens, automation, and navigation into one live experience.',
@@ -7,7 +7,7 @@ const conceptDescriptions: Record<StudioConcept, string> = {
   Screen: 'A screen controls how users view, enter, and update information.',
   Process: 'A process controls how work moves. Example: Draft to Approval to Done.',
   Launch: 'Launch prepares your application so users can start using it.',
-  'Published Version': 'A Published Version is the live version users open after launch.',
+  'Launch Version': 'A Launch Version is the live version users open after launch.',
 };
 
 export function ConceptCard({ concept }: { concept: StudioConcept }) {

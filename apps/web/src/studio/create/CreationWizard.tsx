@@ -162,34 +162,60 @@ export function CreationWizard({
 
   function generateExperience(layout?: DesignedScreenLayout, silent = false) {
     setDraft((current) => {
+      const nextEntities = layout
+        ? current.entities.map((entity) => {
+            if (entity.name !== layout.entityName) {
+              return entity;
+            }
+
+            const screenFields = layout.sections.flatMap((section) => section.fields);
+            return {
+              ...entity,
+              fields: entity.fields.map((field) => {
+                const screenField = screenFields.find((candidate) => (candidate.sourceLabel ?? candidate.label) === field.label);
+
+                return screenField
+                  ? {
+                      ...field,
+                      required: screenField.required ?? field.required,
+                      searchable: screenField.searchable ?? field.searchable,
+                      showInList: screenField.showInList ?? field.showInList,
+                    }
+                  : field;
+              }),
+            };
+          })
+        : current.entities;
       const nextDraft = {
-      ...current,
-      screenLayouts: layout
-        ? {
-            ...current.screenLayouts,
-            [layout.entityName]: {
-              screen: layout.screen,
-              entityName: layout.entityName,
-              sections: layout.sections.map((section) => ({
-                title: section.title,
-                columns: section.columns,
-                fields: section.fields.map((field) => ({
-                  label: field.label,
-                  sourceLabel: field.sourceLabel,
-                  required: field.required,
-                  readonly: field.readonly,
-                  visible: field.visible,
-                  width: field.width,
-                  showInList: field.showInList,
+        ...current,
+        entities: nextEntities,
+        screenLayouts: layout
+          ? {
+              ...current.screenLayouts,
+              [layout.entityName]: {
+                screen: layout.screen,
+                entityName: layout.entityName,
+                sections: layout.sections.map((section) => ({
+                  title: section.title,
+                  columns: section.columns,
+                  fields: section.fields.map((field) => ({
+                    label: field.label,
+                    sourceLabel: field.sourceLabel,
+                    required: field.required,
+                    readonly: field.readonly,
+                    visible: field.visible,
+                    width: field.width,
+                    showInList: field.showInList,
+                    searchable: field.searchable,
+                  })),
                 })),
-              })),
-            },
-          }
-        : current.screenLayouts,
-      forms: generated.forms.map((form) => form.code),
-      views: generated.views.map((view) => view.code),
-      navigation: generated.navigation ? [generated.navigation.code] : [],
-      generated,
+              },
+            }
+          : current.screenLayouts,
+        forms: generated.forms.map((form) => form.code),
+        views: generated.views.map((view) => view.code),
+        navigation: generated.navigation ? [generated.navigation.code] : [],
+        generated,
       };
 
       const nextGenerated = generateMetadataSet(nextDraft, {
@@ -241,6 +267,7 @@ export function CreationWizard({
                 visible: screenField.visible,
                 width: screenField.width,
                 showInList: screenField.showInList,
+                searchable: screenField.searchable,
               })),
             })),
           },
@@ -304,7 +331,7 @@ export function CreationWizard({
             { title: '2. Add Data Objects', body: 'Create the things your business manages, such as Product, Customer, Asset, or Order.' },
             { title: '3. Design Screen', body: 'Add information directly on the screen, arrange it, and preview it.' },
             { title: '4. Workflow', body: 'Keep process simple for launch, then improve it later.' },
-            { title: '5. Launch', body: 'RediOS checks readiness, publishes the version, and opens the generated app.' },
+            { title: '5. Launch', body: 'RediOS checks readiness, prepares the version, and opens the app.' },
           ]}
           currentTip={nextRecommendedAction(step, draft, expertMode)}
         />
@@ -401,7 +428,7 @@ export function CreationWizard({
                   >
                     Open Application
                   </StudioButton>
-                  <StudioButton variant="secondary" onClick={() => setStep(4)} tooltip="Kembali ke halaman pemeriksaan jika masih ingin memperbaiki aplikasi.">
+                  <StudioButton variant="secondary" onClick={() => setStep(processStepIndex)} tooltip="Kembali ke halaman pemeriksaan jika masih ingin memperbaiki aplikasi.">
                     Continue Editing
                   </StudioButton>
                 </div>
@@ -563,13 +590,14 @@ function BuildPreviewPanel({ draft, expertMode }: { draft: CreationDraft; expert
   const generated = draft.generated.entities.length > 0 ? draft.generated : generateMetadataSet(draft, { tenantId: 'preview', applicationCode: codeFromLabel(draft.application.name || 'APP'), domainCode: 'preview' });
   const uiPages = generated.pages.filter((page) => typeof page.definition === 'object' && 'kind' in page.definition && page.definition.kind === 'PAGE');
   const mode = terminologyMode(expertMode);
+  const [showMetadata, setShowMetadata] = useState(false);
 
   return (
     <StudioPanel title={expertMode ? 'Build Preview and Developer View' : 'Application Preview'}>
       <div className="studio-build-preview">
         <h3>{expertMode ? 'Your application contains:' : 'Your application will look like this'}</h3>
         <PreviewGroup title={`📦 ${pluralTerm('ENTITY', mode)}`} values={draft.entities.map((entity) => entity.name)} />
-        <PreviewGroup title={`📝 ${pluralTerm('FORM', mode)}`} values={generated.forms.map((form) => humanizeCode(form.code))} ready={isFieldsComplete(draft)} />
+        <PreviewGroup title={expertMode ? `📝 ${pluralTerm('FORM', mode)}` : 'Screens'} values={generated.forms.map((form) => humanizeCode(form.code))} ready={isFieldsComplete(draft)} />
         <PreviewGroup title={`📋 ${pluralTerm('VIEW', mode)}`} values={generated.views.map((view) => humanizeCode(view.code))} ready={isFieldsComplete(draft)} />
         <PreviewGroup title="⚙ Automation" values={['Not configured']} ready={false} />
         <PreviewLine label={`🚀 ${term('RUNTIME_PACKAGE', mode)}`} value={isReviewComplete(draft) ? 'Ready' : 'Waiting for completed steps'} ready={isReviewComplete(draft)} />
@@ -577,8 +605,20 @@ function BuildPreviewPanel({ draft, expertMode }: { draft: CreationDraft; expert
       </div>
       {!expertMode ? <BusinessPreview draft={draft} /> : null}
       {expertMode ? (
+        <label className="studio-check-row">
+          <input type="checkbox" checked={showMetadata} onChange={(event) => setShowMetadata(event.target.checked)} />
+          Show Metadata
+        </label>
+      ) : null}
+      {expertMode && showMetadata ? (
         <div className="studio-developer-view">
           <strong>Developer View</strong>
+          <div className="studio-card-grid">
+            <ReviewMetric label="Entity" value={generated.entities.length} />
+            <ReviewMetric label="Field" value={generated.fields.length} />
+            <ReviewMetric label="Form" value={generated.forms.length} />
+            <ReviewMetric label="Page" value={uiPages.length} />
+          </div>
           <pre>{JSON.stringify(generated, null, 2)}</pre>
         </div>
       ) : null}
@@ -591,7 +631,7 @@ function ReviewStep({ draft, expertMode }: { draft: CreationDraft; expertMode: b
 
   return (
     <section className="studio-wizard-body">
-      <h3>{expertMode ? 'Visual Review' : 'Set Process'}</h3>
+      <h3>{expertMode ? 'Visual Review' : 'Workflow'}</h3>
       <p className="studio-muted">
         {expertMode ? 'Review generated definitions before publishing.' : 'How does your business process work? You can launch now and add process rules later.'}
       </p>
@@ -672,7 +712,7 @@ function BuildCounts({ draft, expertMode }: { draft: CreationDraft; expertMode: 
     <div className="studio-card-grid">
       <ReviewMetric label="Creating Application" value={generated.application ? 1 : 0} />
       <ReviewMetric label={pluralTerm('ENTITY', mode)} value={generated.entities.length} />
-      <ReviewMetric label={pluralTerm('FORM', mode)} value={generated.forms.length} />
+      <ReviewMetric label={expertMode ? pluralTerm('FORM', mode) : 'Screens'} value={generated.forms.length} />
       <ReviewMetric label="Screens" value={generated.pages.filter((page) => typeof page.definition === 'object' && 'kind' in page.definition && page.definition.kind === 'PAGE').length} />
       <ReviewMetric label="Menu" value={generated.navigation ? 1 : 0} />
       <ReviewMetric label={term('RUNTIME_PACKAGE', mode)} value="Ready" />
@@ -717,7 +757,7 @@ function BusinessPreview({ draft }: { draft: CreationDraft }) {
         <span className="studio-kicker">Your Application</span>
         <h3>{draft.application.name || 'Inventory App'}</h3>
         <div className="studio-card-grid">
-          <PreviewGroup title="Screens" values={[`${primaryName} List`, `${primaryName} Form`]} />
+          <PreviewGroup title="Screens" values={[`${primaryName} List`, `${primaryName} Screen`]} />
           <PreviewGroup title="Menu" values={[primaryName]} />
           <PreviewGroup title="Data" values={[`${primaryName} Information`]} />
         </div>
@@ -874,9 +914,9 @@ function calculateReadiness(draft: CreationDraft, runtimeCompiled: boolean, expe
     { label: 'Application exists', ready: Boolean(generated.application) },
     { label: `${term('ENTITY', mode)} created`, ready: generated.entities.length > 0 },
     { label: expertMode ? 'At least one field' : 'Information added', ready: generated.fields.length > 0 },
-    { label: `${term('FORM', mode)} generated`, ready: generated.forms.length > 0 },
+    { label: expertMode ? `${term('FORM', mode)} generated` : 'Screen created', ready: generated.forms.length > 0 },
     { label: expertMode ? 'Navigation generated' : 'Menu created', ready: Boolean(generated.navigation) },
-    { label: expertMode ? 'Runtime package compiled' : `${term('RUNTIME_PACKAGE', mode)} ready`, ready: runtimeCompiled },
+    { label: expertMode ? 'Runtime package compiled' : 'Launch ready', ready: runtimeCompiled },
   ];
   const percentage = Math.round((checks.filter((check) => check.ready).length / checks.length) * 100);
 
@@ -910,7 +950,7 @@ function highestUnlockedStep(draft: CreationDraft, expertMode: boolean): number 
   }
 
   if (!expertMode) {
-    if (!isExperienceComplete(draft)) {
+    if (!isFieldsComplete(draft) || !isExperienceComplete(draft)) {
       return 2;
     }
 
@@ -998,7 +1038,7 @@ function learningTitle(step: number, expertMode: boolean): string {
     return [term('APPLICATION', mode), term('ENTITY', mode), term('FIELD', mode), term('FORM', mode), term('WORKFLOW', mode), 'Publish'][step] ?? term('APPLICATION', mode);
   }
 
-  return ['Create Application', 'Create Data Object', 'Design Screen', 'Set Process', 'Launch Application'][step] ?? 'Create Application';
+  return ['Create Application', 'Create Data Object', 'Design Screen', 'Workflow', 'Launch Application'][step] ?? 'Create Application';
 }
 
 function learningSummary(step: number, draft: CreationDraft, expertMode: boolean): string {

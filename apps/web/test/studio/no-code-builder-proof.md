@@ -39,7 +39,7 @@ No required knowledge:
 11. Preview generated app before launch:
     - Inventory App
     - Product List
-    - Product Form
+    - Product Screen
     - Product menu
     - Product Information
 12. Click `Open Preview App`.
@@ -54,7 +54,7 @@ No required knowledge:
 - `+ Add Information` creates information and places it on the screen immediately.
 - Canvas looks like a real app form, not metadata blocks.
 - Desktop, Tablet, and Mobile preview are available.
-- FIELD/FORM metadata is still generated behind the scenes.
+- Runtime definitions are still generated behind the scenes.
 - No JSON is visible in Simple Mode.
 - No metadata terms are required to complete the journey.
 

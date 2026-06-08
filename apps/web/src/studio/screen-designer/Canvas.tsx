@@ -3,24 +3,40 @@ import type { DesignedScreenField, DesignedScreenLayout } from './screen-designe
 export function Canvas({
   layout,
   selectedFieldId,
+  onAddInformation,
   onSelectField,
   onMoveField,
 }: {
   layout: DesignedScreenLayout;
   selectedFieldId?: string;
+  onAddInformation: () => void;
   onSelectField: (field: DesignedScreenField) => void;
   onMoveField: (fieldId: string, direction: 'UP' | 'DOWN', targetSectionId?: string) => void;
 }) {
+  const hasFields = layout.sections.some((section) => section.fields.length > 0);
+
   return (
     <section className="studio-screen-canvas">
       <div className="studio-section-header">
         <div>
-          <span className="studio-kicker">CENTER</span>
-          <h4>{layout.screen}</h4>
+          <span className="studio-kicker">Screen</span>
+          <h2>{layout.screen}</h2>
         </div>
         <span className="studio-muted">Reorder information and preview the real screen</span>
       </div>
-      {layout.sections.map((section) => (
+      {!hasFields ? (
+        <div className="studio-screen-empty-guide">
+          <h3>Your screen is empty</h3>
+          <p>Start by adding information users need.</p>
+          <div className="studio-muted">
+            Example for {layout.entityName}: Name, Price, Stock
+          </div>
+          <button type="button" className="studio-button studio-button-primary" onClick={onAddInformation}>
+            + Add Information
+          </button>
+        </div>
+      ) : null}
+      {hasFields ? layout.sections.map((section) => (
         <div
           key={section.id}
           className="studio-screen-section"
@@ -33,15 +49,13 @@ export function Canvas({
           }}
           onDragOver={(event) => event.preventDefault()}
         >
-          <div className="studio-section-header">
-            <strong>Section: {section.title}</strong>
-            <span className="studio-muted">{section.columns} columns</span>
-          </div>
+          <strong>{section.title}</strong>
           <div className="studio-screen-field-grid" data-columns={section.columns}>
             {section.fields.map((field) => (
               <div
                 key={field.id}
                 className={selectedFieldId === field.id ? 'studio-screen-field studio-screen-field-selected' : 'studio-screen-field'}
+                data-width={field.width}
                 role="button"
                 tabIndex={0}
                 onClick={() => onSelectField(field)}
@@ -73,7 +87,7 @@ export function Canvas({
             ))}
           </div>
         </div>
-      ))}
+      )) : null}
       <div className="studio-screen-save-row">
         <button type="button">Save {layout.entityName}</button>
       </div>

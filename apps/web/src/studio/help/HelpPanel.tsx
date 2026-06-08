@@ -27,8 +27,8 @@ const helpContent: Record<string, { title: string; body: string; steps: string[]
     steps: ['Select trigger', 'Choose connector', 'Map information', 'Test and launch'],
   },
   RUNTIME: {
-    title: 'Published Version',
-    body: 'Published Version shows what users are currently running.',
+    title: 'Launch Version',
+    body: 'Launch Version shows what users are currently running.',
     steps: ['Review active version', 'Check application health', 'Validate status', 'Open the generated app'],
   },
 };

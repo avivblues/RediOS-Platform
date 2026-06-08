@@ -14,7 +14,7 @@ export function RuntimeHealthView({
     return (
       <Panel title="Launch Health">
         <EmptyState
-          title="Belum ada Published Version aktif"
+          title="Belum ada Launch Version aktif"
           description="Launch aplikasi untuk membuat versi aktif yang siap digunakan."
         />
       </Panel>
@@ -25,7 +25,7 @@ export function RuntimeHealthView({
     <Panel title="Launch Health">
       <div className="studio-section-header">
         <div>
-          <span className="studio-kicker">Active Published Version</span>
+          <span className="studio-kicker">Active Launch Version</span>
           <h3>{definition.code}</h3>
         </div>
         <Badge tone={definition.status === 'ACTIVE' ? 'success' : 'warning'}>{definition.status}</Badge>

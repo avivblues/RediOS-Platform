@@ -23,7 +23,7 @@ Simple Mode uses business language:
 - Rule
 - Permission
 - Connector
-- Published Version
+- Launch Version
 
 Developer View uses internal platform language from the same terminology service.
 

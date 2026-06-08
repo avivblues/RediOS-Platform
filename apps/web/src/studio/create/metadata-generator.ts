@@ -129,6 +129,7 @@ export function generateForm(entity: CreationEntityInput, context: GeneratorCont
             validation: {
               width: field.width,
               showInList: field.showInList,
+              searchable: field.searchable,
             },
             lookup: sourceField?.type === 'Lookup' && sourceField.relatedObject
               ? {
@@ -177,21 +178,34 @@ export function generateForm(entity: CreationEntityInput, context: GeneratorCont
   });
 }
 
-export function generateView(entity: CreationEntityInput, context: GeneratorContext): MetadataDefinition<ViewDefinition> {
+export function generateView(entity: CreationEntityInput, context: GeneratorContext, draft?: CreationDraft): MetadataDefinition<ViewDefinition> {
   const entityCode = codeFromLabel(entity.name);
   const code = `${entityCode}_LIST`;
+  const layoutFields = draft?.screenLayouts[entity.name]?.sections.flatMap((section) => section.fields) ?? [];
 
   return metadata('VIEW', code, `${entity.name} List`, context, {
     code,
     entityCode,
     type: 'TABLE',
-    columns: entity.fields.filter((field) => field.showInList !== false).slice(0, 6).map((field) => ({
-      field: fieldCodeFromLabel(field.label),
-      label: field.label,
-      visible: true,
-      sortable: field.type !== 'Long Text',
-      filterable: field.searchable !== false,
-    })),
+    columns: entity.fields
+      .map((field) => {
+        const screenField = layoutFields.find((candidate) => (candidate.sourceLabel ?? candidate.label) === field.label);
+
+        return {
+          field,
+          screenField,
+          showInList: screenField?.showInList ?? field.showInList,
+        };
+      })
+      .filter(({ showInList }) => showInList !== false)
+      .slice(0, 6)
+      .map(({ field, screenField }) => ({
+        field: fieldCodeFromLabel(field.label),
+        label: screenField?.label ?? field.label,
+        visible: true,
+        sortable: field.type !== 'Long Text',
+        filterable: (screenField?.searchable ?? field.searchable) !== false,
+      })),
     filters: [],
     enabled: true,
   });
@@ -301,7 +315,7 @@ export function generateMetadataSet(draft: CreationDraft, context: GeneratorCont
     return entity.fields.map((field) => generateRelation(entityCode, field, context)).filter((relation): relation is MetadataDefinition<RelationDefinition> => Boolean(relation));
   });
   const forms = draft.entities.map((entity) => generateForm(entity, context, draft));
-  const views = draft.entities.map((entity) => generateView(entity, context));
+  const views = draft.entities.map((entity) => generateView(entity, context, draft));
   const pages = [
     ...generateUiFoundation(draft.entities, context),
     ...draft.entities.map((entity) => generatePage(entity, context)),
