@@ -7,6 +7,7 @@ import { FieldBuilder } from '../field-builder/FieldBuilder';
 import { HelpTooltip } from '../help/HelpTooltip';
 import { ConceptCard } from '../help/ConceptCard';
 import { LearningPanel } from '../help/LearningPanel';
+import { StudioLearningCoach } from '../help/StudioLearningCoach';
 import { GuidedHint } from '../help/GuidedHint';
 import { FirstTimeStudioTour } from '../onboarding/FirstTimeStudioTour';
 import { humanizeCode } from '../humanizer/HumanizerEngine';
@@ -118,6 +119,15 @@ export function CreationWizard({
     });
   }
 
+  function addSuggestedFieldToEntity(entityIndex: number, field: CreationFieldInput) {
+    setDraft((current) => ({
+      ...current,
+      entities: current.entities.map((entity, index) => (index === entityIndex ? { ...entity, fields: [...entity.fields, field] } : entity)),
+    }));
+    setSelectedEntityIndex(entityIndex);
+    pushActivity(`${term('FIELD', mode)} added: ${field.label}`, `${field.label} will appear on ${draft.entities[entityIndex]?.name ?? 'this object'}.`);
+  }
+
   function generateExperience() {
     setDraft((current) => ({
       ...current,
@@ -154,6 +164,18 @@ export function CreationWizard({
     <div className="studio-create-grid">
       <StudioPanel title="Create Application">
         <FirstTimeStudioTour />
+        <StudioLearningCoach
+          title="How to create an application"
+          purpose="RediOS asks you to describe your business app first, then it creates the screens and live application from that description."
+          steps={[
+            { title: '1. Name the app', body: 'Choose what you want to build, such as Inventory or CRM.' },
+            { title: '2. Add Data Objects', body: 'Create the things your business manages, such as Product, Customer, Asset, or Order.' },
+            { title: '3. Add Information', body: 'Each Data Object needs at least one detail, such as Name, Price, Stock, or Status.' },
+            { title: '4. Design Screens', body: 'Generate input screens and lists so users can work with the data.' },
+            { title: '5. Launch', body: 'RediOS checks readiness, publishes the version, and opens the generated app.' },
+          ]}
+          currentTip={nextRecommendedAction(step, draft, expertMode)}
+        />
         <StepExplanation step={step} draft={draft} expertMode={expertMode} />
         <StudioStepper steps={steps} activeIndex={step} isStepEnabled={canUseStep} onStepClick={goToStep} onLockedStep={() => setLockedMessage(lockedStepMessage(step + 1, draft, expertMode))} />
         {lockedMessage ? <div className="studio-inline-warning">{lockedMessage}</div> : null}
@@ -177,11 +199,12 @@ export function CreationWizard({
             </div>
             {draft.entities.length > 1 ? (
               <Select
-                value={String(selectedEntityIndex)}
+                value={`${selectedEntityIndex}:${selectedEntity?.name ?? ''}`}
                 options={draft.entities.map((entity, index) => `${index}:${entity.name}`)}
                 onChange={(value) => setSelectedEntityIndex(Number(value.split(':')[0]))}
               />
             ) : null}
+            <InformationCompletionChecklist draft={draft} onAddSuggestion={addSuggestedFieldToEntity} />
             {selectedEntity ? (
               <>
                 {selectedEntity.fields.length === 0 ? (
@@ -490,6 +513,50 @@ function BusinessPreview({ draft }: { draft: CreationDraft }) {
   );
 }
 
+function InformationCompletionChecklist({
+  draft,
+  onAddSuggestion,
+}: {
+  draft: CreationDraft;
+  onAddSuggestion: (entityIndex: number, field: CreationFieldInput) => void;
+}) {
+  const missingEntities = draft.entities
+    .map((entity, index) => ({ entity, index }))
+    .filter(({ entity }) => entity.fields.length === 0);
+
+  if (draft.entities.length === 0) {
+    return null;
+  }
+
+  if (missingEntities.length === 0) {
+    return (
+      <div className="studio-impact studio-impact-info">
+        All Data Objects have information. You can continue to Design Screen.
+      </div>
+    );
+  }
+
+  return (
+    <div className="studio-inline-warning">
+      <strong>Next is locked because these Data Objects still need information:</strong>
+      <div className="studio-checklist">
+        {missingEntities.map(({ entity, index }) => {
+          const suggestion = suggestInformationForObject(entity.name)[0];
+
+          return (
+            <div key={entity.name} className="studio-list-row">
+              <span>{entity.name}</span>
+              <StudioButton variant="secondary" onClick={() => onAddSuggestion(index, suggestion)}>
+                Add {suggestion.label}
+              </StudioButton>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 function ReadinessMeter({ draft, runtimeCompiled, expertMode }: { draft: CreationDraft; runtimeCompiled: boolean; expertMode: boolean }) {
   const readiness = calculateReadiness(draft, runtimeCompiled, expertMode);
 
@@ -658,7 +725,7 @@ function lockedStepMessage(index: number, draft: CreationDraft, expertMode: bool
   }
 
   if (index >= 3 && !isFieldsComplete(draft)) {
-    return expertMode ? 'Add at least one field to each entity first.' : 'Add at least one piece of information before designing screens.';
+    return expertMode ? 'Each Entity needs at least one Field before Form generation. Use the checklist below.' : 'Each Data Object needs at least one piece of information before designing screens. Use the checklist below.';
   }
 
   if (index >= 4 && !isExperienceComplete(draft)) {

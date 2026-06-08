@@ -309,6 +309,12 @@ a:focus-visible {
   color: #991b1b;
 }
 
+.studio-checklist {
+  display: grid;
+  gap: var(--redios-spacing-xs);
+  margin-top: var(--redios-spacing-sm);
+}
+
 .studio-help-tooltip {
   position: relative;
   display: inline-flex;
@@ -351,7 +357,8 @@ a:focus-visible {
 .studio-learning-hint,
 .studio-concept-card,
 .studio-learning-panel,
-.studio-guided-hint {
+.studio-guided-hint,
+.studio-learning-coach {
   border: 1px solid color-mix(in srgb, var(--redios-color-primary), transparent 70%);
   border-radius: var(--redios-radius-medium);
   padding: var(--redios-spacing-md);
@@ -359,11 +366,24 @@ a:focus-visible {
 }
 
 .studio-learning-panel,
+.studio-learning-coach,
 .studio-onboarding-tour,
 .studio-business-preview,
 .studio-developer-view {
   display: grid;
   gap: var(--redios-spacing-md);
+}
+
+.studio-learning-coach ol {
+  display: grid;
+  gap: var(--redios-spacing-sm);
+  margin: 0;
+  padding-left: 1.25rem;
+}
+
+.studio-learning-coach li {
+  display: grid;
+  gap: var(--redios-spacing-xs);
 }
 
 .studio-onboarding-tour ol {

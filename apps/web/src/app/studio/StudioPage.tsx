@@ -438,7 +438,7 @@ async function resolveForm(
   metadataClient: MetadataClient,
 ): Promise<RuntimeForm | undefined> {
   if (selection.type === 'ENTITY') {
-    return metadataClient.getForm(selection.code);
+    return metadataClient.getForm(selection.code).catch(() => undefined);
   }
 
   if (selection.type === 'FORMS') {

@@ -1,6 +1,7 @@
 import { Badge } from '../../components/atomic/atoms/Atoms';
 import type { RuntimeFormField } from '../../core/renderer/runtime-types';
 import { EmptyState } from '../../studio/empty/EmptyState';
+import { HelpTooltip } from '../../studio/help/HelpTooltip';
 import { humanizeCode } from '../../studio/humanizer/HumanizerEngine';
 import { PropertyEditor } from '../property/PropertyEditor';
 
@@ -16,13 +17,16 @@ export function PropertyPanel({
   return (
     <div className="studio-card">
       <div className="studio-section-header">
-        <h4>Properties</h4>
+        <h4>
+          Details
+          <HelpTooltip label="Details">This panel explains the selected information and how users will interact with it.</HelpTooltip>
+        </h4>
         {valid !== undefined ? <Badge tone={valid ? 'success' : 'danger'}>{valid ? 'preview valid' : 'preview invalid'}</Badge> : null}
       </div>
       {field ? (
         <>
           <div className="studio-list-row">
-            <strong>Label</strong>
+            <strong>Display name</strong>
             <span>{humanizeCode(field.fieldCode)}</span>
           </div>
           {expertMode ? (
@@ -32,39 +36,39 @@ export function PropertyPanel({
             </div>
           ) : null}
           <div className="studio-list-row">
-            <strong>Component</strong>
+            <strong>Input type</strong>
             <span>{humanizeCode(field.component)}</span>
           </div>
           <div className="studio-list-row">
-            <strong>Required</strong>
+            <strong>Must be filled?</strong>
             <span>{String(field.required ?? false)}</span>
           </div>
           <div className="studio-list-row">
-            <strong>Visibility</strong>
+            <strong>Visible to users?</strong>
             <span>{field.visible === false ? 'Hidden' : 'Visible'}</span>
           </div>
           <div className="studio-list-row">
-            <strong>Security</strong>
+            <strong>Editable?</strong>
             <span>{String(field.readonly ?? false)}</span>
           </div>
           <div className="studio-list-row">
-            <strong>Validation</strong>
+            <strong>Rule</strong>
             <span>{field.required ? 'Required' : 'Optional'}</span>
           </div>
           <div className="studio-list-row">
-            <strong>Lookup relation</strong>
+            <strong>Connection</strong>
             <span>{field.relation?.code ?? '-'}</span>
           </div>
           <div className="studio-list-row">
-            <strong>View</strong>
+            <strong>List screen</strong>
             <span>{field.view?.code ?? '-'}</span>
           </div>
           <PropertyEditor node={field as unknown as Record<string, unknown>} onChange={() => undefined} />
         </>
       ) : (
         <EmptyState
-          title="No field selected yet"
-          description="Click a field on the canvas to inspect label, component, security, and validation metadata."
+          title="No information selected yet"
+          description="Click information on the screen to understand its display name, input type, rules, and connections."
         />
       )}
     </div>

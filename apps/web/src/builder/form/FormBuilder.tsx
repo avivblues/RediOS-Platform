@@ -8,6 +8,9 @@ import { FieldPalette } from './FieldPalette';
 import { FormCanvas } from './FormCanvas';
 import { PropertyPanel } from './PropertyPanel';
 import { humanizeCode } from '../../studio/humanizer/HumanizerEngine';
+import { GuidedHint } from '../../studio/help/GuidedHint';
+import { HelpTooltip } from '../../studio/help/HelpTooltip';
+import { StudioLearningCoach } from '../../studio/help/StudioLearningCoach';
 
 export function FormBuilder({
   form,
@@ -90,16 +93,34 @@ export function FormBuilder({
     <Panel title="Form Builder">
       <div className="studio-builder-intro">
         <div>
-          <h3>Forms control how users enter and update data</h3>
-          <p className="studio-muted">Choose data, arrange fields, preview the result, then publish safely.</p>
+          <h3>
+            Input Screens control how users enter and update information
+            <HelpTooltip label="Input Screen">An Input Screen is the form users see when creating or editing business data.</HelpTooltip>
+          </h3>
+          <p className="studio-muted">Choose information, arrange it on the screen, preview the impact, then launch safely.</p>
         </div>
         <div className="studio-flow-indicator">
-          <span>1 Select Data</span>
-          <span>2 Design Form</span>
-          <span>3 Preview</span>
-          <span>4 Publish</span>
+          <span>1 Choose information</span>
+          <span>2 Design screen</span>
+          <span>3 Preview impact</span>
+          <span>4 Launch</span>
         </div>
       </div>
+      <GuidedHint title="How to use this builder">
+        Select information on the left, choose how it should appear, drag it into the center screen, then preview before launching changes.
+      </GuidedHint>
+      <StudioLearningCoach
+        title="How to change an Input Screen"
+        purpose="This builder controls what users see when they enter or update information."
+        steps={[
+          { title: '1. Pick information', body: 'Choose a detail from the left panel, such as Name, Price, or Stock.' },
+          { title: '2. Pick input type', body: 'Choose how users should fill it in, such as text, number, date, or lookup.' },
+          { title: '3. Place it on screen', body: 'Drag the information into the center area.' },
+          { title: '4. Preview impact', body: 'Check whether the change affects screens, processes, or reports.' },
+          { title: '5. Launch change', body: 'Launch only after the preview says the change is valid.' },
+        ]}
+        currentTip={draft ? 'Preview the change before launching it.' : 'Choose information on the left and drag it into the center screen.'}
+      />
       <div className="studio-builder-grid">
         <FieldPalette
           entity={entity}
@@ -124,6 +145,7 @@ export function FormBuilder({
               Data source: {entity ? humanizeCode(entity.code) : 'Choose a data source'}
               {expertMode && entity ? ` | Technical Code: ${entity.code}` : ''}
             </div>
+            <GuidedHint title="Need help?">Preview checks whether the change is safe. Launch only becomes available after the preview is valid.</GuidedHint>
             <div className="studio-action-row">
               <Button variant="secondary" onClick={() => void preview()} disabled={!draft}>
                 Preview

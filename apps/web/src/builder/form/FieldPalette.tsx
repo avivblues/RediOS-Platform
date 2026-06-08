@@ -2,6 +2,7 @@ import type { EntityDefinition } from '@redios/shared';
 import { Badge, Select } from '../../components/atomic/atoms/Atoms';
 import type { RuntimeForm } from '../../core/renderer/runtime-types';
 import { EmptyState } from '../../studio/empty/EmptyState';
+import { HelpTooltip } from '../../studio/help/HelpTooltip';
 import { humanizeCode } from '../../studio/humanizer/HumanizerEngine';
 
 const componentOptions = ['TEXT_INPUT', 'NUMBER_INPUT', 'DATE_PICKER', 'LOOKUP', 'TEXT_AREA', 'SELECT'];
@@ -28,20 +29,26 @@ export function FieldPalette({
   if (!entity) {
     return (
       <EmptyState
-        title="No data model selected yet"
-        description="Choose an entity or form to load available fields."
+        title="No Data Object selected yet"
+        description="Choose a Data Object or Input Screen to load available information."
       />
     );
   }
 
   return (
     <div className="studio-card">
-      <h4>Data Source</h4>
+      <h4>
+        Data Object
+        <HelpTooltip label="Data Object">A Data Object is the thing your business manages, like Product, Asset, or Customer.</HelpTooltip>
+      </h4>
       <div className="studio-muted">
         {humanizeCode(entity.code)}
         {expertMode ? ` | Technical Code: ${entity.code}` : ''}
       </div>
-      <h4>Components</h4>
+      <h4>
+        How should it appear?
+        <HelpTooltip label="Component">Choose the control users will see, such as text, number, date, or lookup.</HelpTooltip>
+      </h4>
       <div className="studio-component-palette">
         {componentOptions.slice(0, 4).map((component) => (
           <button
@@ -54,6 +61,10 @@ export function FieldPalette({
         ))}
       </div>
       <Select value={selectedComponent} options={componentOptions} onChange={onComponentChange} />
+      <h4>
+        Available Information
+        <HelpTooltip label="Information">Information is a detail stored inside the Data Object, such as Name, Price, or Status.</HelpTooltip>
+      </h4>
       {entity.fieldCodes.map((fieldCode) => (
         <button
           key={fieldCode}
@@ -67,7 +78,7 @@ export function FieldPalette({
         >
           <span>{humanizeCode(fieldCode)}</span>
           {expertMode ? <span className="studio-muted">{fieldCode}</span> : null}
-          {usedFields.has(fieldCode) ? <Badge>on form</Badge> : null}
+          {usedFields.has(fieldCode) ? <Badge>on screen</Badge> : null}
         </button>
       ))}
     </div>
