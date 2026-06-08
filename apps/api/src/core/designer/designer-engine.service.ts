@@ -86,6 +86,17 @@ export interface GeneratedMetadataPublishResult {
   }>;
 }
 
+export interface StudioHistoryEntry {
+  id: string;
+  version: number;
+  targetType: string;
+  targetCode: string;
+  entityCode?: string;
+  summary: string;
+  createdBy: string;
+  createdAt?: Date;
+}
+
 @Injectable()
 export class DesignerEngine {
   constructor(
@@ -478,6 +489,30 @@ export class DesignerEngine {
       await this.traceEngine.fail(trace.id!, error);
       throw error;
     }
+  }
+
+  async listVersions(context: RuntimeContext, limit = 12): Promise<StudioHistoryEntry[]> {
+    this.permissionGuard.assert(context, 'FORM.DESIGN');
+    const snapshots = await this.versionModel
+      .find(this.scope(context))
+      .sort({ createdAt: -1 })
+      .limit(limit)
+      .lean()
+      .exec();
+
+    return snapshots.map((snapshot) => {
+      const record = this.toVersion(snapshot);
+      return {
+        id: String(snapshot._id ?? record.id ?? `${record.targetType}:${record.targetCode}:${record.version}`),
+        version: record.version,
+        targetType: record.targetType,
+        targetCode: record.targetCode,
+        entityCode: record.entityCode,
+        summary: this.historySummary(record),
+        createdBy: record.createdBy,
+        createdAt: record.createdAt,
+      };
+    });
   }
 
   async composeDraft(context: RuntimeContext, draftId: string): Promise<ComposedForm> {
@@ -1811,6 +1846,28 @@ export class DesignerEngine {
       createdAt: record.createdAt,
       updatedAt: record.updatedAt,
     };
+  }
+
+  private toVersion(record: MetadataVersionRecord): MetadataVersion {
+    return {
+      id: String(record._id ?? record.id ?? ''),
+      tenantId: record.tenantId,
+      domainCode: record.domainCode,
+      applicationCode: record.applicationCode,
+      sourceMetadataId: record.sourceMetadataId,
+      targetType: record.targetType,
+      targetCode: record.targetCode,
+      entityCode: record.entityCode,
+      version: record.version,
+      metadata: record.metadata,
+      createdBy: record.createdBy,
+      createdAt: record.createdAt,
+    };
+  }
+
+  private historySummary(record: MetadataVersion): string {
+    const name = record.metadata?.name ?? record.targetCode;
+    return `Updated ${name}`;
   }
 
   private clone<TValue>(value: TValue): TValue {

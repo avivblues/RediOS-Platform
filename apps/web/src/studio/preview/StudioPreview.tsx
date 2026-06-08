@@ -4,6 +4,7 @@ import { Badge } from '../../components/atomic/atoms/Atoms';
 import { Panel } from '../../components/atomic/organisms/Organisms';
 import { FormRenderer } from '../../renderer/FormRenderer';
 import { PageRenderer } from '../../renderer/PageRenderer';
+import { ChangeImpactPreview } from './ChangeImpactPreview';
 import { ImpactPreview } from './ImpactPreview';
 
 export function StudioPreview({
@@ -24,6 +25,7 @@ export function StudioPreview({
       {preview ? (
         <div className="studio-preview-grid">
           <ImpactPreview preview={preview} />
+          <ChangeImpactPreview preview={preview} />
           <section className="studio-card">
             <h4>Validation</h4>
             <div>Errors: {preview.validation.errors}</div>

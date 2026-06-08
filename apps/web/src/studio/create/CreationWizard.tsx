@@ -10,6 +10,8 @@ import { LearningPanel } from '../help/LearningPanel';
 import { GuidedHint } from '../help/GuidedHint';
 import { FirstTimeStudioTour } from '../onboarding/FirstTimeStudioTour';
 import { humanizeCode } from '../humanizer/HumanizerEngine';
+import { ApplicationHealthIndicator, applicationHealthChecks } from '../readiness/ApplicationHealthIndicator';
+import { suggestInformationForObject } from '../suggestions/StudioSuggestionEngine';
 import { pluralTerm, term, terminologyMode } from '../terminology/terminology.service';
 import { StudioActivityTimeline, type StudioActivityItem } from '../activity/StudioActivityTimeline';
 import {
@@ -236,6 +238,14 @@ export function CreationWizard({
                   {expertMode ? 'Before Publish' : 'Launch Application'}
                   <HelpTooltip label={expertMode ? 'Publish' : 'Launch'}>Launch prepares your application so users can start using it.</HelpTooltip>
                 </h3>
+                <ApplicationHealthIndicator
+                  checks={applicationHealthChecks({
+                    dataCount: draft.entities.length,
+                    screenCount: draft.forms.length + draft.views.length,
+                    securityReady: true,
+                    processCount: 0,
+                  })}
+                />
                 <ReadinessMeter draft={{ ...draft, generated }} runtimeCompiled={false} expertMode={expertMode} />
                 <BuildCounts draft={{ ...draft, generated }} expertMode={expertMode} />
                 {publishError ? <div className="studio-inline-danger">{publishError}</div> : null}
@@ -513,10 +523,7 @@ function RecommendedNextStep({
   onSuggestField: (label: string, type?: CreationFieldInput['type']) => void;
 }) {
   const suggestions: Array<{ label: string; type: CreationFieldInput['type'] }> = [
-    { label: 'Product Name', type: 'Text' },
-    { label: 'Price', type: 'Money' },
-    { label: 'Stock', type: 'Number' },
-    { label: 'Category', type: 'Text' },
+    ...(selectedEntity ? suggestInformationForObject(selectedEntity.name) : suggestInformationForObject('Product')),
   ];
 
   return (

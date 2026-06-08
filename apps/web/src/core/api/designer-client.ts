@@ -63,6 +63,17 @@ export interface GeneratedMetadataPublishResult {
   }>;
 }
 
+export interface StudioHistoryEntry {
+  id: string;
+  version: number;
+  targetType: string;
+  targetCode: string;
+  entityCode?: string;
+  summary: string;
+  createdBy: string;
+  createdAt?: string;
+}
+
 export class DesignerClient {
   constructor(private readonly api: ApiClient) {}
 
@@ -84,5 +95,13 @@ export class DesignerClient {
 
   publishGenerated(metadata: MetadataDefinition[]): Promise<GeneratedMetadataPublishResult> {
     return this.api.post('/designer/generated/publish', { metadata });
+  }
+
+  rollback(draftId: string, version: number): Promise<DesignerPublishResult> {
+    return this.api.post(`/designer/${draftId}/rollback`, { version });
+  }
+
+  history(limit = 12): Promise<StudioHistoryEntry[]> {
+    return this.api.get(`/designer/history?limit=${limit}`);
   }
 }

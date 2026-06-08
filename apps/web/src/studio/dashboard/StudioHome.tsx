@@ -4,6 +4,7 @@ import { Panel } from '../../components/atomic/organisms/Organisms';
 import type { MetadataDebugTree } from '../../core/api/metadata-client';
 import type { ExplorerSelection } from '../explorer/ApplicationExplorer';
 import { humanizeCode, humanizeMetadata } from '../humanizer/HumanizerEngine';
+import { ApplicationHealthIndicator, applicationHealthChecks } from '../readiness/ApplicationHealthIndicator';
 import { term, terminologyMode } from '../terminology/terminology.service';
 
 export function StudioHome({
@@ -49,6 +50,9 @@ export function StudioHome({
 
       <Panel title="Your Applications">
         <div className="studio-card-grid">
+          {applications.length === 0 ? (
+            <EmptyWorkspaceCards onSelect={onSelect} />
+          ) : null}
           {applications.map((metadata) => {
             const app = metadata.definition;
             const appEntities = entities.filter((entity) => app.entityCodes.includes(entity.code));
@@ -63,6 +67,14 @@ export function StudioHome({
                 <div className="studio-muted">{app.entityCodes.length} Data Objects</div>
                 <div className="studio-muted">{tree.forms.length} Input Screens</div>
                 <div className="studio-muted">{workflowCount} Processes</div>
+                <ApplicationHealthIndicator
+                  checks={applicationHealthChecks({
+                    dataCount: app.entityCodes.length,
+                    screenCount: tree.forms.length + tree.ui.length,
+                    securityReady: true,
+                    processCount: workflowCount,
+                  })}
+                />
                 <strong>{app.enabled ? 'Published' : 'Draft'}</strong>
                 <div className="studio-action-row">
                   <Button onClick={() => onSelect({ type: 'APPLICATION_BUILDER', code: app.code })}>Customize</Button>
@@ -70,10 +82,27 @@ export function StudioHome({
               </article>
             );
           })}
-          {applications.length === 0 ? <div className="studio-empty">No applications registered yet.</div> : null}
         </div>
       </Panel>
     </div>
+  );
+}
+
+function EmptyWorkspaceCards({ onSelect }: { onSelect: (selection: ExplorerSelection) => void }) {
+  const starters = ['Manage Products', 'Manage Customers', 'Manage Tasks', 'Start Blank'];
+
+  return (
+    <section className="studio-empty-workspace">
+      <h3>What do you want to build?</h3>
+      <div className="studio-card-grid">
+        {starters.map((starter) => (
+          <button key={starter} className="studio-ds-card studio-ds-card-interactive" type="button" onClick={() => onSelect({ type: 'CREATE_APPLICATION', code: 'CREATE_APPLICATION' })}>
+            <strong>{starter}</strong>
+            <span className="studio-muted">Start guided creation</span>
+          </button>
+        ))}
+      </div>
+    </section>
   );
 }
 

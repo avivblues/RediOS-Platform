@@ -21,11 +21,13 @@ import { useRuntimeContext } from '../../core/context/runtime-context';
 import type { ResolvedUIPage, RuntimeForm, RuntimeNavigation, RuntimeTheme } from '../../core/renderer/runtime-types';
 import { ThemeProvider } from '../../core/theme/theme-provider';
 import { ApplicationBuilderView } from '../../studio/application/ApplicationBuilderView';
+import { StudioCommandCenter } from '../../studio/command/StudioCommandCenter';
 import { StudioHome } from '../../studio/dashboard/StudioHome';
 import { CreationWizard } from '../../studio/create/CreationWizard';
 import { ErrorState } from '../../studio/error/ErrorState';
 import type { ExplorerSelection } from '../../studio/explorer/ApplicationExplorer';
 import { HelpPanel } from '../../studio/help/HelpPanel';
+import { StudioHistoryPanel } from '../../studio/history/StudioHistoryPanel';
 import { readStudioMode, type StudioMode, writeStudioMode } from '../../studio/mode/studio-mode';
 import { StudioHeader } from '../../studio/StudioHeader';
 import { StudioPreview } from '../../studio/preview/StudioPreview';
@@ -211,6 +213,7 @@ export function StudioPage() {
       >
         {error ? <ErrorState message={error} onRetry={() => setReloadKey((current) => current + 1)} /> : null}
         <StudioWorkspace>
+          <StudioCommandCenter tree={state.tree} mode={mode} onSelect={handleSelect} />
           <ActiveWorkspace
             selection={selection}
             tree={state.tree}
@@ -311,6 +314,7 @@ function ActiveWorkspace({
     return (
       <>
         <ApplicationBuilderView application={application} entities={entities} tree={tree} onSelect={onSelect} />
+        <StudioHistoryPanel designer={designerClient} onRestored={onPublished} />
         <HelpPanel topic="APPLICATION" />
       </>
     );
@@ -343,6 +347,7 @@ function ActiveWorkspace({
       <>
         <FormBuilder form={form} entity={entity} designer={designerClient} expertMode={mode === 'EXPERT'} onPreview={onPreview} onPublished={onPublished} />
         <StudioPreview preview={preview} form={form} />
+        <StudioHistoryPanel designer={designerClient} draftId={preview?.draft.id} onRestored={onPublished} />
         <HelpPanel topic="FORMS" />
       </>
     );
