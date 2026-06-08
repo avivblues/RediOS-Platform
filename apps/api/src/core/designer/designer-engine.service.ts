@@ -4,6 +4,7 @@ import type {
   ConnectorDefinition,
   DesignerOperation,
   DependencyImpact,
+  DependencyNodeType,
   DesignerTargetType,
   FormDefinition,
   FormFieldDefinition,
@@ -69,6 +70,20 @@ export interface DesignerPublishResult {
   draft: MetadataDraft<DesignerDefinition>;
   published: MetadataDefinition<DesignerDefinition>;
   traceId?: string;
+}
+
+export interface GeneratedMetadataPublishRequest {
+  metadata: MetadataDefinition[];
+}
+
+export interface GeneratedMetadataPublishResult {
+  published: MetadataDefinition[];
+  validation: ValidationResult[];
+  dependencies: DependencyImpact[];
+  runtimePackages: Array<{
+    applicationCode: string;
+    status: string;
+  }>;
 }
 
 @Injectable()
@@ -312,6 +327,89 @@ export class DesignerEngine {
     }
   }
 
+  async publishGeneratedMetadata(
+    context: RuntimeContext,
+    request: GeneratedMetadataPublishRequest,
+  ): Promise<GeneratedMetadataPublishResult> {
+    this.permissionGuard.assert(context, 'FORM.PUBLISH');
+
+    if (!Array.isArray(request.metadata) || request.metadata.length === 0) {
+      throw new BadRequestException('Generated metadata publish requires metadata.');
+    }
+
+    const metadataByApplication = this.groupGeneratedMetadata(request.metadata, context);
+    const validationResults: ValidationResult[] = [];
+    const dependencyImpacts: DependencyImpact[] = [];
+    const runtimePackages: GeneratedMetadataPublishResult['runtimePackages'] = [];
+    const published: MetadataDefinition[] = [];
+
+    for (const [applicationCode, generatedMetadata] of metadataByApplication.entries()) {
+      const publishContext: RuntimeContext = {
+        ...context,
+        applicationCode,
+      };
+      const existingMetadata = await this.metadataProvider.findMetadata(publishContext, {
+        applicationCode,
+        enabledOnly: true,
+      });
+      const validationSet = this.mergeGeneratedMetadata(existingMetadata, generatedMetadata);
+      const validation = await this.metadataValidatorEngine.validate(validationSet);
+      validationResults.push(validation);
+
+      if (!validation.valid) {
+        throw new UnprocessableEntityException(validation);
+      }
+
+      for (const metadata of generatedMetadata) {
+        const dependency = this.dependencyEngine.analyzeImpactFromMetadata(validationSet, {
+          type: metadata.type as DependencyNodeType,
+          code: metadata.code,
+        });
+        dependencyImpacts.push(...dependency.impacts);
+
+        if (!dependency.safe) {
+          throw new UnprocessableEntityException({
+            code: 'DEPENDENCY_BREAKING_IMPACT',
+            impacts: dependency.impacts,
+          });
+        }
+      }
+
+      for (const metadata of generatedMetadata) {
+        const current = existingMetadata.find((candidate) => this.sameMetadataIdentity(candidate, metadata));
+        const next: MetadataDefinition = {
+          ...metadata,
+          tenantId: context.tenantId,
+          domainCode: context.domainCode,
+          applicationCode,
+          version: (current?.version ?? 0) + 1,
+          enabled: true,
+        };
+
+        if (current) {
+          await this.saveVersion(publishContext, current as MetadataDefinition<DesignerDefinition>, context.userId);
+        }
+
+        const saved = await this.metadataProvider.saveMetadata(publishContext, next);
+        published.push(saved);
+        await this.saveVersion(publishContext, saved as MetadataDefinition<DesignerDefinition>, context.userId);
+      }
+
+      const runtimePackage = await this.runtimeCompiler.compile(publishContext);
+      runtimePackages.push({
+        applicationCode,
+        status: runtimePackage.definition.status,
+      });
+    }
+
+    return {
+      published,
+      validation: validationResults,
+      dependencies: dependencyImpacts,
+      runtimePackages,
+    };
+  }
+
   async rollback(context: RuntimeContext, draftId: string, version: number): Promise<DesignerPublishResult> {
     this.permissionGuard.assert(context, 'FORM.PUBLISH');
     const draft = await this.findDraft(context, draftId);
@@ -408,6 +506,44 @@ export class DesignerEngine {
     });
     const validationSet = replacedExisting ? replaced : [...replaced, draft.draft];
     return this.metadataValidatorEngine.validate(validationSet);
+  }
+
+  private groupGeneratedMetadata(metadata: MetadataDefinition[], context: RuntimeContext): Map<string, MetadataDefinition[]> {
+    const groups = new Map<string, MetadataDefinition[]>();
+
+    for (const definition of metadata) {
+      const applicationCode = definition.applicationCode || context.applicationCode;
+      const records = groups.get(applicationCode) ?? [];
+      records.push(definition);
+      groups.set(applicationCode, records);
+    }
+
+    return groups;
+  }
+
+  private mergeGeneratedMetadata(existing: MetadataDefinition[], generated: MetadataDefinition[]): MetadataDefinition[] {
+    const merged = existing.filter((candidate) => !generated.some((metadata) => this.sameMetadataIdentity(candidate, metadata)));
+    return [...merged, ...generated];
+  }
+
+  private sameMetadataIdentity(left: MetadataDefinition, right: MetadataDefinition): boolean {
+    if (left.applicationCode !== right.applicationCode || left.type !== right.type || left.code !== right.code) {
+      return false;
+    }
+
+    if (
+      left.type === 'UI' &&
+      left.definition &&
+      right.definition &&
+      typeof left.definition === 'object' &&
+      typeof right.definition === 'object' &&
+      'kind' in left.definition &&
+      'kind' in right.definition
+    ) {
+      return left.definition.kind === right.definition.kind;
+    }
+
+    return this.sameDefinitionScope(left.definition, right.definition);
   }
 
   private async analyzeDraftDependencies(

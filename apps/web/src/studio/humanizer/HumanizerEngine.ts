@@ -20,6 +20,15 @@ const categoryIcons: Record<string, string> = {
   RUNTIME_PACKAGE: 'RUN',
 };
 
+const simpleMetadataTerms: Record<string, string> = {
+  ENTITY: 'Data Object',
+  FIELD: 'Information Field',
+  FORM: 'Input Screen',
+  VIEW: 'Data List',
+  WORKFLOW: 'Business Process',
+  RELATION: 'Connection',
+};
+
 export function humanizeCode(code: string): string {
   return code
     .toLowerCase()
@@ -39,4 +48,9 @@ export function humanizeMetadata(code: string, category: string, description?: s
     description: description ?? `${humanizeCode(normalizedCategory)} metadata for ${humanizeCode(code)}.`,
     category: normalizedCategory,
   };
+}
+
+export function metadataTerm(type: string, expertMode = false): string {
+  const normalizedType = type.toUpperCase();
+  return expertMode ? humanizeCode(normalizedType) : simpleMetadataTerms[normalizedType] ?? humanizeCode(normalizedType);
 }

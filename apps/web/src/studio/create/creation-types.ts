@@ -6,6 +6,7 @@ import type {
   MetadataDefinition,
   NavigationDefinition,
   RelationDefinition,
+  ThemeDefinition,
   UIDefinition,
   ViewDefinition,
 } from '@redios/shared';
@@ -62,6 +63,7 @@ export interface GeneratedMetadataSet {
   forms: Array<MetadataDefinition<FormDefinition>>;
   views: Array<MetadataDefinition<ViewDefinition>>;
   pages: Array<MetadataDefinition<UIDefinition>>;
+  themes: Array<MetadataDefinition<ThemeDefinition>>;
   navigation?: MetadataDefinition<NavigationDefinition>;
 }
 
@@ -73,6 +75,7 @@ export function emptyGeneratedMetadata(): GeneratedMetadataSet {
     forms: [],
     views: [],
     pages: [],
+    themes: [],
   };
 }
 

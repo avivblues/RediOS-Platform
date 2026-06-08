@@ -6,6 +6,8 @@ import {
   type CreateDesignerDraftRequest,
   type DesignerPreviewResult,
   type DesignerPublishResult,
+  type GeneratedMetadataPublishRequest,
+  type GeneratedMetadataPublishResult,
 } from '../core/designer/designer-engine.service';
 
 type RollbackRequest = {
@@ -36,6 +38,14 @@ export class DesignerController {
   @Post(':draftId/preview')
   preview(@Headers() headers: RuntimeHeaders, @Param('draftId') draftId: string): Promise<DesignerPreviewResult> {
     return this.designerEngine.preview(this.contextEngine.resolve(headers), draftId);
+  }
+
+  @Post('generated/publish')
+  publishGenerated(
+    @Headers() headers: RuntimeHeaders,
+    @Body() request: GeneratedMetadataPublishRequest,
+  ): Promise<GeneratedMetadataPublishResult> {
+    return this.designerEngine.publishGeneratedMetadata(this.contextEngine.resolve(headers), request);
   }
 
   @Post(':draftId/publish')

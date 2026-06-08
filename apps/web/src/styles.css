@@ -42,6 +42,75 @@ textarea {
   padding: var(--redios-spacing-md);
 }
 
+.runtime-app-shell {
+  background: var(--redios-color-background);
+}
+
+.runtime-app-navigation {
+  display: flex;
+  flex-direction: column;
+  gap: var(--redios-spacing-xs);
+  min-width: 16rem;
+  margin: var(--redios-spacing-lg) 0 var(--redios-spacing-lg) var(--redios-spacing-lg);
+}
+
+.runtime-app-home,
+.runtime-app-nav-link,
+.runtime-app-nav-label {
+  display: block;
+  width: 100%;
+  border: 0;
+  border-radius: var(--redios-radius-medium);
+  padding: var(--redios-spacing-sm);
+  background: transparent;
+  color: var(--redios-color-text);
+  text-align: left;
+  text-decoration: none;
+}
+
+.runtime-app-nav-link {
+  cursor: pointer;
+}
+
+.runtime-app-nav-link-active,
+.runtime-app-nav-link:hover {
+  background: color-mix(in srgb, var(--redios-color-primary), var(--redios-color-surface) 88%);
+  color: var(--redios-color-primary);
+}
+
+.runtime-app-nav-children {
+  margin-left: var(--redios-spacing-sm);
+}
+
+.runtime-app-main {
+  display: grid;
+  gap: var(--redios-spacing-md);
+}
+
+.runtime-app-header h1 {
+  margin: var(--redios-spacing-xs) 0;
+}
+
+.runtime-form-workspace,
+.runtime-form-section,
+.runtime-form-grid {
+  display: grid;
+  gap: var(--redios-spacing-md);
+}
+
+.runtime-form-grid {
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.runtime-form-field input,
+.runtime-form-field textarea {
+  border: 1px solid color-mix(in srgb, var(--redios-color-text), transparent 75%);
+  border-radius: var(--redios-radius-medium);
+  padding: var(--redios-spacing-sm);
+  background: var(--redios-color-surface);
+  color: var(--redios-color-text);
+}
+
 .runtime-form-field {
   display: grid;
   gap: var(--redios-spacing-xs);
@@ -212,6 +281,104 @@ textarea {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: var(--redios-spacing-md);
+}
+
+.studio-inline-warning,
+.studio-inline-danger {
+  border-radius: var(--redios-radius-medium);
+  padding: var(--redios-spacing-sm) var(--redios-spacing-md);
+  font-size: var(--redios-font-size-small);
+}
+
+.studio-inline-warning {
+  background: color-mix(in srgb, var(--redios-color-warning), var(--redios-color-surface) 86%);
+  color: #9a3412;
+}
+
+.studio-inline-danger {
+  background: color-mix(in srgb, var(--redios-color-danger), var(--redios-color-surface) 88%);
+  color: #991b1b;
+}
+
+.studio-help-tooltip {
+  position: relative;
+  display: inline-flex;
+  margin-left: var(--redios-spacing-xs);
+}
+
+.studio-help-trigger {
+  width: 1.25rem;
+  height: 1.25rem;
+  border: 1px solid color-mix(in srgb, var(--redios-color-text), transparent 76%);
+  border-radius: 999px;
+  background: var(--redios-color-surface);
+  color: var(--redios-color-text);
+  cursor: help;
+  font-size: 0.75rem;
+}
+
+.studio-help-bubble {
+  position: absolute;
+  z-index: 20;
+  top: 1.6rem;
+  left: 0;
+  display: none;
+  width: 16rem;
+  border: 1px solid color-mix(in srgb, var(--redios-color-text), transparent 82%);
+  border-radius: var(--redios-radius-medium);
+  padding: var(--redios-spacing-sm);
+  background: var(--redios-color-surface);
+  box-shadow: 0 20px 40px rgb(15 23 42 / 12%);
+  color: var(--redios-color-text);
+  font-size: var(--redios-font-size-small);
+  line-height: 1.4;
+}
+
+.studio-help-tooltip:hover .studio-help-bubble,
+.studio-help-tooltip:focus-within .studio-help-bubble {
+  display: block;
+}
+
+.studio-learning-hint,
+.studio-concept-card {
+  border: 1px solid color-mix(in srgb, var(--redios-color-primary), transparent 70%);
+  border-radius: var(--redios-radius-medium);
+  padding: var(--redios-spacing-md);
+  background: color-mix(in srgb, var(--redios-color-primary), var(--redios-color-surface) 92%);
+}
+
+.studio-chip-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--redios-spacing-xs);
+}
+
+.studio-chip {
+  border: 1px solid color-mix(in srgb, var(--redios-color-text), transparent 80%);
+  border-radius: 999px;
+  padding: 0.45rem 0.75rem;
+  background: var(--redios-color-surface);
+  color: var(--redios-color-text);
+  cursor: pointer;
+}
+
+.studio-readiness {
+  display: grid;
+  gap: var(--redios-spacing-sm);
+}
+
+.studio-readiness-bar {
+  height: 0.6rem;
+  overflow: hidden;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--redios-color-text), transparent 88%);
+}
+
+.studio-readiness-bar span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--redios-color-primary), var(--redios-color-success));
 }
 
 .studio-metric-card,

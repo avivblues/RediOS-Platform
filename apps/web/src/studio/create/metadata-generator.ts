@@ -9,8 +9,11 @@ import type {
   MetadataType,
   NavigationDefinition,
   RelationDefinition,
+  ThemeDefinition,
   UIDefinition,
+  UIAtomDefinition,
   UIPageDefinition,
+  UITemplateDefinition,
   ViewDefinition,
 } from '@redios/shared';
 import type { CreationDraft, CreationEntityInput, CreationFieldInput, GeneratedMetadataSet } from './creation-types';
@@ -43,7 +46,7 @@ export function generateEntity(input: CreationEntityInput, context: GeneratorCon
     name: input.name,
     type: 'MASTER',
     fieldCodes: input.fields.map((field) => fieldCodeFromLabel(field.label)),
-    actionCodes: ['CREATE', 'READ', 'UPDATE', 'DELETE'],
+    actionCodes: [],
     enabled: true,
   });
 }
@@ -165,11 +168,11 @@ export function generatePage(entity: CreationEntityInput, context: GeneratorCont
     code: `${entityCode}_DETAIL_PAGE`,
     entityCode,
     viewCode: `${entityCode}_LIST`,
-    template: 'FORM_WORKSPACE_TEMPLATE',
+    template: `${entityCode}_FORM_WORKSPACE_TEMPLATE`,
     regions: {
-      main: [`${entityCode}_FORM`],
+      main: [],
     },
-    actions: ['CREATE', 'READ', 'UPDATE'],
+    actions: [],
     enabled: true,
   };
 
@@ -203,6 +206,53 @@ export function generateNavigation(draft: CreationDraft, context: GeneratorConte
   });
 }
 
+export function generateTheme(context: GeneratorContext): MetadataDefinition<ThemeDefinition> {
+  return metadata('THEME', 'DEFAULT_THEME', 'Default Theme', context, {
+    code: 'DEFAULT_THEME',
+    name: 'Default Theme',
+    version: 1,
+    enabled: true,
+    tokens: {
+      colors: {
+        primary: '#2563eb',
+        secondary: '#64748b',
+        success: '#16a34a',
+        warning: '#f59e0b',
+        danger: '#dc2626',
+        background: '#f8fafc',
+        surface: '#ffffff',
+        text: '#0f172a',
+      },
+      typography: {
+        fontFamily: 'Inter, system-ui, sans-serif',
+        size: {
+          small: '0.875rem',
+          medium: '1rem',
+          large: '1.25rem',
+          title: '1.75rem',
+        },
+      },
+      spacing: {
+        xs: '0.25rem',
+        sm: '0.5rem',
+        md: '1rem',
+        lg: '1.5rem',
+        xl: '2rem',
+      },
+      radius: {
+        small: '0.375rem',
+        medium: '0.75rem',
+        large: '1rem',
+      },
+    },
+    layout: {
+      navigation: 'SIDEBAR',
+      density: 'COMFORTABLE',
+    },
+    assets: {},
+  });
+}
+
 export function generateMetadataSet(draft: CreationDraft, context: GeneratorContext): GeneratedMetadataSet {
   const application = generateApplication(draft.application, context);
   const entities = draft.entities.map((entity) => generateEntity(entity, context));
@@ -216,7 +266,11 @@ export function generateMetadataSet(draft: CreationDraft, context: GeneratorCont
   });
   const forms = draft.entities.map((entity) => generateForm(entity, context));
   const views = draft.entities.map((entity) => generateView(entity, context));
-  const pages = draft.entities.map((entity) => generatePage(entity, context));
+  const pages = [
+    ...generateUiFoundation(draft.entities, context),
+    ...draft.entities.map((entity) => generatePage(entity, context)),
+  ];
+  const themes = [generateTheme(context)];
   const navigation = generateNavigation(draft, context);
 
   application.definition.entityCodes = entities.map((entity) => entity.definition.code);
@@ -229,8 +283,49 @@ export function generateMetadataSet(draft: CreationDraft, context: GeneratorCont
     forms,
     views,
     pages,
+    themes,
     navigation,
   };
+}
+
+function generateUiFoundation(entities: CreationEntityInput[], context: GeneratorContext): Array<MetadataDefinition<UIDefinition>> {
+  const componentCodes = new Set<string>();
+
+  for (const entity of entities) {
+    for (const field of entity.fields) {
+      componentCodes.add(componentForField(field));
+    }
+  }
+
+  const atoms = [...componentCodes].map((component): MetadataDefinition<UIDefinition> => {
+    const atom: UIAtomDefinition = {
+      kind: 'ATOM',
+      code: component,
+      category: component === 'LOOKUP' ? 'DATA' : 'INPUT',
+      renderer: {
+        web: component,
+        mobile: component,
+      },
+      propsSchema: {},
+      enabled: true,
+    };
+
+    return metadata('UI', component, humanName(component), context, atom);
+  });
+
+  const templates = entities.map((entity): MetadataDefinition<UIDefinition> => {
+    const entityCode = codeFromLabel(entity.name);
+    const template: UITemplateDefinition = {
+      kind: 'TEMPLATE',
+      code: `${entityCode}_FORM_WORKSPACE_TEMPLATE`,
+      regions: [{ code: 'main' }],
+      enabled: true,
+    };
+
+    return metadata('UI', template.code, `${entity.name} Form Workspace Template`, context, template);
+  });
+
+  return [...atoms, ...templates];
 }
 
 export function codeFromLabel(label: string): string {
@@ -320,4 +415,12 @@ function componentForField(field: CreationFieldInput): string {
   }
 
   return 'TEXT_INPUT';
+}
+
+function humanName(code: string): string {
+  return code
+    .toLowerCase()
+    .split('_')
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(' ');
 }

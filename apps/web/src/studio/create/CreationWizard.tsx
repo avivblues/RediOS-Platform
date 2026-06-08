@@ -1,10 +1,13 @@
 import { useMemo, useState } from 'react';
+import type { MetadataDefinition } from '@redios/shared';
 import type { DesignerClient } from '../../core/api/designer-client';
 import type { RuntimeContext } from '../../core/renderer/runtime-types';
 import { Input, Select } from '../../components/atomic/atoms/Atoms';
 import { FieldBuilder } from '../field-builder/FieldBuilder';
 import { StudioGuide } from '../guide/StudioGuide';
-import { humanizeCode } from '../humanizer/HumanizerEngine';
+import { HelpTooltip } from '../help/HelpTooltip';
+import { ConceptCard } from '../help/ConceptCard';
+import { humanizeCode, metadataTerm } from '../humanizer/HumanizerEngine';
 import { StudioActivityTimeline, type StudioActivityItem } from '../activity/StudioActivityTimeline';
 import {
   StudioBadge,
@@ -19,6 +22,7 @@ import {
   type CreationDraft,
   type CreationEntityInput,
   type CreationFieldInput,
+  type GeneratedMetadataSet,
 } from './creation-types';
 import { codeFromLabel, generateMetadataSet } from './metadata-generator';
 
@@ -44,7 +48,9 @@ export function CreationWizard({
   const [draft, setDraft] = useState<CreationDraft>(() => createInitialCreationDraft());
   const [selectedEntityIndex, setSelectedEntityIndex] = useState(0);
   const [activity, setActivity] = useState<StudioActivityItem[]>([]);
-  const [publishState, setPublishState] = useState<'idle' | 'publishing' | 'ready'>('idle');
+  const [publishState, setPublishState] = useState<'idle' | 'publishing' | 'live'>('idle');
+  const [publishError, setPublishError] = useState<string | undefined>();
+  const [lockedMessage, setLockedMessage] = useState<string | undefined>();
   const generated = useMemo(
     () =>
       generateMetadataSet(draft, {
@@ -59,10 +65,11 @@ export function CreationWizard({
 
   function goToStep(index: number) {
     if (!canUseStep(index)) {
-      window.alert('Complete previous step first');
+      setLockedMessage('Complete previous step first');
       return;
     }
 
+    setLockedMessage(undefined);
     setStep(index);
   }
 
@@ -93,6 +100,15 @@ export function CreationWizard({
     pushActivity(`Field added: ${field.label}`, `${field.type} field queued for ${selectedEntity?.name ?? 'object'}.`);
   }
 
+  function addSuggestedField(label: string, type: CreationFieldInput['type'] = 'Text') {
+    addField({
+      label,
+      type,
+      required: label === 'Product Name',
+      unique: false,
+    });
+  }
+
   function generateExperience() {
     setDraft((current) => ({
       ...current,
@@ -106,12 +122,19 @@ export function CreationWizard({
 
   async function publish() {
     setPublishState('publishing');
-    pushActivity('Draft created', 'Generated metadata is ready for DesignerEngine-backed publish.');
-    // Current backend Designer supports FORM/NAVIGATION draft publishing for existing targets.
-    // New APPLICATION/ENTITY/FIELD/VIEW/UI creation remains generated metadata until generic creation targets are enabled.
-    void designer;
-    setPublishState('ready');
-    pushActivity('Runtime Package pending', 'RuntimeCompiler will activate after DesignerEngine publish.');
+    setPublishError(undefined);
+    pushActivity('Designer publish started', 'Generated metadata submitted to Designer Publish API.');
+
+    try {
+      const result = await designer.publishGenerated(metadataForPublish(generated));
+      const runtimePackage = result.runtimePackages.find((candidate) => candidate.applicationCode === generated.application?.code);
+      setPublishState('live');
+      pushActivity('Runtime Package activated', `${runtimePackage?.applicationCode ?? generated.application?.code} is ${runtimePackage?.status ?? 'ACTIVE'}.`);
+    } catch (error) {
+      setPublishState('idle');
+      setPublishError(error instanceof Error ? error.message : String(error));
+      pushActivity('Publish failed', 'Designer validation blocked runtime activation.');
+    }
   }
 
   function pushActivity(message: string, detail?: string) {
@@ -121,7 +144,8 @@ export function CreationWizard({
   return (
     <div className="studio-create-grid">
       <StudioPanel title="Create Application">
-        <StudioStepper steps={steps} activeIndex={step} isStepEnabled={canUseStep} onStepClick={goToStep} />
+        <StudioStepper steps={steps} activeIndex={step} isStepEnabled={canUseStep} onStepClick={goToStep} onLockedStep={() => setLockedMessage('Complete previous step first')} />
+        {lockedMessage ? <div className="studio-inline-warning">{lockedMessage}</div> : null}
 
         {step === 0 ? (
           <ApplicationStep draft={draft} onStarterSelect={chooseStarter} onChange={updateApplication} />
@@ -133,7 +157,10 @@ export function CreationWizard({
           <section className="studio-wizard-body">
             <div className="studio-section-header">
               <div>
-                <h3>{selectedEntity ? `${selectedEntity.name} Fields` : 'Fields'}</h3>
+                <h3>
+                  {selectedEntity ? `${selectedEntity.name} ${metadataTerm('FIELD', expertMode)}s` : metadataTerm('FIELD', expertMode)}
+                  <HelpTooltip label="Field">Fields describe information stored in a data object.</HelpTooltip>
+                </h3>
                 <p className="studio-muted">Add the information users need to capture.</p>
               </div>
             </div>
@@ -145,7 +172,16 @@ export function CreationWizard({
               />
             ) : null}
             {selectedEntity ? (
-              <FieldBuilder entities={draft.entities} objectName={selectedEntity.name} onAddField={addField} />
+              <>
+                {selectedEntity.fields.length === 0 ? (
+                  <StudioEmptyState
+                    title="No information fields yet"
+                    description={`Fields describe information stored in ${selectedEntity.name}. Examples: Product Name, Price, Quantity.`}
+                    action={<StudioButton onClick={() => addSuggestedField('Product Name')}>Add First Field</StudioButton>}
+                  />
+                ) : null}
+                <FieldBuilder entities={draft.entities} objectName={selectedEntity.name} onAddField={addField} />
+              </>
             ) : (
               <StudioEmptyState title="Create an object first" description="Fields belong to a data object, such as Product or Supplier." />
             )}
@@ -166,18 +202,28 @@ export function CreationWizard({
 
         {step === 5 ? (
           <section className="studio-wizard-body">
-            {publishState === 'ready' ? (
+            {publishState === 'live' ? (
               <StudioCard>
-                <h3>Your application is ready</h3>
-                <p className="studio-muted">Generated metadata is prepared for the runtime application once Designer creation targets are enabled.</p>
-                <StudioButton onClick={() => window.alert('Generated app will open after metadata publish is enabled.')}>Open App</StudioButton>
+                <h3>Your application is live</h3>
+                <p className="studio-muted">Metadata was saved, RuntimeCompiler compiled the package, and the generated application route is ready.</p>
+                <ReadinessMeter draft={{ ...draft, generated }} runtimeCompiled />
+                <div className="studio-action-row">
+                  <StudioButton onClick={() => { window.location.href = `/apps/${generated.application?.code ?? codeFromLabel(draft.application.name)}`; }}>
+                    Open Application
+                  </StudioButton>
+                  <StudioButton variant="secondary" onClick={() => setStep(4)}>
+                    Continue Editing
+                  </StudioButton>
+                </div>
               </StudioCard>
             ) : (
               <>
                 <h3>Before Publish</h3>
+                <ReadinessMeter draft={{ ...draft, generated }} runtimeCompiled={false} />
                 <BuildCounts draft={{ ...draft, generated }} />
+                {publishError ? <div className="studio-inline-danger">{publishError}</div> : null}
                 <StudioButton onClick={() => void publish()} disabled={!isReviewComplete(draft)}>
-                  Publish Application
+                  {publishState === 'publishing' ? 'Publishing...' : 'Publish Application'}
                 </StudioButton>
               </>
             )}
@@ -195,6 +241,7 @@ export function CreationWizard({
       </StudioPanel>
 
       <BuildPreviewPanel draft={{ ...draft, generated }} expertMode={expertMode} />
+      <RecommendedNextStep draft={draft} selectedEntity={selectedEntity} onSuggestField={addSuggestedField} />
       <StudioGuide topic={guideTopic(step)} />
       <StudioActivityTimeline items={activity} />
     </div>
@@ -212,7 +259,10 @@ function ApplicationStep({
 }) {
   return (
     <section className="studio-wizard-body">
-      <h3>What do you want to build?</h3>
+      <h3>
+        What do you want to build?
+        <HelpTooltip label="Application">An application groups data objects, screens, automation, and runtime navigation.</HelpTooltip>
+      </h3>
       <div className="studio-card-grid">
         {appStarterCards.map((card) => (
           <StudioCard key={card.label} interactive onClick={() => onStarterSelect(card.label)}>
@@ -256,7 +306,10 @@ function DataModelStep({
           </StudioCard>
         ))}
       </div>
-      <h3>Object Name</h3>
+      <h3>
+        Object Name
+        <HelpTooltip label="Data Object">A data object stores business information such as products, assets, orders, or customers.</HelpTooltip>
+      </h3>
       <Input value={name} placeholder="Product" onChange={setName} />
       <Input value={description} placeholder="Inventory products" onChange={setDescription} />
       <StudioButton
@@ -283,15 +336,18 @@ function DataModelStep({
 
 function BuildPreviewPanel({ draft, expertMode }: { draft: CreationDraft; expertMode: boolean }) {
   const generated = draft.generated.entities.length > 0 ? draft.generated : generateMetadataSet(draft, { tenantId: 'preview', applicationCode: codeFromLabel(draft.application.name || 'APP'), domainCode: 'preview' });
+  const uiPages = generated.pages.filter((page) => typeof page.definition === 'object' && 'kind' in page.definition && page.definition.kind === 'PAGE');
 
   return (
     <StudioPanel title={expertMode ? 'Build Preview and Metadata' : 'Build Preview'}>
       <div className="studio-build-preview">
-        <PreviewLine label="Application" value={draft.application.name || 'Not selected'} ready={Boolean(draft.application.name)} />
-        <PreviewGroup title="Objects" values={draft.entities.map((entity) => entity.name)} />
-        <PreviewGroup title="Fields" values={draft.entities.flatMap((entity) => entity.fields.map((field) => field.label))} />
-        <PreviewGroup title="Generated Automatically" values={['Form', 'List View', 'Detail Page', 'Navigation', 'API']} ready={isFieldsComplete(draft)} />
-        <PreviewLine label="Runtime" value={isReviewComplete(draft) ? 'READY' : 'Waiting for completed steps'} ready={isReviewComplete(draft)} />
+        <h3>Your application contains:</h3>
+        <PreviewGroup title={`📦 ${metadataTerm('ENTITY', expertMode)}s`} values={draft.entities.map((entity) => entity.name)} />
+        <PreviewGroup title={`📝 ${metadataTerm('FORM', expertMode)}s`} values={generated.forms.map((form) => humanizeCode(form.code))} ready={isFieldsComplete(draft)} />
+        <PreviewGroup title={`📋 ${metadataTerm('VIEW', expertMode)}s`} values={generated.views.map((view) => humanizeCode(view.code))} ready={isFieldsComplete(draft)} />
+        <PreviewGroup title="⚙ Automation" values={['Not configured']} ready={false} />
+        <PreviewLine label="🚀 Runtime" value={isReviewComplete(draft) ? 'Ready' : 'Waiting for completed steps'} ready={isReviewComplete(draft)} />
+        <PreviewGroup title="Screens" values={uiPages.map((page) => humanizeCode(page.code))} ready={isFieldsComplete(draft)} />
       </div>
       {expertMode ? <pre>{JSON.stringify(generated, null, 2)}</pre> : null}
     </StudioPanel>
@@ -302,11 +358,12 @@ function ReviewStep({ draft }: { draft: CreationDraft }) {
   return (
     <section className="studio-wizard-body">
       <h3>Visual Review</h3>
+      <ReadinessMeter draft={draft} runtimeCompiled={false} />
       <BuildCounts draft={draft} />
       <div className="studio-list">
         {draft.generated.entities.map((entity) => (
           <div key={entity.code} className="studio-list-row">
-            <strong>OK {humanizeCode(entity.code)}</strong>
+            <strong>{humanizeCode(entity.code)}</strong>
             <span>{entity.definition.fieldCodes.length} fields</span>
           </div>
         ))}
@@ -323,7 +380,7 @@ function BuildCounts({ draft }: { draft: CreationDraft }) {
       <ReviewMetric label="Creating Application" value={generated.application ? 1 : 0} />
       <ReviewMetric label="Objects" value={generated.entities.length} />
       <ReviewMetric label="Forms" value={generated.forms.length} />
-      <ReviewMetric label="Pages" value={generated.pages.length} />
+      <ReviewMetric label="Pages" value={generated.pages.filter((page) => typeof page.definition === 'object' && 'kind' in page.definition && page.definition.kind === 'PAGE').length} />
       <ReviewMetric label="Navigation" value={generated.navigation ? 1 : 0} />
       <ReviewMetric label="Runtime" value="READY" />
     </div>
@@ -334,10 +391,10 @@ function PreviewGroup({ title, values, ready = values.length > 0 }: { title: str
   return (
     <div className="studio-preview-group">
       <strong>{title}</strong>
-      {values.length === 0 ? <div className="studio-muted">Nothing added yet</div> : null}
+      {values.length === 0 ? <div className="studio-muted">No information fields yet</div> : null}
       {values.map((value) => (
         <div key={value}>
-          <StudioBadge tone={ready ? 'success' : 'info'}>OK</StudioBadge> {value}
+          <StudioBadge tone={ready ? 'success' : 'info'}>{ready ? 'Ready' : 'Planned'}</StudioBadge> {value}
         </div>
       ))}
     </div>
@@ -349,9 +406,74 @@ function PreviewLine({ label, value, ready }: { label: string; value: string; re
     <div className="studio-list-row">
       <strong>{label}</strong>
       <span>
-        <StudioBadge tone={ready ? 'success' : 'warning'}>{ready ? 'OK' : 'TODO'}</StudioBadge> {value}
+        <StudioBadge tone={ready ? 'success' : 'warning'}>{ready ? 'Ready' : 'Pending'}</StudioBadge> {value}
       </span>
     </div>
+  );
+}
+
+function ReadinessMeter({ draft, runtimeCompiled }: { draft: CreationDraft; runtimeCompiled: boolean }) {
+  const readiness = calculateReadiness(draft, runtimeCompiled);
+
+  return (
+    <div className="studio-readiness">
+      <div className="studio-list-row">
+        <strong>Application readiness</strong>
+        <span>{readiness.percentage}%</span>
+      </div>
+      <div className="studio-readiness-bar">
+        <span style={{ width: `${readiness.percentage}%` }} />
+      </div>
+      <div className="studio-card-grid">
+        {readiness.checks.map((check) => (
+          <StudioBadge key={check.label} tone={check.ready ? 'success' : 'warning'}>
+            {check.ready ? 'Ready' : 'Pending'} {check.label}
+          </StudioBadge>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function RecommendedNextStep({
+  draft,
+  selectedEntity,
+  onSuggestField,
+}: {
+  draft: CreationDraft;
+  selectedEntity?: CreationEntityInput;
+  onSuggestField: (label: string, type?: CreationFieldInput['type']) => void;
+}) {
+  const suggestions: Array<{ label: string; type: CreationFieldInput['type'] }> = [
+    { label: 'Product Name', type: 'Text' },
+    { label: 'Price', type: 'Money' },
+    { label: 'Stock', type: 'Number' },
+    { label: 'Category', type: 'Text' },
+  ];
+
+  return (
+    <StudioPanel title="Recommended Next Step">
+      {!draft.application.name ? (
+        <ConceptCard concept="Application" />
+      ) : !selectedEntity ? (
+        <ConceptCard concept="Data Object" />
+      ) : selectedEntity.fields.length === 0 ? (
+        <>
+          <p className="studio-muted">Current: Created {selectedEntity.name} object.</p>
+          <p>Next: Add information fields.</p>
+          <p className="studio-muted">Why: Users need fields to enter {selectedEntity.name.toLowerCase()} information.</p>
+          <div className="studio-chip-list">
+            {suggestions.map((suggestion) => (
+              <button key={suggestion.label} className="studio-chip" type="button" onClick={() => onSuggestField(suggestion.label, suggestion.type)}>
+                {suggestion.label}
+              </button>
+            ))}
+          </div>
+        </>
+      ) : (
+        <ConceptCard concept="Publish" />
+      )}
+    </StudioPanel>
   );
 }
 
@@ -362,6 +484,40 @@ function ReviewMetric({ label, value }: { label: string; value: string | number 
       <strong>{value}</strong>
     </StudioCard>
   );
+}
+
+function calculateReadiness(draft: CreationDraft, runtimeCompiled: boolean) {
+  const generated = draft.generated.entities.length > 0
+    ? draft.generated
+    : generateMetadataSet(draft, { tenantId: 'preview', applicationCode: codeFromLabel(draft.application.name || 'APP'), domainCode: 'preview' });
+  const checks = [
+    { label: 'Application exists', ready: Boolean(generated.application) },
+    { label: 'Data object exists', ready: generated.entities.length > 0 },
+    { label: 'At least one field', ready: generated.fields.length > 0 },
+    { label: 'Input screen generated', ready: generated.forms.length > 0 },
+    { label: 'Navigation generated', ready: Boolean(generated.navigation) },
+    { label: 'Runtime package compiled', ready: runtimeCompiled },
+  ];
+  const percentage = Math.round((checks.filter((check) => check.ready).length / checks.length) * 100);
+
+  return {
+    percentage,
+    checks,
+  };
+}
+
+function metadataForPublish(generated: GeneratedMetadataSet): MetadataDefinition[] {
+  return [
+    ...(generated.application ? [generated.application] : []),
+    ...generated.entities,
+    ...generated.fields,
+    ...generated.relations,
+    ...generated.forms,
+    ...generated.views,
+    ...generated.pages,
+    ...generated.themes,
+    ...(generated.navigation ? [generated.navigation] : []),
+  ];
 }
 
 function highestUnlockedStep(draft: CreationDraft): number {

@@ -87,3 +87,7 @@ export interface MetadataVersion<TDefinition = unknown> {
   createdBy: string;
   createdAt?: Date;
 }
+
+export interface GeneratedMetadataPublishRequest {
+  metadata: MetadataDefinition[];
+}

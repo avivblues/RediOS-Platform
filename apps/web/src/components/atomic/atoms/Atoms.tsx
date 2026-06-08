@@ -11,7 +11,7 @@ export function Button({
   onClick?: () => void;
 }>) {
   return (
-    <button className={`studio-button studio-button-${variant}`} disabled={disabled} onClick={onClick ?? (() => window.alert('Coming soon'))}>
+    <button className={`studio-button studio-button-${variant}`} disabled={disabled || !onClick} onClick={onClick}>
       {children}
     </button>
   );

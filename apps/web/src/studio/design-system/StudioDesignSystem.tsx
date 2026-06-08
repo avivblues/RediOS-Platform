@@ -42,7 +42,7 @@ export function StudioButton({
   onClick?: () => void;
 }>) {
   return (
-    <button className={`studio-button studio-button-${variant}`} disabled={disabled} onClick={onClick ?? comingSoon}>
+    <button className={`studio-button studio-button-${variant}`} disabled={disabled || !onClick} onClick={onClick}>
       {children}
     </button>
   );
@@ -53,11 +53,13 @@ export function StudioStepper({
   activeIndex,
   isStepEnabled,
   onStepClick,
+  onLockedStep,
 }: {
   steps: string[];
   activeIndex: number;
   isStepEnabled: (index: number) => boolean;
   onStepClick: (index: number) => void;
+  onLockedStep?: () => void;
 }) {
   return (
     <div className="studio-stepper">
@@ -67,7 +69,7 @@ export function StudioStepper({
           <button
             key={step}
             className={index === activeIndex ? 'studio-stepper-item studio-stepper-item-active' : 'studio-stepper-item'}
-            onClick={() => (enabled ? onStepClick(index) : window.alert('Complete previous step first'))}
+            onClick={() => (enabled ? onStepClick(index) : onLockedStep?.())}
           >
             <span>{index + 1}</span>
             <strong>{step}</strong>
@@ -102,5 +104,5 @@ export function StudioBadge({ children, tone = 'info' }: PropsWithChildren<{ ton
 }
 
 export function comingSoon() {
-  window.alert('Coming soon');
+  return undefined;
 }
