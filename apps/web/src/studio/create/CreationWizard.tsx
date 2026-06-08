@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import type { MetadataDefinition } from '@redios/shared';
 import type { DesignerClient } from '../../core/api/designer-client';
+import { ApiClientError } from '../../core/api/api-client';
 import type { RuntimeContext } from '../../core/renderer/runtime-types';
 import { Input, Select } from '../../components/atomic/atoms/Atoms';
 import { FieldBuilder } from '../field-builder/FieldBuilder';
@@ -16,6 +17,8 @@ import { suggestInformationForObject } from '../suggestions/StudioSuggestionEngi
 import { pluralTerm, term, terminologyMode } from '../terminology/terminology.service';
 import { StudioActivityTimeline, type StudioActivityItem } from '../activity/StudioActivityTimeline';
 import { MetadataEditor } from '../editor/MetadataEditor';
+import { ScreenDesigner } from '../screen-designer/ScreenDesigner';
+import type { DesignedScreenLayout } from '../screen-designer/screen-designer-types';
 import {
   StudioBadge,
   StudioButton,
@@ -80,7 +83,7 @@ export function CreationWizard({
   const [selectedEntityIndex, setSelectedEntityIndex] = useState(0);
   const [activity, setActivity] = useState<StudioActivityItem[]>([]);
   const [publishState, setPublishState] = useState<'idle' | 'publishing' | 'live'>('idle');
-  const [publishError, setPublishError] = useState<string | undefined>();
+  const [publishError, setPublishError] = useState<{ title: string; reason: string } | undefined>();
   const [lockedMessage, setLockedMessage] = useState<string | undefined>();
   const mode = terminologyMode(expertMode);
   const steps = expertMode
@@ -153,14 +156,50 @@ export function CreationWizard({
     pushActivity(`${term('FIELD', mode)} added: ${field.label}`, `${field.label} akan muncul di ${draft.entities[entityIndex]?.name ?? 'data ini'}.`);
   }
 
-  function generateExperience() {
-    setDraft((current) => ({
+  function generateExperience(layout?: DesignedScreenLayout) {
+    setDraft((current) => {
+      const nextDraft = {
       ...current,
+      screenLayouts: layout
+        ? {
+            ...current.screenLayouts,
+            [layout.entityName]: {
+              screen: layout.screen,
+              entityName: layout.entityName,
+              sections: layout.sections.map((section) => ({
+                title: section.title,
+                columns: section.columns,
+                fields: section.fields.map((field) => ({
+                  label: field.label,
+                  required: field.required,
+                  readonly: field.readonly,
+                  visible: field.visible,
+                  width: field.width,
+                })),
+              })),
+            },
+          }
+        : current.screenLayouts,
       forms: generated.forms.map((form) => form.code),
       views: generated.views.map((view) => view.code),
       navigation: generated.navigation ? [generated.navigation.code] : [],
       generated,
-    }));
+      };
+
+      const nextGenerated = generateMetadataSet(nextDraft, {
+        tenantId: context.tenantId,
+        domainCode: context.domainCode,
+        applicationCode: codeFromLabel(nextDraft.application.name || context.applicationCode),
+      });
+
+      return {
+        ...nextDraft,
+        forms: nextGenerated.forms.map((form) => form.code),
+        views: nextGenerated.views.map((view) => view.code),
+        navigation: nextGenerated.navigation ? [nextGenerated.navigation.code] : [],
+        generated: nextGenerated,
+      };
+    });
     pushActivity(expertMode ? 'Experience generated' : 'Layar dibuat', expertMode ? 'Forms, list views, detail pages, navigation, and API-ready metadata generated.' : 'Screen, daftar, dan menu sudah siap.');
   }
 
@@ -176,7 +215,7 @@ export function CreationWizard({
       pushActivity(expertMode ? `${term('RUNTIME_PACKAGE', mode)} activated` : 'Application launched', `${runtimePackage?.applicationCode ?? generated.application?.code} is ${runtimePackage?.status ?? 'ACTIVE'}.`);
     } catch (error) {
       setPublishState('idle');
-      setPublishError(error instanceof Error ? error.message : String(error));
+      setPublishError(humanizeLaunchError(error));
       pushActivity(expertMode ? 'Publish failed' : 'Launch needs attention', expertMode ? 'Designer validation blocked runtime activation.' : 'A rule or connection needs review before this application can launch.');
     }
   }
@@ -258,17 +297,22 @@ export function CreationWizard({
         {step === 3 ? (
           <section className="studio-wizard-body">
             <h3>
-              Design Screen
+              {expertMode ? 'FORM metadata' : 'Screen Design'}
               <HelpTooltip label="Screen">A screen is what users see when entering or viewing data.</HelpTooltip>
             </h3>
             <p className="studio-muted">How should users enter and view this data?</p>
-            <StudioButton
-              onClick={generateExperience}
-              disabled={!isFieldsComplete(draft)}
-              tooltip={isFieldsComplete(draft) ? 'Buat layar input, layar daftar, dan menu dari informasi yang sudah kamu isi.' : 'Lengkapi minimal satu informasi untuk setiap data dulu.'}
-            >
-              Design Screens
-            </StudioButton>
+            {selectedEntity ? (
+              <ScreenDesigner entity={selectedEntity} onApply={(layout) => generateExperience(layout)} />
+            ) : null}
+            {!selectedEntity ? (
+              <StudioButton
+                onClick={() => generateExperience()}
+                disabled={!isFieldsComplete(draft)}
+                tooltip={isFieldsComplete(draft) ? 'Buat layar input, layar daftar, dan menu dari informasi yang sudah kamu isi.' : 'Lengkapi minimal satu informasi untuk setiap data dulu.'}
+              >
+                Design Screens
+              </StudioButton>
+            ) : null}
           </section>
         ) : null}
 
@@ -278,7 +322,7 @@ export function CreationWizard({
           <section className="studio-wizard-body">
             {publishState === 'live' ? (
               <StudioCard>
-                <h3>Your application is ready</h3>
+                <h3>Application Ready 🚀</h3>
                 <p className="studio-muted">
                   {expertMode ? 'Publish saved definitions, compiled the package, and prepared the generated application route.' : 'Aplikasi sudah siap digunakan.'}
                 </p>
@@ -312,7 +356,15 @@ export function CreationWizard({
                 />
                 <ReadinessMeter draft={{ ...draft, generated }} runtimeCompiled={false} expertMode={expertMode} />
                 <BuildCounts draft={{ ...draft, generated }} expertMode={expertMode} />
-                {publishError ? <div className="studio-inline-danger">{publishError}</div> : null}
+                {publishError ? (
+                  <div className="studio-inline-danger">
+                    <strong>{publishError.title}</strong>
+                    <p>{publishError.reason}</p>
+                    <StudioButton variant="secondary" onClick={() => generateExperience()} tooltip="RediOS akan membuat screen dan menu yang hilang secara otomatis.">
+                      Fix automatically
+                    </StudioButton>
+                  </div>
+                ) : null}
                 <StudioButton
                   onClick={() => void publish()}
                   disabled={!isReviewComplete(draft)}
@@ -502,6 +554,47 @@ function LaunchProgress() {
       ))}
     </div>
   );
+}
+
+function humanizeLaunchError(error: unknown): { title: string; reason: string } {
+  const fallback = {
+    title: 'Cannot launch application',
+    reason: 'Runtime validation failed. Please review screen design and required information.',
+  };
+
+  if (!(error instanceof ApiClientError)) {
+    return fallback;
+  }
+
+  const issues = validationIssues(error.detail);
+  const firstIssue = issues[0];
+
+  if (!firstIssue) {
+    return fallback;
+  }
+
+  if (firstIssue.code?.includes('FORM') || firstIssue.code?.includes('UI') || firstIssue.code?.includes('NAVIGATION')) {
+    return {
+      title: 'Cannot launch application',
+      reason: 'Screen missing or not ready. Use Fix automatically to generate screen and navigation again.',
+    };
+  }
+
+  return {
+    title: 'Cannot launch application',
+    reason: firstIssue.message || fallback.reason,
+  };
+}
+
+function validationIssues(detail: unknown): Array<{ code?: string; message?: string }> {
+  if (!detail || typeof detail !== 'object') {
+    return [];
+  }
+
+  const response = detail as { issues?: unknown; response?: { issues?: unknown } };
+  const issues = response.issues ?? response.response?.issues;
+
+  return Array.isArray(issues) ? issues as Array<{ code?: string; message?: string }> : [];
 }
 
 function BuildCounts({ draft, expertMode }: { draft: CreationDraft; expertMode: boolean }) {

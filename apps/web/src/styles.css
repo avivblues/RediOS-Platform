@@ -325,6 +325,111 @@ a:focus-visible {
   font-size: 1.75rem;
 }
 
+.studio-screen-designer-grid {
+  display: grid;
+  grid-template-columns: minmax(220px, 0.8fr) minmax(360px, 1.4fr) minmax(240px, 0.9fr);
+  gap: var(--redios-spacing-md);
+  align-items: start;
+}
+
+.studio-screen-panel,
+.studio-screen-canvas,
+.studio-preview-panel {
+  display: grid;
+  gap: var(--redios-spacing-sm);
+}
+
+.studio-screen-canvas {
+  border: 1px solid color-mix(in srgb, var(--redios-color-primary), transparent 78%);
+  border-radius: var(--redios-radius-large);
+  padding: var(--redios-spacing-md);
+  background: color-mix(in srgb, var(--redios-color-primary), var(--redios-color-surface) 97%);
+}
+
+.studio-screen-section {
+  display: grid;
+  gap: var(--redios-spacing-sm);
+  border-radius: var(--redios-radius-large);
+  padding: var(--redios-spacing-md);
+  background: var(--redios-color-surface);
+}
+
+.studio-screen-field-grid,
+.studio-preview-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--redios-spacing-sm);
+}
+
+.studio-screen-field-grid[data-columns='1'] {
+  grid-template-columns: 1fr;
+}
+
+.studio-screen-field-grid[data-columns='3'] {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.studio-screen-field {
+  display: grid;
+  gap: var(--redios-spacing-xs);
+  border: 1px solid color-mix(in srgb, var(--redios-color-text), transparent 82%);
+  border-radius: var(--redios-radius-medium);
+  padding: var(--redios-spacing-sm);
+  background: var(--redios-color-surface);
+  color: var(--redios-color-text);
+  text-align: left;
+  cursor: grab;
+}
+
+.studio-screen-field-selected {
+  border-color: var(--redios-color-primary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--redios-color-primary), transparent 82%);
+}
+
+.studio-screen-field-actions {
+  display: flex;
+  gap: var(--redios-spacing-xs);
+}
+
+.studio-screen-field-actions span {
+  border-radius: 999px;
+  padding: 0.1rem 0.45rem;
+  background: color-mix(in srgb, var(--redios-color-primary), transparent 88%);
+  cursor: pointer;
+}
+
+.studio-adaptive-preview {
+  display: grid;
+  gap: var(--redios-spacing-sm);
+  margin: 0 auto;
+  border: 1px solid color-mix(in srgb, var(--redios-color-text), transparent 84%);
+  border-radius: var(--redios-radius-large);
+  padding: var(--redios-spacing-md);
+  background: var(--redios-color-surface);
+}
+
+.studio-adaptive-preview-desktop {
+  width: min(100%, 860px);
+}
+
+.studio-adaptive-preview-tablet {
+  width: min(100%, 620px);
+}
+
+.studio-adaptive-preview-mobile {
+  width: min(100%, 340px);
+  border-width: 8px;
+}
+
+.studio-preview-section {
+  display: grid;
+  gap: var(--redios-spacing-sm);
+}
+
+.studio-preview-fields[data-device='Mobile'] {
+  grid-template-columns: 1fr;
+}
+
 .studio-ds-panel,
 .studio-ds-card {
   background: var(--redios-color-surface);
@@ -1208,6 +1313,7 @@ a:focus-visible {
   .studio-card-grid,
   .studio-create-grid,
   .studio-edit-builder-grid,
+  .studio-screen-designer-grid,
   .studio-stepper,
   .studio-builder-grid,
   .studio-preview-grid,

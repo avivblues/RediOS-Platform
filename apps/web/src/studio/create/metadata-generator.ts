@@ -12,6 +12,8 @@ import type {
   ThemeDefinition,
   UIDefinition,
   UIAtomDefinition,
+  UIMoleculeDefinition,
+  UIOrganismDefinition,
   UIPageDefinition,
   UITemplateDefinition,
   ViewDefinition,
@@ -104,19 +106,34 @@ export function generateRelation(entityCode: string, field: CreationFieldInput, 
   });
 }
 
-export function generateForm(entity: CreationEntityInput, context: GeneratorContext): MetadataDefinition<FormDefinition> {
+export function generateForm(entity: CreationEntityInput, context: GeneratorContext, draft?: CreationDraft): MetadataDefinition<FormDefinition> {
   const entityCode = codeFromLabel(entity.name);
   const code = `${entityCode}_FORM`;
-
-  return metadata('FORM', code, `${entity.name} Form`, context, {
-    code,
-    entityCode,
-    name: `${entity.name} Form`,
-    version: 1,
-    enabled: true,
-    layout: {
-      type: 'SECTION',
-      sections: [
+  const layout = draft?.screenLayouts[entity.name];
+  const sections = layout?.sections.length
+    ? layout.sections.map((section, sectionIndex) => ({
+        code: codeFromLabel(section.title) || `SECTION_${sectionIndex + 1}`,
+        title: section.title,
+        order: sectionIndex + 1,
+        fields: section.fields.map<FormFieldDefinition>((field, index) => {
+          const sourceField = entity.fields.find((candidate) => candidate.label === field.label) ?? entity.fields[index];
+          return {
+            fieldCode: fieldCodeFromLabel(field.label),
+            component: sourceField ? componentForField(sourceField) : 'TEXT_INPUT',
+            order: index + 1,
+            required: field.required ?? sourceField?.required ?? false,
+            readonly: field.readonly ?? false,
+            visible: field.visible ?? true,
+            lookup: sourceField?.type === 'Lookup' && sourceField.relatedObject
+              ? {
+                  relationCode: `${entityCode}_${codeFromLabel(sourceField.relatedObject)}_RELATION`,
+                  viewCode: `${codeFromLabel(sourceField.relatedObject)}_LIST`,
+                }
+              : undefined,
+          };
+        }),
+      }))
+    : [
         {
           code: 'GENERAL',
           title: `${entity.name} Details`,
@@ -136,7 +153,17 @@ export function generateForm(entity: CreationEntityInput, context: GeneratorCont
               : undefined,
           })),
         },
-      ],
+      ];
+
+  return metadata('FORM', code, `${entity.name} Form`, context, {
+    code,
+    entityCode,
+    name: `${entity.name} Form`,
+    version: 1,
+    enabled: true,
+    layout: {
+      type: 'SECTION',
+      sections,
     },
   });
 }
@@ -170,7 +197,7 @@ export function generatePage(entity: CreationEntityInput, context: GeneratorCont
     viewCode: `${entityCode}_LIST`,
     template: `${entityCode}_FORM_WORKSPACE_TEMPLATE`,
     regions: {
-      main: [],
+      main: [`${entityCode}_SCREEN_COMPOSITION`],
     },
     actions: [],
     enabled: true,
@@ -264,7 +291,7 @@ export function generateMetadataSet(draft: CreationDraft, context: GeneratorCont
     const entityCode = codeFromLabel(entity.name);
     return entity.fields.map((field) => generateRelation(entityCode, field, context)).filter((relation): relation is MetadataDefinition<RelationDefinition> => Boolean(relation));
   });
-  const forms = draft.entities.map((entity) => generateForm(entity, context));
+  const forms = draft.entities.map((entity) => generateForm(entity, context, draft));
   const views = draft.entities.map((entity) => generateView(entity, context));
   const pages = [
     ...generateUiFoundation(draft.entities, context),
@@ -325,7 +352,37 @@ function generateUiFoundation(entities: CreationEntityInput[], context: Generato
     return metadata('UI', template.code, `${entity.name} Form Workspace Template`, context, template);
   });
 
-  return [...atoms, ...templates];
+  const molecules = entities.flatMap((entity): Array<MetadataDefinition<UIDefinition>> => {
+    const entityCode = codeFromLabel(entity.name);
+
+    return entity.fields.map((field): MetadataDefinition<UIDefinition> => {
+      const molecule: UIMoleculeDefinition = {
+        kind: 'MOLECULE',
+        code: `${entityCode}_${fieldCodeFromLabel(field.label).toUpperCase()}_FIELD`,
+        atoms: [{ atom: componentForField(field), bind: fieldCodeFromLabel(field.label) }],
+        enabled: true,
+      };
+
+      return metadata('UI', molecule.code, `${entity.name} ${field.label} Field Composition`, context, molecule);
+    });
+  });
+
+  const organisms = entities.map((entity): MetadataDefinition<UIDefinition> => {
+    const entityCode = codeFromLabel(entity.name);
+    const organism: UIOrganismDefinition = {
+      kind: 'ORGANISM',
+      code: `${entityCode}_SCREEN_COMPOSITION`,
+      molecules: entity.fields.map((field) => ({
+        molecule: `${entityCode}_${fieldCodeFromLabel(field.label).toUpperCase()}_FIELD`,
+        bind: fieldCodeFromLabel(field.label),
+      })),
+      enabled: true,
+    };
+
+    return metadata('UI', organism.code, `${entity.name} UI Composition`, context, organism);
+  });
+
+  return [...atoms, ...molecules, ...organisms, ...templates];
 }
 
 export function codeFromLabel(label: string): string {

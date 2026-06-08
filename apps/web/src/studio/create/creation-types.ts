@@ -40,6 +40,22 @@ export interface CreationEntityInput {
   fields: CreationFieldInput[];
 }
 
+export interface CreationScreenLayout {
+  screen: string;
+  entityName: string;
+  sections: Array<{
+    title: string;
+    columns: number;
+    fields: Array<{
+      label: string;
+      required?: boolean;
+      readonly?: boolean;
+      visible?: boolean;
+      width?: string;
+    }>;
+  }>;
+}
+
 export interface CreationDraft {
   application: {
     name: string;
@@ -52,6 +68,7 @@ export interface CreationDraft {
   forms: string[];
   views: string[];
   navigation: string[];
+  screenLayouts: Record<string, CreationScreenLayout>;
   generated: GeneratedMetadataSet;
 }
 
@@ -92,6 +109,7 @@ export function createInitialCreationDraft(): CreationDraft {
     forms: [],
     views: [],
     navigation: [],
+    screenLayouts: {},
     generated: emptyGeneratedMetadata(),
   };
 }

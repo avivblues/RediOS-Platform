@@ -34,10 +34,29 @@ export class ApiClient {
     });
 
     if (!response.ok) {
-      throw new Error(`API returned ${response.status} ${response.statusText} for ${path}`);
+      let detail: unknown;
+
+      try {
+        detail = await response.json();
+      } catch {
+        detail = await response.text().catch(() => undefined);
+      }
+
+      throw new ApiClientError(response.status, response.statusText, path, detail);
     }
 
     return response.json() as Promise<TResponse>;
+  }
+}
+
+export class ApiClientError extends Error {
+  constructor(
+    readonly status: number,
+    readonly statusText: string,
+    readonly path: string,
+    readonly detail: unknown,
+  ) {
+    super(`API returned ${status} ${statusText} for ${path}`);
   }
 }
 
