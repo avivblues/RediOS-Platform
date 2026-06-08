@@ -2,16 +2,18 @@ import { useMemo, useState } from 'react';
 import type { MetadataDebugTree } from '../../core/api/metadata-client';
 import { humanizeCode } from '../humanizer/HumanizerEngine';
 import type { ExplorerSelection } from '../explorer/ApplicationExplorer';
+import { term, terminologyMode } from '../terminology/terminology.service';
 
+const mode = terminologyMode(false);
 const searchableKeys: Array<{ key: keyof MetadataDebugTree; type: string; label: string }> = [
-  { key: 'applications', type: 'APPLICATION', label: 'Application' },
-  { key: 'entities', type: 'ENTITY', label: 'Entity' },
-  { key: 'forms', type: 'FORMS', label: 'Form' },
-  { key: 'ui', type: 'PAGES', label: 'Page' },
-  { key: 'workflows', type: 'WORKFLOWS', label: 'Workflow' },
-  { key: 'integrations', type: 'INTEGRATIONS', label: 'Integration' },
-  { key: 'connectors', type: 'CONNECTORS', label: 'Connector' },
-  { key: 'securityPolicies', type: 'SECURITY', label: 'Policy' },
+  { key: 'applications', type: 'APPLICATION', label: term('APPLICATION', mode) },
+  { key: 'entities', type: 'ENTITY', label: term('ENTITY', mode) },
+  { key: 'forms', type: 'FORMS', label: term('FORM', mode) },
+  { key: 'ui', type: 'PAGES', label: 'Screen' },
+  { key: 'workflows', type: 'WORKFLOWS', label: term('WORKFLOW', mode) },
+  { key: 'integrations', type: 'INTEGRATIONS', label: term('INTEGRATION', mode) },
+  { key: 'connectors', type: 'CONNECTORS', label: term('INTEGRATION', mode) },
+  { key: 'securityPolicies', type: 'SECURITY', label: term('SECURITY_POLICY', mode) },
 ];
 
 export function StudioSearch({
@@ -47,7 +49,7 @@ export function StudioSearch({
 
   return (
     <div className="studio-search">
-      <input className="studio-input" placeholder="Search metadata..." value={query} onChange={(event) => setQuery(event.target.value)} />
+      <input className="studio-input" placeholder="Search Studio..." value={query} onChange={(event) => setQuery(event.target.value)} />
       {results.length > 0 ? (
         <div className="studio-search-results">
           {results.map((result) => (

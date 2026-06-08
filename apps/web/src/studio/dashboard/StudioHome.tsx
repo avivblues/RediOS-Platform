@@ -4,6 +4,7 @@ import { Panel } from '../../components/atomic/organisms/Organisms';
 import type { MetadataDebugTree } from '../../core/api/metadata-client';
 import type { ExplorerSelection } from '../explorer/ApplicationExplorer';
 import { humanizeCode, humanizeMetadata } from '../humanizer/HumanizerEngine';
+import { term, terminologyMode } from '../terminology/terminology.service';
 
 export function StudioHome({
   tree,
@@ -18,13 +19,15 @@ export function StudioHome({
   runtimeStatus?: string;
   onSelect: (selection: ExplorerSelection) => void;
 }) {
+  const mode = terminologyMode(false);
+
   return (
     <div className="studio-home">
       <section className="studio-hero">
         <div>
           <span className="studio-kicker">Welcome to RediOS Studio</span>
           <h2>Customize enterprise applications without editing code.</h2>
-          <p className="studio-muted">Choose an application, update its experience, preview impact, then publish safely through metadata.</p>
+          <p className="studio-muted">Choose an application, update its experience, preview impact, then launch safely through guided checks.</p>
         </div>
         <div className="studio-action-row">
           <Button onClick={() => onSelect({ type: 'CREATE_APPLICATION', code: 'CREATE_APPLICATION' })}>Create Application</Button>
@@ -37,11 +40,11 @@ export function StudioHome({
 
       <div className="studio-home-grid">
         <MetricCard label="Applications" value={tree.applications.length} onClick={() => onSelect({ type: 'APPLICATION_BUILDER', code: tree.applications[0] ?? 'APPLICATIONS' })} />
-        <MetricCard label="Forms" value={tree.forms.length} onClick={() => onSelect({ type: 'FORMS', code: tree.forms[0] ?? 'FORMS' })} />
-        <MetricCard label="Pages" value={tree.ui.length} onClick={() => onSelect({ type: 'PAGES', code: tree.ui[0] ?? 'PAGES' })} />
-        <MetricCard label="Workflow" value={tree.workflows.length} onClick={() => onSelect({ type: 'WORKFLOWS', code: tree.workflows[0] ?? 'WORKFLOWS' })} />
-        <MetricCard label="Integration" value={tree.integrations.length + tree.connectors.length} onClick={() => onSelect({ type: 'INTEGRATIONS', code: tree.integrations[0] ?? 'INTEGRATIONS' })} />
-        <MetricCard label="Runtime Package Status" value={runtimeStatus ?? 'Not compiled'} onClick={() => onSelect({ type: 'RUNTIME', code: 'RUNTIME' })} />
+        <MetricCard label={`${term('FORM', mode)}s`} value={tree.forms.length} onClick={() => onSelect({ type: 'FORMS', code: tree.forms[0] ?? 'FORMS' })} />
+        <MetricCard label="Screens" value={tree.ui.length} onClick={() => onSelect({ type: 'PAGES', code: tree.ui[0] ?? 'PAGES' })} />
+        <MetricCard label={term('WORKFLOW', mode)} value={tree.workflows.length} onClick={() => onSelect({ type: 'WORKFLOWS', code: tree.workflows[0] ?? 'WORKFLOWS' })} />
+        <MetricCard label={term('INTEGRATION', mode)} value={tree.integrations.length + tree.connectors.length} onClick={() => onSelect({ type: 'INTEGRATIONS', code: tree.integrations[0] ?? 'INTEGRATIONS' })} />
+        <MetricCard label={`${term('RUNTIME_PACKAGE', mode)} Status`} value={runtimeStatus ?? 'Not launched'} onClick={() => onSelect({ type: 'RUNTIME', code: 'RUNTIME' })} />
       </div>
 
       <Panel title="Your Applications">
@@ -57,9 +60,9 @@ export function StudioHome({
                 <span className="studio-kicker">{human.icon}</span>
                 <h3>{app.name || human.label}</h3>
                 <p>{app.description ?? human.description}</p>
-                <div className="studio-muted">{app.entityCodes.length} entities</div>
-                <div className="studio-muted">{tree.forms.length} forms</div>
-                <div className="studio-muted">{workflowCount} workflows</div>
+                <div className="studio-muted">{app.entityCodes.length} Data Objects</div>
+                <div className="studio-muted">{tree.forms.length} Input Screens</div>
+                <div className="studio-muted">{workflowCount} Processes</div>
                 <strong>{app.enabled ? 'Published' : 'Draft'}</strong>
                 <div className="studio-action-row">
                   <Button onClick={() => onSelect({ type: 'APPLICATION_BUILDER', code: app.code })}>Customize</Button>
@@ -67,7 +70,7 @@ export function StudioHome({
               </article>
             );
           })}
-          {applications.length === 0 ? <div className="studio-empty">No application metadata registered yet.</div> : null}
+          {applications.length === 0 ? <div className="studio-empty">No applications registered yet.</div> : null}
         </div>
       </Panel>
     </div>

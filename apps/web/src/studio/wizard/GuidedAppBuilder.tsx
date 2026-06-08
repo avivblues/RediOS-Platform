@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Button, Input, Select } from '../../components/atomic/atoms/Atoms';
 import { Panel } from '../../components/atomic/organisms/Organisms';
 
-const steps = ['Application', 'Data Model', 'Experience', 'Workflow', 'Publish'];
+const steps = ['Application', 'Data Object', 'Screen', 'Process', 'Launch'];
 
 export function GuidedAppBuilder() {
   const [step, setStep] = useState(0);
@@ -25,18 +25,18 @@ export function GuidedAppBuilder() {
           <section>
             <h3>What are you building?</h3>
             <Select value={mode} options={['Start Blank', 'Use Template']} onChange={setMode} />
-            <p className="studio-muted">The builder creates metadata drafts through Designer operations in later phases.</p>
+            <p className="studio-muted">The builder prepares an application plan through guided Studio operations.</p>
           </section>
         ) : null}
         {step === 1 ? (
           <section>
-            <h3>Create entity visually</h3>
-            <Input value={entityName} placeholder="Entity name" onChange={setEntityName} />
-            <Input value={fieldName} placeholder="Field name" onChange={setFieldName} />
+            <h3>Create Data Object visually</h3>
+            <Input value={entityName} placeholder="Data Object name" onChange={setEntityName} />
+            <Input value={fieldName} placeholder="Information name" onChange={setFieldName} />
             <div className="studio-flow-preview">
-              <strong>{entityName || 'Entity'}</strong>
+              <strong>{entityName || 'Data Object'}</strong>
               <span>down</span>
-              <span>{fieldName || 'Fields'}</span>
+              <span>{fieldName || 'Information'}</span>
             </div>
           </section>
         ) : null}
@@ -48,16 +48,16 @@ export function GuidedAppBuilder() {
         ) : null}
         {step === 3 ? (
           <section>
-            <h3>Optional workflow setup</h3>
-            <p className="studio-muted">Workflow metadata can be added now or later in Workflow Builder.</p>
+            <h3>Optional process setup</h3>
+            <p className="studio-muted">A business process can be added now or later in Process Builder.</p>
           </section>
         ) : null}
         {step === 4 ? (
           <section>
-            <h3>Publish safely</h3>
-            <div className="studio-impact studio-impact-info">SimulationEngine will validate runtime behavior.</div>
-            <div className="studio-impact studio-impact-info">DependencyEngine will analyze affected metadata.</div>
-            <div className="studio-impact studio-impact-info">RuntimeCompiler will build the active runtime package.</div>
+            <h3>Launch safely</h3>
+            <div className="studio-impact studio-impact-info">RediOS checks rules before launch.</div>
+            <div className="studio-impact studio-impact-info">RediOS reviews affected application pieces.</div>
+            <div className="studio-impact studio-impact-info">RediOS prepares the published version.</div>
           </section>
         ) : null}
       </div>

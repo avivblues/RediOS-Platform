@@ -340,11 +340,91 @@ textarea {
 }
 
 .studio-learning-hint,
-.studio-concept-card {
+.studio-concept-card,
+.studio-learning-panel,
+.studio-guided-hint {
   border: 1px solid color-mix(in srgb, var(--redios-color-primary), transparent 70%);
   border-radius: var(--redios-radius-medium);
   padding: var(--redios-spacing-md);
   background: color-mix(in srgb, var(--redios-color-primary), var(--redios-color-surface) 92%);
+}
+
+.studio-learning-panel,
+.studio-onboarding-tour,
+.studio-business-preview,
+.studio-developer-view {
+  display: grid;
+  gap: var(--redios-spacing-md);
+}
+
+.studio-onboarding-tour ol {
+  display: grid;
+  gap: var(--redios-spacing-xs);
+  margin: 0;
+  padding-left: 1.25rem;
+}
+
+.studio-business-preview {
+  grid-template-columns: minmax(0, 2fr) minmax(180px, 0.9fr);
+  align-items: start;
+}
+
+.studio-preview-device {
+  border: 1px solid color-mix(in srgb, var(--redios-color-text), transparent 84%);
+  border-radius: var(--redios-radius-large);
+  padding: var(--redios-spacing-md);
+  background: var(--redios-color-surface);
+  box-shadow: 0 10px 32px color-mix(in srgb, var(--redios-color-text), transparent 94%);
+}
+
+.studio-preview-toolbar {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--redios-spacing-sm);
+  margin-bottom: var(--redios-spacing-md);
+}
+
+.studio-preview-toolbar button {
+  border: 0;
+  border-radius: var(--redios-radius-medium);
+  padding: var(--redios-spacing-xs) var(--redios-spacing-sm);
+  background: var(--redios-color-primary);
+  color: var(--redios-color-surface);
+}
+
+.studio-preview-table {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--redios-spacing-sm);
+  border-top: 1px solid color-mix(in srgb, var(--redios-color-text), transparent 88%);
+  padding-top: var(--redios-spacing-sm);
+}
+
+.studio-preview-table span {
+  font-weight: 700;
+}
+
+.studio-preview-mobile {
+  display: grid;
+  gap: var(--redios-spacing-sm);
+  max-width: 240px;
+}
+
+.studio-preview-mobile label {
+  display: grid;
+  gap: var(--redios-spacing-xs);
+  font-size: var(--redios-font-size-small);
+}
+
+.studio-preview-mobile input {
+  border: 1px solid color-mix(in srgb, var(--redios-color-text), transparent 78%);
+  border-radius: var(--redios-radius-medium);
+  padding: var(--redios-spacing-xs) var(--redios-spacing-sm);
+}
+
+.studio-developer-view pre {
+  max-height: 340px;
+  overflow: auto;
 }
 
 .studio-chip-list {

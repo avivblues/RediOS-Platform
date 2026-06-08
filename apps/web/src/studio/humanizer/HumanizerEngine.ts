@@ -1,3 +1,5 @@
+import { term, terminologyMode, type StudioTermCode } from '../terminology/terminology.service';
+
 export interface HumanizedMetadata {
   code: string;
   label: string;
@@ -20,15 +22,6 @@ const categoryIcons: Record<string, string> = {
   RUNTIME_PACKAGE: 'RUN',
 };
 
-const simpleMetadataTerms: Record<string, string> = {
-  ENTITY: 'Data Object',
-  FIELD: 'Information Field',
-  FORM: 'Input Screen',
-  VIEW: 'Data List',
-  WORKFLOW: 'Business Process',
-  RELATION: 'Connection',
-};
-
 export function humanizeCode(code: string): string {
   return code
     .toLowerCase()
@@ -45,12 +38,33 @@ export function humanizeMetadata(code: string, category: string, description?: s
     code,
     label: humanizeCode(code),
     icon: categoryIcons[normalizedCategory] ?? 'META',
-    description: description ?? `${humanizeCode(normalizedCategory)} metadata for ${humanizeCode(code)}.`,
+    description: description ?? `${humanizeCode(normalizedCategory)} configuration for ${humanizeCode(code)}.`,
     category: normalizedCategory,
   };
 }
 
 export function metadataTerm(type: string, expertMode = false): string {
   const normalizedType = type.toUpperCase();
-  return expertMode ? humanizeCode(normalizedType) : simpleMetadataTerms[normalizedType] ?? humanizeCode(normalizedType);
+
+  if (isStudioTermCode(normalizedType)) {
+    return term(normalizedType, terminologyMode(expertMode));
+  }
+
+  return humanizeCode(normalizedType);
+}
+
+function isStudioTermCode(value: string): value is StudioTermCode {
+  return [
+    'APPLICATION',
+    'ENTITY',
+    'FIELD',
+    'FORM',
+    'VIEW',
+    'WORKFLOW',
+    'RELATION',
+    'VALIDATION',
+    'SECURITY_POLICY',
+    'INTEGRATION',
+    'RUNTIME_PACKAGE',
+  ].includes(value);
 }

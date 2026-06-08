@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Input, Select } from '../../components/atomic/atoms/Atoms';
 import { StudioButton, StudioCard, StudioEmptyState } from '../design-system/StudioDesignSystem';
 import type { CreationEntityInput, CreationFieldInput, CreationFieldType } from '../create/creation-types';
+import { term, terminologyMode } from '../terminology/terminology.service';
 
 const fieldTypes: CreationFieldType[] = ['Text', 'Number', 'Money', 'Date', 'Lookup', 'Attachment', 'User'];
 
@@ -9,10 +10,12 @@ export function FieldBuilder({
   entities,
   objectName,
   onAddField,
+  expertMode = false,
 }: {
   entities: CreationEntityInput[];
   objectName: string;
   onAddField: (field: CreationFieldInput) => void;
+  expertMode?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const [label, setLabel] = useState('');
@@ -26,6 +29,9 @@ export function FieldBuilder({
   const relatedObjectOptions = entities.map((entity) => entity.name);
   const relatedEntity = entities.find((entity) => entity.name === relatedObject);
   const displayFieldOptions = relatedEntity?.fields.map((field) => field.label) ?? [];
+  const mode = terminologyMode(expertMode);
+  const informationLabel = term('FIELD', mode);
+  const objectLabel = term('ENTITY', mode);
 
   function addField() {
     if (!label.trim()) {
@@ -59,34 +65,34 @@ export function FieldBuilder({
     <StudioCard>
       <div className="studio-section-header">
         <div>
-          <h4>{objectName} Fields</h4>
-          <p className="studio-muted">Add fields users will see on forms and lists.</p>
+          <h4>{objectName} {informationLabel}</h4>
+          <p className="studio-muted">Add details users will see on screens and lists.</p>
         </div>
-        <StudioButton onClick={() => setOpen(true)}>+ Add Field</StudioButton>
+        <StudioButton onClick={() => setOpen(true)}>+ Add {informationLabel}</StudioButton>
       </div>
       {!open ? (
-        <StudioEmptyState title="No field dialog open" description="Click Add Field to define a field name, type, and advanced options." />
+        <StudioEmptyState title={`No ${informationLabel.toLowerCase()} dialog open`} description={`Click Add ${informationLabel} to define a name, type, and advanced options.`} />
       ) : (
         <div className="studio-field-dialog">
-          <h4>Field Details</h4>
+          <h4>{informationLabel} Details</h4>
           <Input value={label} placeholder="Stock Quantity" onChange={setLabel} />
           <Select value={type} options={fieldTypes} onChange={(value) => setType(value as CreationFieldType)} />
           {type === 'Lookup' ? (
             relatedObjectOptions.length > 0 ? (
               <>
-                <label className="studio-muted">Related Object</label>
+                <label className="studio-muted">Related {objectLabel}</label>
                 <Select value={relatedObject || relatedObjectOptions[0]} options={relatedObjectOptions} onChange={setRelatedObject} />
                 {displayFieldOptions.length > 0 ? (
                   <>
-                    <label className="studio-muted">Display Field</label>
+                    <label className="studio-muted">Display {informationLabel}</label>
                     <Select value={displayField || displayFieldOptions[0]} options={displayFieldOptions} onChange={setDisplayField} />
                   </>
                 ) : (
-                  <div className="studio-muted">Add fields to the related object before choosing a display field.</div>
+                  <div className="studio-muted">Add information to the related {objectLabel.toLowerCase()} before choosing a display value.</div>
                 )}
               </>
             ) : (
-              <StudioEmptyState title="No related object yet" description="Create another object before adding a lookup field." />
+              <StudioEmptyState title={`No related ${objectLabel.toLowerCase()} yet`} description={`Create another ${objectLabel.toLowerCase()} before adding a lookup connection.`} />
             )
           ) : null}
           <details>
@@ -104,7 +110,7 @@ export function FieldBuilder({
           </details>
           <div className="studio-action-row">
             <StudioButton onClick={addField} disabled={!label.trim() || (type === 'Lookup' && relatedObjectOptions.length === 0)}>
-              Save Field
+              Save {informationLabel}
             </StudioButton>
             <StudioButton variant="secondary" onClick={() => setOpen(false)}>
               Cancel

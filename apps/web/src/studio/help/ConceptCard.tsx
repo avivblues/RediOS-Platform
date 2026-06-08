@@ -1,13 +1,13 @@
-export type StudioConcept = 'Application' | 'Data Object' | 'Field' | 'Screen' | 'Workflow' | 'Publish' | 'Runtime';
+export type StudioConcept = 'Application' | 'Data Object' | 'Information' | 'Screen' | 'Process' | 'Launch' | 'Published Version';
 
 const conceptDescriptions: Record<StudioConcept, string> = {
-  Application: 'A business app groups data, screens, automation, and navigation into one runtime experience.',
-  'Data Object': 'A data object stores business information such as products, assets, orders, or customers.',
-  Field: 'A field describes one piece of information stored on a data object.',
+  Application: 'A business app groups data, screens, automation, and navigation into one live experience.',
+  'Data Object': 'A Data Object stores information your business manages. Example: Product, Customer, Asset.',
+  Information: 'Information is a detail stored inside your object. Example: Product Name, Price, Stock.',
   Screen: 'A screen controls how users view, enter, and update information.',
-  Workflow: 'A workflow defines the business process that moves records through states.',
-  Publish: 'Publishing validates metadata, saves it, compiles the runtime package, and activates the app.',
-  Runtime: 'The runtime is the live application generated from active metadata.',
+  Process: 'A process controls how work moves. Example: Draft to Approval to Done.',
+  Launch: 'Launch prepares your application so users can start using it.',
+  'Published Version': 'A Published Version is the live version users open after launch.',
 };
 
 export function ConceptCard({ concept }: { concept: StudioConcept }) {
