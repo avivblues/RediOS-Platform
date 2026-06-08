@@ -381,6 +381,23 @@ a:focus-visible {
   cursor: grab;
 }
 
+.studio-screen-field label,
+.studio-preview-fields label,
+.studio-field-wizard {
+  display: grid;
+  gap: var(--redios-spacing-xs);
+}
+
+.studio-screen-field input,
+.studio-preview-fields input {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid color-mix(in srgb, var(--redios-color-text), transparent 78%);
+  border-radius: var(--redios-radius-medium);
+  padding: var(--redios-spacing-sm);
+  background: var(--redios-color-surface);
+}
+
 .studio-screen-field-selected {
   border-color: var(--redios-color-primary);
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--redios-color-primary), transparent 82%);
@@ -396,6 +413,25 @@ a:focus-visible {
   padding: 0.1rem 0.45rem;
   background: color-mix(in srgb, var(--redios-color-primary), transparent 88%);
   cursor: pointer;
+}
+
+.studio-screen-save-row {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.studio-screen-save-row button {
+  border: 0;
+  border-radius: var(--redios-radius-medium);
+  padding: var(--redios-spacing-sm) var(--redios-spacing-md);
+  background: var(--redios-color-primary);
+  color: var(--redios-color-surface);
+}
+
+.studio-field-type-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: var(--redios-spacing-sm);
 }
 
 .studio-adaptive-preview {

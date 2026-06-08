@@ -20,7 +20,7 @@ export function ErrorState({
       <ul>
         <li>API offline</li>
         <li>Permission denied</li>
-        <li>Missing metadata</li>
+        <li>Application setup is incomplete</li>
       </ul>
       <div className="studio-action-row">
         <Button onClick={onRetry} tooltip="Coba ambil data Studio lagi dari API.">Retry</Button>

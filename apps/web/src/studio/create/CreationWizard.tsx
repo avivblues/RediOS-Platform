@@ -36,7 +36,7 @@ import {
 } from './creation-types';
 import { codeFromLabel, generateMetadataSet } from './metadata-generator';
 
-const simpleSteps = ['Application', 'Data Object', 'Information', 'Screen', 'Process', 'Launch'];
+const simpleSteps = ['Application', 'Data Object', 'Design Screen', 'Workflow', 'Launch'];
 const appStarterCards = [
   { label: 'Inventory', icon: 'BOX', description: 'Kelola produk, stok, pemasok, dan pergerakan barang.' },
   { label: 'CRM', icon: 'PEOPLE', description: 'Kelola pelanggan, kontak, dan aktivitas penjualan.' },
@@ -99,7 +99,11 @@ export function CreationWizard({
     [context, draft],
   );
   const selectedEntity = draft.entities[selectedEntityIndex];
-  const canUseStep = (index: number) => index <= highestUnlockedStep(draft);
+  const canUseStep = (index: number) => index <= highestUnlockedStep(draft, expertMode);
+  const informationStepIndex = 2;
+  const screenStepIndex = expertMode ? 3 : 2;
+  const processStepIndex = expertMode ? 4 : 3;
+  const launchStepIndex = expertMode ? 5 : 4;
 
   function goToStep(index: number) {
     if (!canUseStep(index)) {
@@ -156,7 +160,7 @@ export function CreationWizard({
     pushActivity(`${term('FIELD', mode)} added: ${field.label}`, `${field.label} akan muncul di ${draft.entities[entityIndex]?.name ?? 'data ini'}.`);
   }
 
-  function generateExperience(layout?: DesignedScreenLayout) {
+  function generateExperience(layout?: DesignedScreenLayout, silent = false) {
     setDraft((current) => {
       const nextDraft = {
       ...current,
@@ -171,10 +175,12 @@ export function CreationWizard({
                 columns: section.columns,
                 fields: section.fields.map((field) => ({
                   label: field.label,
+                  sourceLabel: field.sourceLabel,
                   required: field.required,
                   readonly: field.readonly,
                   visible: field.visible,
                   width: field.width,
+                  showInList: field.showInList,
                 })),
               })),
             },
@@ -200,7 +206,61 @@ export function CreationWizard({
         generated: nextGenerated,
       };
     });
-    pushActivity(expertMode ? 'Experience generated' : 'Layar dibuat', expertMode ? 'Forms, list views, detail pages, navigation, and API-ready metadata generated.' : 'Screen, daftar, dan menu sudah siap.');
+    if (!silent) {
+      pushActivity(expertMode ? 'Experience generated' : 'Layar dibuat', expertMode ? 'Forms, list views, detail pages, navigation, and API-ready metadata generated.' : 'Screen, daftar, dan menu sudah siap.');
+    }
+  }
+
+  function addInformationInDesigner(field: CreationFieldInput, layout: DesignedScreenLayout) {
+    setDraft((current) => {
+      const nextDraft = {
+        ...current,
+        entities: current.entities.map((entity, index) => {
+          if (index !== selectedEntityIndex || entity.fields.some((candidate) => candidate.label === field.label)) {
+            return entity;
+          }
+
+          return {
+            ...entity,
+            fields: [...entity.fields, field],
+          };
+        }),
+        screenLayouts: {
+          ...current.screenLayouts,
+          [layout.entityName]: {
+            screen: layout.screen,
+            entityName: layout.entityName,
+            sections: layout.sections.map((section) => ({
+              title: section.title,
+              columns: section.columns,
+              fields: section.fields.map((screenField) => ({
+                label: screenField.label,
+                sourceLabel: screenField.sourceLabel,
+                required: screenField.required,
+                readonly: screenField.readonly,
+                visible: screenField.visible,
+                width: screenField.width,
+                showInList: screenField.showInList,
+              })),
+            })),
+          },
+        },
+      };
+      const nextGenerated = generateMetadataSet(nextDraft, {
+        tenantId: context.tenantId,
+        domainCode: context.domainCode,
+        applicationCode: codeFromLabel(nextDraft.application.name || context.applicationCode),
+      });
+
+      return {
+        ...nextDraft,
+        forms: nextGenerated.forms.map((form) => form.code),
+        views: nextGenerated.views.map((view) => view.code),
+        navigation: nextGenerated.navigation ? [nextGenerated.navigation.code] : [],
+        generated: nextGenerated,
+      };
+    });
+    pushActivity(`${term('FIELD', mode)} added: ${field.label}`, `${field.label} langsung muncul di screen ${layout.entityName}.`);
   }
 
   async function publish() {
@@ -242,8 +302,8 @@ export function CreationWizard({
           steps={[
             { title: '1. Name the app', body: 'Choose what you want to build, such as Inventory or CRM.' },
             { title: '2. Add Data Objects', body: 'Create the things your business manages, such as Product, Customer, Asset, or Order.' },
-            { title: '3. Add Information', body: 'Each Data Object needs at least one detail, such as Name, Price, Stock, or Status.' },
-            { title: '4. Design Screens', body: 'Generate input screens and lists so users can work with the data.' },
+            { title: '3. Design Screen', body: 'Add information directly on the screen, arrange it, and preview it.' },
+            { title: '4. Workflow', body: 'Keep process simple for launch, then improve it later.' },
             { title: '5. Launch', body: 'RediOS checks readiness, publishes the version, and opens the generated app.' },
           ]}
           currentTip={nextRecommendedAction(step, draft, expertMode)}
@@ -258,7 +318,7 @@ export function CreationWizard({
 
         {step === 1 ? <DataModelStep onAddEntity={addEntity} entities={draft.entities} expertMode={expertMode} /> : null}
 
-        {step === 2 ? (
+        {expertMode && step === informationStepIndex ? (
           <section className="studio-wizard-body">
             <div className="studio-section-header">
               <div>
@@ -294,7 +354,7 @@ export function CreationWizard({
           </section>
         ) : null}
 
-        {step === 3 ? (
+        {step === screenStepIndex ? (
           <section className="studio-wizard-body">
             <h3>
               {expertMode ? 'FORM metadata' : 'Screen Design'}
@@ -302,7 +362,14 @@ export function CreationWizard({
             </h3>
             <p className="studio-muted">How should users enter and view this data?</p>
             {selectedEntity ? (
-              <ScreenDesigner entity={selectedEntity} onApply={(layout) => generateExperience(layout)} />
+              <ScreenDesigner
+                key={selectedEntity.name}
+                entity={selectedEntity}
+                expertMode={expertMode}
+                onApply={(layout) => generateExperience(layout)}
+                onLayoutChange={(layout) => generateExperience(layout, true)}
+                onAddInformation={addInformationInDesigner}
+              />
             ) : null}
             {!selectedEntity ? (
               <StudioButton
@@ -316,9 +383,9 @@ export function CreationWizard({
           </section>
         ) : null}
 
-        {step === 4 ? <ReviewStep draft={{ ...draft, generated }} expertMode={expertMode} /> : null}
+        {step === processStepIndex ? <ReviewStep draft={{ ...draft, generated }} expertMode={expertMode} /> : null}
 
-        {step === 5 ? (
+        {step === launchStepIndex ? (
           <section className="studio-wizard-body">
             {publishState === 'live' ? (
               <StudioCard>
@@ -646,6 +713,18 @@ function BusinessPreview({ draft }: { draft: CreationDraft }) {
 
   return (
     <div className="studio-business-preview">
+      <section className="studio-card" id="preview-app">
+        <span className="studio-kicker">Your Application</span>
+        <h3>{draft.application.name || 'Inventory App'}</h3>
+        <div className="studio-card-grid">
+          <PreviewGroup title="Screens" values={[`${primaryName} List`, `${primaryName} Form`]} />
+          <PreviewGroup title="Menu" values={[primaryName]} />
+          <PreviewGroup title="Data" values={[`${primaryName} Information`]} />
+        </div>
+        <StudioButton variant="secondary" onClick={() => document.getElementById('preview-app')?.scrollIntoView({ behavior: 'smooth' })} tooltip="Buka preview aplikasi di halaman ini.">
+          Open Preview App
+        </StudioButton>
+      </section>
       <div className="studio-preview-device studio-preview-desktop">
         <div className="studio-preview-menu">Menu: {draft.application.name || 'Inventory'}</div>
         <div className="studio-preview-toolbar">
@@ -821,13 +900,25 @@ function metadataForPublish(generated: GeneratedMetadataSet): MetadataDefinition
   ];
 }
 
-function highestUnlockedStep(draft: CreationDraft): number {
+function highestUnlockedStep(draft: CreationDraft, expertMode: boolean): number {
   if (!isApplicationComplete(draft)) {
     return 0;
   }
 
   if (!isDataModelComplete(draft)) {
     return 1;
+  }
+
+  if (!expertMode) {
+    if (!isExperienceComplete(draft)) {
+      return 2;
+    }
+
+    if (!isReviewComplete(draft)) {
+      return 3;
+    }
+
+    return 4;
   }
 
   if (!isFieldsComplete(draft)) {
@@ -882,6 +973,14 @@ function lockedStepMessage(index: number, draft: CreationDraft, expertMode: bool
     return expertMode ? 'Create an entity before adding fields.' : 'You need at least one Data Object before adding information.';
   }
 
+  if (!expertMode) {
+    if (index >= 3 && !isExperienceComplete(draft)) {
+      return 'Add information in Screen Design before continuing.';
+    }
+
+    return 'Finish the previous step first.';
+  }
+
   if (index >= 3 && !isFieldsComplete(draft)) {
     return expertMode ? 'Each Entity needs at least one Field before Form generation. Use the checklist below.' : 'Each Data Object needs at least one piece of information before designing screens. Use the checklist below.';
   }
@@ -899,7 +998,7 @@ function learningTitle(step: number, expertMode: boolean): string {
     return [term('APPLICATION', mode), term('ENTITY', mode), term('FIELD', mode), term('FORM', mode), term('WORKFLOW', mode), 'Publish'][step] ?? term('APPLICATION', mode);
   }
 
-  return ['Create Application', 'Create Data Object', 'Add Information', 'Design Screen', 'Set Process', 'Launch Application'][step] ?? 'Create Application';
+  return ['Create Application', 'Create Data Object', 'Design Screen', 'Set Process', 'Launch Application'][step] ?? 'Create Application';
 }
 
 function learningSummary(step: number, draft: CreationDraft, expertMode: boolean): string {
@@ -919,8 +1018,7 @@ function learningSummary(step: number, draft: CreationDraft, expertMode: boolean
   return [
     'Give your business application a clear name.',
     'What information do you want to manage? Examples: Product, Customer, Asset, Order.',
-    `What information does ${selectedEntity} contain? Examples: Product Name, Price, Stock, Photo, Barcode.`,
-    'How should users enter and view this data?',
+    `Add information directly on the ${selectedEntity} screen. It appears immediately on the canvas and preview.`,
     'How does your business process work?',
     'Launch prepares your application so users can start using it.',
   ][step] ?? 'Give your business application a clear name.';
@@ -943,14 +1041,13 @@ function nextRecommendedAction(step: number, draft: CreationDraft, expertMode: b
   }
 
   if (step === 2 && !isFieldsComplete(draft)) {
-    return 'Add Product Name, Price, Stock, Photo, or Barcode.';
+    return 'Click + Add Information, then add Name, Price, and Stock directly on the screen.';
   }
 
   return [
     'Choose a starter and name the application.',
     'Create the first Data Object.',
-    'Add the details users need to capture.',
-    'Design screens from your Data Object.',
+    'Add information directly on the screen and arrange it for users.',
     'Keep process simple for launch, then improve it later.',
     'Launch and open the generated application.',
   ][step] ?? 'Choose a starter and name the application.';

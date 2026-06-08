@@ -54,7 +54,7 @@ const productTemplates: ProductTemplate[] = [
 export function StudioTemplateGallery({ onCreateFromTemplate }: { onCreateFromTemplate?: () => void }) {
   return (
     <Panel title="Template Gallery">
-      <p className="studio-muted">Templates create metadata drafts only. They never create source files or business modules.</p>
+      <p className="studio-muted">Templates create application drafts only. They never create source files or business modules.</p>
       <div className="studio-card-grid">
         {productTemplates.map((template) => (
           <article key={template.code} className="studio-card">

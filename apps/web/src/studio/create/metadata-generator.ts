@@ -69,6 +69,8 @@ export function generateField(entityCode: string, input: CreationFieldInput, con
     validation: {
       unique: input.unique,
       helpText: input.helpText,
+      searchable: input.searchable,
+      showInList: input.showInList,
     },
     relation: input.type === 'Lookup' && input.relatedObject ? `${entityCode}_${codeFromLabel(input.relatedObject)}_RELATION` : undefined,
   });
@@ -116,14 +118,18 @@ export function generateForm(entity: CreationEntityInput, context: GeneratorCont
         title: section.title,
         order: sectionIndex + 1,
         fields: section.fields.map<FormFieldDefinition>((field, index) => {
-          const sourceField = entity.fields.find((candidate) => candidate.label === field.label) ?? entity.fields[index];
+          const sourceField = entity.fields.find((candidate) => candidate.label === (field.sourceLabel ?? field.label)) ?? entity.fields[index];
           return {
-            fieldCode: fieldCodeFromLabel(field.label),
+            fieldCode: fieldCodeFromLabel(field.sourceLabel ?? field.label),
             component: sourceField ? componentForField(sourceField) : 'TEXT_INPUT',
             order: index + 1,
             required: field.required ?? sourceField?.required ?? false,
             readonly: field.readonly ?? false,
             visible: field.visible ?? true,
+            validation: {
+              width: field.width,
+              showInList: field.showInList,
+            },
             lookup: sourceField?.type === 'Lookup' && sourceField.relatedObject
               ? {
                   relationCode: `${entityCode}_${codeFromLabel(sourceField.relatedObject)}_RELATION`,
@@ -145,6 +151,9 @@ export function generateForm(entity: CreationEntityInput, context: GeneratorCont
             required: field.required,
             readonly: false,
             visible: true,
+            validation: {
+              showInList: field.showInList,
+            },
             lookup: field.type === 'Lookup' && field.relatedObject
               ? {
                   relationCode: `${entityCode}_${codeFromLabel(field.relatedObject)}_RELATION`,
@@ -176,12 +185,12 @@ export function generateView(entity: CreationEntityInput, context: GeneratorCont
     code,
     entityCode,
     type: 'TABLE',
-    columns: entity.fields.slice(0, 6).map((field) => ({
+    columns: entity.fields.filter((field) => field.showInList !== false).slice(0, 6).map((field) => ({
       field: fieldCodeFromLabel(field.label),
       label: field.label,
       visible: true,
       sortable: field.type !== 'Long Text',
-      filterable: true,
+      filterable: field.searchable !== false,
     })),
     filters: [],
     enabled: true,

@@ -5,9 +5,11 @@ export type PreviewDevice = 'Desktop' | 'Tablet' | 'Mobile';
 
 export interface DesignedScreenField extends CreationFieldInput {
   id: string;
+  sourceLabel: string;
   width: 'Full' | 'Half' | 'Third';
   visible: boolean;
   readonly: boolean;
+  showInList: boolean;
 }
 
 export interface DesignedScreenSection {
@@ -45,9 +47,11 @@ export function toDesignedField(field: CreationFieldInput, index: number): Desig
   return {
     ...field,
     id: `${field.label}:${index}`,
+    sourceLabel: field.label,
     width: field.type === 'Long Text' ? 'Full' : 'Half',
     visible: true,
     readonly: false,
+    showInList: field.showInList ?? true,
   };
 }
 

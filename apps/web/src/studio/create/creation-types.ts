@@ -28,6 +28,8 @@ export interface CreationFieldInput {
   type: CreationFieldType;
   required: boolean;
   unique: boolean;
+  searchable?: boolean;
+  showInList?: boolean;
   defaultValue?: string;
   helpText?: string;
   relatedObject?: string;
@@ -48,10 +50,12 @@ export interface CreationScreenLayout {
     columns: number;
     fields: Array<{
       label: string;
+      sourceLabel?: string;
       required?: boolean;
       readonly?: boolean;
       visible?: boolean;
       width?: string;
+      showInList?: boolean;
     }>;
   }>;
 }

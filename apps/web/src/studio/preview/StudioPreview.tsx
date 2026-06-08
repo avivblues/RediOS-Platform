@@ -17,7 +17,7 @@ export function StudioPreview({
   page?: ResolvedUIPage;
 }) {
   return (
-    <Panel title="Preview Engine">
+    <Panel title="Application Preview">
       <div className="studio-action-row">
         <Badge tone={preview?.valid ? 'success' : 'info'}>{preview ? (preview.valid ? 'VALID' : 'NEEDS ATTENTION') : 'NO PREVIEW'}</Badge>
         {preview?.affected.map((item) => <Badge key={item}>{item}</Badge>)}
@@ -46,16 +46,16 @@ export function StudioPreview({
             ))}
           </section>
           <section className="studio-card">
-            <h4>Runtime Simulation</h4>
+            <h4>Launch Simulation</h4>
             <div className="studio-impact studio-impact-info">Simulation completed through the existing Simulation Engine.</div>
-            <div className="studio-muted">Use Expert Mode for raw runtime details in later Studio tooling.</div>
+            <div className="studio-muted">Use Expert Mode for deeper technical details.</div>
           </section>
         </div>
       ) : null}
       <section className="studio-card">
         <div className="studio-section-header">
           <h4>Desktop Preview</h4>
-          <span className="studio-muted">Rendered from metadata</span>
+          <span className="studio-muted">Rendered from current application setup</span>
         </div>
         <div className="studio-desktop-preview">
           <FormRenderer form={form} />
@@ -67,7 +67,7 @@ export function StudioPreview({
           <h4>Mobile Preview</h4>
           <span className="studio-muted">Adaptive experience placeholder</span>
         </div>
-        <div className="studio-mobile-preview">Mobile layout will use Adaptive Experience metadata when available.</div>
+        <div className="studio-mobile-preview">Mobile layout follows the adaptive experience settings when available.</div>
       </section>
     </Panel>
   );

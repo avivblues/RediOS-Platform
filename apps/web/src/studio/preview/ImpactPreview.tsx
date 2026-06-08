@@ -26,7 +26,7 @@ export function ImpactPreview({ preview }: { preview?: DesignerPreviewResult }) 
         return (
           <div key={row.label} className={breaking ? 'studio-impact studio-impact-breaking' : 'studio-impact studio-impact-info'}>
             <strong>{breaking ? '!' : 'OK'} {row.label}</strong>
-            <span>{breaking?.reason ?? (affected ? 'Affected metadata is safe to preview.' : 'No issue')}</span>
+            <span>{breaking?.reason ?? (affected ? 'Affected application pieces are safe to preview.' : 'No issue')}</span>
           </div>
         );
       })}
