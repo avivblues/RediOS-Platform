@@ -286,7 +286,7 @@ function ActiveWorkspace({
   onPublished: () => void;
 }) {
   if (!selection) {
-    return <Panel title="Studio Workspace">Select metadata from the explorer.</Panel>;
+    return <Panel title="Studio Workspace">Pilih bagian Studio untuk mulai membangun aplikasi.</Panel>;
   }
 
   if (selection.type === 'HOME') {
@@ -308,7 +308,7 @@ function ActiveWorkspace({
     const application = applications.find((metadata) => metadata.definition.code === selection.code) ?? applications[0];
 
     if (!application) {
-      return <Panel title="Application Builder">No application metadata available.</Panel>;
+      return <Panel title="Application Builder">Belum ada aplikasi yang tersedia.</Panel>;
     }
 
     return (
@@ -396,7 +396,7 @@ function ActiveWorkspace({
 
   return (
     <Panel title="Studio Tool">
-      <div className="studio-muted">This Studio area is available from metadata and will use the existing engine APIs when opened.</div>
+      <div className="studio-muted">{mode === 'EXPERT' ? 'This Studio area is available from metadata and will use the existing engine APIs when opened.' : 'Area Studio ini akan terbuka saat sudah tersedia untuk aplikasi.'}</div>
       {mode === 'EXPERT' ? <pre>{JSON.stringify(selection, null, 2)}</pre> : null}
     </Panel>
   );

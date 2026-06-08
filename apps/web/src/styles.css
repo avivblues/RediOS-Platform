@@ -231,6 +231,100 @@ a:focus-visible {
   gap: var(--redios-spacing-md);
 }
 
+.studio-editor {
+  display: grid;
+  gap: var(--redios-spacing-md);
+}
+
+.studio-editor-hero {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--redios-spacing-md);
+  align-items: flex-start;
+  border: 1px solid color-mix(in srgb, var(--redios-color-primary), transparent 82%);
+  border-radius: var(--redios-radius-large);
+  padding: var(--redios-spacing-md);
+  background: color-mix(in srgb, var(--redios-color-primary), var(--redios-color-surface) 96%);
+}
+
+.studio-editor-hero h2 {
+  margin: var(--redios-spacing-xs) 0;
+}
+
+.studio-editor-status {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--redios-spacing-xs);
+  justify-content: flex-end;
+}
+
+.studio-journey {
+  display: grid;
+  gap: var(--redios-spacing-md);
+  border: 1px solid color-mix(in srgb, var(--redios-color-primary), transparent 82%);
+  border-radius: var(--redios-radius-large);
+  padding: var(--redios-spacing-md);
+  background: var(--redios-color-surface);
+  box-shadow: 0 8px 28px color-mix(in srgb, var(--redios-color-text), transparent 94%);
+}
+
+.studio-journey-compact {
+  gap: var(--redios-spacing-sm);
+  padding: var(--redios-spacing-sm);
+  box-shadow: none;
+}
+
+.studio-journey-steps {
+  display: grid;
+  gap: var(--redios-spacing-xs);
+}
+
+.studio-journey-step {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: var(--redios-spacing-sm);
+  align-items: start;
+  border: 1px solid color-mix(in srgb, var(--redios-color-text), transparent 86%);
+  border-radius: var(--redios-radius-medium);
+  padding: var(--redios-spacing-sm);
+  background: color-mix(in srgb, var(--redios-color-surface), var(--redios-color-background) 18%);
+  color: var(--redios-color-text);
+  text-align: left;
+  cursor: pointer;
+}
+
+.studio-journey-step p {
+  margin: var(--redios-spacing-xs) 0 0;
+  color: color-mix(in srgb, var(--redios-color-text), transparent 32%);
+}
+
+.studio-journey-step-complete {
+  border-color: color-mix(in srgb, var(--redios-color-success, #16a34a), transparent 60%);
+  background: #f0fdf4;
+}
+
+.studio-assistant-panel {
+  display: grid;
+  gap: var(--redios-spacing-sm);
+  border-radius: var(--redios-radius-large);
+  padding: var(--redios-spacing-md);
+  background: color-mix(in srgb, var(--redios-color-primary), var(--redios-color-surface) 94%);
+}
+
+.studio-assistant-panel ul {
+  margin: var(--redios-spacing-xs) 0 0;
+  padding-left: var(--redios-spacing-lg);
+}
+
+.studio-home-starter {
+  display: grid;
+  gap: var(--redios-spacing-xs);
+}
+
+.studio-home-icon {
+  font-size: 1.75rem;
+}
+
 .studio-ds-panel,
 .studio-ds-card {
   background: var(--redios-color-surface);
@@ -786,6 +880,14 @@ a:focus-visible {
   background: color-mix(in srgb, var(--redios-color-primary), transparent 92%);
 }
 
+.studio-launch-progress {
+  display: grid;
+  gap: var(--redios-spacing-xs);
+  border-radius: var(--redios-radius-large);
+  padding: var(--redios-spacing-md);
+  background: color-mix(in srgb, var(--redios-color-primary), var(--redios-color-surface) 94%);
+}
+
 .studio-check-row {
   display: flex;
   align-items: center;
@@ -1115,6 +1217,11 @@ a:focus-visible {
   }
 
   .studio-hero {
+    flex-direction: column;
+  }
+
+  .studio-editor-hero,
+  .studio-builder-intro {
     flex-direction: column;
   }
 

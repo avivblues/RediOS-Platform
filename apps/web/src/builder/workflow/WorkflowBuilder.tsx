@@ -204,7 +204,7 @@ export function WorkflowBuilder({
       <div className="studio-section-header">
         <div>
           <strong>{workflow.code}</strong>
-          <div className="studio-muted">Entity binding comes from workflow metadata: {workflow.entityCode}</div>
+          <div className="studio-muted">Process ini terhubung ke data: {workflow.entityCode}</div>
         </div>
         <div className="studio-action-row">
           <Button variant="secondary" onClick={() => void ensureDraft()} tooltip="Buat rancangan alur kerja sebelum melakukan perubahan.">
@@ -245,7 +245,7 @@ export function WorkflowBuilder({
               </Badge>
             ))}
           </div>
-          <pre>{JSON.stringify(dependency, null, 2)}</pre>
+          <div className="studio-muted">Detail teknis tersedia di Expert Mode.</div>
         </section>
       ) : null}
       <WorkflowSimulator workflow={workflow} runtime={runtime} context={context} />

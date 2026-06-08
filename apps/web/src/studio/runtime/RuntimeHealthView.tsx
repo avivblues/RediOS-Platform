@@ -12,30 +12,30 @@ export function RuntimeHealthView({
 
   if (!definition) {
     return (
-      <Panel title="Runtime Health">
+      <Panel title="Launch Health">
         <EmptyState
-          title="No active runtime package yet"
-          description="Publish metadata or run the Runtime Compiler to create an active package."
+          title="Belum ada Published Version aktif"
+          description="Launch aplikasi untuk membuat versi aktif yang siap digunakan."
         />
       </Panel>
     );
   }
 
   return (
-    <Panel title="Runtime Health">
+    <Panel title="Launch Health">
       <div className="studio-section-header">
         <div>
-          <span className="studio-kicker">Active Runtime Package</span>
+          <span className="studio-kicker">Active Published Version</span>
           <h3>{definition.code}</h3>
         </div>
         <Badge tone={definition.status === 'ACTIVE' ? 'success' : 'warning'}>{definition.status}</Badge>
       </div>
       <div className="studio-runtime-grid">
         <RuntimeMetric label="Version" value={definition.metadataVersion} />
-        <RuntimeMetric label="Entities" value={Object.keys(definition.content.entities).length} />
-        <RuntimeMetric label="Forms" value={Object.keys(definition.content.forms).length} />
-        <RuntimeMetric label="Views" value={Object.keys(definition.content.views).length} />
-        <RuntimeMetric label="Workflow" value={Object.keys(definition.content.workflows).length} />
+        <RuntimeMetric label="Data Object" value={Object.keys(definition.content.entities).length} />
+        <RuntimeMetric label="Screen" value={Object.keys(definition.content.forms).length} />
+        <RuntimeMetric label="List Screen" value={Object.keys(definition.content.views).length} />
+        <RuntimeMetric label="Process" value={Object.keys(definition.content.workflows).length} />
         <RuntimeMetric label="Checksum" value={definition.checksum} />
       </div>
     </Panel>

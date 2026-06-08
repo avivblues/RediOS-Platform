@@ -10,7 +10,8 @@ import { humanizeCode } from '../../studio/humanizer/HumanizerEngine';
 import { GuidedHint } from '../../studio/help/GuidedHint';
 import { HelpTooltip } from '../../studio/help/HelpTooltip';
 import { StudioLearningCoach } from '../../studio/help/StudioLearningCoach';
-import { StudioBadge, StudioPanel } from '../../studio/design-system/StudioDesignSystem';
+import { StudioBadge } from '../../studio/design-system/StudioDesignSystem';
+import { MetadataEditor } from '../../studio/editor/MetadataEditor';
 
 export function FormBuilder({
   form,
@@ -90,8 +91,20 @@ export function FormBuilder({
   }
 
   return (
+    <MetadataEditor
+      definition={{
+        mode: 'EDIT',
+        title: 'Ubah Layar Input',
+        subtitle: 'Gunakan alur yang sama seperti create: pilih informasi, susun layar, pratinjau, lalu terbitkan.',
+        status: (
+          <>
+            <StudioBadge tone={draft ? 'warning' : 'info'}>{draft ? 'Ada rancangan perubahan' : 'Belum ada perubahan'}</StudioBadge>
+            {previewResult ? <StudioBadge tone={previewResult.valid ? 'success' : 'danger'}>{previewResult.valid ? 'Pratinjau valid' : 'Perlu diperiksa'}</StudioBadge> : null}
+          </>
+        ),
+      }}
+    >
     <div className="studio-edit-flow">
-      <StudioPanel title="Ubah Layar Input">
         <div className="studio-builder-intro studio-edit-hero">
           <div>
             <span className="studio-kicker">Edit Aplikasi</span>
@@ -172,8 +185,8 @@ export function FormBuilder({
             </div>
           </div>
         </div>
-      </StudioPanel>
     </div>
+    </MetadataEditor>
   );
 }
 

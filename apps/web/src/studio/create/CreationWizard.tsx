@@ -15,6 +15,7 @@ import { ApplicationHealthIndicator, applicationHealthChecks } from '../readines
 import { suggestInformationForObject } from '../suggestions/StudioSuggestionEngine';
 import { pluralTerm, term, terminologyMode } from '../terminology/terminology.service';
 import { StudioActivityTimeline, type StudioActivityItem } from '../activity/StudioActivityTimeline';
+import { MetadataEditor } from '../editor/MetadataEditor';
 import {
   StudioBadge,
   StudioButton,
@@ -34,12 +35,36 @@ import { codeFromLabel, generateMetadataSet } from './metadata-generator';
 
 const simpleSteps = ['Application', 'Data Object', 'Information', 'Screen', 'Process', 'Launch'];
 const appStarterCards = [
-  { label: 'Inventory', icon: 'BOX', description: 'Track products, stock, suppliers, and movements.' },
-  { label: 'CRM', icon: 'PEOPLE', description: 'Manage customers, contacts, and sales activity.' },
-  { label: 'Asset Management', icon: 'TOOLS', description: 'Manage assets, maintenance, and work orders.' },
-  { label: 'Helpdesk', icon: 'HEADSET', description: 'Track support tickets and resolution workflows.' },
-  { label: 'Blank App', icon: 'SPARK', description: 'Start from an empty metadata model.' },
+  { label: 'Inventory', icon: 'BOX', description: 'Kelola produk, stok, pemasok, dan pergerakan barang.' },
+  { label: 'CRM', icon: 'PEOPLE', description: 'Kelola pelanggan, kontak, dan aktivitas penjualan.' },
+  { label: 'Asset Management', icon: 'TOOLS', description: 'Kelola aset, perawatan, dan pekerjaan lapangan.' },
+  { label: 'Helpdesk', icon: 'HEADSET', description: 'Kelola permintaan bantuan dan tindak lanjut tim.' },
+  { label: 'Blank App', icon: 'SPARK', description: 'Mulai dari aplikasi kosong.' },
 ];
+
+function createDraftFromStarter(): CreationDraft {
+  const draft = createInitialCreationDraft();
+
+  try {
+    const starter = window.localStorage.getItem('redios:studio:starter');
+
+    if (starter && starter !== 'Blank App') {
+      return {
+        ...draft,
+        application: {
+          ...draft.application,
+          name: `${starter} App`,
+          description: appStarterCards.find((card) => card.label === starter)?.description ?? `Create ${starter} application`,
+          startFrom: 'Template',
+        },
+      };
+    }
+  } catch {
+    return draft;
+  }
+
+  return draft;
+}
 
 export function CreationWizard({
   designer,
@@ -51,7 +76,7 @@ export function CreationWizard({
   expertMode?: boolean;
 }) {
   const [step, setStep] = useState(0);
-  const [draft, setDraft] = useState<CreationDraft>(() => createInitialCreationDraft());
+  const [draft, setDraft] = useState<CreationDraft>(() => createDraftFromStarter());
   const [selectedEntityIndex, setSelectedEntityIndex] = useState(0);
   const [activity, setActivity] = useState<StudioActivityItem[]>([]);
   const [publishState, setPublishState] = useState<'idle' | 'publishing' | 'live'>('idle');
@@ -93,13 +118,13 @@ export function CreationWizard({
       description: appStarterCards.find((card) => card.label === label)?.description,
       startFrom: label === 'Blank App' ? 'Blank' : 'Template',
     });
-    pushActivity(`Starter selected: ${label}`, expertMode ? 'Application metadata draft initialized.' : 'Application plan started.');
+    pushActivity(`Starter selected: ${label}`, expertMode ? 'Application metadata draft initialized.' : 'Rancangan aplikasi dimulai.');
   }
 
   function addEntity(entity: CreationEntityInput) {
     setDraft((current) => ({ ...current, entities: [...current.entities, entity] }));
     setSelectedEntityIndex(draft.entities.length);
-    pushActivity(`${term('ENTITY', mode)} added: ${entity.name}`, expertMode ? 'ENTITY metadata generated in Studio draft.' : 'Your business information structure is ready for details.');
+    pushActivity(`${term('ENTITY', mode)} added: ${entity.name}`, expertMode ? 'ENTITY metadata generated in Studio draft.' : 'Struktur data bisnis siap diisi informasi.');
   }
 
   function addField(field: CreationFieldInput) {
@@ -107,7 +132,7 @@ export function CreationWizard({
       ...current,
       entities: current.entities.map((entity, index) => (index === selectedEntityIndex ? { ...entity, fields: [...entity.fields, field] } : entity)),
     }));
-    pushActivity(`${term('FIELD', mode)} added: ${field.label}`, expertMode ? `${field.type} field queued for ${selectedEntity?.name ?? 'object'}.` : `${field.label} will appear on the ${selectedEntity?.name ?? 'object'} screen.`);
+    pushActivity(`${term('FIELD', mode)} added: ${field.label}`, expertMode ? `${field.type} field queued for ${selectedEntity?.name ?? 'object'}.` : `${field.label} akan muncul di layar ${selectedEntity?.name ?? 'data ini'}.`);
   }
 
   function addSuggestedField(label: string, type: CreationFieldInput['type'] = 'Text') {
@@ -125,7 +150,7 @@ export function CreationWizard({
       entities: current.entities.map((entity, index) => (index === entityIndex ? { ...entity, fields: [...entity.fields, field] } : entity)),
     }));
     setSelectedEntityIndex(entityIndex);
-    pushActivity(`${term('FIELD', mode)} added: ${field.label}`, `${field.label} will appear on ${draft.entities[entityIndex]?.name ?? 'this object'}.`);
+    pushActivity(`${term('FIELD', mode)} added: ${field.label}`, `${field.label} akan muncul di ${draft.entities[entityIndex]?.name ?? 'data ini'}.`);
   }
 
   function generateExperience() {
@@ -136,13 +161,13 @@ export function CreationWizard({
       navigation: generated.navigation ? [generated.navigation.code] : [],
       generated,
     }));
-    pushActivity(expertMode ? 'Experience generated' : 'Screens designed', expertMode ? 'Forms, list views, detail pages, navigation, and API-ready metadata generated.' : 'Input screens, list screens, and menu entries are ready.');
+    pushActivity(expertMode ? 'Experience generated' : 'Layar dibuat', expertMode ? 'Forms, list views, detail pages, navigation, and API-ready metadata generated.' : 'Screen, daftar, dan menu sudah siap.');
   }
 
   async function publish() {
     setPublishState('publishing');
     setPublishError(undefined);
-    pushActivity(expertMode ? 'Designer publish started' : 'Launch started', expertMode ? 'Generated metadata submitted to Designer Publish API.' : 'RediOS is preparing the application for users.');
+    pushActivity(expertMode ? 'Designer publish started' : 'Launch dimulai', expertMode ? 'Generated metadata submitted to Designer Publish API.' : 'RediOS sedang menyiapkan aplikasi untuk pengguna.');
 
     try {
       const result = await designer.publishGenerated(metadataForPublish(generated));
@@ -161,6 +186,14 @@ export function CreationWizard({
   }
 
   return (
+    <MetadataEditor
+      definition={{
+        mode: 'CREATE',
+        title: 'Buat Aplikasi',
+        subtitle: 'RediOS memandu dari ide, data, layar, proses, sampai aplikasi siap digunakan.',
+        status: <StudioBadge tone={isReviewComplete(draft) ? 'success' : 'info'}>{calculateReadiness(draft, publishState === 'live', expertMode).percentage}% ready</StudioBadge>,
+      }}
+    >
     <div className="studio-create-grid">
       <StudioPanel title="Create Application">
         <FirstTimeStudioTour />
@@ -209,9 +242,9 @@ export function CreationWizard({
               <>
                 {selectedEntity.fields.length === 0 ? (
                   <StudioEmptyState
-                    title="No information fields yet"
+                    title="You haven't created anything yet."
                     description={`Information describes what is stored in ${selectedEntity.name}. Examples: Product Name, Price, Quantity.`}
-                    action={<StudioButton onClick={() => addSuggestedField('Product Name')} tooltip={`Tambah contoh informasi pertama untuk ${selectedEntity.name}, supaya bisa lanjut ke desain layar.`}>Add First Information</StudioButton>}
+                    action={<StudioButton onClick={() => addSuggestedField('Product Name')} tooltip={`Tambah contoh informasi pertama untuk ${selectedEntity.name}, supaya bisa lanjut ke desain layar.`}>Add Information</StudioButton>}
                   />
                 ) : null}
                 <FieldBuilder entities={draft.entities} objectName={selectedEntity.name} onAddField={addField} expertMode={expertMode} />
@@ -245,9 +278,9 @@ export function CreationWizard({
           <section className="studio-wizard-body">
             {publishState === 'live' ? (
               <StudioCard>
-                <h3>Your application is live</h3>
+                <h3>Your application is ready</h3>
                 <p className="studio-muted">
-                  {expertMode ? 'Publish saved definitions, compiled the package, and prepared the generated application route.' : 'Your application is prepared and ready for users.'}
+                  {expertMode ? 'Publish saved definitions, compiled the package, and prepared the generated application route.' : 'Aplikasi sudah siap digunakan.'}
                 </p>
                 <ReadinessMeter draft={{ ...draft, generated }} runtimeCompiled expertMode={expertMode} />
                 <div className="studio-action-row">
@@ -265,9 +298,10 @@ export function CreationWizard({
             ) : (
               <>
                 <h3>
-                  {expertMode ? 'Before Publish' : 'Launch Application'}
+                  {expertMode ? 'Before Publish' : 'Launch Application 🚀'}
                   <HelpTooltip label={expertMode ? 'Publish' : 'Launch'}>Launch prepares your application so users can start using it.</HelpTooltip>
                 </h3>
+                {publishState === 'publishing' ? <LaunchProgress /> : null}
                 <ApplicationHealthIndicator
                   checks={applicationHealthChecks({
                     dataCount: draft.entities.length,
@@ -284,7 +318,7 @@ export function CreationWizard({
                   disabled={!isReviewComplete(draft)}
                   tooltip={isReviewComplete(draft) ? 'Periksa kesiapan, terbitkan versi, lalu aktifkan aplikasi.' : 'Lengkapi aplikasi, data, informasi, dan layar dulu sebelum diluncurkan.'}
                 >
-                  {publishState === 'publishing' ? (expertMode ? 'Publishing...' : 'Launching...') : expertMode ? 'Publish Application' : '🚀 Launch Application'}
+                  {publishState === 'publishing' ? (expertMode ? 'Publishing...' : 'Preparing application...') : expertMode ? 'Publish Application' : 'Launch Application 🚀'}
                 </StudioButton>
               </>
             )}
@@ -312,6 +346,7 @@ export function CreationWizard({
       </LearningPanel>
       <StudioActivityTimeline items={activity} />
     </div>
+    </MetadataEditor>
   );
 }
 
@@ -411,15 +446,15 @@ function BuildPreviewPanel({ draft, expertMode }: { draft: CreationDraft; expert
   const mode = terminologyMode(expertMode);
 
   return (
-    <StudioPanel title={expertMode ? 'Build Preview and Developer View' : 'Business Preview'}>
+    <StudioPanel title={expertMode ? 'Build Preview and Developer View' : 'Application Preview'}>
       <div className="studio-build-preview">
-        <h3>Your application contains:</h3>
+        <h3>{expertMode ? 'Your application contains:' : 'Your application will look like this'}</h3>
         <PreviewGroup title={`📦 ${pluralTerm('ENTITY', mode)}`} values={draft.entities.map((entity) => entity.name)} />
         <PreviewGroup title={`📝 ${pluralTerm('FORM', mode)}`} values={generated.forms.map((form) => humanizeCode(form.code))} ready={isFieldsComplete(draft)} />
         <PreviewGroup title={`📋 ${pluralTerm('VIEW', mode)}`} values={generated.views.map((view) => humanizeCode(view.code))} ready={isFieldsComplete(draft)} />
         <PreviewGroup title="⚙ Automation" values={['Not configured']} ready={false} />
         <PreviewLine label={`🚀 ${term('RUNTIME_PACKAGE', mode)}`} value={isReviewComplete(draft) ? 'Ready' : 'Waiting for completed steps'} ready={isReviewComplete(draft)} />
-        <PreviewGroup title="Screens" values={uiPages.map((page) => humanizeCode(page.code))} ready={isFieldsComplete(draft)} />
+        <PreviewGroup title="Screen" values={uiPages.map((page) => humanizeCode(page.code))} ready={isFieldsComplete(draft)} />
       </div>
       {!expertMode ? <BusinessPreview draft={draft} /> : null}
       {expertMode ? (
@@ -456,6 +491,19 @@ function ReviewStep({ draft, expertMode }: { draft: CreationDraft; expertMode: b
   );
 }
 
+function LaunchProgress() {
+  return (
+    <div className="studio-launch-progress" aria-label="Launch progress">
+      {['Preparing application...', 'Checking data', 'Creating screens', 'Activating version'].map((item) => (
+        <div key={item} className="studio-list-row">
+          <span>✓</span>
+          <strong>{item}</strong>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 function BuildCounts({ draft, expertMode }: { draft: CreationDraft; expertMode: boolean }) {
   const generated = draft.generated.entities.length > 0 ? draft.generated : generateMetadataSet(draft, { tenantId: 'preview', applicationCode: codeFromLabel(draft.application.name || 'APP'), domainCode: 'preview' });
   const mode = terminologyMode(expertMode);
@@ -476,7 +524,7 @@ function PreviewGroup({ title, values, ready = values.length > 0 }: { title: str
   return (
     <div className="studio-preview-group">
       <strong>{title}</strong>
-      {values.length === 0 ? <div className="studio-muted">No information fields yet</div> : null}
+      {values.length === 0 ? <div className="studio-muted">You haven't created anything yet.</div> : null}
       {values.map((value) => (
         <div key={value}>
           <StudioBadge tone={ready ? 'success' : 'info'}>{ready ? 'Ready' : 'Planned'}</StudioBadge> {value}
@@ -506,8 +554,9 @@ function BusinessPreview({ draft }: { draft: CreationDraft }) {
   return (
     <div className="studio-business-preview">
       <div className="studio-preview-device studio-preview-desktop">
+        <div className="studio-preview-menu">Menu: {draft.application.name || 'Inventory'}</div>
         <div className="studio-preview-toolbar">
-          <strong>{primaryName} List</strong>
+          <strong>Screen: {primaryName} List</strong>
           <button type="button">+ Add {primaryName}</button>
         </div>
         <div className="studio-preview-table">
@@ -617,7 +666,7 @@ function RecommendedNextStep({
         <ConceptCard concept="Data Object" />
       ) : selectedEntity.fields.length === 0 ? (
         <>
-          <p className="studio-muted">Current: Created {selectedEntity.name} Data Object.</p>
+          <p className="studio-muted">Great, your app has {selectedEntity.name}.</p>
           <p>Next: Add information.</p>
           <p className="studio-muted">Why: Users need details to enter {selectedEntity.name.toLowerCase()} information.</p>
           <div className="studio-chip-list">

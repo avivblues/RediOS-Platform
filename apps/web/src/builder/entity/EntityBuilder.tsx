@@ -99,21 +99,21 @@ export function EntityBuilder({
   }
 
   return (
-    <Panel title="Entity Builder">
+    <Panel title="Data Builder">
       <div className="studio-section-header">
         <div>
-          <strong>{entityCode ?? 'No entity selected'}</strong>
-          <div className="studio-muted">Fields are edited through form draft operations.</div>
+          <strong>{entityCode ?? 'Belum ada data dipilih'}</strong>
+          <div className="studio-muted">Informasi diedit melalui rancangan layar.</div>
         </div>
         <Button variant="secondary" onClick={() => void ensureDraft()} disabled={!form} tooltip={form ? 'Buat rancangan perubahan untuk data ini.' : 'Pilih layar input atau data dulu.'}>
-          Create Draft
+          Buat Rancangan
         </Button>
       </div>
       <div className="studio-action-row">
-        <Input value={fieldCode} placeholder="fieldCode" onChange={setFieldCode} />
+        <Input value={fieldCode} placeholder="Kode informasi" onChange={setFieldCode} />
         <Select value={component} options={['TEXT_INPUT', 'TEXT_AREA', 'NUMBER_INPUT', 'DATE_PICKER', 'SELECT', 'LOOKUP', 'BADGE']} onChange={setComponent} />
         <Button onClick={() => void addField()} disabled={!form || !fieldCode} tooltip={form && fieldCode ? 'Tambahkan informasi ini ke rancangan layar.' : 'Pilih layar dan isi kode informasi dulu.'}>
-          Add Field
+          Tambah Informasi
         </Button>
       </div>
       <div className="studio-list">
@@ -122,7 +122,7 @@ export function EntityBuilder({
             <span>{field.fieldCode}</span>
             <span>{field.component}</span>
             <Button variant="secondary" onClick={() => void toggleRequired(field, index)} tooltip="Ubah apakah informasi ini wajib diisi pengguna.">
-              Required: {String(field.required)}
+              Wajib: {field.required ? 'Ya' : 'Tidak'}
             </Button>
             <Button variant="danger" onClick={() => void removeField(field)} tooltip="Hapus informasi ini dari rancangan layar. Pratinjau dulu sebelum diterbitkan.">
               Remove
@@ -132,10 +132,10 @@ export function EntityBuilder({
       </div>
       <div className="studio-action-row">
         <Button variant="secondary" onClick={() => void preview()} disabled={!draft} tooltip={draft ? 'Cek dampak perubahan data sebelum diterbitkan.' : 'Buat rancangan perubahan dulu.'}>
-          Preview
+          Pratinjau
         </Button>
         <Button onClick={() => void publish()} disabled={!draft} tooltip={draft ? 'Terbitkan rancangan perubahan agar aktif di aplikasi.' : 'Belum ada rancangan yang bisa diterbitkan.'}>
-          Publish
+          Terbitkan
         </Button>
       </div>
     </Panel>

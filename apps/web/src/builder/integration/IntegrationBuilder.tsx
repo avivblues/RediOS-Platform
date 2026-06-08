@@ -194,7 +194,12 @@ export function IntegrationBuilder({
             <Edge x1={216} y1={148} x2={280} y2={148} label="map" />
             <Edge x1={456} y1={148} x2={520} y2={148} label={connector?.type ?? integration?.connector.type ?? 'connector'} />
           </Canvas>
-          {testResult ? <pre className="studio-card">{JSON.stringify(testResult, null, 2)}</pre> : null}
+          {testResult ? (
+            <div className="studio-card">
+              <strong>Hasil test tersedia</strong>
+              <p className="studio-muted">Koneksi berhasil merespons. Detail teknis tersedia di Expert Mode.</p>
+            </div>
+          ) : null}
         </section>
         <section className="studio-card">
           <h4>Property Editor</h4>

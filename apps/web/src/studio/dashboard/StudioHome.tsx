@@ -1,11 +1,13 @@
+import { useState } from 'react';
 import type { ApplicationDefinition, EntityDefinition, MetadataDefinition } from '@redios/shared';
 import { Button } from '../../components/atomic/atoms/Atoms';
-import { Panel } from '../../components/atomic/organisms/Organisms';
 import type { MetadataDebugTree } from '../../core/api/metadata-client';
 import type { ExplorerSelection } from '../explorer/ApplicationExplorer';
 import { humanizeCode, humanizeMetadata } from '../humanizer/HumanizerEngine';
 import { ApplicationHealthIndicator, applicationHealthChecks } from '../readiness/ApplicationHealthIndicator';
-import { term, terminologyMode } from '../terminology/terminology.service';
+import { StudioPanel } from '../design-system/StudioDesignSystem';
+import { createApplicationJourney, createStarterJourney } from '../journey/JourneyEngine';
+import { JourneyProgress } from '../journey/JourneyProgress';
 
 export function StudioHome({
   tree,
@@ -20,35 +22,44 @@ export function StudioHome({
   runtimeStatus?: string;
   onSelect: (selection: ExplorerSelection) => void;
 }) {
-  const mode = terminologyMode(false);
+  const [starterJourney, setStarterJourney] = useState(() => createStarterJourney('Start Blank'));
+
+  function startJourney(starter: HomeStarter) {
+    window.localStorage.setItem('redios:studio:starter', starter.template);
+    setStarterJourney(createStarterJourney(starter.title));
+    onSelect({ type: 'CREATE_APPLICATION', code: 'CREATE_APPLICATION' });
+  }
 
   return (
     <div className="studio-home">
       <section className="studio-hero">
         <div>
-          <span className="studio-kicker">Welcome to RediOS Studio</span>
-          <h2>Customize enterprise applications without editing code.</h2>
-          <p className="studio-muted">Choose an application, update its experience, preview impact, then launch safely through guided checks.</p>
-        </div>
-        <div className="studio-action-row">
-          <Button onClick={() => onSelect({ type: 'CREATE_APPLICATION', code: 'CREATE_APPLICATION' })} tooltip="Mulai panduan untuk membuat aplikasi baru.">Create Application</Button>
-          <Button variant="secondary" onClick={() => onSelect({ type: 'APPLICATION_BUILDER', code: tree.applications[0] ?? 'APPLICATIONS' })} tooltip="Buka aplikasi yang sudah ada untuk diubah dengan aman.">
-            Modify Existing App
-          </Button>
-          <Button variant="secondary" onClick={() => onSelect({ type: 'TEMPLATES', code: 'TEMPLATES' })} tooltip="Pilih template untuk membuat rancangan aplikasi.">Import Template</Button>
+          <span className="studio-kicker">Selamat datang di RediOS Studio</span>
+          <h2>Apa yang ingin kamu buat?</h2>
+          <p className="studio-muted">Pilih kebutuhan bisnis, lalu RediOS akan memandu dari ide sampai aplikasi siap digunakan.</p>
         </div>
       </section>
 
-      <div className="studio-home-grid">
-        <MetricCard label="Applications" value={tree.applications.length} onClick={() => onSelect({ type: 'APPLICATION_BUILDER', code: tree.applications[0] ?? 'APPLICATIONS' })} />
-        <MetricCard label={`${term('FORM', mode)}s`} value={tree.forms.length} onClick={() => onSelect({ type: 'FORMS', code: tree.forms[0] ?? 'FORMS' })} />
-        <MetricCard label="Screens" value={tree.ui.length} onClick={() => onSelect({ type: 'PAGES', code: tree.ui[0] ?? 'PAGES' })} />
-        <MetricCard label={term('WORKFLOW', mode)} value={tree.workflows.length} onClick={() => onSelect({ type: 'WORKFLOWS', code: tree.workflows[0] ?? 'WORKFLOWS' })} />
-        <MetricCard label={term('INTEGRATION', mode)} value={tree.integrations.length + tree.connectors.length} onClick={() => onSelect({ type: 'INTEGRATIONS', code: tree.integrations[0] ?? 'INTEGRATIONS' })} />
-        <MetricCard label={`${term('RUNTIME_PACKAGE', mode)} Status`} value={runtimeStatus ?? 'Not launched'} onClick={() => onSelect({ type: 'RUNTIME', code: 'RUNTIME' })} />
+      <div className="studio-card-grid">
+        {homeStarters.map((starter) => (
+          <button
+            key={starter.template}
+            className="studio-ds-card studio-ds-card-interactive studio-home-starter"
+            type="button"
+            onClick={() => startJourney(starter)}
+            title={starter.tooltip}
+            data-tooltip={starter.tooltip}
+          >
+            <span className="studio-home-icon">{starter.icon}</span>
+            <strong>{starter.title}</strong>
+            <span className="studio-muted">{starter.description}</span>
+          </button>
+        ))}
       </div>
 
-      <Panel title="Your Applications">
+      <JourneyProgress journey={starterJourney} onSelect={onSelect} compact />
+
+      <StudioPanel title="Aplikasi Anda">
         <div className="studio-card-grid">
           {applications.length === 0 ? (
             <EmptyWorkspaceCards onSelect={onSelect} />
@@ -64,9 +75,9 @@ export function StudioHome({
                 <span className="studio-kicker">{human.icon}</span>
                 <h3>{app.name || human.label}</h3>
                 <p>{app.description ?? human.description}</p>
-                <div className="studio-muted">{app.entityCodes.length} Data Objects</div>
-                <div className="studio-muted">{tree.forms.length} Input Screens</div>
-                <div className="studio-muted">{workflowCount} Processes</div>
+                <div className="studio-muted">{app.entityCodes.length} Data Object</div>
+                <div className="studio-muted">{tree.forms.length} Screen</div>
+                <div className="studio-muted">{workflowCount} Process</div>
                 <ApplicationHealthIndicator
                   checks={applicationHealthChecks({
                     dataCount: app.entityCodes.length,
@@ -75,7 +86,12 @@ export function StudioHome({
                     processCount: workflowCount,
                   })}
                 />
-                <strong>{app.enabled ? 'Published' : 'Draft'}</strong>
+                <JourneyProgress
+                  journey={createApplicationJourney({ application: metadata, entities, tree, launched: app.enabled || runtimeStatus === 'ACTIVE' })}
+                  onSelect={onSelect}
+                  compact
+                />
+                <strong>{app.enabled ? 'Launched' : 'In progress'}</strong>
                 <div className="studio-action-row">
                   <Button onClick={() => onSelect({ type: 'APPLICATION_BUILDER', code: app.code })} tooltip={`Ubah data, layar, alur kerja, dan izin akses untuk ${app.name || human.label}.`}>Customize</Button>
                 </div>
@@ -83,29 +99,28 @@ export function StudioHome({
             );
           })}
         </div>
-      </Panel>
+      </StudioPanel>
     </div>
   );
 }
 
 function EmptyWorkspaceCards({ onSelect }: { onSelect: (selection: ExplorerSelection) => void }) {
-  const starters = ['Manage Products', 'Manage Customers', 'Manage Tasks', 'Start Blank'];
-
   return (
     <section className="studio-empty-workspace">
-      <h3>What do you want to build?</h3>
+      <h3>Anda belum membuat apa pun.</h3>
+      <p className="studio-muted">Mulai dengan membuat Data Object pertama. Contoh: Product, Customer, Asset.</p>
       <div className="studio-card-grid">
-        {starters.map((starter) => (
+        {homeStarters.map((starter) => (
           <button
-            key={starter}
+            key={starter.template}
             className="studio-ds-card studio-ds-card-interactive"
             type="button"
             onClick={() => onSelect({ type: 'CREATE_APPLICATION', code: 'CREATE_APPLICATION' })}
-            title={`Mulai panduan pembuatan untuk ${starter}.`}
-            data-tooltip={`Mulai panduan pembuatan untuk ${starter}.`}
+            title={starter.tooltip}
+            data-tooltip={starter.tooltip}
           >
-            <strong>{starter}</strong>
-            <span className="studio-muted">Start guided creation</span>
+            <strong>{starter.title}</strong>
+            <span className="studio-muted">Mulai panduan pembuatan</span>
           </button>
         ))}
       </div>
@@ -113,11 +128,41 @@ function EmptyWorkspaceCards({ onSelect }: { onSelect: (selection: ExplorerSelec
   );
 }
 
-function MetricCard({ label, value, onClick }: { label: string; value: string | number; onClick: () => void }) {
-  return (
-    <button className="studio-metric-card" onClick={onClick} title={`Buka area ${label}.`}>
-      <span className="studio-muted">{label}</span>
-      <strong>{typeof value === 'number' ? value.toLocaleString() : humanizeCode(value)}</strong>
-    </button>
-  );
+interface HomeStarter {
+  icon: string;
+  title: string;
+  template: string;
+  description: string;
+  tooltip: string;
 }
+
+const homeStarters: HomeStarter[] = [
+  {
+    icon: '📦',
+    title: 'Manage Inventory',
+    template: 'Inventory',
+    description: 'Kelola produk, stok, lokasi, dan pemasok.',
+    tooltip: 'Mulai aplikasi inventory dengan contoh Product, SKU, Stock, dan Location.',
+  },
+  {
+    icon: '👥',
+    title: 'Manage Customers',
+    template: 'CRM',
+    description: 'Kelola pelanggan, kontak, dan aktivitas follow-up.',
+    tooltip: 'Mulai aplikasi customer management dengan contoh Name, Email, dan Phone.',
+  },
+  {
+    icon: '🛠',
+    title: 'Track Assets',
+    template: 'Asset Tracking',
+    description: 'Lacak aset, lokasi, kondisi, dan perawatan.',
+    tooltip: 'Mulai aplikasi asset tracking dengan contoh Asset, Serial Number, dan Status.',
+  },
+  {
+    icon: '📝',
+    title: 'Start Blank',
+    template: 'Blank App',
+    description: 'Mulai kosong dan tentukan sendiri data bisnisnya.',
+    tooltip: 'Mulai dari aplikasi kosong dengan panduan langkah demi langkah.',
+  },
+];

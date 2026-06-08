@@ -8,6 +8,8 @@ import { HelpTooltip } from '../help/HelpTooltip';
 import { LearningPanel } from '../help/LearningPanel';
 import { StudioLearningCoach } from '../help/StudioLearningCoach';
 import { humanizeCode } from '../humanizer/HumanizerEngine';
+import { createApplicationJourney } from '../journey/JourneyEngine';
+import { JourneyProgress } from '../journey/JourneyProgress';
 
 export function ApplicationBuilderView({
   application,
@@ -23,6 +25,7 @@ export function ApplicationBuilderView({
   const definition = application.definition;
   const appEntities = entities.filter((entity) => definition.entityCodes.includes(entity.code));
   const workflowCode = appEntities.find((entity) => entity.workflowCode)?.workflowCode ?? tree.workflows[0];
+  const journey = createApplicationJourney({ application, entities, tree, launched: definition.enabled });
 
   return (
     <div className="studio-app-builder">
@@ -33,47 +36,50 @@ export function ApplicationBuilderView({
       </div>
       <section className="studio-hero">
         <div>
-          <span className="studio-kicker">Customize your application</span>
+          <span className="studio-kicker">Application Journey</span>
           <h2>{definition.name || humanizeCode(definition.code)}</h2>
-          <p className="studio-muted">{definition.description ?? 'Choose what information this app stores, how users see it, and when it is ready to launch.'}</p>
+          <p className="studio-muted">{definition.description ?? 'Pilih data yang disimpan, layar yang dilihat pengguna, proses bisnis, izin akses, lalu launch.'}</p>
         </div>
       </section>
-      <LearningPanel title="How to modify an existing app" summary="Start with the business information, then adjust the screens users interact with. You can preview impact before launch.">
-        <GuidedHint title="Recommended path">Open Data Object first, review the information it stores, then open Input Screens to change how users enter it.</GuidedHint>
+
+      <JourneyProgress journey={journey} onSelect={onSelect} />
+
+      <LearningPanel title="Cara mengubah aplikasi" summary="Mulai dari data bisnis, lalu sesuaikan layar yang digunakan pengguna. Pratinjau dampak sebelum launch.">
+        <GuidedHint title="Jalur yang disarankan">Buka Data Object terlebih dahulu, cek informasi yang disimpan, lalu buka Screen untuk mengatur cara pengguna mengisinya.</GuidedHint>
       </LearningPanel>
       <StudioLearningCoach
-        title="How to modify this application"
-        purpose="Use this page like a map. Pick the part of the app you want to change, then RediOS opens the right builder."
+        title="Cara mengubah aplikasi ini"
+        purpose="Gunakan halaman ini seperti peta. Pilih bagian aplikasi yang ingin diubah, lalu RediOS membuka builder yang sesuai."
         steps={[
-          { title: '1. Data Object', body: 'Use this to understand what information the app stores.' },
-          { title: '2. Input Screens', body: 'Use this to change what users see when adding or editing information.' },
-          { title: '3. Process', body: 'Use this when work needs approval, status changes, or lifecycle steps.' },
-          { title: '4. Permissions', body: 'Use this to control who can see or edit the app.' },
+          { title: '1. Data Object', body: 'Gunakan ini untuk memahami informasi yang disimpan aplikasi.' },
+          { title: '2. Screen', body: 'Gunakan ini untuk mengubah tampilan saat pengguna menambah atau mengedit informasi.' },
+          { title: '3. Process', body: 'Gunakan ini ketika pekerjaan butuh approval, perubahan status, atau tahapan kerja.' },
+          { title: '4. Permission', body: 'Gunakan ini untuk mengatur siapa yang boleh melihat atau mengubah aplikasi.' },
         ]}
-        currentTip="If you are not sure, start with Data Object, then open Input Screens."
+        currentTip={journey.nextAction.description}
       />
       <Panel title="Builder">
         <div className="studio-card-grid">
-          <BuilderCard title="Data Object" category="Data" description="The thing your business manages, such as Product, Asset, or Customer." help="Mulai dari sini saat ingin menambah atau memahami informasi yang disimpan aplikasi." onClick={() => onSelect({ type: 'ENTITY', code: definition.entityCodes[0] ?? tree.entities[0] ?? 'ENTITY' })} />
-          <BuilderCard title="Input Screens" category="Experience" description="Where users enter and update information." help="Buka bagian ini saat pengguna membutuhkan layar input atau tata letak yang lebih baik." onClick={() => onSelect({ type: 'FORMS', code: tree.forms[0] ?? 'FORMS' })} />
-          <BuilderCard title="Pages" category="Experience" description="The app screens users navigate to." help="Gunakan halaman untuk mengatur daftar, input, dan dashboard aplikasi." onClick={() => onSelect({ type: 'PAGES', code: tree.ui[0] ?? 'PAGES' })} />
-          <BuilderCard title="Process" category="Automation" description="How work moves from one step to another." help="Gunakan ini untuk persetujuan, perubahan status, dan alur kerja." onClick={() => onSelect({ type: 'WORKFLOWS', code: workflowCode ?? 'WORKFLOWS' })} />
-          <BuilderCard title="Connector" category="Automation" description="How this app exchanges data with another system." help="Gunakan ini untuk menghubungkan aplikasi dengan sistem lain." onClick={() => onSelect({ type: 'INTEGRATIONS', code: tree.integrations[0] ?? 'INTEGRATIONS' })} />
-          <BuilderCard title="Permissions" category="Security" description="Who can see, edit, or launch parts of this app." help="Gunakan izin akses untuk menjaga data bisnis tetap aman." onClick={() => onSelect({ type: 'SECURITY', code: tree.securityPolicies[0] ?? 'SECURITY' })} />
+          <BuilderCard title="Data Object" category="Data" description="Hal yang dikelola bisnis, seperti Product, Asset, atau Customer." help="Mulai dari sini saat ingin menambah atau memahami informasi yang disimpan aplikasi." onClick={() => onSelect({ type: 'ENTITY', code: definition.entityCodes[0] ?? tree.entities[0] ?? 'ENTITY' })} />
+          <BuilderCard title="Screen" category="Experience" description="Tempat pengguna memasukkan dan memperbarui informasi." help="Buka bagian ini saat pengguna membutuhkan layar input atau tata letak yang lebih baik." onClick={() => onSelect({ type: 'FORMS', code: tree.forms[0] ?? 'FORMS' })} />
+          <BuilderCard title="Page" category="Experience" description="Halaman yang dibuka pengguna di aplikasi." help="Gunakan halaman untuk mengatur daftar, input, dan dashboard aplikasi." onClick={() => onSelect({ type: 'PAGES', code: tree.ui[0] ?? 'PAGES' })} />
+          <BuilderCard title="Process" category="Automation" description="Cara pekerjaan bergerak dari satu langkah ke langkah lain." help="Gunakan ini untuk persetujuan, perubahan status, dan alur kerja." onClick={() => onSelect({ type: 'WORKFLOWS', code: workflowCode ?? 'WORKFLOWS' })} />
+          <BuilderCard title="Connector" category="Automation" description="Cara aplikasi bertukar data dengan sistem lain." help="Gunakan ini untuk menghubungkan aplikasi dengan sistem lain." onClick={() => onSelect({ type: 'INTEGRATIONS', code: tree.integrations[0] ?? 'INTEGRATIONS' })} />
+          <BuilderCard title="Permission" category="Security" description="Siapa yang boleh melihat, mengubah, atau launch aplikasi." help="Gunakan izin akses untuk menjaga data bisnis tetap aman." onClick={() => onSelect({ type: 'SECURITY', code: tree.securityPolicies[0] ?? 'SECURITY' })} />
         </div>
       </Panel>
-      <Panel title="Data Objects">
+      <Panel title="Data Object">
         <div className="studio-card-grid">
           {appEntities.map((entity) => (
             <button key={entity.code} className="studio-app-card" onClick={() => onSelect({ type: 'ENTITY', code: entity.code })}>
               <span className="studio-kicker">Data Object</span>
               <h3>{humanizeCode(entity.code)}</h3>
-              <p className="studio-muted">{entity.fieldCodes.length} information items</p>
-              <strong>Open Input Screen Builder</strong>
+              <p className="studio-muted">{entity.fieldCodes.length} informasi</p>
+              <strong>Buka Screen Builder</strong>
             </button>
           ))}
           {appEntities.length === 0 ? (
-            <GuidedHint title="No Data Objects yet">Create a Data Object before changing screens. A Data Object describes the business information this app manages.</GuidedHint>
+            <GuidedHint title="Anda belum membuat apa pun.">Mulai dengan membuat Data Object pertama. Contoh: Product, Customer, Asset.</GuidedHint>
           ) : null}
         </div>
       </Panel>
