@@ -4,9 +4,9 @@ import { Button, Input, Select } from '../../components/atomic/atoms/Atoms';
 import type { DesignerClient, DesignerPreviewResult } from '../../core/api/designer-client';
 import type { RuntimeForm, RuntimeFormField } from '../../core/renderer/runtime-types';
 import type { RuntimeContext } from '../../core/renderer/runtime-types';
-import { StudioBadge } from '../../studio/design-system/StudioDesignSystem';
-import { EmptyState } from '../../studio/empty/EmptyState';
-import { humanizeCode } from '../../studio/humanizer/HumanizerEngine';
+import { StudioBadge } from '../../studio_legacy_phase19/design-system/StudioDesignSystem';
+import { EmptyState } from '../../studio_legacy_phase19/empty/EmptyState';
+import { humanizeCode } from '../../studio_legacy_phase19/humanizer/HumanizerEngine';
 
 type BuilderDevice = 'Desktop' | 'Tablet' | 'Mobile';
 type BuilderMode = 'web' | 'android';

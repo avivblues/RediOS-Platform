@@ -666,6 +666,215 @@ a:focus-visible {
   grid-column: 1 / -1;
 }
 
+.redos-builder-page {
+  display: grid;
+  gap: var(--redios-spacing-md);
+  min-height: 100vh;
+  padding: var(--redios-spacing-md);
+  background: var(--redios-color-background);
+}
+
+.redos-builder-header {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: grid;
+  grid-template-columns: minmax(260px, 1fr) auto auto;
+  gap: var(--redios-spacing-md);
+  align-items: center;
+  border: 1px solid color-mix(in srgb, var(--redios-color-text), transparent 88%);
+  border-radius: var(--redios-radius-large);
+  padding: var(--redios-spacing-md);
+  background: var(--redios-color-surface);
+  box-shadow: 0 12px 40px color-mix(in srgb, var(--redios-color-text), transparent 92%);
+}
+
+.redos-kicker {
+  color: var(--redios-color-primary);
+  font-size: var(--redios-font-size-small);
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.redos-actions,
+.redos-device-switch,
+.redos-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--redios-spacing-xs);
+}
+
+.redos-actions button,
+.redos-chip,
+.redos-tabs button,
+.redos-builder-header button {
+  border: 1px solid color-mix(in srgb, var(--redios-color-text), transparent 84%);
+  border-radius: var(--redios-radius-medium);
+  padding: var(--redios-spacing-sm) var(--redios-spacing-md);
+  background: var(--redios-color-surface);
+  color: var(--redios-color-text);
+  cursor: pointer;
+}
+
+.redos-chip-active,
+.redos-tab-active,
+.redos-actions button:last-child {
+  border-color: var(--redios-color-primary);
+  background: var(--redios-color-primary);
+  color: var(--redios-color-surface);
+}
+
+.redos-builder-workspace {
+  display: grid;
+  grid-template-columns: minmax(260px, 0.8fr) minmax(620px, 2.2fr) minmax(320px, 0.9fr);
+  gap: var(--redios-spacing-md);
+  min-height: calc(100vh - 132px);
+}
+
+.redos-left-panel,
+.redos-property-panel,
+.redos-canvas {
+  border: 1px solid color-mix(in srgb, var(--redios-color-text), transparent 88%);
+  border-radius: var(--redios-radius-large);
+  background: var(--redios-color-surface);
+  box-shadow: 0 10px 32px color-mix(in srgb, var(--redios-color-text), transparent 94%);
+}
+
+.redos-left-panel,
+.redos-property-panel {
+  display: grid;
+  align-content: start;
+  gap: var(--redios-spacing-md);
+  padding: var(--redios-spacing-md);
+  max-height: calc(100vh - 132px);
+  overflow: auto;
+}
+
+.redos-panel-content,
+.redos-component-group,
+.redos-tree-object,
+.redos-property-panel section,
+.redos-screen {
+  display: grid;
+  gap: var(--redios-spacing-sm);
+}
+
+.redos-tool-button,
+.redos-tree-field {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: var(--redios-spacing-xs);
+  align-items: center;
+  border: 1px solid color-mix(in srgb, var(--redios-color-text), transparent 84%);
+  border-radius: var(--redios-radius-medium);
+  padding: var(--redios-spacing-sm);
+  background: var(--redios-color-surface);
+  color: var(--redios-color-text);
+  text-align: left;
+  cursor: grab;
+}
+
+.redos-muted {
+  color: color-mix(in srgb, var(--redios-color-text), transparent 38%);
+}
+
+.redos-canvas {
+  min-height: 70vh;
+  padding: var(--redios-spacing-xl);
+  background:
+    linear-gradient(color-mix(in srgb, var(--redios-color-text), transparent 96%) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in srgb, var(--redios-color-text), transparent 96%) 1px, transparent 1px),
+    var(--redios-color-background);
+  background-size: 28px 28px;
+}
+
+.redos-screen {
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  max-width: 720px;
+  margin-inline: auto;
+  border: 1px solid color-mix(in srgb, var(--redios-color-text), transparent 82%);
+  border-radius: var(--redios-radius-large);
+  padding: var(--redios-spacing-lg);
+  background: var(--redios-color-surface);
+}
+
+.redos-screen h2 {
+  grid-column: 1 / -1;
+}
+
+.redos-canvas-component {
+  display: grid;
+  gap: var(--redios-spacing-xs);
+  border: 1px solid color-mix(in srgb, var(--redios-color-text), transparent 82%);
+  border-radius: var(--redios-radius-medium);
+  padding: var(--redios-spacing-sm);
+  background: var(--redios-color-surface);
+  text-align: left;
+  cursor: pointer;
+}
+
+.redos-canvas-component-selected {
+  border-color: var(--redios-color-primary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--redios-color-primary), transparent 78%);
+}
+
+.redos-canvas-component input,
+.redos-canvas-component select,
+.redos-canvas-component textarea,
+.redos-property-panel input,
+.redos-property-panel select {
+  box-sizing: border-box;
+  width: 100%;
+  border: 1px solid color-mix(in srgb, var(--redios-color-text), transparent 78%);
+  border-radius: var(--redios-radius-medium);
+  padding: var(--redios-spacing-sm);
+  background: var(--redios-color-surface);
+}
+
+.redos-button-preview {
+  justify-self: center;
+  border-radius: var(--redios-radius-medium);
+  padding: var(--redios-spacing-sm) var(--redios-spacing-lg);
+  background: var(--redios-color-primary);
+  color: var(--redios-color-surface);
+  font-weight: 700;
+}
+
+.redos-table-preview {
+  display: grid;
+  gap: var(--redios-spacing-xs);
+}
+
+.redos-metadata-map,
+.redos-metadata-card {
+  border: 1px solid color-mix(in srgb, var(--redios-color-text), transparent 88%);
+  border-radius: var(--redios-radius-large);
+  padding: var(--redios-spacing-lg);
+  background: var(--redios-color-surface);
+}
+
+.redos-metadata-map {
+  display: grid;
+  gap: var(--redios-spacing-md);
+  text-align: center;
+}
+
+.redos-metadata-map > div,
+.redos-metadata-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--redios-spacing-md);
+}
+
+.redos-list-row {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--redios-spacing-md);
+  border-top: 1px solid color-mix(in srgb, var(--redios-color-text), transparent 90%);
+  padding-top: var(--redios-spacing-sm);
+}
+
 .redios-builder-page {
   display: grid;
   gap: var(--redios-spacing-md);

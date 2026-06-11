@@ -1,8 +1,8 @@
 import { Badge } from '../../components/atomic/atoms/Atoms';
 import type { RuntimeFormField } from '../../core/renderer/runtime-types';
-import { EmptyState } from '../../studio/empty/EmptyState';
-import { HelpTooltip } from '../../studio/help/HelpTooltip';
-import { humanizeCode } from '../../studio/humanizer/HumanizerEngine';
+import { EmptyState } from '../../studio_legacy_phase19/empty/EmptyState';
+import { HelpTooltip } from '../../studio_legacy_phase19/help/HelpTooltip';
+import { humanizeCode } from '../../studio_legacy_phase19/humanizer/HumanizerEngine';
 import { PropertyEditor } from '../property/PropertyEditor';
 
 export function PropertyPanel({

@@ -1,5 +1,5 @@
 import type { ResolvedUIAtom, ResolvedUIMolecule, ResolvedUIOrganism, ResolvedUIPage } from '../core/renderer/runtime-types';
-import { EmptyState } from '../studio/empty/EmptyState';
+import { EmptyState } from '../studio_legacy_phase19/empty/EmptyState';
 import { renderRegisteredComponent } from './ComponentRegistry';
 
 export function PageRenderer({ page }: { page?: ResolvedUIPage }) {

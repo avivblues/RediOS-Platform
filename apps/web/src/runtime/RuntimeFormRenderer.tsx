@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import type { RuntimeForm, RuntimeFormField } from '../core/renderer/runtime-types';
-import { humanizeCode } from '../studio/humanizer/HumanizerEngine';
+import { humanizeCode } from '../studio_legacy_phase19/humanizer/HumanizerEngine';
 
 interface RuntimeFormRendererProps {
   form?: RuntimeForm;

@@ -1,18 +1,18 @@
-import { RediosVisualBuilder } from '../../studio/builder/RediosVisualBuilder';
-import { VisualFirstMetadataDesigner } from '../../studio/metadata/VisualFirstMetadataDesigner';
+import { BuilderShell } from '../../studio/builder/BuilderShell';
+import { MetadataDesignerPage } from '../../studio/metadata/MetadataDesignerPage';
 
 export function StudioPage() {
   const route = studioRoute(window.location.pathname);
 
   if (route === 'metadata') {
-    return <VisualFirstMetadataDesigner />;
+    return <MetadataDesignerPage />;
   }
 
   if (route === 'android') {
-    return <RediosVisualBuilder target="android" />;
+    return <BuilderShell target="android" />;
   }
 
-  return <RediosVisualBuilder target="web" />;
+  return <BuilderShell target="web" />;
 }
 
 function studioRoute(pathname: string): 'builder' | 'metadata' | 'android' {

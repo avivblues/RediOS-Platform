@@ -6,12 +6,12 @@ import type { RuntimeForm, RuntimeFormField } from '../../core/renderer/runtime-
 import { FieldPalette } from './FieldPalette';
 import { FormCanvas } from './FormCanvas';
 import { PropertyPanel } from './PropertyPanel';
-import { humanizeCode } from '../../studio/humanizer/HumanizerEngine';
-import { GuidedHint } from '../../studio/help/GuidedHint';
-import { HelpTooltip } from '../../studio/help/HelpTooltip';
-import { StudioLearningCoach } from '../../studio/help/StudioLearningCoach';
-import { StudioBadge } from '../../studio/design-system/StudioDesignSystem';
-import { MetadataEditor } from '../../studio/editor/MetadataEditor';
+import { humanizeCode } from '../../studio_legacy_phase19/humanizer/HumanizerEngine';
+import { GuidedHint } from '../../studio_legacy_phase19/help/GuidedHint';
+import { HelpTooltip } from '../../studio_legacy_phase19/help/HelpTooltip';
+import { StudioLearningCoach } from '../../studio_legacy_phase19/help/StudioLearningCoach';
+import { StudioBadge } from '../../studio_legacy_phase19/design-system/StudioDesignSystem';
+import { MetadataEditor } from '../../studio_legacy_phase19/editor/MetadataEditor';
 
 export function FormBuilder({
   form,

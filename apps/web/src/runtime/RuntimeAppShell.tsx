@@ -3,7 +3,7 @@ import { ThemeProvider } from '../core/theme/theme-provider';
 import { createMetadataClient } from '../core/metadata-client/metadata-client';
 import { useRuntimeContext } from '../core/context/runtime-context';
 import type { ResolvedUIPage, RuntimeForm, RuntimeNavigation, RuntimeTheme } from '../core/renderer/runtime-types';
-import { humanizeCode } from '../studio/humanizer/HumanizerEngine';
+import { humanizeCode } from '../studio_legacy_phase19/humanizer/HumanizerEngine';
 import { RuntimeNavigationRenderer } from './RuntimeNavigationRenderer';
 import { RuntimePageRenderer } from './RuntimePageRenderer';
 
