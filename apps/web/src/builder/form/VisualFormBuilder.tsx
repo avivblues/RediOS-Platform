@@ -370,7 +370,7 @@ export function VisualFormBuilder({
   }
 
   if (!activeForm || !entity) {
-    return <BuilderEmptyState />;
+    return <BuilderEmptyState builderMode={builderMode} applicationName={applicationName} onBack={onBack} />;
   }
 
   return (
@@ -765,24 +765,123 @@ function PropertyInspector({
   );
 }
 
-function BuilderEmptyState() {
+function BuilderEmptyState({
+  builderMode,
+  applicationName,
+  onBack,
+}: {
+  builderMode: BuilderMode;
+  applicationName: string;
+  onBack?: () => void;
+}) {
+  const components = builderMode === 'android'
+    ? androidComponents
+    : [
+        ...basicComponents,
+        { type: 'TEXT_AREA' as BuilderComponentType, label: 'Text Area' },
+        ...layoutComponents,
+        ...advancedComponents,
+      ];
+
   return (
     <main className="visual-builder-page">
-      <EmptyState
-        title="What do you want to build?"
-        description="Choose a starter to create data, screens, connections, and navigation, then open the full visual builder."
-        primaryAction={<Button onClick={() => { window.location.href = '/studio/create'; }}>Inventory App</Button>}
-      />
-      <div className="studio-card-grid">
-        {['Inventory App', 'CRM', 'Asset Management'].map((label) => (
-          <article key={label} className="studio-card">
-            <h3>{label}</h3>
-            <p className="studio-muted">Auto create starter metadata, API connections, navigation, and screen.</p>
-          </article>
-        ))}
-      </div>
+      <header className="visual-builder-topbar">
+        <Button variant="secondary" onClick={onBack ?? (() => { window.location.href = '/studio'; })}>Back to Studio</Button>
+        <div>
+          <span className="studio-kicker">{builderMode === 'android' ? 'Android Builder' : 'Web App Builder'}</span>
+          <h2>{applicationName}</h2>
+          <p className="studio-muted">No form metadata is available for this route yet.</p>
+        </div>
+        <StudioBadge tone="warning">Missing Form Metadata</StudioBadge>
+        <div className="studio-action-row">
+          <Button variant="secondary" onClick={() => { window.location.href = '/studio/metadata'; }}>Metadata Designer</Button>
+          <Button onClick={() => { window.location.href = '/studio/create'; }}>Create Object</Button>
+        </div>
+      </header>
+
+      <section className="visual-builder-workspace">
+        <aside className="visual-builder-left">
+          <div className="visual-builder-panel-body">
+            <span className="studio-kicker">Main Modules</span>
+            <button className="visual-builder-palette-item" type="button" onClick={() => { window.location.href = '/studio/metadata'; }}>
+              <span>DB</span>
+              <strong>Metadata Designer</strong>
+              <small>Define Object, Attribute, API, and Event first.</small>
+            </button>
+            <button className="visual-builder-palette-item" type="button" onClick={() => { window.location.href = '/studio/builder/web/WEB_APP_BUILDER'; }}>
+              <span>WEB</span>
+              <strong>Web App Builder</strong>
+              <small>Design web layout after form metadata exists.</small>
+            </button>
+            <button className="visual-builder-palette-item" type="button" onClick={() => { window.location.href = '/studio/builder/android/ANDROID_BUILDER'; }}>
+              <span>DROID</span>
+              <strong>Android Builder</strong>
+              <small>Design mobile layout after form metadata exists.</small>
+            </button>
+          </div>
+          <div className="visual-builder-panel-body">
+            <span className="studio-kicker">Component Toolbox</span>
+            <p className="studio-muted">These are the tools available once metadata is connected.</p>
+            {components.map((component) => (
+              <button
+                key={`${component.type}:${component.label}`}
+                className="visual-builder-palette-item"
+                type="button"
+                onClick={() => { window.location.href = '/studio/metadata'; }}
+              >
+                <span>+</span>
+                <strong>{component.label}</strong>
+                <small>{componentHint(component.type)}</small>
+              </button>
+            ))}
+          </div>
+        </aside>
+
+        <section className="visual-builder-canvas">
+          <div className="visual-builder-canvas-header">
+            <h2>{builderMode === 'android' ? 'Android Canvas' : 'Web Canvas'}</h2>
+            <StudioBadge tone="info">Layout only</StudioBadge>
+          </div>
+          <EmptyState
+            title="No form metadata found"
+            description="Create or select an Object in Metadata Designer first. Then this toolbox can place fields, inputs, dropdowns, text areas, buttons, tables, cards, and sections into the canvas."
+            primaryAction={<Button onClick={() => { window.location.href = '/studio/metadata'; }}>Open Metadata Designer</Button>}
+            secondaryAction={<Button variant="secondary" onClick={() => { window.location.href = '/studio/create'; }}>Create Starter App</Button>}
+          />
+        </section>
+
+        <aside className="visual-builder-right">
+          <div className="visual-builder-inspector">
+            <span className="studio-kicker">Properties</span>
+            <h3>Toolbox Ready</h3>
+            <p className="studio-muted">
+              Select or create form metadata first. After that, selecting a component here will show Label, Width, Visible, Required, Data Binding, and Event settings.
+            </p>
+          </div>
+        </aside>
+      </section>
     </main>
   );
+}
+
+function componentHint(type: BuilderComponentType): string {
+  if (type === 'BUTTON') {
+    return 'Connect to Event Metadata';
+  }
+
+  if (type === 'SELECT' || type === 'LOOKUP') {
+    return 'Uses Data Source Metadata';
+  }
+
+  if (type === 'TABLE' || type === 'RECYCLER_VIEW') {
+    return 'List layout component';
+  }
+
+  if (type === 'CAMERA' || type === 'IMAGE_UPLOAD' || type === 'LOCATION' || type === 'BARCODE_SCANNER') {
+    return 'Android capability component';
+  }
+
+  return 'Visual layout component';
 }
 
 function renderComponentPreview(component: VisualComponent) {

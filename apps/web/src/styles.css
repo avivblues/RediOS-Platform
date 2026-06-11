@@ -666,6 +666,144 @@ a:focus-visible {
   grid-column: 1 / -1;
 }
 
+.redios-builder-page {
+  display: grid;
+  gap: var(--redios-spacing-md);
+  min-height: 100vh;
+  padding: var(--redios-spacing-md);
+  background: var(--redios-color-background);
+}
+
+.redios-builder-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: grid;
+  grid-template-columns: minmax(260px, 1fr) auto auto;
+  gap: var(--redios-spacing-md);
+  align-items: center;
+  border: 1px solid color-mix(in srgb, var(--redios-color-text), transparent 88%);
+  border-radius: var(--redios-radius-large);
+  padding: var(--redios-spacing-md);
+  background: var(--redios-color-surface);
+  box-shadow: 0 12px 40px color-mix(in srgb, var(--redios-color-text), transparent 92%);
+}
+
+.redios-builder-workspace {
+  display: grid;
+  grid-template-columns: minmax(260px, 0.8fr) minmax(560px, 2.1fr) minmax(320px, 0.9fr);
+  gap: var(--redios-spacing-md);
+  min-height: calc(100vh - 132px);
+}
+
+.redios-builder-panel,
+.redios-builder-canvas {
+  border: 1px solid color-mix(in srgb, var(--redios-color-text), transparent 88%);
+  border-radius: var(--redios-radius-large);
+  padding: var(--redios-spacing-md);
+  background: var(--redios-color-surface);
+  box-shadow: 0 10px 32px color-mix(in srgb, var(--redios-color-text), transparent 94%);
+}
+
+.redios-builder-panel {
+  display: grid;
+  align-content: start;
+  gap: var(--redios-spacing-md);
+  max-height: calc(100vh - 132px);
+  overflow: auto;
+}
+
+.redios-toolbox,
+.redios-data-card,
+.redios-preview-body {
+  display: grid;
+  gap: var(--redios-spacing-sm);
+}
+
+.redios-builder-canvas {
+  background:
+    linear-gradient(color-mix(in srgb, var(--redios-color-text), transparent 96%) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in srgb, var(--redios-color-text), transparent 96%) 1px, transparent 1px),
+    var(--redios-color-background);
+  background-size: 28px 28px;
+}
+
+.redios-runtime-preview {
+  display: grid;
+  place-items: start center;
+  min-height: calc(100vh - 190px);
+}
+
+.redios-preview-frame {
+  width: min(720px, 100%);
+  border: 1px solid color-mix(in srgb, var(--redios-color-text), transparent 82%);
+  border-radius: var(--redios-radius-large);
+  padding: var(--redios-spacing-lg);
+  background: var(--redios-color-surface);
+}
+
+.redios-runtime-preview-tablet .redios-preview-frame {
+  width: min(560px, 100%);
+}
+
+.redios-runtime-preview-mobile .redios-preview-frame,
+.redios-runtime-preview-android .redios-preview-frame {
+  width: min(360px, 100%);
+  border: 10px solid #111827;
+  border-radius: 2rem;
+}
+
+.redios-preview-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: var(--redios-spacing-md);
+}
+
+.redios-preview-field {
+  display: grid;
+  gap: var(--redios-spacing-xs);
+}
+
+.redios-preview-field input,
+.redios-preview-field select,
+.redios-preview-field textarea {
+  border: 1px solid color-mix(in srgb, var(--redios-color-text), transparent 78%);
+  border-radius: var(--redios-radius-medium);
+  padding: var(--redios-spacing-sm);
+  background: var(--redios-color-surface);
+}
+
+.redios-preview-button {
+  border: 0;
+  border-radius: var(--redios-radius-medium);
+  padding: var(--redios-spacing-sm) var(--redios-spacing-md);
+  background: var(--redios-color-primary);
+  color: var(--redios-color-surface);
+  font-weight: 700;
+}
+
+.redios-preview-table {
+  border: 1px solid color-mix(in srgb, var(--redios-color-text), transparent 86%);
+  border-radius: var(--redios-radius-medium);
+  padding: var(--redios-spacing-md);
+}
+
+.redios-architecture-map {
+  display: grid;
+  gap: var(--redios-spacing-md);
+  border: 1px solid color-mix(in srgb, var(--redios-color-primary), transparent 72%);
+  border-radius: var(--redios-radius-large);
+  padding: var(--redios-spacing-lg);
+  background: color-mix(in srgb, var(--redios-color-primary), var(--redios-color-surface) 96%);
+  text-align: center;
+}
+
+.redios-architecture-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--redios-spacing-md);
+}
+
 .visual-builder-page {
   display: grid;
   gap: var(--redios-spacing-md);
