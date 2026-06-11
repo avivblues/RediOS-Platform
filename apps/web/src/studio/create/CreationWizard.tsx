@@ -326,6 +326,60 @@ export function CreationWizard({
     }
   }
 
+  function repairGeneratedMetadata() {
+    setPublishError(undefined);
+    setPublishState('idle');
+    setDraft((current) => {
+      const repairedEntities = current.entities.map((entity) => {
+        const layoutFields = current.screenLayouts[entity.name]?.sections
+          .flatMap((section) => section.fields)
+          .filter((field) => !field.designerOnly) ?? [];
+        const existingCodes = new Set(entity.fields.map((field) => codeFromLabel(field.label)));
+        const repairedFields = [
+          ...entity.fields,
+          ...layoutFields
+            .filter((field) => !existingCodes.has(codeFromLabel(field.sourceLabel ?? field.label)))
+            .map((field) => ({
+              label: field.sourceLabel ?? field.label,
+              type: creationFieldTypeFromComponent(field.componentKind),
+              required: field.required ?? false,
+              unique: false,
+              searchable: field.searchable,
+              showInList: field.showInList,
+              componentKind: field.componentKind,
+              relatedObject: field.relatedObject,
+              displayField: field.displayField,
+              choiceOptions: field.choiceOptions,
+            } satisfies CreationFieldInput)),
+        ];
+        const dedupedFields = repairedFields.filter((field, index, fields) => fields.findIndex((candidate) => codeFromLabel(candidate.label) === codeFromLabel(field.label)) === index);
+
+        return {
+          ...entity,
+          fields: dedupedFields,
+        };
+      });
+      const repairedDraft = {
+        ...current,
+        entities: repairedEntities,
+      };
+      const nextGenerated = generateMetadataSet(repairedDraft, {
+        tenantId: context.tenantId,
+        domainCode: context.domainCode,
+        applicationCode: codeFromLabel(repairedDraft.application.name || context.applicationCode),
+      });
+
+      return {
+        ...repairedDraft,
+        forms: nextGenerated.forms.map((form) => form.code),
+        views: nextGenerated.views.map((view) => view.code),
+        navigation: nextGenerated.navigation ? [nextGenerated.navigation.code] : [],
+        generated: nextGenerated,
+      };
+    });
+    pushActivity(expertMode ? 'Metadata repaired' : 'Aplikasi diperbaiki otomatis', expertMode ? 'Fields, forms, screens, and navigation were regenerated from the visual draft.' : 'Informasi, screen, menu, dan koneksi aplikasi dibuat ulang dari rancangan visual.');
+  }
+
   function pushActivity(message: string, detail?: string) {
     setActivity((current) => [{ id: `${Date.now()}:${message}`, message, detail }, ...current].slice(0, 8));
   }
@@ -473,7 +527,7 @@ export function CreationWizard({
                   <div className="studio-inline-danger">
                     <strong>{publishError.title}</strong>
                     <p>{publishError.reason}</p>
-                    <StudioButton variant="secondary" onClick={() => generateExperience()} tooltip="RediOS akan membuat screen dan menu yang hilang secara otomatis.">
+                    <StudioButton variant="secondary" onClick={repairGeneratedMetadata} tooltip="RediOS akan memperbaiki informasi, screen, menu, dan koneksi yang hilang dari rancangan visual.">
                       Fix automatically
                     </StudioButton>
                   </div>
@@ -513,6 +567,18 @@ export function CreationWizard({
     </div>
     </MetadataEditor>
   );
+}
+
+function creationFieldTypeFromComponent(component?: CreationFieldInput['componentKind']): CreationFieldInput['type'] {
+  if (component === 'Link Data') {
+    return 'Lookup';
+  }
+
+  if (component === 'File') {
+    return 'Attachment';
+  }
+
+  return 'Text';
 }
 
 function ApplicationStep({

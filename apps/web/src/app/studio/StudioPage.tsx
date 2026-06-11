@@ -8,7 +8,6 @@ import type {
   RuntimePackageDefinition,
   WorkflowDefinition,
 } from '@redios/shared';
-import { VisualFormBuilder } from '../../builder/form/VisualFormBuilder';
 import { IntegrationBuilder } from '../../builder/integration/IntegrationBuilder';
 import { PageBuilder } from '../../builder/ui/PageBuilder';
 import { WorkflowBuilder } from '../../builder/workflow/WorkflowBuilder';
@@ -22,6 +21,7 @@ import { useRuntimeContext } from '../../core/context/runtime-context';
 import type { ResolvedUIPage, RuntimeForm, RuntimeNavigation, RuntimeTheme } from '../../core/renderer/runtime-types';
 import { ThemeProvider } from '../../core/theme/theme-provider';
 import { ApplicationBuilderView } from '../../studio/application/ApplicationBuilderView';
+import { FormBuilderPage } from '../../studio/builder/FormBuilderPage';
 import { StudioCommandCenter } from '../../studio/command/StudioCommandCenter';
 import { StudioHome } from '../../studio/dashboard/StudioHome';
 import { CreationWizard } from '../../studio/create/CreationWizard';
@@ -190,6 +190,25 @@ export function StudioPage() {
   function handleModeChange(nextMode: StudioMode) {
     setMode(nextMode);
     writeStudioMode(nextMode);
+  }
+
+  if (selection?.type === 'FORM_BUILDER') {
+    return (
+      <ThemeProvider theme={state.theme}>
+        {error ? <ErrorState message={error} onRetry={() => setReloadKey((current) => current + 1)} /> : null}
+        <FormBuilderPage
+          form={form}
+          entity={entity}
+          designer={designerClient}
+          context={context}
+          applicationName={state.applications[0]?.definition.name ?? context.applicationCode}
+          developerMode={mode === 'EXPERT'}
+          onPreview={setPreview}
+          onPublished={() => setReloadKey((current) => current + 1)}
+          onBack={() => handleSelect({ type: 'HOME', code: 'HOME' })}
+        />
+      </ThemeProvider>
+    );
   }
 
   return (
@@ -362,14 +381,16 @@ function ActiveWorkspace({
 
   if (selection.type === 'FORM_BUILDER') {
     return (
-      <VisualFormBuilder
+      <FormBuilderPage
         form={form}
         entity={entity}
         designer={designerClient}
+        context={context}
         applicationName={applications[0]?.definition.name ?? context.applicationCode}
         developerMode={mode === 'EXPERT'}
         onPreview={onPreview}
         onPublished={onPublished}
+        onBack={() => onSelect({ type: 'HOME', code: 'HOME' })}
       />
     );
   }

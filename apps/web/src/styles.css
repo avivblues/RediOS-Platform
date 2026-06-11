@@ -654,7 +654,9 @@ a:focus-visible {
 .visual-builder-page {
   display: grid;
   gap: var(--redios-spacing-md);
-  min-height: calc(100vh - 96px);
+  min-height: 100vh;
+  padding: var(--redios-spacing-md);
+  background: var(--redios-color-background);
 }
 
 .visual-builder-topbar {
@@ -662,7 +664,7 @@ a:focus-visible {
   top: 0;
   z-index: 20;
   display: grid;
-  grid-template-columns: minmax(240px, 1fr) auto auto;
+  grid-template-columns: auto minmax(240px, 1fr) auto auto;
   gap: var(--redios-spacing-md);
   align-items: center;
   border: 1px solid color-mix(in srgb, var(--redios-color-text), transparent 88%);
@@ -681,9 +683,10 @@ a:focus-visible {
 
 .visual-builder-workspace {
   display: grid;
-  grid-template-columns: minmax(240px, 0.75fr) minmax(520px, 2fr) minmax(300px, 0.9fr);
+  grid-template-columns: minmax(260px, 0.7fr) minmax(680px, 2.4fr) minmax(340px, 0.9fr);
   gap: var(--redios-spacing-md);
   align-items: start;
+  min-height: calc(100vh - 128px);
 }
 
 .visual-builder-left,
@@ -698,11 +701,11 @@ a:focus-visible {
 .visual-builder-left,
 .visual-builder-right {
   position: sticky;
-  top: 112px;
+  top: 104px;
   display: grid;
   gap: var(--redios-spacing-sm);
   padding: var(--redios-spacing-md);
-  max-height: calc(100vh - 132px);
+  max-height: calc(100vh - 124px);
   overflow: auto;
 }
 
@@ -738,8 +741,8 @@ a:focus-visible {
 }
 
 .visual-builder-canvas {
-  min-height: 720px;
-  padding: var(--redios-spacing-lg);
+  min-height: calc(100vh - 132px);
+  padding: var(--redios-spacing-xl);
   background:
     linear-gradient(color-mix(in srgb, var(--redios-color-text), transparent 96%) 1px, transparent 1px),
     linear-gradient(90deg, color-mix(in srgb, var(--redios-color-text), transparent 96%) 1px, transparent 1px),
@@ -768,7 +771,8 @@ a:focus-visible {
 .visual-builder-drop-area {
   display: grid;
   gap: var(--redios-spacing-md);
-  min-height: 620px;
+  align-content: start;
+  min-height: calc(100vh - 260px);
 }
 
 .visual-builder-grid {

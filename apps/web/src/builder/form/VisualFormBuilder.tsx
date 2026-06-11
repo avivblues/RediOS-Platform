@@ -1,14 +1,15 @@
 import { useMemo, useState } from 'react';
-import type { EntityDefinition, FormDefinition, MetadataDraft } from '@redios/shared';
+import type { EntityDefinition, FieldDataType, FieldDefinition, FormDefinition, MetadataDefinition, MetadataDraft } from '@redios/shared';
 import { Button, Input, Select } from '../../components/atomic/atoms/Atoms';
 import type { DesignerClient, DesignerPreviewResult } from '../../core/api/designer-client';
 import type { RuntimeForm, RuntimeFormField } from '../../core/renderer/runtime-types';
+import type { RuntimeContext } from '../../core/renderer/runtime-types';
 import { StudioBadge } from '../../studio/design-system/StudioDesignSystem';
 import { EmptyState } from '../../studio/empty/EmptyState';
 import { humanizeCode } from '../../studio/humanizer/HumanizerEngine';
 
 type BuilderDevice = 'Desktop' | 'Tablet' | 'Mobile';
-type BuilderTab = 'Fields' | 'Components';
+type BuilderTab = 'Fields' | 'Components' | 'Data Source';
 type BuilderComponentType =
   | 'TEXT_INPUT'
   | 'TEXT_AREA'
@@ -37,6 +38,7 @@ interface VisualComponent {
   label: string;
   fieldCode?: string;
   sectionCode?: string;
+  order?: number;
   x: number;
   y: number;
   width: number;
@@ -97,12 +99,16 @@ export function VisualFormBuilder({
   developerMode = false,
   onPreview,
   onPublished,
+  context,
+  onBack,
 }: {
   form?: RuntimeForm;
   entity?: EntityDefinition;
   designer: DesignerClient;
   applicationName: string;
   developerMode?: boolean;
+  context: RuntimeContext;
+  onBack?: () => void;
   onPreview: (preview: DesignerPreviewResult) => void;
   onPublished?: () => void;
 }) {
@@ -120,10 +126,10 @@ export function VisualFormBuilder({
   const components = useMemo(() => visualComponentsFromForm(activeForm, entity), [activeForm, entity]);
   const selected = components.find((component) => component.id === selectedId) ?? components[0];
   const defaultConnections = entity ? [
-    { method: 'GET', endpoint: `/${entity.code.toLowerCase()}` },
-    { method: 'POST', endpoint: `/${entity.code.toLowerCase()}` },
-    { method: 'PUT', endpoint: `/${entity.code.toLowerCase()}/{id}` },
-    { method: 'DELETE', endpoint: `/${entity.code.toLowerCase()}/{id}` },
+    { method: 'GET', endpoint: `/api/${entity.code.toLowerCase()}` },
+    { method: 'POST', endpoint: `/api/${entity.code.toLowerCase()}` },
+    { method: 'PUT', endpoint: `/api/${entity.code.toLowerCase()}/:id` },
+    { method: 'DELETE', endpoint: `/api/${entity.code.toLowerCase()}/:id` },
   ] : [];
 
   async function ensureDraft(): Promise<MetadataDraft | undefined> {
@@ -210,12 +216,58 @@ export function VisualFormBuilder({
       });
     }
 
+    if (typeof next.visible === 'boolean') {
+      nextDraft = await designer.applyOperation(nextDraft.id!, {
+        type: 'CHANGE_PROPERTY',
+        path: `layout.sections.${location.sectionIndex}.fields.${location.fieldIndex}.visible`,
+        after: next.visible,
+      });
+    }
+
+    if (typeof next.order === 'number') {
+      nextDraft = await designer.applyOperation(nextDraft.id!, {
+        type: 'CHANGE_PROPERTY',
+        path: `layout.sections.${location.sectionIndex}.fields.${location.fieldIndex}.order`,
+        after: next.order,
+      });
+    }
+
     nextDraft = await designer.applyOperation(nextDraft.id!, {
       type: 'CHANGE_PROPERTY',
       path: `layout.sections.${location.sectionIndex}.fields.${location.fieldIndex}.validation.visualBuilder`,
       after: compactVisualMetadata(visual),
     });
     setDraft(nextDraft);
+  }
+
+  async function deleteSelected() {
+    if (!selected?.fieldCode) {
+      return;
+    }
+
+    const targetDraft = await ensureDraft();
+    if (!targetDraft?.id) {
+      return;
+    }
+
+    remember(selected.id);
+    const nextDraft = await designer.applyOperation(targetDraft.id, {
+      type: 'REMOVE_FIELD',
+      payload: { fieldCode: selected.fieldCode },
+    });
+    setDraft(nextDraft);
+    setSelectedId('save-button');
+  }
+
+  function duplicateSelected() {
+    if (!selected) {
+      return;
+    }
+
+    setPendingComponent(selected.type);
+    setSelectedId('new-field');
+    setNewFieldName(`${selected.fieldCode ?? labelForComponent(selected.type)}_copy`);
+    setNewFieldType(fieldTypeForComponent(selected.type));
   }
 
   async function saveAction(next: VisualComponent['event']) {
@@ -233,6 +285,40 @@ export function VisualFormBuilder({
     });
     setDraft(nextDraft);
     setSelectedId('save-button');
+  }
+
+  async function createFieldAndAddToForm() {
+    if (!activeForm || !entity || !newFieldName.trim()) {
+      return;
+    }
+
+    const fieldCode = fieldCodeFromLabel(newFieldName);
+    const component = pendingComponent ?? componentFromFieldType(newFieldType);
+    const updatedEntity: EntityDefinition = {
+      ...entity,
+      fieldCodes: entity.fieldCodes.includes(fieldCode) ? entity.fieldCodes : [...entity.fieldCodes, fieldCode],
+    };
+    const nextField = formFieldFromComponent(fieldCode, component, activeForm.sections[0]?.fields.length ?? 0, activeForm.entityCode);
+    const updatedForm = formDefinitionFromRuntime(activeForm, nextField);
+    const fieldMetadata = metadata<FieldDefinition>('FIELD', fieldCode, humanizeCode(fieldCode), context, {
+      code: fieldCode,
+      name: humanizeCode(fieldCode),
+      entityCode: entity.code,
+      dataType: dataTypeFromFieldType(newFieldType),
+      required: false,
+      visible: true,
+      readonly: false,
+      validation: {
+        visualBuilder: compactVisualMetadata(visualMetadataFor(fieldCode, component, activeForm.sections[0]?.fields.length ?? 0, activeForm.entityCode)),
+      },
+    });
+    const entityMetadata = metadata<EntityDefinition>('ENTITY', entity.code, humanizeCode(entity.code), context, updatedEntity);
+    const formMetadata = metadata<FormDefinition>('FORM', updatedForm.code, updatedForm.name, context, updatedForm);
+
+    await designer.publishGenerated([entityMetadata, fieldMetadata, formMetadata]);
+    setPendingComponent(undefined);
+    setSelectedId(fieldCode);
+    onPublished?.();
   }
 
   async function preview() {
@@ -274,10 +360,11 @@ export function VisualFormBuilder({
   return (
     <main className="visual-builder-page">
       <header className="visual-builder-topbar">
+        <Button variant="secondary" onClick={onBack ?? (() => { window.location.href = '/studio'; })}>Back</Button>
         <div>
-          <span className="studio-kicker">Full Page Builder</span>
-          <h2>{applicationName}</h2>
-          <p className="studio-muted">{humanizeCode(activeForm.form)} untuk {humanizeCode(entity.code)}</p>
+          <span className="studio-kicker">{humanizeCode(entity.code)} Form Builder</span>
+          <h2>{humanizeCode(activeForm.form)}</h2>
+          <p className="studio-muted">{applicationName}</p>
         </div>
         <div className="visual-builder-device-switch">
           {(['Desktop', 'Tablet', 'Mobile'] as BuilderDevice[]).map((nextDevice) => (
@@ -298,15 +385,15 @@ export function VisualFormBuilder({
       <section className="visual-builder-workspace">
         <aside className="visual-builder-left">
           <div className="visual-builder-tabs">
-            {(['Fields', 'Components'] as BuilderTab[]).map((nextTab) => (
+            {(['Fields', 'Components', 'Data Source'] as BuilderTab[]).map((nextTab) => (
               <button key={nextTab} className={tab === nextTab ? 'studio-chip studio-chip-active' : 'studio-chip'} type="button" onClick={() => setTab(nextTab)}>
-                {nextTab === 'Fields' ? 'Information Fields' : 'Components'}
+                {nextTab === 'Fields' ? 'Fields' : nextTab}
               </button>
             ))}
           </div>
           {tab === 'Fields' ? (
             <FieldsPanel entity={entity} form={activeForm} onDropField={(fieldCode) => void addField(fieldCode)} />
-          ) : (
+          ) : tab === 'Components' ? (
             <ComponentsPanel onAddComponent={(component) => {
               if (component === 'BUTTON') {
                 setSelectedId('save-button');
@@ -318,6 +405,8 @@ export function VisualFormBuilder({
               setNewFieldName(labelForComponent(component));
               setNewFieldType(fieldTypeForComponent(component));
             }} />
+          ) : (
+            <DataSourcePanel entity={entity} connections={defaultConnections} />
           )}
         </aside>
 
@@ -381,7 +470,10 @@ export function VisualFormBuilder({
             pendingComponent={pendingComponent}
             onNewFieldName={setNewFieldName}
             onNewFieldType={setNewFieldType}
+            onCreateField={() => void createFieldAndAddToForm()}
             onChange={(next) => void updateSelected(next)}
+            onDelete={() => void deleteSelected()}
+            onDuplicate={duplicateSelected}
             onSaveAction={saveAction}
           />
         </aside>
@@ -419,6 +511,26 @@ function ComponentsPanel({ onAddComponent }: { onAddComponent: (component: Build
       <PaletteGroup title="Basic" components={basicComponents} onAddComponent={onAddComponent} />
       <PaletteGroup title="Layout" components={layoutComponents} onAddComponent={onAddComponent} />
       <PaletteGroup title="Advanced" components={advancedComponents} onAddComponent={onAddComponent} />
+    </div>
+  );
+}
+
+function DataSourcePanel({ entity, connections }: { entity: EntityDefinition; connections: Array<{ method: string; endpoint: string }> }) {
+  return (
+    <div className="visual-builder-panel-body">
+      <span className="studio-kicker">Data Source</span>
+      <h3>{humanizeCode(entity.code)}</h3>
+      <div className="studio-list">
+        {connections.map((connection) => (
+          <div key={`${connection.method}:${connection.endpoint}`} className="studio-list-row">
+            <strong>{connection.method}</strong>
+            <span>{connection.endpoint}</span>
+          </div>
+        ))}
+      </div>
+      <div className="studio-inline-warning">
+        Default connections are generated from the Data Object and can be overridden in API Binding.
+      </div>
     </div>
   );
 }
@@ -466,7 +578,10 @@ function PropertyInspector({
   pendingComponent,
   onNewFieldName,
   onNewFieldType,
+  onCreateField,
   onChange,
+  onDelete,
+  onDuplicate,
   onSaveAction,
 }: {
   selected?: VisualComponent;
@@ -478,7 +593,10 @@ function PropertyInspector({
   pendingComponent?: BuilderComponentType;
   onNewFieldName: (value: string) => void;
   onNewFieldType: (value: string) => void;
+  onCreateField: () => void;
   onChange: (next: Partial<VisualComponent>) => void;
+  onDelete: () => void;
+  onDuplicate: () => void;
   onSaveAction: (event: VisualComponent['event']) => void;
 }) {
   const [actionType, setActionType] = useState<BuilderActionType>('Save Record');
@@ -506,6 +624,7 @@ function PropertyInspector({
           <strong>{humanizeCode(entity.code)}</strong>
         </div>
         <div className="studio-inline-warning">Field metadata creation from this panel is staged for generated publish, so existing form metadata stays valid.</div>
+        <Button onClick={onCreateField}>Create Field and Add to Form</Button>
       </div>
     );
   }
@@ -529,7 +648,7 @@ function PropertyInspector({
         {entity.fieldCodes.slice(0, 6).map((fieldCode) => (
           <div key={fieldCode} className="studio-list-row">
             <span>{fieldCode}</span>
-            <strong>{entity.code.toLowerCase()}.{fieldCode}</strong>
+            <strong>{`{{form.${fieldCode}}}`}</strong>
           </div>
         ))}
         <label className="studio-form-field">
@@ -545,7 +664,7 @@ function PropertyInspector({
             type: actionType,
             method,
             endpoint,
-            payload: Object.fromEntries(entity.fieldCodes.map((fieldCode) => [fieldCode, `${entity.code.toLowerCase()}.${fieldCode}`])),
+            payload: Object.fromEntries(entity.fieldCodes.map((fieldCode) => [fieldCode, `{{form.${fieldCode}}}`])),
             successMessage: toast,
             navigateTo,
           },
@@ -564,46 +683,84 @@ function PropertyInspector({
         Label
         <Input value={selected.label} onChange={(label) => onChange({ label })} />
       </label>
-      <h4>Binding</h4>
-      <div className="studio-list-row">
-        <span>Data Object</span>
-        <strong>{humanizeCode(entity.code)}</strong>
-      </div>
-      <div className="studio-list-row">
-        <span>Information Field</span>
-        <strong>{selected.fieldCode}</strong>
-      </div>
-      <h4>UI</h4>
       <label className="studio-form-field">
-        Width
-        <Select value={`${selected.width}`} options={['3', '4', '6', '8', '12']} onChange={(value) => onChange({ width: Number(value) })} />
-      </label>
-      <label className="studio-form-field">
-        Height
-        <Select value={`${selected.height}`} options={['1', '2', '3', '4']} onChange={(value) => onChange({ height: Number(value) })} />
+        Field
+        <Input value={selected.fieldCode ?? ''} onChange={() => undefined} />
       </label>
       <label className="studio-form-field">
         Placeholder
         <Input value={selected.placeholder ?? ''} onChange={(placeholder) => onChange({ placeholder })} />
       </label>
+      <h4>Input</h4>
+      <label className="studio-form-field">
+        Type
+        <Select value={selected.type} options={basicComponents.map((component) => component.type)} onChange={(value) => onChange({ type: value as BuilderComponentType })} />
+      </label>
       <label className="studio-check-row">
-        <input type="checkbox" checked={selected.visible !== false} onChange={(event) => onChange({ visible: event.target.checked })} />
-        Visible
+        <input type="checkbox" checked={Boolean(selected.required)} onChange={(event) => onChange({ required: event.target.checked })} />
+        Required
       </label>
       <label className="studio-check-row">
         <input type="checkbox" checked={Boolean(selected.readonly)} onChange={(event) => onChange({ readonly: event.target.checked })} />
         Readonly
       </label>
-      <h4>Validation</h4>
       <label className="studio-check-row">
-        <input type="checkbox" checked={Boolean(selected.required)} onChange={(event) => onChange({ required: event.target.checked })} />
-        Required
+        <input type="checkbox" checked={selected.visible !== false} onChange={(event) => onChange({ visible: event.target.checked })} />
+        Visible
       </label>
+      <h4>Layout</h4>
+      <label className="studio-form-field">
+        Width
+        <Select value={`${selected.width}`} options={['12', '6', '4']} onChange={(value) => onChange({ width: Number(value) })} />
+      </label>
+      <label className="studio-form-field">
+        Column
+        <Select value={`${Math.floor((selected.x ?? 0) / 4) + 1}`} options={['1', '2', '3']} onChange={(value) => onChange({ x: (Number(value) - 1) * 4 })} />
+      </label>
+      <label className="studio-form-field">
+        Order
+        <Input value={`${selected.order ?? selected.y ?? 0}`} onChange={(value) => onChange({ order: Number(value), y: Number(value) })} />
+      </label>
+      <h4>Validation</h4>
+      <label className="studio-form-field">
+        Min
+        <Input value="" onChange={() => undefined} />
+      </label>
+      <label className="studio-form-field">
+        Max
+        <Input value="" onChange={() => undefined} />
+      </label>
+      <label className="studio-form-field">
+        Regex
+        <Input value="" onChange={() => undefined} />
+      </label>
+      <h4>API Binding</h4>
+      <div className="studio-list-row">
+        <span>Data Object</span>
+        <strong>{humanizeCode(entity.code)}</strong>
+      </div>
+      <div className="studio-list-row">
+        <span>Binding</span>
+        <strong>{selected.fieldCode}</strong>
+      </div>
+      <div className="studio-list-row">
+        <span>Endpoint</span>
+        <strong>{defaultConnections[0]?.endpoint}</strong>
+      </div>
       <div className="studio-card">
-        <strong>Create New Information Field</strong>
-        <p className="studio-muted">Intent metadata for adding new data from inside builder.</p>
+        <strong>Component Actions</strong>
+        <p className="studio-muted">Duplicate creates a new information field instead of reusing the same binding.</p>
+        <div className="studio-action-row">
+          <Button variant="secondary" onClick={onDuplicate}>Duplicate</Button>
+          <Button variant="secondary" onClick={onDelete}>Delete</Button>
+        </div>
+      </div>
+      <div className="studio-card">
+        <strong>Add Field Here</strong>
+        <p className="studio-muted">Create an information field without leaving the builder.</p>
         <Input value={newFieldName} onChange={onNewFieldName} />
         <Select value={newFieldType} options={['Text', 'Number', 'Date', 'Dropdown', 'File']} onChange={onNewFieldType} />
+        <Button onClick={onCreateField}>Create Field and Add</Button>
       </div>
       {developerMode ? <pre>{JSON.stringify(compactVisualMetadata(selected), null, 2)}</pre> : null}
     </div>
@@ -699,6 +856,7 @@ function visualMetadataFor(fieldCode: string, component: string, index: number, 
     type: component as BuilderComponentType,
     label: humanizeCode(fieldCode),
     fieldCode,
+    order: index + 1,
     x: (index % 2) * 6,
     y: Math.floor(index / 2),
     width: 6,
@@ -716,6 +874,7 @@ function compactVisualMetadata(component: Partial<VisualComponent>): Partial<Vis
     type: component.type,
     label: component.label,
     fieldCode: component.fieldCode,
+    order: component.order,
     x: component.x,
     y: component.y,
     width: component.width,
@@ -759,6 +918,130 @@ function formFromDraft(draft: MetadataDraft, fallback?: RuntimeForm): RuntimeFor
       })),
     })),
   };
+}
+
+function metadata<TDefinition>(
+  type: MetadataDefinition<TDefinition>['type'],
+  code: string,
+  name: string,
+  context: RuntimeContext,
+  definition: TDefinition,
+): MetadataDefinition<TDefinition> {
+  return {
+    tenantId: context.tenantId,
+    domainCode: context.domainCode,
+    applicationCode: context.applicationCode,
+    type,
+    code,
+    name,
+    version: 1,
+    enabled: true,
+    definition,
+  };
+}
+
+function formFieldFromComponent(
+  fieldCode: string,
+  component: BuilderComponentType,
+  index: number,
+  entityCode: string,
+): FormDefinition['layout']['sections'][number]['fields'][number] {
+  return {
+    fieldCode,
+    component,
+    order: index + 1,
+    required: false,
+    readonly: false,
+    visible: true,
+    binding: {
+      source: 'FORM',
+      fieldCode,
+    },
+    validation: {
+      label: humanizeCode(fieldCode),
+      visualBuilder: visualMetadataFor(fieldCode, component, index, entityCode),
+    },
+  };
+}
+
+function formDefinitionFromRuntime(form: RuntimeForm, nextField: FormDefinition['layout']['sections'][number]['fields'][number]): FormDefinition {
+  const sections = form.sections.length > 0 ? form.sections : [{ code: 'MAIN', fields: [] }];
+
+  return {
+    code: form.form,
+    entityCode: form.entityCode,
+    name: form.name,
+    version: form.version,
+    enabled: true,
+    layout: {
+      type: form.layout === 'TWO_COLUMN' ? 'TWO_COLUMN' : 'SECTION',
+      sections: sections.map((section, sectionIndex) => ({
+        code: section.code,
+        title: humanizeCode(section.code),
+        order: sectionIndex + 1,
+        fields: [
+          ...section.fields.map((field) => ({
+            fieldCode: field.fieldCode,
+            component: field.component,
+            order: field.order,
+            required: field.required,
+            readonly: field.readonly ?? false,
+            visible: field.visible ?? true,
+            binding: {
+              source: 'FORM' as const,
+              fieldCode: field.fieldCode,
+            },
+            validation: validationFor(field),
+          })),
+          ...(sectionIndex === 0 && !section.fields.some((field) => field.fieldCode === nextField.fieldCode) ? [nextField] : []),
+        ],
+      })),
+    },
+  };
+}
+
+function fieldCodeFromLabel(label: string): string {
+  return label
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '_')
+    .replace(/^_+|_+$/g, '') || 'new_field';
+}
+
+function componentFromFieldType(type: string): BuilderComponentType {
+  if (type === 'Number') {
+    return 'NUMBER_INPUT';
+  }
+
+  if (type === 'Date') {
+    return 'DATE_PICKER';
+  }
+
+  if (type === 'Dropdown') {
+    return 'SELECT';
+  }
+
+  if (type === 'File') {
+    return 'FILE_UPLOAD';
+  }
+
+  return 'TEXT_INPUT';
+}
+
+function dataTypeFromFieldType(type: string): FieldDataType {
+  if (type === 'Number') {
+    return 'number';
+  }
+
+  if (type === 'Date') {
+    return 'date';
+  }
+
+  if (type === 'File') {
+    return 'object';
+  }
+
+  return 'string';
 }
 
 function groupBySection(components: VisualComponent[]): Array<[string, VisualComponent[]]> {
