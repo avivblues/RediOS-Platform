@@ -56,6 +56,7 @@ export function generateEntity(input: CreationEntityInput, context: GeneratorCon
 export function generateField(entityCode: string, input: CreationFieldInput, context: GeneratorContext): MetadataDefinition<FieldDefinition> {
   const code = fieldCodeFromLabel(input.label);
   const dataType = fieldDataType(input.type);
+  const relationCode = lookupRelationCode(entityCode, input);
 
   return metadata('FIELD', code, input.label, context, {
     code,
@@ -72,21 +73,23 @@ export function generateField(entityCode: string, input: CreationFieldInput, con
       searchable: input.searchable,
       showInList: input.showInList,
     },
-    relation: input.type === 'Lookup' && input.relatedObject ? `${entityCode}_${codeFromLabel(input.relatedObject)}_RELATION` : undefined,
+    relation: relationCode,
   });
 }
 
 export function generateRelation(entityCode: string, field: CreationFieldInput, context: GeneratorContext): MetadataDefinition<RelationDefinition> | undefined {
-  if (field.type !== 'Lookup' || !field.relatedObject) {
+  const relationCode = lookupRelationCode(entityCode, field);
+
+  if (!relationCode || !field.relatedObject) {
     return undefined;
   }
 
   const targetEntity = codeFromLabel(field.relatedObject);
   const fieldCode = fieldCodeFromLabel(field.label);
-  const code = `${entityCode}_${targetEntity}_RELATION`;
+  const targetField = field.displayField ? fieldCodeFromLabel(field.displayField) : fieldCode;
 
-  return metadata('RELATION', code, `${entityCode} ${targetEntity} Relation`, context, {
-    code,
+  return metadata('RELATION', relationCode, `${entityCode} ${targetEntity} Relation`, context, {
+    code: relationCode,
     source: {
       entityCode,
     },
@@ -96,7 +99,7 @@ export function generateRelation(entityCode: string, field: CreationFieldInput, 
     type: 'MANY_TO_ONE',
     mapping: {
       sourceField: fieldCode,
-      targetField: field.displayField ? fieldCodeFromLabel(field.displayField) : 'id',
+      targetField,
     },
     behavior: {
       required: field.required,
@@ -131,10 +134,10 @@ export function generateForm(entity: CreationEntityInput, context: GeneratorCont
               showInList: field.showInList,
               searchable: field.searchable,
             },
-            lookup: sourceField?.type === 'Lookup' && sourceField.relatedObject
+            lookup: lookupRelationCode(entityCode, sourceField)
               ? {
-                  relationCode: `${entityCode}_${codeFromLabel(sourceField.relatedObject)}_RELATION`,
-                  viewCode: `${codeFromLabel(sourceField.relatedObject)}_LIST`,
+                  relationCode: lookupRelationCode(entityCode, sourceField)!,
+                  viewCode: `${codeFromLabel(sourceField.relatedObject!)}_LIST`,
                 }
               : undefined,
           };
@@ -155,10 +158,10 @@ export function generateForm(entity: CreationEntityInput, context: GeneratorCont
             validation: {
               showInList: field.showInList,
             },
-            lookup: field.type === 'Lookup' && field.relatedObject
+            lookup: lookupRelationCode(entityCode, field)
               ? {
-                  relationCode: `${entityCode}_${codeFromLabel(field.relatedObject)}_RELATION`,
-                  viewCode: `${codeFromLabel(field.relatedObject)}_LIST`,
+                  relationCode: lookupRelationCode(entityCode, field)!,
+                  viewCode: `${codeFromLabel(field.relatedObject!)}_LIST`,
                 }
               : undefined,
           })),
@@ -507,6 +510,14 @@ function componentForField(field: CreationFieldInput): string {
   }
 
   return 'TEXT_INPUT';
+}
+
+function lookupRelationCode(entityCode: string, field?: CreationFieldInput): string | undefined {
+  if (!field || field.type !== 'Lookup' || !field.relatedObject) {
+    return undefined;
+  }
+
+  return `${entityCode}_${codeFromLabel(field.relatedObject)}_RELATION`;
 }
 
 function humanName(code: string): string {

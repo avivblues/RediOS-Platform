@@ -8,10 +8,11 @@ import type {
   RuntimePackageDefinition,
   WorkflowDefinition,
 } from '@redios/shared';
-import { FormBuilder } from '../../builder/form/FormBuilder';
+import { VisualFormBuilder } from '../../builder/form/VisualFormBuilder';
 import { IntegrationBuilder } from '../../builder/integration/IntegrationBuilder';
 import { PageBuilder } from '../../builder/ui/PageBuilder';
 import { WorkflowBuilder } from '../../builder/workflow/WorkflowBuilder';
+import { Button } from '../../components/atomic/atoms/Atoms';
 import { Panel } from '../../components/atomic/organisms/Organisms';
 import { DesignerClient, type DesignerPreviewResult } from '../../core/api/designer-client';
 import { MetadataClient, type MetadataDebugTree } from '../../core/api/metadata-client';
@@ -173,6 +174,11 @@ export function StudioPage() {
 
     if (nextSelection.type === 'CREATE_APPLICATION') {
       window.history.pushState(null, '', '/studio/create');
+      return;
+    }
+
+    if (nextSelection.type === 'FORM_BUILDER') {
+      window.history.pushState(null, '', `/studio/builder/forms/${nextSelection.code}`);
       return;
     }
 
@@ -343,13 +349,28 @@ function ActiveWorkspace({
   }
 
   if (selection.type === 'ENTITY' || selection.type === 'FORMS') {
+    const screenCode = form?.form ?? selection.code;
     return (
-      <>
-        <FormBuilder form={form} entity={entity} designer={designerClient} expertMode={mode === 'EXPERT'} onPreview={onPreview} onPublished={onPublished} />
-        <StudioPreview preview={preview} form={form} />
-        <StudioHistoryPanel designer={designerClient} draftId={preview?.draft.id} onRestored={onPublished} />
-        <HelpPanel topic="FORMS" />
-      </>
+      <Panel title="Open Full Page Builder">
+        <p className="studio-muted">Screen sekarang dibuka di full browser workspace agar field, component, canvas, preview, dan action binding terlihat jelas.</p>
+        <Button onClick={() => onSelect({ type: 'FORM_BUILDER', code: screenCode })} tooltip="Buka visual builder full page.">
+          Open Visual Builder
+        </Button>
+      </Panel>
+    );
+  }
+
+  if (selection.type === 'FORM_BUILDER') {
+    return (
+      <VisualFormBuilder
+        form={form}
+        entity={entity}
+        designer={designerClient}
+        applicationName={applications[0]?.definition.name ?? context.applicationCode}
+        developerMode={mode === 'EXPERT'}
+        onPreview={onPreview}
+        onPublished={onPublished}
+      />
     );
   }
 
@@ -413,6 +434,14 @@ function initialSelection(tree: MetadataDebugTree): ExplorerSelection | undefine
     return { type: 'APPLICATION_BUILDER', code: applicationCode };
   }
 
+  if (route === 'studio' && resource === 'builder') {
+    const [, , , builderKind, screenId] = window.location.pathname.split('/');
+
+    if (builderKind === 'forms' && screenId) {
+      return { type: 'FORM_BUILDER', code: screenId };
+    }
+  }
+
   if (tree.applications.length > 0 || tree.forms.length > 0 || tree.entities.length > 0) {
     return { type: 'HOME', code: 'HOME' };
   }
@@ -441,7 +470,7 @@ async function resolveForm(
     return metadataClient.getForm(selection.code).catch(() => undefined);
   }
 
-  if (selection.type === 'FORMS') {
+  if (selection.type === 'FORMS' || selection.type === 'FORM_BUILDER') {
     for (const entityCode of tree.entities) {
       const candidate = await metadataClient.getForm(entityCode).catch(() => undefined);
 

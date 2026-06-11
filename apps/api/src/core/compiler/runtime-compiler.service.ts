@@ -33,7 +33,7 @@ export class RuntimeCompiler {
       enabledOnly: true,
     });
     const sourceMetadata = metadata.filter((record) => record.type !== 'RUNTIME_PACKAGE');
-    const validation = this.metadataValidatorEngine.validate(metadata);
+    const validation = this.metadataValidatorEngine.validate(sourceMetadata);
 
     if (!validation.valid) {
       throw new UnprocessableEntityException(validation);

@@ -724,10 +724,21 @@ function validationIssues(detail: unknown): Array<{ code?: string; message?: str
     return [];
   }
 
-  const response = detail as { issues?: unknown; response?: { issues?: unknown } };
-  const issues = response.issues ?? response.response?.issues;
+  const response = detail as {
+    issues?: unknown;
+    message?: unknown;
+    response?: { issues?: unknown; message?: unknown };
+  };
+  const issues = response.issues
+    ?? response.response?.issues
+    ?? (isValidationShape(response.message) ? response.message.issues : undefined)
+    ?? (isValidationShape(response.response?.message) ? response.response?.message.issues : undefined);
 
   return Array.isArray(issues) ? issues as Array<{ code?: string; message?: string }> : [];
+}
+
+function isValidationShape(value: unknown): value is { issues?: unknown } {
+  return Boolean(value && typeof value === 'object' && 'issues' in value);
 }
 
 function BuildCounts({ draft, expertMode }: { draft: CreationDraft; expertMode: boolean }) {

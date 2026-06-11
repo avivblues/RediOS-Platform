@@ -61,7 +61,7 @@ export function ApplicationBuilderView({
       <Panel title="Builder">
         <div className="studio-card-grid">
           <BuilderCard title="Data Object" category="Data" description="Hal yang dikelola bisnis, seperti Product, Asset, atau Customer." help="Mulai dari sini saat ingin menambah atau memahami informasi yang disimpan aplikasi." onClick={() => onSelect({ type: 'ENTITY', code: definition.entityCodes[0] ?? tree.entities[0] ?? 'ENTITY' })} />
-          <BuilderCard title="Screen" category="Experience" description="Tempat pengguna memasukkan dan memperbarui informasi." help="Buka bagian ini saat pengguna membutuhkan layar input atau tata letak yang lebih baik." onClick={() => onSelect({ type: 'FORMS', code: tree.forms[0] ?? 'FORMS' })} />
+          <BuilderCard title="Screen" category="Experience" description="Tempat pengguna memasukkan dan memperbarui informasi." help="Buka bagian ini saat pengguna membutuhkan layar input atau tata letak yang lebih baik." onClick={() => onSelect({ type: 'FORM_BUILDER', code: tree.forms[0] ?? 'FORMS' })} />
           <BuilderCard title="Page" category="Experience" description="Halaman yang dibuka pengguna di aplikasi." help="Gunakan halaman untuk mengatur daftar, input, dan dashboard aplikasi." onClick={() => onSelect({ type: 'PAGES', code: tree.ui[0] ?? 'PAGES' })} />
           <BuilderCard title="Process" category="Automation" description="Cara pekerjaan bergerak dari satu langkah ke langkah lain." help="Gunakan ini untuk persetujuan, perubahan status, dan alur kerja." onClick={() => onSelect({ type: 'WORKFLOWS', code: workflowCode ?? 'WORKFLOWS' })} />
           <BuilderCard title="Connector" category="Automation" description="Cara aplikasi bertukar data dengan sistem lain." help="Gunakan ini untuk menghubungkan aplikasi dengan sistem lain." onClick={() => onSelect({ type: 'INTEGRATIONS', code: tree.integrations[0] ?? 'INTEGRATIONS' })} />
@@ -71,7 +71,7 @@ export function ApplicationBuilderView({
       <Panel title="Data Object">
         <div className="studio-card-grid">
           {appEntities.map((entity) => (
-            <button key={entity.code} className="studio-app-card" onClick={() => onSelect({ type: 'ENTITY', code: entity.code })}>
+            <button key={entity.code} className="studio-app-card" onClick={() => onSelect({ type: 'FORM_BUILDER', code: `${entity.code}_FORM` })}>
               <span className="studio-kicker">Data Object</span>
               <h3>{humanizeCode(entity.code)}</h3>
               <p className="studio-muted">{entity.fieldCodes.length} informasi</p>
