@@ -13,6 +13,8 @@ export function FormBuilderPage({
   onPreview,
   onPublished,
   onBack,
+  builderMode = 'web',
+  eventCodes = [],
 }: {
   form?: RuntimeForm;
   entity?: EntityDefinition;
@@ -23,6 +25,8 @@ export function FormBuilderPage({
   onPreview: (preview: DesignerPreviewResult) => void;
   onPublished: () => void;
   onBack: () => void;
+  builderMode?: 'web' | 'android';
+  eventCodes?: string[];
 }) {
   return (
     <VisualFormBuilder
@@ -32,6 +36,8 @@ export function FormBuilderPage({
       context={context}
       applicationName={applicationName}
       developerMode={developerMode}
+      builderMode={builderMode}
+      eventCodes={eventCodes}
       onPreview={onPreview}
       onPublished={onPublished}
       onBack={onBack}

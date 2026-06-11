@@ -63,6 +63,10 @@ export interface GeneratedMetadataPublishResult {
   }>;
 }
 
+export interface GeneratedMetadataStageResult {
+  staged: MetadataDefinition[];
+}
+
 export interface StudioHistoryEntry {
   id: string;
   version: number;
@@ -95,6 +99,10 @@ export class DesignerClient {
 
   publishGenerated(metadata: MetadataDefinition[]): Promise<GeneratedMetadataPublishResult> {
     return this.api.post('/designer/generated/publish', { metadata });
+  }
+
+  stageGenerated(metadata: MetadataDefinition[]): Promise<GeneratedMetadataStageResult> {
+    return this.api.post('/designer/generated/stage', { metadata });
   }
 
   rollback(draftId: string, version: number): Promise<DesignerPublishResult> {

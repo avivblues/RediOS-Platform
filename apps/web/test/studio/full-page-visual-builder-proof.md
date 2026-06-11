@@ -9,7 +9,7 @@ Validate that a business user can open a full page screen builder, drag informat
 Product app builder flow:
 
 1. Create or open `Inventory App`.
-2. Open `/studio/builder/forms/PRODUCT_FORM`.
+2. Open `/studio/builder/web/PRODUCT_FORM`.
 3. Confirm builder uses the full browser workspace:
    - Top bar with Back, form name, application name.
    - Device preview switch: Desktop, Tablet, Mobile.
@@ -29,12 +29,8 @@ Product app builder flow:
    - Connection mapping metadata under `validation.visualBuilder`.
 6. Add or select `Save Product` button.
 7. Configure On Click event:
-   - Action: `Save Record` or `Call Connection`.
-   - Method: `POST`.
-   - Endpoint: `/api/product`.
-   - Payload mapper: `{{form.name}}`, `{{form.stock}}`, and product fields to request body.
-   - Success toast.
-   - Navigate to Product List.
+   - Select existing `Save Product` Event from Metadata Designer.
+   - Confirm the builder does not expose direct API URL editing.
 8. Switch to Mobile preview and confirm the same metadata renders in mobile layout.
 9. Publish.
 10. Open generated app and save product data.

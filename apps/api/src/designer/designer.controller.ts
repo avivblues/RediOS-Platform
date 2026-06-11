@@ -8,6 +8,7 @@ import {
   type DesignerPublishResult,
   type GeneratedMetadataPublishRequest,
   type GeneratedMetadataPublishResult,
+  type GeneratedMetadataStageResult,
   type StudioHistoryEntry,
 } from '../core/designer/designer-engine.service';
 
@@ -47,6 +48,14 @@ export class DesignerController {
     @Body() request: GeneratedMetadataPublishRequest,
   ): Promise<GeneratedMetadataPublishResult> {
     return this.designerEngine.publishGeneratedMetadata(this.contextEngine.resolve(headers), request);
+  }
+
+  @Post('generated/stage')
+  stageGenerated(
+    @Headers() headers: RuntimeHeaders,
+    @Body() request: GeneratedMetadataPublishRequest,
+  ): Promise<GeneratedMetadataStageResult> {
+    return this.designerEngine.stageGeneratedMetadata(this.contextEngine.resolve(headers), request);
   }
 
   @Post(':draftId/publish')

@@ -17,7 +17,6 @@ import { suggestInformationForObject } from '../suggestions/StudioSuggestionEngi
 import { pluralTerm, term, terminologyMode } from '../terminology/terminology.service';
 import { StudioActivityTimeline, type StudioActivityItem } from '../activity/StudioActivityTimeline';
 import { MetadataEditor } from '../editor/MetadataEditor';
-import { ScreenDesigner } from '../screen-designer/ScreenDesigner';
 import type { DesignedScreenLayout } from '../screen-designer/screen-designer-types';
 import {
   StudioBadge,
@@ -85,6 +84,7 @@ export function CreationWizard({
   const [publishState, setPublishState] = useState<'idle' | 'publishing' | 'live'>('idle');
   const [publishError, setPublishError] = useState<{ title: string; reason: string } | undefined>();
   const [lockedMessage, setLockedMessage] = useState<string | undefined>();
+  const [builderOpening, setBuilderOpening] = useState(false);
   const mode = terminologyMode(expertMode);
   const steps = expertMode
     ? [term('APPLICATION', mode), term('ENTITY', mode), term('FIELD', mode), term('FORM', mode), term('WORKFLOW', mode), 'Publish']
@@ -326,6 +326,32 @@ export function CreationWizard({
     }
   }
 
+  async function openFullPageBuilder() {
+    if (!selectedEntity) {
+      setLockedMessage('Create a Data Object first, then open the visual builder.');
+      return;
+    }
+
+    setBuilderOpening(true);
+    setPublishError(undefined);
+
+    try {
+      const generatedForBuilder = generateMetadataSet(draft, {
+        tenantId: context.tenantId,
+        domainCode: context.domainCode,
+        applicationCode: codeFromLabel(draft.application.name || context.applicationCode),
+      });
+      await designer.stageGenerated(metadataForPublish(generatedForBuilder));
+      const formCode = `${codeFromLabel(selectedEntity.name)}_FORM`;
+      pushActivity('Full page builder opened', `${selectedEntity.name} screen is now edited in the visual builder workspace.`);
+      window.location.href = `/studio/builder/web/${formCode}`;
+    } catch (error) {
+      setPublishError(humanizeLaunchError(error, expertMode));
+      pushActivity('Builder setup needs attention', 'RediOS could not prepare the visual builder workspace yet.');
+      setBuilderOpening(false);
+    }
+  }
+
   function repairGeneratedMetadata() {
     setPublishError(undefined);
     setPublishState('idle');
@@ -457,27 +483,53 @@ export function CreationWizard({
         {step === screenStepIndex ? (
           <section className="studio-wizard-body">
             <h3>
-              {expertMode ? 'FORM metadata' : 'Screen Design'}
+              Screen Design
               <HelpTooltip label="Screen">A screen is what users see when entering or viewing data.</HelpTooltip>
             </h3>
-            <p className="studio-muted">How should users enter and view this data?</p>
+            <p className="studio-muted">Open the full visual builder workspace to add fields, arrange the form, connect Save actions, and preview web or mobile layout.</p>
             {selectedEntity ? (
-              <ScreenDesigner
-                key={selectedEntity.name}
-                entity={selectedEntity}
-                expertMode={expertMode}
-                onApply={(layout) => generateExperience(layout)}
-                onLayoutChange={(layout) => generateExperience(layout, true)}
-                onAddInformation={addInformationInDesigner}
-              />
+              <StudioCard>
+                <span className="studio-kicker">Full Page Visual Builder</span>
+                <h3>{selectedEntity.name} Builder</h3>
+                <p className="studio-muted">
+                  Layout, component toolbox, large canvas, property inspector, and Event connection are handled in the builder. Object, API, Data Source, and Event definitions live in Metadata Designer.
+                </p>
+                <div className="studio-card-grid">
+                  <StudioCard>
+                    <strong>Fields</strong>
+                    <span className="studio-muted">{selectedEntity.fields.length || 'Add from builder'} information items</span>
+                  </StudioCard>
+                  <StudioCard>
+                    <strong>Canvas</strong>
+                    <span className="studio-muted">Desktop, tablet, and mobile preview</span>
+                  </StudioCard>
+                  <StudioCard>
+                    <strong>Connection</strong>
+                    <span className="studio-muted">GET, POST, PUT, DELETE defaults</span>
+                  </StudioCard>
+                </div>
+                {publishError ? (
+                  <div className="studio-inline-danger">
+                    <strong>{publishError.title}</strong>
+                    <p>{publishError.reason}</p>
+                  </div>
+                ) : null}
+                <StudioButton
+                  onClick={() => void openFullPageBuilder()}
+                  disabled={builderOpening}
+                  tooltip="Simpan rancangan awal lalu buka visual builder full page."
+                >
+                  {builderOpening ? 'Opening Builder...' : 'Open Full Page Builder'}
+                </StudioButton>
+              </StudioCard>
             ) : null}
             {!selectedEntity ? (
               <StudioButton
-                onClick={() => generateExperience()}
+                onClick={() => goToStep(1)}
                 disabled={!isFieldsComplete(draft)}
-                tooltip={isFieldsComplete(draft) ? 'Buat layar input, layar daftar, dan menu dari informasi yang sudah kamu isi.' : 'Lengkapi minimal satu informasi untuk setiap data dulu.'}
+                tooltip="Create a Data Object first, then open the full visual builder."
               >
-                Design Screens
+                Create Data Object First
               </StudioButton>
             ) : null}
           </section>

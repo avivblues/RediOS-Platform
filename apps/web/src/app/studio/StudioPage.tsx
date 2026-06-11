@@ -21,7 +21,8 @@ import { useRuntimeContext } from '../../core/context/runtime-context';
 import type { ResolvedUIPage, RuntimeForm, RuntimeNavigation, RuntimeTheme } from '../../core/renderer/runtime-types';
 import { ThemeProvider } from '../../core/theme/theme-provider';
 import { ApplicationBuilderView } from '../../studio/application/ApplicationBuilderView';
-import { FormBuilderPage } from '../../studio/builder/FormBuilderPage';
+import { AndroidFormBuilderPage } from '../../studio/builder/AndroidFormBuilderPage';
+import { WebFormBuilderPage } from '../../studio/builder/WebFormBuilderPage';
 import { StudioCommandCenter } from '../../studio/command/StudioCommandCenter';
 import { StudioHome } from '../../studio/dashboard/StudioHome';
 import { CreationWizard } from '../../studio/create/CreationWizard';
@@ -29,6 +30,7 @@ import { ErrorState } from '../../studio/error/ErrorState';
 import type { ExplorerSelection } from '../../studio/explorer/ApplicationExplorer';
 import { HelpPanel } from '../../studio/help/HelpPanel';
 import { StudioHistoryPanel } from '../../studio/history/StudioHistoryPanel';
+import { MetadataDesignCenter } from '../../studio/metadata/MetadataDesignCenter';
 import { readStudioMode, type StudioMode, writeStudioMode } from '../../studio/mode/studio-mode';
 import { StudioHeader } from '../../studio/StudioHeader';
 import { StudioPreview } from '../../studio/preview/StudioPreview';
@@ -177,8 +179,18 @@ export function StudioPage() {
       return;
     }
 
-    if (nextSelection.type === 'FORM_BUILDER') {
-      window.history.pushState(null, '', `/studio/builder/forms/${nextSelection.code}`);
+    if (nextSelection.type === 'FORM_BUILDER' || nextSelection.type === 'WEB_BUILDER') {
+      window.history.pushState(null, '', `/studio/builder/web/${nextSelection.code}`);
+      return;
+    }
+
+    if (nextSelection.type === 'ANDROID_BUILDER') {
+      window.history.pushState(null, '', `/studio/builder/android/${nextSelection.code}`);
+      return;
+    }
+
+    if (nextSelection.type === 'METADATA_DESIGNER') {
+      window.history.pushState(null, '', '/studio/metadata');
       return;
     }
 
@@ -192,17 +204,38 @@ export function StudioPage() {
     writeStudioMode(nextMode);
   }
 
-  if (selection?.type === 'FORM_BUILDER') {
+  if (selection?.type === 'FORM_BUILDER' || selection?.type === 'WEB_BUILDER') {
     return (
       <ThemeProvider theme={state.theme}>
         {error ? <ErrorState message={error} onRetry={() => setReloadKey((current) => current + 1)} /> : null}
-        <FormBuilderPage
+        <WebFormBuilderPage
           form={form}
           entity={entity}
           designer={designerClient}
           context={context}
           applicationName={state.applications[0]?.definition.name ?? context.applicationCode}
           developerMode={mode === 'EXPERT'}
+          eventCodes={state.tree.events}
+          onPreview={setPreview}
+          onPublished={() => setReloadKey((current) => current + 1)}
+          onBack={() => handleSelect({ type: 'HOME', code: 'HOME' })}
+        />
+      </ThemeProvider>
+    );
+  }
+
+  if (selection?.type === 'ANDROID_BUILDER') {
+    return (
+      <ThemeProvider theme={state.theme}>
+        {error ? <ErrorState message={error} onRetry={() => setReloadKey((current) => current + 1)} /> : null}
+        <AndroidFormBuilderPage
+          form={form}
+          entity={entity}
+          designer={designerClient}
+          context={context}
+          applicationName={state.applications[0]?.definition.name ?? context.applicationCode}
+          developerMode={mode === 'EXPERT'}
+          eventCodes={state.tree.events}
           onPreview={setPreview}
           onPublished={() => setReloadKey((current) => current + 1)}
           onBack={() => handleSelect({ type: 'HOME', code: 'HOME' })}
@@ -354,6 +387,10 @@ function ActiveWorkspace({
     );
   }
 
+  if (selection.type === 'METADATA_DESIGNER') {
+    return <MetadataDesignCenter tree={tree} entities={entities} onSelect={onSelect} />;
+  }
+
   if (selection.type === 'TEMPLATES') {
     return <TemplateGallery onCreateFromTemplate={() => onSelect({ type: 'CREATE_APPLICATION', code: 'CREATE_APPLICATION' })} />;
   }
@@ -372,22 +409,40 @@ function ActiveWorkspace({
     return (
       <Panel title="Open Full Page Builder">
         <p className="studio-muted">Screen sekarang dibuka di full browser workspace agar field, component, canvas, preview, dan action binding terlihat jelas.</p>
-        <Button onClick={() => onSelect({ type: 'FORM_BUILDER', code: screenCode })} tooltip="Buka visual builder full page.">
-          Open Visual Builder
+        <Button onClick={() => onSelect({ type: 'WEB_BUILDER', code: screenCode })} tooltip="Buka Web App Builder full page.">
+          Open Web Builder
         </Button>
       </Panel>
     );
   }
 
-  if (selection.type === 'FORM_BUILDER') {
+  if (selection.type === 'FORM_BUILDER' || selection.type === 'WEB_BUILDER') {
     return (
-      <FormBuilderPage
+      <WebFormBuilderPage
         form={form}
         entity={entity}
         designer={designerClient}
         context={context}
         applicationName={applications[0]?.definition.name ?? context.applicationCode}
         developerMode={mode === 'EXPERT'}
+        eventCodes={tree.events}
+        onPreview={onPreview}
+        onPublished={onPublished}
+        onBack={() => onSelect({ type: 'HOME', code: 'HOME' })}
+      />
+    );
+  }
+
+  if (selection.type === 'ANDROID_BUILDER') {
+    return (
+      <AndroidFormBuilderPage
+        form={form}
+        entity={entity}
+        designer={designerClient}
+        context={context}
+        applicationName={applications[0]?.definition.name ?? context.applicationCode}
+        developerMode={mode === 'EXPERT'}
+        eventCodes={tree.events}
         onPreview={onPreview}
         onPublished={onPublished}
         onBack={() => onSelect({ type: 'HOME', code: 'HOME' })}
@@ -451,6 +506,10 @@ function initialSelection(tree: MetadataDebugTree): ExplorerSelection | undefine
     return { type: 'CREATE_APPLICATION', code: 'CREATE_APPLICATION' };
   }
 
+  if (route === 'studio' && resource === 'metadata') {
+    return { type: 'METADATA_DESIGNER', code: 'METADATA_DESIGNER' };
+  }
+
   if (route === 'studio' && resource === 'apps' && applicationCode) {
     return { type: 'APPLICATION_BUILDER', code: applicationCode };
   }
@@ -460,6 +519,14 @@ function initialSelection(tree: MetadataDebugTree): ExplorerSelection | undefine
 
     if (builderKind === 'forms' && screenId) {
       return { type: 'FORM_BUILDER', code: screenId };
+    }
+
+    if (builderKind === 'web' && screenId) {
+      return { type: 'WEB_BUILDER', code: screenId };
+    }
+
+    if (builderKind === 'android' && screenId) {
+      return { type: 'ANDROID_BUILDER', code: screenId };
     }
   }
 
@@ -491,7 +558,7 @@ async function resolveForm(
     return metadataClient.getForm(selection.code).catch(() => undefined);
   }
 
-  if (selection.type === 'FORMS' || selection.type === 'FORM_BUILDER') {
+  if (selection.type === 'FORMS' || selection.type === 'FORM_BUILDER' || selection.type === 'WEB_BUILDER' || selection.type === 'ANDROID_BUILDER') {
     for (const entityCode of tree.entities) {
       const candidate = await metadataClient.getForm(entityCode).catch(() => undefined);
 

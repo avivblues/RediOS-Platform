@@ -15,8 +15,10 @@ export const STUDIO_NAVIGATION = 'STUDIO_NAVIGATION';
 const registry: StudioNavigationItem[] = [
   { code: 'APPLICATIONS', label: 'Applications', group: 'BUILD', selectionType: 'HOME', metadataKey: 'applications' },
   { code: 'CREATE_APPLICATION', label: 'Create Application', group: 'BUILD', selectionType: 'CREATE_APPLICATION' },
+  { code: 'METADATA_DESIGNER', label: 'Metadata Designer', group: 'BUILD', selectionType: 'METADATA_DESIGNER' },
+  { code: 'WEB_APP_BUILDER', label: 'Web App Builder', group: 'BUILD', selectionType: 'WEB_BUILDER', metadataKey: 'forms' },
+  { code: 'ANDROID_BUILDER', label: 'Android Builder', group: 'BUILD', selectionType: 'ANDROID_BUILDER', metadataKey: 'forms' },
   { code: 'DATA_MODEL', label: 'Data Model', group: 'BUILD', selectionType: 'ENTITY', metadataKey: 'entities', expertOnly: true },
-  { code: 'FORM_BUILDER', label: 'Screen Builder', group: 'BUILD', selectionType: 'FORMS', metadataKey: 'forms' },
   { code: 'PAGE_BUILDER', label: 'Page Builder', group: 'BUILD', selectionType: 'PAGES', metadataKey: 'ui', expertOnly: true },
   { code: 'WORKFLOW_BUILDER', label: 'Process Builder', group: 'BUILD', selectionType: 'WORKFLOWS', metadataKey: 'workflows' },
   { code: 'PROCESS_BUILDER', label: 'Process Builder', group: 'AUTOMATE', selectionType: 'PROCESSES', metadataKey: 'processes', expertOnly: true },

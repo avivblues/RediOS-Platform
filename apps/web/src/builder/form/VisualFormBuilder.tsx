@@ -9,7 +9,8 @@ import { EmptyState } from '../../studio/empty/EmptyState';
 import { humanizeCode } from '../../studio/humanizer/HumanizerEngine';
 
 type BuilderDevice = 'Desktop' | 'Tablet' | 'Mobile';
-type BuilderTab = 'Fields' | 'Components' | 'Data Source';
+type BuilderMode = 'web' | 'android';
+type BuilderTab = 'Fields' | 'Components';
 type BuilderComponentType =
   | 'TEXT_INPUT'
   | 'TEXT_AREA'
@@ -29,7 +30,12 @@ type BuilderComponentType =
   | 'CARD'
   | 'LOOKUP'
   | 'REPEATER'
-  | 'SUB_FORM';
+  | 'SUB_FORM'
+  | 'RECYCLER_VIEW'
+  | 'BOTTOM_NAVIGATION'
+  | 'CAMERA'
+  | 'LOCATION'
+  | 'BARCODE_SCANNER';
 type BuilderActionType = 'Call Connection' | 'Save Record' | 'Update Record' | 'Delete Record' | 'Navigate Screen' | 'Run Automation' | 'Show Notification';
 
 interface VisualComponent {
@@ -91,6 +97,17 @@ const advancedComponents: Array<{ type: BuilderComponentType; label: string }> =
   { type: 'SUB_FORM', label: 'Sub Form' },
 ];
 
+const androidComponents: Array<{ type: BuilderComponentType; label: string }> = [
+  { type: 'TEXT_INPUT', label: 'TextInput' },
+  { type: 'RECYCLER_VIEW', label: 'RecyclerView / List' },
+  { type: 'BOTTOM_NAVIGATION', label: 'Bottom Navigation' },
+  { type: 'CARD', label: 'Card' },
+  { type: 'CAMERA', label: 'Camera' },
+  { type: 'IMAGE_UPLOAD', label: 'Image Upload' },
+  { type: 'LOCATION', label: 'Location' },
+  { type: 'BARCODE_SCANNER', label: 'Barcode Scanner' },
+];
+
 export function VisualFormBuilder({
   form,
   entity,
@@ -101,6 +118,8 @@ export function VisualFormBuilder({
   onPublished,
   context,
   onBack,
+  builderMode = 'web',
+  eventCodes = [],
 }: {
   form?: RuntimeForm;
   entity?: EntityDefinition;
@@ -109,10 +128,12 @@ export function VisualFormBuilder({
   developerMode?: boolean;
   context: RuntimeContext;
   onBack?: () => void;
+  builderMode?: BuilderMode;
+  eventCodes?: string[];
   onPreview: (preview: DesignerPreviewResult) => void;
   onPublished?: () => void;
 }) {
-  const [device, setDevice] = useState<BuilderDevice>('Desktop');
+  const [device, setDevice] = useState<BuilderDevice>(builderMode === 'android' ? 'Mobile' : 'Desktop');
   const [tab, setTab] = useState<BuilderTab>('Fields');
   const [draft, setDraft] = useState<MetadataDraft | undefined>();
   const [previewResult, setPreviewResult] = useState<DesignerPreviewResult | undefined>();
@@ -125,12 +146,7 @@ export function VisualFormBuilder({
   const activeForm = draft ? formFromDraft(draft, form) : form;
   const components = useMemo(() => visualComponentsFromForm(activeForm, entity), [activeForm, entity]);
   const selected = components.find((component) => component.id === selectedId) ?? components[0];
-  const defaultConnections = entity ? [
-    { method: 'GET', endpoint: `/api/${entity.code.toLowerCase()}` },
-    { method: 'POST', endpoint: `/api/${entity.code.toLowerCase()}` },
-    { method: 'PUT', endpoint: `/api/${entity.code.toLowerCase()}/:id` },
-    { method: 'DELETE', endpoint: `/api/${entity.code.toLowerCase()}/:id` },
-  ] : [];
+  const eventOptions = eventCodes.length > 0 ? eventCodes : [`SAVE_${entity?.code ?? activeForm?.entityCode ?? 'OBJECT'}`];
 
   async function ensureDraft(): Promise<MetadataDraft | undefined> {
     if (draft || !activeForm) {
@@ -315,7 +331,7 @@ export function VisualFormBuilder({
     const entityMetadata = metadata<EntityDefinition>('ENTITY', entity.code, humanizeCode(entity.code), context, updatedEntity);
     const formMetadata = metadata<FormDefinition>('FORM', updatedForm.code, updatedForm.name, context, updatedForm);
 
-    await designer.publishGenerated([entityMetadata, fieldMetadata, formMetadata]);
+    await designer.stageGenerated([entityMetadata, fieldMetadata, formMetadata]);
     setPendingComponent(undefined);
     setSelectedId(fieldCode);
     onPublished?.();
@@ -362,17 +378,17 @@ export function VisualFormBuilder({
       <header className="visual-builder-topbar">
         <Button variant="secondary" onClick={onBack ?? (() => { window.location.href = '/studio'; })}>Back</Button>
         <div>
-          <span className="studio-kicker">{humanizeCode(entity.code)} Form Builder</span>
+          <span className="studio-kicker">{builderMode === 'android' ? 'Android Form Builder' : 'Web Form Builder'}</span>
           <h2>{humanizeCode(activeForm.form)}</h2>
           <p className="studio-muted">{applicationName}</p>
         </div>
-        <div className="visual-builder-device-switch">
+        {builderMode === 'web' ? <div className="visual-builder-device-switch">
           {(['Desktop', 'Tablet', 'Mobile'] as BuilderDevice[]).map((nextDevice) => (
             <button key={nextDevice} className={device === nextDevice ? 'studio-chip studio-chip-active' : 'studio-chip'} type="button" onClick={() => setDevice(nextDevice)}>
               {nextDevice}
             </button>
           ))}
-        </div>
+        </div> : <StudioBadge tone="info">Phone Preview</StudioBadge>}
         <div className="studio-action-row">
           <Button variant="secondary" disabled={history.length === 0} onClick={history.length ? () => setFuture((current) => [history[0], ...current]) : undefined}>Undo</Button>
           <Button variant="secondary" disabled={future.length === 0} onClick={future.length ? () => setFuture(([, ...rest]) => rest) : undefined}>Redo</Button>
@@ -385,7 +401,7 @@ export function VisualFormBuilder({
       <section className="visual-builder-workspace">
         <aside className="visual-builder-left">
           <div className="visual-builder-tabs">
-            {(['Fields', 'Components', 'Data Source'] as BuilderTab[]).map((nextTab) => (
+            {(['Fields', 'Components'] as BuilderTab[]).map((nextTab) => (
               <button key={nextTab} className={tab === nextTab ? 'studio-chip studio-chip-active' : 'studio-chip'} type="button" onClick={() => setTab(nextTab)}>
                 {nextTab === 'Fields' ? 'Fields' : nextTab}
               </button>
@@ -393,8 +409,8 @@ export function VisualFormBuilder({
           </div>
           {tab === 'Fields' ? (
             <FieldsPanel entity={entity} form={activeForm} onDropField={(fieldCode) => void addField(fieldCode)} />
-          ) : tab === 'Components' ? (
-            <ComponentsPanel onAddComponent={(component) => {
+          ) : (
+            <ComponentsPanel builderMode={builderMode} onAddComponent={(component) => {
               if (component === 'BUTTON') {
                 setSelectedId('save-button');
                 setPendingComponent(undefined);
@@ -405,8 +421,6 @@ export function VisualFormBuilder({
               setNewFieldName(labelForComponent(component));
               setNewFieldType(fieldTypeForComponent(component));
             }} />
-          ) : (
-            <DataSourcePanel entity={entity} connections={defaultConnections} />
           )}
         </aside>
 
@@ -463,7 +477,8 @@ export function VisualFormBuilder({
           <PropertyInspector
             selected={selectedId === 'save-button' ? undefined : selected}
             entity={entity}
-            defaultConnections={defaultConnections}
+            eventOptions={eventOptions}
+            builderMode={builderMode}
             developerMode={developerMode}
             newFieldName={newFieldName}
             newFieldType={newFieldType}
@@ -505,32 +520,20 @@ function FieldsPanel({ entity, form, onDropField }: { entity: EntityDefinition; 
   );
 }
 
-function ComponentsPanel({ onAddComponent }: { onAddComponent: (component: BuilderComponentType) => void }) {
+function ComponentsPanel({ builderMode, onAddComponent }: { builderMode: BuilderMode; onAddComponent: (component: BuilderComponentType) => void }) {
+  if (builderMode === 'android') {
+    return (
+      <div className="visual-builder-panel-body">
+        <PaletteGroup title="Android Components" components={androidComponents} onAddComponent={onAddComponent} />
+      </div>
+    );
+  }
+
   return (
     <div className="visual-builder-panel-body">
       <PaletteGroup title="Basic" components={basicComponents} onAddComponent={onAddComponent} />
       <PaletteGroup title="Layout" components={layoutComponents} onAddComponent={onAddComponent} />
       <PaletteGroup title="Advanced" components={advancedComponents} onAddComponent={onAddComponent} />
-    </div>
-  );
-}
-
-function DataSourcePanel({ entity, connections }: { entity: EntityDefinition; connections: Array<{ method: string; endpoint: string }> }) {
-  return (
-    <div className="visual-builder-panel-body">
-      <span className="studio-kicker">Data Source</span>
-      <h3>{humanizeCode(entity.code)}</h3>
-      <div className="studio-list">
-        {connections.map((connection) => (
-          <div key={`${connection.method}:${connection.endpoint}`} className="studio-list-row">
-            <strong>{connection.method}</strong>
-            <span>{connection.endpoint}</span>
-          </div>
-        ))}
-      </div>
-      <div className="studio-inline-warning">
-        Default connections are generated from the Data Object and can be overridden in API Binding.
-      </div>
     </div>
   );
 }
@@ -571,7 +574,8 @@ function VisualComponentCard({ component, selected, developerMode, onSelect }: {
 function PropertyInspector({
   selected,
   entity,
-  defaultConnections,
+  eventOptions,
+  builderMode,
   developerMode,
   newFieldName,
   newFieldType,
@@ -586,7 +590,8 @@ function PropertyInspector({
 }: {
   selected?: VisualComponent;
   entity: EntityDefinition;
-  defaultConnections: Array<{ method: string; endpoint: string }>;
+  eventOptions: string[];
+  builderMode: BuilderMode;
   developerMode: boolean;
   newFieldName: string;
   newFieldType: string;
@@ -599,11 +604,10 @@ function PropertyInspector({
   onDuplicate: () => void;
   onSaveAction: (event: VisualComponent['event']) => void;
 }) {
-  const [actionType, setActionType] = useState<BuilderActionType>('Save Record');
-  const [method, setMethod] = useState(defaultConnections[1]?.method ?? 'POST');
-  const [endpoint, setEndpoint] = useState(defaultConnections[1]?.endpoint ?? `/${entity.code.toLowerCase()}`);
-  const [toast, setToast] = useState(`${humanizeCode(entity.code)} saved`);
-  const [navigateTo, setNavigateTo] = useState(`${humanizeCode(entity.code)} List`);
+  const [eventCode, setEventCode] = useState(eventOptions[0] ?? `SAVE_${entity.code}`);
+  const [keyboardType, setKeyboardType] = useState('Default');
+  const [offlineMode, setOfflineMode] = useState('Online first');
+  const [syncBehavior, setSyncBehavior] = useState('Sync on save');
 
   if (!selected && pendingComponent) {
     return (
@@ -634,42 +638,18 @@ function PropertyInspector({
       <div className="visual-builder-inspector">
         <span className="studio-kicker">Events</span>
         <h3>Save Button</h3>
-        <h4>On Click</h4>
-        <Select value={actionType} options={['Call Connection', 'Save Record', 'Update Record', 'Delete Record', 'Navigate Screen', 'Run Automation', 'Show Notification']} onChange={(value) => setActionType(value as BuilderActionType)} />
-        <label className="studio-form-field">
-          Connection Method
-          <Select value={method} options={['GET', 'POST', 'PUT', 'DELETE']} onChange={setMethod} />
-        </label>
-        <label className="studio-form-field">
-          Endpoint
-          <Input value={endpoint} onChange={setEndpoint} />
-        </label>
-        <h4>Payload Mapper</h4>
-        {entity.fieldCodes.slice(0, 6).map((fieldCode) => (
-          <div key={fieldCode} className="studio-list-row">
-            <span>{fieldCode}</span>
-            <strong>{`{{form.${fieldCode}}}`}</strong>
-          </div>
-        ))}
-        <label className="studio-form-field">
-          Success Toast
-          <Input value={toast} onChange={setToast} />
-        </label>
-        <label className="studio-form-field">
-          Navigate
-          <Input value={navigateTo} onChange={setNavigateTo} />
-        </label>
+        <h4>Event</h4>
+        <p className="studio-muted">Layout builders only connect to existing Event Metadata. API URLs and business logic are managed in Metadata Designer.</p>
+        <Select value={eventCode} options={eventOptions} onChange={setEventCode} />
         <Button onClick={() => onSaveAction({
           onClick: {
-            type: actionType,
-            method,
-            endpoint,
-            payload: Object.fromEntries(entity.fieldCodes.map((fieldCode) => [fieldCode, `{{form.${fieldCode}}}`])),
-            successMessage: toast,
-            navigateTo,
+            type: 'Run Automation',
+            payload: {
+              event: eventCode,
+            },
           },
         })}>Save Event</Button>
-        {developerMode ? <pre>{JSON.stringify({ actionType, method, endpoint }, null, 2)}</pre> : null}
+        {developerMode ? <pre>{JSON.stringify({ event: 'button.click', target: 'saveButton', eventCode }, null, 2)}</pre> : null}
       </div>
     );
   }
@@ -734,7 +714,7 @@ function PropertyInspector({
         Regex
         <Input value="" onChange={() => undefined} />
       </label>
-      <h4>API Binding</h4>
+      <h4>Data Binding</h4>
       <div className="studio-list-row">
         <span>Data Object</span>
         <strong>{humanizeCode(entity.code)}</strong>
@@ -743,10 +723,28 @@ function PropertyInspector({
         <span>Binding</span>
         <strong>{selected.fieldCode}</strong>
       </div>
-      <div className="studio-list-row">
-        <span>Endpoint</span>
-        <strong>{defaultConnections[0]?.endpoint}</strong>
-      </div>
+      <p className="studio-muted">Binding is automatic from metadata. API and events are defined in Metadata Designer.</p>
+      {builderMode === 'android' ? (
+        <>
+          <h4>Mobile Properties</h4>
+          <label className="studio-form-field">
+            Keyboard Type
+            <Select value={keyboardType} options={['Default', 'Text', 'Number', 'Phone', 'Email']} onChange={setKeyboardType} />
+          </label>
+          <label className="studio-form-field">
+            Offline Mode
+            <Select value={offlineMode} options={['Online first', 'Offline first', 'Read only offline']} onChange={setOfflineMode} />
+          </label>
+          <label className="studio-form-field">
+            Sync Behavior
+            <Select value={syncBehavior} options={['Sync on save', 'Background sync', 'Manual sync']} onChange={setSyncBehavior} />
+          </label>
+          <label className="studio-check-row">
+            <input type="checkbox" onChange={() => undefined} />
+            Camera permission required
+          </label>
+        </>
+      ) : null}
       <div className="studio-card">
         <strong>Component Actions</strong>
         <p className="studio-muted">Duplicate creates a new information field instead of reusing the same binding.</p>

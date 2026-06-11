@@ -86,6 +86,10 @@ export interface GeneratedMetadataPublishResult {
   }>;
 }
 
+export interface GeneratedMetadataStageResult {
+  staged: MetadataDefinition[];
+}
+
 export interface StudioHistoryEntry {
   id: string;
   version: number;
@@ -419,6 +423,53 @@ export class DesignerEngine {
       dependencies: dependencyImpacts,
       runtimePackages,
     };
+  }
+
+  async stageGeneratedMetadata(
+    context: RuntimeContext,
+    request: GeneratedMetadataPublishRequest,
+  ): Promise<GeneratedMetadataStageResult> {
+    this.permissionGuard.assert(context, 'FORM.PUBLISH');
+
+    if (!Array.isArray(request.metadata) || request.metadata.length === 0) {
+      throw new BadRequestException('Generated metadata stage requires metadata.');
+    }
+
+    const metadataByApplication = this.groupGeneratedMetadata(request.metadata, context);
+    const staged: MetadataDefinition[] = [];
+
+    for (const [applicationCode, generatedMetadata] of metadataByApplication.entries()) {
+      const stageContext: RuntimeContext = {
+        ...context,
+        applicationCode,
+      };
+      const existingMetadata = await this.metadataProvider.findMetadata(stageContext, {
+        applicationCode,
+        enabledOnly: true,
+      });
+
+      for (const metadata of generatedMetadata) {
+        const current = existingMetadata.find((candidate) => this.sameMetadataIdentity(candidate, metadata));
+        const next: MetadataDefinition = {
+          ...metadata,
+          tenantId: context.tenantId,
+          domainCode: context.domainCode,
+          applicationCode,
+          version: (current?.version ?? 0) + 1,
+          enabled: true,
+        };
+
+        if (current) {
+          await this.saveVersion(stageContext, current as MetadataDefinition<DesignerDefinition>, context.userId);
+        }
+
+        const saved = await this.metadataProvider.saveMetadata(stageContext, next);
+        staged.push(saved);
+        await this.saveVersion(stageContext, saved as MetadataDefinition<DesignerDefinition>, context.userId);
+      }
+    }
+
+    return { staged };
   }
 
   async rollback(context: RuntimeContext, draftId: string, version: number): Promise<DesignerPublishResult> {
