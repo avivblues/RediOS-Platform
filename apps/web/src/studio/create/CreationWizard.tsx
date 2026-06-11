@@ -168,7 +168,7 @@ export function CreationWizard({
               return entity;
             }
 
-            const screenFields = layout.sections.flatMap((section) => section.fields);
+            const screenFields = layout.sections.flatMap((section) => section.fields).filter((screenField) => !screenField.designerOnly);
             return {
               ...entity,
               fields: entity.fields.map((field) => {
@@ -177,9 +177,14 @@ export function CreationWizard({
                 return screenField
                   ? {
                       ...field,
+                      type: screenField.type ?? field.type,
                       required: screenField.required ?? field.required,
                       searchable: screenField.searchable ?? field.searchable,
                       showInList: screenField.showInList ?? field.showInList,
+                      componentKind: screenField.componentKind ?? field.componentKind,
+                      relatedObject: screenField.relatedObject ?? field.relatedObject,
+                      displayField: screenField.displayField ?? field.displayField,
+                      choiceOptions: screenField.choiceOptions ?? field.choiceOptions,
                     }
                   : field;
               }),
@@ -207,6 +212,13 @@ export function CreationWizard({
                     width: field.width,
                     showInList: field.showInList,
                     searchable: field.searchable,
+                    componentKind: field.componentKind,
+                    designerOnly: field.designerOnly,
+                    actionType: field.actionType,
+                    actionTarget: field.actionTarget,
+                    choiceOptions: field.choiceOptions,
+                    relatedObject: field.relatedObject,
+                    displayField: field.displayField,
                   })),
                 })),
               },
@@ -268,6 +280,13 @@ export function CreationWizard({
                 width: screenField.width,
                 showInList: screenField.showInList,
                 searchable: screenField.searchable,
+                componentKind: screenField.componentKind,
+                designerOnly: screenField.designerOnly,
+                actionType: screenField.actionType,
+                actionTarget: screenField.actionTarget,
+                choiceOptions: screenField.choiceOptions,
+                relatedObject: screenField.relatedObject,
+                displayField: screenField.displayField,
               })),
             })),
           },
@@ -302,7 +321,7 @@ export function CreationWizard({
       pushActivity(expertMode ? `${term('RUNTIME_PACKAGE', mode)} activated` : 'Application launched', `${runtimePackage?.applicationCode ?? generated.application?.code} is ${runtimePackage?.status ?? 'ACTIVE'}.`);
     } catch (error) {
       setPublishState('idle');
-      setPublishError(humanizeLaunchError(error));
+      setPublishError(humanizeLaunchError(error, expertMode));
       pushActivity(expertMode ? 'Publish failed' : 'Launch needs attention', expertMode ? 'Designer validation blocked runtime activation.' : 'A rule or connection needs review before this application can launch.');
     }
   }
@@ -663,7 +682,7 @@ function LaunchProgress() {
   );
 }
 
-function humanizeLaunchError(error: unknown): { title: string; reason: string } {
+function humanizeLaunchError(error: unknown, expertMode = false): { title: string; reason: string } {
   const fallback = {
     title: 'Cannot launch application',
     reason: 'Runtime validation failed. Please review screen design and required information.',
@@ -678,6 +697,13 @@ function humanizeLaunchError(error: unknown): { title: string; reason: string } 
 
   if (!firstIssue) {
     return fallback;
+  }
+
+  if (!expertMode && (firstIssue.message?.includes('FIELD:') || firstIssue.message?.includes('ENTITY:') || firstIssue.code?.includes('FIELD') || firstIssue.code?.includes('DEPENDENCY'))) {
+    return {
+      title: 'Cannot launch application',
+      reason: 'Some information on this screen is not connected correctly yet. Use Fix automatically or review the Screen Design step.',
+    };
   }
 
   if (firstIssue.code?.includes('FORM') || firstIssue.code?.includes('UI') || firstIssue.code?.includes('NAVIGATION')) {

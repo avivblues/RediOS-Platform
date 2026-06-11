@@ -66,7 +66,16 @@ export function ScreenDesigner({
           },
         ],
       }));
+      return;
     }
+
+    const preset = fieldPresetForComponent(component, layout.entityName);
+
+    if (!preset) {
+      return;
+    }
+
+    addFieldToCanvas(preset, !preset.designerOnly);
   }
 
   function updateField(nextField: DesignedScreenField) {
@@ -90,7 +99,12 @@ export function ScreenDesigner({
       ...newField,
       label: newField.label.trim(),
     };
-    const designedField = toDesignedField(field, layout.sections[0]?.fields.length ?? 0);
+    addFieldToCanvas(field, true);
+  }
+
+  function addFieldToCanvas(field: CreationFieldInput, shouldCreateInformation: boolean) {
+    const normalizedField = field.type === 'Lookup' && !field.relatedObject ? { ...field, relatedObject: layout.entityName } : field;
+    const designedField = toDesignedField(normalizedField, layout.sections[0]?.fields.length ?? 0);
     const nextLayout: DesignedScreenLayout = {
       ...layout,
       sections: layout.sections.length > 0
@@ -103,7 +117,11 @@ export function ScreenDesigner({
     setDrawerOpen(true);
     setWizardOpen(false);
     setNewField({ label: '', type: 'Text', required: false, unique: false, searchable: true, showInList: true });
-    onAddInformation?.(field, nextLayout);
+    if (shouldCreateInformation) {
+      onAddInformation?.(normalizedField, nextLayout);
+    } else {
+      onLayoutChange?.(nextLayout);
+    }
   }
 
   function moveField(fieldId: string, direction: 'UP' | 'DOWN', targetSectionId?: string) {
@@ -179,8 +197,8 @@ export function ScreenDesigner({
           </StudioButton>
         </div>
       </div>
-      {expertMode ? <ComponentPalette expertMode={expertMode} onSelect={handleComponentSelect} onAddInformation={() => setWizardOpen(true)} /> : null}
-      <div className={expertMode ? 'studio-screen-designer-grid studio-screen-designer-grid-expert' : 'studio-screen-designer-workspace'}>
+      <div className="studio-screen-builder-shell">
+        <ComponentPalette expertMode={expertMode} onSelect={handleComponentSelect} onAddInformation={() => setWizardOpen(true)} />
         <Canvas
           layout={layout}
           selectedFieldId={selectedField?.id}
@@ -191,8 +209,9 @@ export function ScreenDesigner({
           }}
           onMoveField={moveField}
         />
+        <PreviewPanel layout={layout} device="Mobile" onDeviceChange={() => undefined} compact />
       </div>
-      <PropertyPanel field={selectedField} open={drawerOpen} expertMode={expertMode} onClose={() => setDrawerOpen(false)} onChange={updateField} />
+      <PropertyPanel field={selectedField} entityName={layout.entityName} open={drawerOpen} expertMode={expertMode} onClose={() => setDrawerOpen(false)} onChange={updateField} />
       {wizardOpen ? (
         <section className="studio-card studio-field-wizard" aria-label="Add information wizard">
           <div className="studio-section-header">
@@ -207,12 +226,12 @@ export function ScreenDesigner({
             <Input value={newField.label} placeholder="Stock Quantity" onChange={(label) => setNewField((current) => ({ ...current, label }))} />
           </label>
           <div className="studio-field-type-grid">
-            {(['Text', 'Number', 'Date', 'Choice', 'File'] as const).map((type) => (
+            {(['Text', 'Number', 'Date', 'Dropdown', 'Link Data', 'File'] as const).map((type) => (
               <label key={type} className="studio-check-row">
                 <input
                   type="radio"
-                  checked={fieldTypeLabel(newField.type) === type}
-                  onChange={() => setNewField((current) => ({ ...current, type: creationTypeFromWizard(type) }))}
+                  checked={fieldTypeLabel(newField) === type}
+                  onChange={() => setNewField((current) => ({ ...current, ...fieldPresetFromWizard(type) }))}
                 />
                 {type}
               </label>
@@ -243,32 +262,92 @@ export function ScreenDesigner({
   );
 }
 
-function creationTypeFromWizard(type: 'Text' | 'Number' | 'Date' | 'Choice' | 'File'): CreationFieldInput['type'] {
-  if (type === 'Choice') {
-    return 'Text';
+function fieldPresetForComponent(component: ScreenComponentType, entityName: string): CreationFieldInput | undefined {
+  if (component === 'Text Input') {
+    return baseField('Text Input', 'Text', 'Information');
+  }
+
+  if (component === 'Number') {
+    return baseField('Number', 'Number', 'Information');
+  }
+
+  if (component === 'Date') {
+    return baseField('Date', 'Date', 'Information');
+  }
+
+  if (component === 'Dropdown') {
+    return {
+      ...baseField('Dropdown', 'Text', 'Dropdown'),
+      choiceOptions: ['Option 1', 'Option 2'],
+    };
+  }
+
+  if (component === 'Table') {
+    return {
+      ...baseField('Linked Data', 'Lookup', 'Link Data'),
+      relatedObject: entityName,
+    };
+  }
+
+  if (component === 'Button') {
+    return {
+      ...baseField(`Save ${entityName}`, 'Boolean', 'Button'),
+      designerOnly: true,
+      showInList: false,
+      searchable: false,
+      actionType: 'Save',
+    };
+  }
+
+  return undefined;
+}
+
+function baseField(label: string, type: CreationFieldInput['type'], componentKind: CreationFieldInput['componentKind']): CreationFieldInput {
+  return {
+    label,
+    type,
+    componentKind,
+    required: false,
+    unique: false,
+    searchable: true,
+    showInList: true,
+  };
+}
+
+function fieldPresetFromWizard(type: 'Text' | 'Number' | 'Date' | 'Dropdown' | 'Link Data' | 'File'): Partial<CreationFieldInput> {
+  if (type === 'Dropdown') {
+    return { type: 'Text', componentKind: 'Dropdown', choiceOptions: ['Option 1', 'Option 2'] };
+  }
+
+  if (type === 'Link Data') {
+    return { type: 'Lookup', componentKind: 'Link Data' };
   }
 
   if (type === 'File') {
-    return 'Attachment';
+    return { type: 'Attachment', componentKind: 'File' };
   }
 
-  return type;
+  return { type, componentKind: 'Information' };
 }
 
-function fieldTypeLabel(type: CreationFieldInput['type']): 'Text' | 'Number' | 'Date' | 'Boolean' | 'Choice' | 'File' {
-  if (type === 'Boolean') {
-    return 'Boolean';
+function fieldTypeLabel(field: CreationFieldInput): 'Text' | 'Number' | 'Date' | 'Dropdown' | 'Link Data' | 'File' {
+  if (field.componentKind === 'Dropdown') {
+    return 'Dropdown';
   }
 
-  if (type === 'Attachment') {
+  if (field.componentKind === 'Link Data' || field.type === 'Lookup') {
+    return 'Link Data';
+  }
+
+  if (field.type === 'Attachment') {
     return 'File';
   }
 
-  if (type === 'Date' || type === 'Date Time') {
+  if (field.type === 'Date' || field.type === 'Date Time') {
     return 'Date';
   }
 
-  if (type === 'Number' || type === 'Money') {
+  if (field.type === 'Number' || field.type === 'Money') {
     return 'Number';
   }
 

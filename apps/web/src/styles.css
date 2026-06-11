@@ -339,6 +339,42 @@ a:focus-visible {
   margin: 0 auto var(--redios-spacing-md);
 }
 
+.studio-screen-builder-shell {
+  display: grid;
+  grid-template-columns: minmax(210px, 0.55fr) minmax(520px, 1.5fr) minmax(260px, 0.65fr);
+  gap: var(--redios-spacing-md);
+  align-items: start;
+  margin-bottom: var(--redios-spacing-md);
+}
+
+.studio-component-sidebar {
+  position: sticky;
+  top: var(--redios-spacing-md);
+}
+
+.studio-builder-component {
+  display: grid;
+  gap: 0.2rem;
+  width: 100%;
+  border: 1px solid color-mix(in srgb, var(--redios-color-text), transparent 86%);
+  border-radius: var(--redios-radius-medium);
+  padding: var(--redios-spacing-sm);
+  background: var(--redios-color-surface);
+  color: var(--redios-color-text);
+  text-align: left;
+  cursor: pointer;
+}
+
+.studio-builder-component:hover {
+  border-color: color-mix(in srgb, var(--redios-color-primary), transparent 45%);
+  background: color-mix(in srgb, var(--redios-color-primary), var(--redios-color-surface) 96%);
+}
+
+.studio-builder-component span {
+  color: color-mix(in srgb, var(--redios-color-text), transparent 38%);
+  font-size: 0.82rem;
+}
+
 .studio-screen-panel,
 .studio-screen-canvas,
 .studio-preview-panel {
@@ -414,13 +450,33 @@ a:focus-visible {
 }
 
 .studio-screen-field input,
-.studio-preview-fields input {
+.studio-screen-field select,
+.studio-screen-field textarea,
+.studio-screen-button-preview,
+.studio-preview-fields input,
+.studio-preview-fields select,
+.studio-preview-fields textarea {
   width: 100%;
   box-sizing: border-box;
   border: 1px solid color-mix(in srgb, var(--redios-color-text), transparent 78%);
   border-radius: var(--redios-radius-medium);
   padding: var(--redios-spacing-sm);
   background: var(--redios-color-surface);
+}
+
+.studio-screen-field textarea,
+.studio-preview-fields textarea {
+  min-height: 112px;
+  resize: vertical;
+}
+
+.studio-screen-button-preview,
+.studio-preview-fields button {
+  border: 0;
+  background: var(--redios-color-primary);
+  color: var(--redios-color-surface);
+  font-weight: 700;
+  cursor: pointer;
 }
 
 .studio-screen-field-selected {
@@ -513,6 +569,19 @@ a:focus-visible {
 .studio-adaptive-preview-mobile {
   width: min(100%, 340px);
   border-width: 8px;
+}
+
+.studio-mobile-builder-preview {
+  position: sticky;
+  top: var(--redios-spacing-md);
+}
+
+.studio-phone-frame {
+  width: min(100%, 290px);
+  min-height: 520px;
+  border: 10px solid #111827;
+  border-radius: 2rem;
+  box-shadow: 0 18px 56px color-mix(in srgb, var(--redios-color-text), transparent 86%);
 }
 
 .studio-preview-section {

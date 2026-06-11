@@ -52,6 +52,12 @@ export function toDesignedField(field: CreationFieldInput, index: number): Desig
     visible: true,
     readonly: false,
     showInList: field.showInList ?? true,
+    searchable: field.searchable ?? true,
+    componentKind: field.componentKind ?? componentKindForType(field.type),
+    designerOnly: field.designerOnly ?? false,
+    actionType: field.actionType,
+    actionTarget: field.actionTarget,
+    choiceOptions: field.choiceOptions,
   };
 }
 
@@ -77,6 +83,18 @@ export function autoDesignLayout(entity?: CreationEntityInput): DesignedScreenLa
       section('more', 'Additional Information', 2, otherFields),
     ].filter((candidate) => candidate.fields.length > 0),
   };
+}
+
+function componentKindForType(type: CreationFieldInput['type']): DesignedScreenField['componentKind'] {
+  if (type === 'Lookup' || type === 'User') {
+    return 'Link Data';
+  }
+
+  if (type === 'Attachment') {
+    return 'File';
+  }
+
+  return 'Information';
 }
 
 function section(id: string, title: string, columns: number, fields: DesignedScreenField[]): DesignedScreenSection {

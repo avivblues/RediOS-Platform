@@ -75,10 +75,7 @@ export function Canvas({
                 }}
                 onDragOver={(event) => event.preventDefault()}
               >
-                <label>
-                  <span>{field.label}</span>
-                  <input placeholder={field.type === 'Number' || field.type === 'Money' ? '0' : field.label} readOnly />
-                </label>
+                {renderCanvasField(field)}
                 <span className="studio-screen-field-actions">
                   <span onClick={(event) => { event.stopPropagation(); onMoveField(field.id, 'UP'); }}>↑</span>
                   <span onClick={(event) => { event.stopPropagation(); onMoveField(field.id, 'DOWN'); }}>↓</span>
@@ -92,5 +89,61 @@ export function Canvas({
         <button type="button">Save {layout.entityName}</button>
       </div>
     </section>
+  );
+}
+
+function renderCanvasField(field: DesignedScreenField) {
+  if (field.componentKind === 'Button') {
+    return <button type="button" className="studio-screen-button-preview">{field.label}</button>;
+  }
+
+  if (field.componentKind === 'Dropdown') {
+    return (
+      <label>
+        <span>{field.label}</span>
+        <select value="" disabled>
+          <option value="">Choose {field.label}</option>
+          {(field.choiceOptions ?? ['Option 1', 'Option 2']).map((option) => (
+            <option key={option} value={option}>{option}</option>
+          ))}
+        </select>
+      </label>
+    );
+  }
+
+  if (field.componentKind === 'Link Data' || field.type === 'Lookup') {
+    return (
+      <label>
+        <span>{field.label}</span>
+        <select value="" disabled>
+          <option value="">Select from {field.relatedObject || 'Data Object'}</option>
+        </select>
+      </label>
+    );
+  }
+
+  if (field.type === 'Attachment') {
+    return (
+      <label>
+        <span>{field.label}</span>
+        <input placeholder="Upload file" readOnly />
+      </label>
+    );
+  }
+
+  if (field.type === 'Long Text') {
+    return (
+      <label>
+        <span>{field.label}</span>
+        <textarea placeholder="Enter description..." readOnly />
+      </label>
+    );
+  }
+
+  return (
+    <label>
+      <span>{field.label}</span>
+      <input type={field.type === 'Date' || field.type === 'Date Time' ? 'text' : 'text'} placeholder={field.type === 'Number' || field.type === 'Money' ? '0' : field.label} readOnly />
+    </label>
   );
 }

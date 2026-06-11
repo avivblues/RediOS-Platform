@@ -57,7 +57,7 @@ export function generateField(entityCode: string, input: CreationFieldInput, con
   const code = fieldCodeFromLabel(input.label);
   const dataType = fieldDataType(input.type);
 
-  return metadata('FIELD', `${entityCode}.${code}`, input.label, context, {
+  return metadata('FIELD', code, input.label, context, {
     code,
     name: input.label,
     entityCode,
@@ -117,7 +117,7 @@ export function generateForm(entity: CreationEntityInput, context: GeneratorCont
         code: codeFromLabel(section.title) || `SECTION_${sectionIndex + 1}`,
         title: section.title,
         order: sectionIndex + 1,
-        fields: section.fields.map<FormFieldDefinition>((field, index) => {
+        fields: section.fields.filter((field) => !field.designerOnly).map<FormFieldDefinition>((field, index) => {
           const sourceField = entity.fields.find((candidate) => candidate.label === (field.sourceLabel ?? field.label)) ?? entity.fields[index];
           return {
             fieldCode: fieldCodeFromLabel(field.sourceLabel ?? field.label),
@@ -181,7 +181,7 @@ export function generateForm(entity: CreationEntityInput, context: GeneratorCont
 export function generateView(entity: CreationEntityInput, context: GeneratorContext, draft?: CreationDraft): MetadataDefinition<ViewDefinition> {
   const entityCode = codeFromLabel(entity.name);
   const code = `${entityCode}_LIST`;
-  const layoutFields = draft?.screenLayouts[entity.name]?.sections.flatMap((section) => section.fields) ?? [];
+  const layoutFields = draft?.screenLayouts[entity.name]?.sections.flatMap((section) => section.fields).filter((field) => !field.designerOnly) ?? [];
 
   return metadata('VIEW', code, `${entity.name} List`, context, {
     code,
@@ -474,6 +474,18 @@ function fieldDataType(type: CreationFieldInput['type']): FieldDataType {
 }
 
 function componentForField(field: CreationFieldInput): string {
+  if (field.componentKind === 'Dropdown') {
+    return 'SELECT';
+  }
+
+  if (field.componentKind === 'Link Data') {
+    return 'LOOKUP';
+  }
+
+  if (field.type === 'Attachment') {
+    return 'FILE_UPLOAD';
+  }
+
   if (field.type === 'Number' || field.type === 'Money') {
     return 'NUMBER_INPUT';
   }

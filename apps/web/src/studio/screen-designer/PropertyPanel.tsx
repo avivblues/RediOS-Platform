@@ -3,12 +3,14 @@ import type { DesignedScreenField } from './screen-designer-types';
 
 export function PropertyPanel({
   field,
+  entityName,
   open = true,
   expertMode = false,
   onClose,
   onChange,
 }: {
   field?: DesignedScreenField;
+  entityName: string;
   open?: boolean;
   expertMode?: boolean;
   onClose?: () => void;
@@ -44,10 +46,62 @@ export function PropertyPanel({
         Label
         <Input value={field.label} onChange={(label) => onChange({ ...field, label })} />
       </label>
-      <div className="studio-list-row">
-        <strong>Data Type</strong>
-        <span>{field.type}</span>
-      </div>
+      <label className="studio-form-field">
+        Component
+        <Select
+          value={field.componentKind ?? 'Information'}
+          options={['Information', 'Dropdown', 'Link Data', 'File', 'Button']}
+          onChange={(value) => onChange(componentChange(field, value as DesignedScreenField['componentKind'], entityName))}
+        />
+      </label>
+      {field.componentKind !== 'Button' ? (
+        <label className="studio-form-field">
+          Data Type
+          <Select
+            value={field.type}
+            options={['Text', 'Long Text', 'Number', 'Money', 'Date', 'Date Time', 'Boolean', 'Lookup', 'Attachment', 'User']}
+            onChange={(value) => onChange({ ...field, type: value as DesignedScreenField['type'] })}
+          />
+        </label>
+      ) : null}
+      {field.componentKind === 'Dropdown' ? (
+        <label className="studio-form-field">
+          Dropdown Options
+          <Input
+            value={(field.choiceOptions ?? []).join(', ')}
+            placeholder="Draft, Active, Archived"
+            onChange={(value) => onChange({ ...field, choiceOptions: value.split(',').map((option) => option.trim()).filter(Boolean) })}
+          />
+        </label>
+      ) : null}
+      {field.componentKind === 'Link Data' ? (
+        <>
+          <label className="studio-form-field">
+            Link Data Object
+            <Input value={field.relatedObject ?? ''} placeholder="Customer" onChange={(relatedObject) => onChange({ ...field, relatedObject, type: 'Lookup' })} />
+          </label>
+          <label className="studio-form-field">
+            Display Information
+            <Input value={field.displayField ?? ''} placeholder="name" onChange={(displayField) => onChange({ ...field, displayField })} />
+          </label>
+        </>
+      ) : null}
+      {field.componentKind === 'Button' ? (
+        <>
+          <label className="studio-form-field">
+            Button Action
+            <Select
+              value={field.actionType ?? 'Save'}
+              options={['Save', 'Next', 'Open Link', 'Custom']}
+              onChange={(value) => onChange({ ...field, actionType: value as DesignedScreenField['actionType'] })}
+            />
+          </label>
+          <label className="studio-form-field">
+            Target
+            <Input value={field.actionTarget ?? ''} placeholder="/products or next screen" onChange={(actionTarget) => onChange({ ...field, actionTarget })} />
+          </label>
+        </>
+      ) : null}
       <h4>Behavior</h4>
       <label className="studio-check-row">
         <input type="checkbox" checked={field.required} onChange={(event) => onChange({ ...field, required: event.target.checked })} />
@@ -94,4 +148,55 @@ export function PropertyPanel({
       ) : null}
     </section>
   );
+}
+
+function componentChange(field: DesignedScreenField, componentKind: DesignedScreenField['componentKind'], entityName: string): DesignedScreenField {
+  if (componentKind === 'Dropdown') {
+    return {
+      ...field,
+      componentKind,
+      type: 'Text',
+      designerOnly: false,
+      choiceOptions: field.choiceOptions?.length ? field.choiceOptions : ['Option 1', 'Option 2'],
+    };
+  }
+
+  if (componentKind === 'Link Data') {
+    return {
+      ...field,
+      componentKind,
+      type: 'Lookup',
+      designerOnly: false,
+      relatedObject: field.relatedObject || entityName,
+      displayField: field.displayField,
+    };
+  }
+
+  if (componentKind === 'File') {
+    return {
+      ...field,
+      componentKind,
+      type: 'Attachment',
+      designerOnly: false,
+    };
+  }
+
+  if (componentKind === 'Button') {
+    return {
+      ...field,
+      componentKind,
+      type: 'Boolean',
+      designerOnly: true,
+      required: false,
+      searchable: false,
+      showInList: false,
+      actionType: field.actionType ?? 'Save',
+    };
+  }
+
+  return {
+    ...field,
+    componentKind: 'Information',
+    designerOnly: false,
+  };
 }

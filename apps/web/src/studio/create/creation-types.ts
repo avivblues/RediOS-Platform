@@ -28,6 +28,11 @@ export interface CreationFieldInput {
   type: CreationFieldType;
   required: boolean;
   unique: boolean;
+  componentKind?: 'Information' | 'Dropdown' | 'Link Data' | 'Button' | 'File';
+  designerOnly?: boolean;
+  actionType?: 'Save' | 'Next' | 'Open Link' | 'Custom';
+  actionTarget?: string;
+  choiceOptions?: string[];
   searchable?: boolean;
   showInList?: boolean;
   defaultValue?: string;
@@ -57,6 +62,13 @@ export interface CreationScreenLayout {
       width?: string;
       showInList?: boolean;
       searchable?: boolean;
+      componentKind?: CreationFieldInput['componentKind'];
+      designerOnly?: boolean;
+      actionType?: CreationFieldInput['actionType'];
+      actionTarget?: string;
+      choiceOptions?: string[];
+      relatedObject?: string;
+      displayField?: string;
     }>;
   }>;
 }
