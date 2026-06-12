@@ -1,6 +1,8 @@
 export type StudioTarget = 'web' | 'android';
 export type StudioDevice = 'Desktop' | 'Tablet' | 'Mobile';
 export type ComponentLayer = 'ATOM' | 'MOLECULE' | 'ORGANISM' | 'ANDROID';
+export type ComponentMoveDirection = 'left' | 'right' | 'up' | 'down';
+export type ComponentResizeDirection = 'narrower' | 'wider' | 'shorter' | 'taller';
 
 export interface BuilderComponentDefinition {
   type: string;

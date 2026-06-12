@@ -9,14 +9,21 @@ export function TreePanel({
 }) {
   return (
     <div className="redos-panel-content">
-      <h3>Data</h3>
-      <p className="redos-muted">Drag experience first, then bind components to data.</p>
+      <div className="redos-panel-heading">
+        <span className="redos-kicker">Binding</span>
+        <h3>Data</h3>
+        <p className="redos-muted">Click a field to bind it to the selected component. Data stays behind the experience layer.</p>
+      </div>
       {dataObjects.map((object) => (
         <section key={object.name} className="redos-tree-object">
-          <strong>{object.name}</strong>
+          <header>
+            <strong>{object.name}</strong>
+            <span>{object.fields.length} fields</span>
+          </header>
           {object.fields.map((field) => (
             <button key={field} className="redos-tree-field" type="button" onClick={() => onBindField(object.name, field)}>
-              {field}
+              <span>{field}</span>
+              <small>{object.name}.{field}</small>
             </button>
           ))}
         </section>

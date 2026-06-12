@@ -1,12 +1,103 @@
+import { useState } from 'react';
+import { HelpTip } from '../../guide/AdminGuide';
+import { loadActions, loadCustomApis, saveActions, toMetadataCode, type StudioActionDraft } from '../metadata-store';
+
 export function ActionDesigner() {
+  const [actions, setActions] = useState(() => loadActions());
+  const [label, setLabel] = useState('Approve Asset');
+  const [trigger, setTrigger] = useState('Button click');
+  const [step, setStep] = useState('validate approval');
+  const customApis = loadCustomApis();
+
+  function persist(nextActions: StudioActionDraft[]) {
+    setActions(nextActions);
+    saveActions(nextActions);
+  }
+
+  function addAction() {
+    const nextAction: StudioActionDraft = {
+      code: toMetadataCode(label),
+      label: label.trim() || 'New Action',
+      trigger,
+      steps: ['validate', 'execute'],
+    };
+    persist([nextAction, ...actions.filter((action) => action.code !== nextAction.code)]);
+  }
+
+  function addStep(code: string, nextStep = step) {
+    const cleanStep = nextStep.trim();
+
+    if (!cleanStep) {
+      return;
+    }
+
+    persist(actions.map((action) => action.code === code ? {
+      ...action,
+      steps: [...action.steps, cleanStep],
+    } : action));
+  }
+
+  function removeAction(code: string) {
+    persist(actions.filter((action) => action.code !== code));
+  }
+
+  function removeStep(code: string, index: number) {
+    persist(actions.map((action) => action.code === code ? {
+      ...action,
+      steps: action.steps.filter((_, stepIndex) => stepIndex !== index),
+    } : action));
+  }
+
   return (
     <section className="redos-metadata-card">
-      <h3>ACTION</h3>
-      <p>Event flow and business logic</p>
-      <div className="redos-list-row"><strong>SAVE_PRODUCT</strong><span>Action</span></div>
-      <div className="redos-list-row"><strong>validate</strong><span>Step</span></div>
-      <div className="redos-list-row"><strong>save</strong><span>Step</span></div>
-      <div className="redos-list-row"><strong>notify</strong><span>Step</span></div>
+      <div className="redos-panel-heading">
+        <span className="redos-kicker">ACTION</span>
+        <h3>Action Designer <HelpTip label="Action Designer" text="Buat alur bisnis untuk tombol dan event. Button memilih Action, bukan endpoint." /></h3>
+        <p>Action adalah langkah kerja bisnis yang dapat berisi validasi, simpan data, notifikasi, atau connector.</p>
+      </div>
+
+      <div className="redos-inline-form">
+        <input data-redos-tooltip="Contoh Action: Save Product, Approve Asset, Submit Ticket." value={label} onChange={(event) => setLabel(event.target.value)} placeholder="Action label" />
+        <select data-redos-tooltip="Trigger menentukan kapan Action dijalankan oleh runtime." value={trigger} onChange={(event) => setTrigger(event.target.value)}>
+          <option>Button click</option>
+          <option>Value changed</option>
+          <option>Screen loaded</option>
+          <option>Workflow state changed</option>
+        </select>
+        <button data-redos-tooltip="Buat Action baru agar bisa dipilih di property inspector builder." type="button" onClick={addAction}>Create Action</button>
+      </div>
+
+      <div className="redos-inline-form">
+        <input data-redos-tooltip="Step adalah urutan kerja Action, misalnya validate, save, notify, atau call connector." value={step} onChange={(event) => setStep(event.target.value)} placeholder="Step name" />
+      </div>
+
+      <div className="redos-metadata-list">
+        {actions.map((action) => (
+          <section key={action.code} className="redos-tree-object">
+            <header>
+              <span>
+                <strong>{action.label}</strong>
+                <small>{action.code} · {action.trigger}</small>
+              </span>
+              <button data-redos-tooltip="Hapus Action dari draft metadata lokal." type="button" onClick={() => removeAction(action.code)}>Delete Action</button>
+            </header>
+            {action.steps.map((actionStep, index) => (
+              <div key={`${action.code}-${actionStep}-${index}`} className="redos-list-row">
+                <strong>{actionStep}</strong>
+                <button data-redos-tooltip="Hapus step ini dari Action." type="button" onClick={() => removeStep(action.code, index)}>Delete</button>
+              </div>
+            ))}
+            <div className="redos-inline-form">
+              <button data-redos-tooltip="Tambahkan step manual ke Action ini." type="button" onClick={() => addStep(action.code)}>Add Step</button>
+              {customApis.map((api) => (
+                <button key={api.code} data-redos-tooltip="Tambahkan connector ini sebagai step Action, tetap event-first." type="button" onClick={() => addStep(action.code, `call ${api.code}`)}>
+                  Use {api.label}
+                </button>
+              ))}
+            </div>
+          </section>
+        ))}
+      </div>
     </section>
   );
 }
