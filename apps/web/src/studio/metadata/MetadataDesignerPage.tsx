@@ -5,6 +5,10 @@ import { AdminGuidePanel, HelpTip } from '../guide/AdminGuide';
 import { CustomOrganismDesigner } from './organisms/CustomOrganismDesigner';
 
 export function MetadataDesignerPage() {
+  function focusSection(sectionId: string) {
+    document.getElementById(sectionId)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
   return (
     <main className="redos-builder-page">
       <header className="redos-builder-header">
@@ -30,21 +34,37 @@ export function MetadataDesignerPage() {
         ]}
       />
 
-      <section className="redos-metadata-map">
-        <strong>METADATA DESIGNER</strong>
-        <div>
-          <span>DATA<br /><small>schema</small></span>
-          <span>EVENT<br /><small>logic</small></span>
-          <span>API<br /><small>connector</small></span>
-          <span>ORGANISM<br /><small>custom UX</small></span>
+      <section className="redos-metadata-map" aria-label="Metadata designer navigation">
+        <div className="redos-panel-heading">
+          <span className="redos-kicker">Metadata Designer</span>
+          <h3>Pilih area yang ingin diatur</h3>
+          <p>Klik salah satu card untuk langsung menuju designer yang dibutuhkan.</p>
+        </div>
+        <div className="redos-metadata-nav-grid">
+          <button type="button" onClick={() => focusSection('metadata-data')}>
+            <strong>Data Object</strong>
+            <span>Buat Object dan Attribute untuk Data Binding.</span>
+          </button>
+          <button type="button" onClick={() => focusSection('metadata-action')}>
+            <strong>Action</strong>
+            <span>Buat alur bisnis untuk tombol dan event.</span>
+          </button>
+          <button type="button" onClick={() => focusSection('metadata-connector')}>
+            <strong>Connector</strong>
+            <span>Hubungkan Action ke sistem eksternal.</span>
+          </button>
+          <button type="button" onClick={() => focusSection('metadata-organism')}>
+            <strong>Custom Organism</strong>
+            <span>Buat reusable block yang muncul di toolbox.</span>
+          </button>
         </div>
       </section>
 
       <section className="redos-metadata-grid">
-        <DataDesigner />
-        <ActionDesigner />
-        <ApiDesigner />
-        <CustomOrganismDesigner />
+        <div id="metadata-data" className="redos-scroll-target"><DataDesigner /></div>
+        <div id="metadata-action" className="redos-scroll-target"><ActionDesigner /></div>
+        <div id="metadata-connector" className="redos-scroll-target"><ApiDesigner /></div>
+        <div id="metadata-organism" className="redos-scroll-target redos-scroll-target-wide"><CustomOrganismDesigner /></div>
       </section>
     </main>
   );

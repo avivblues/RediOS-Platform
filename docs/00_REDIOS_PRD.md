@@ -253,9 +253,9 @@ Application consists of:
 
 ## Data
 
-ENTITY
+DATA OBJECT
 
-FIELD
+ATTRIBUTE
 
 RELATION
 
@@ -294,7 +294,7 @@ RBAC
 
 ABAC
 
-FIELD POLICY
+ATTRIBUTE POLICY
 
 DATA POLICY
 
@@ -340,7 +340,7 @@ without coding.
 
 User can:
 
-- drag field
+- drag attribute
 - add section
 - change component
 - create lookup
@@ -653,13 +653,13 @@ Runtime Engine
 
 ---
 
-## 16.1 Entity Designer
+## 16.1 Data Object Designer
 
 
 Capabilities:
 
-- create entity
-- add fields
+- create data object
+- add attributes
 - configure datatype
 - configure validation
 - configure relation
@@ -672,7 +672,7 @@ User creates:
 
 CUSTOMER
 
-Fields:
+Attributes:
 
 - name
 - email
@@ -1015,6 +1015,13 @@ Connector = generic
 
 Mapping = metadata
 
+UX terminology:
+
+- Use Connector
+- Do not expose raw endpoint/API terminology as the primary admin term
+- Button binds to Action
+- Action step may call Connector
+
 
 Never:
 
@@ -1087,9 +1094,9 @@ User:
 AI generates:
 
 
-ENTITY
+DATA_OBJECT
 
-FIELD
+ATTRIBUTE
 
 FORM
 
@@ -1394,7 +1401,7 @@ Including:
 
 Application Builder
 
-Entity Builder
+Data Object Builder
 
 Form Builder
 

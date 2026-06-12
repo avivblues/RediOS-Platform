@@ -294,9 +294,9 @@ APPLICATION
 
 
 ```
-ENTITY
+DATA_OBJECT
 
-FIELD
+ATTRIBUTE
 
 RELATION
 ```
@@ -428,7 +428,7 @@ Kernel sees:
 ```
 ACTION START
 
-ENTITY WORK_ORDER
+DATA_OBJECT WORK_ORDER
 ```
 
 
@@ -945,9 +945,9 @@ APPLICATION:
 - invalid reference
 
 
-ENTITY:
+DATA_OBJECT:
 
-- missing field
+- missing attribute
 - invalid action
 
 
@@ -1405,7 +1405,7 @@ Same:
 
 
 ```
-ENTITY
+DATA_OBJECT
 
 WORKFLOW
 
@@ -1714,9 +1714,9 @@ Shared:
 
 
 ```
-ENTITY
+DATA_OBJECT
 
-FIELD
+ATTRIBUTE
 
 ACTION
 
@@ -1924,6 +1924,13 @@ EXTERNAL SYSTEM
 
 Connector examples:
 
+Studio UX rule:
+
+- Integration is configured as Connector
+- Mapping is metadata
+- UI components bind to Action
+- Action or Event invokes Connector through metadata
+
 
 Communication:
 
@@ -2012,7 +2019,7 @@ Input:
 
 
 ```
-ENTITY
+DATA_OBJECT
 
 WORKFLOW
 
@@ -2226,10 +2233,10 @@ Studio modules:
 Application Builder
 
 
-Entity Builder
+Data Object Builder
 
 
-Field Builder
+Attribute Builder
 
 
 Workflow Builder
@@ -2360,9 +2367,9 @@ AI creates:
 
 
 ```
-ENTITY
+DATA_OBJECT
 
-FIELD
+ATTRIBUTE
 
 FORM
 

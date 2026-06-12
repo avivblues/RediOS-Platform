@@ -23,6 +23,7 @@ interface BuilderDraftState {
   savedAt: string;
 }
 
+const ACTIVE_APP_KEY_PREFIX = 'redios:studio:active-app';
 const GRID_COLUMNS = 12;
 const MIN_COMPONENT_WIDTH = 2;
 const MIN_COMPONENT_HEIGHT = 48;
@@ -277,8 +278,14 @@ export function BuilderShell({ target }: { target: StudioTarget }) {
     setStatusMessage(isPreviewing ? 'Builder canvas mode active' : 'Runtime preview mode active');
   }
 
-  function launchExperience() {
-    setStatusMessage('Launch check queued. Connect runtime publish before production launch.');
+  function publishExperience() {
+    const savedAt = new Date().toISOString();
+    const applicationCode = resolvePublishedApplicationCode(target);
+    const productionPath = `/apps/${applicationCode}`;
+
+    window.localStorage.setItem(builderDraftKey(target), JSON.stringify({ components, device, selectedId, savedAt }));
+    setStatusMessage(`Published draft opened at ${productionPath}`);
+    window.open(productionPath, '_blank', 'noopener,noreferrer');
   }
 
   return (
@@ -301,7 +308,7 @@ export function BuilderShell({ target }: { target: StudioTarget }) {
           <button data-redos-tooltip="Mulai aplikasi baru dari template experience, bukan dari database." type="button" onClick={() => { window.location.href = '/studio/create'; }}>Create App</button>
           <button data-redos-tooltip="Simpan draft layout visual di browser. Backend metadata sync menyusul di tahap production." type="button" onClick={saveDraft}>Save</button>
           <button data-redos-tooltip="Lihat tampilan runtime tanpa panel editor." type="button" onClick={previewExperience}>{isPreviewing ? 'Edit' : 'Preview'}</button>
-          <button className="redos-launch-action" data-redos-tooltip="Cek kesiapan launch. Nantinya tersambung ke publish runtime metadata." type="button" onClick={launchExperience}>Launch</button>
+          <button className="redos-launch-action" data-redos-tooltip="Publish draft dan buka hasil production di tab baru." type="button" onClick={publishExperience}>Publish</button>
           <button data-redos-tooltip="Advanced Mode untuk Data, Action, Connector, dan Custom Organism." type="button" onClick={() => { window.location.href = '/studio/metadata'; }}>Metadata</button>
         </div>
       </header>
@@ -391,6 +398,16 @@ function clamp(value: number, min: number, max: number) {
 
 function builderDraftKey(target: StudioTarget) {
   return `redios:studio:${target}:draft`;
+}
+
+function resolvePublishedApplicationCode(target: StudioTarget) {
+  const [, root, route, appCode] = window.location.pathname.split('/');
+
+  if (root === 'studio' && route === 'apps' && appCode) {
+    return appCode;
+  }
+
+  return window.localStorage.getItem(`${ACTIVE_APP_KEY_PREFIX}:${target}`) ?? 'REDIOS_EXPERIENCE';
 }
 
 function loadBuilderDraft(target: StudioTarget): BuilderDraftState | undefined {

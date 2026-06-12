@@ -23,7 +23,7 @@ export function ApiDesigner() {
   function saveApi() {
     const nextApi: StudioCustomApiDraft = {
       code: toMetadataCode(label),
-      label: label.trim() || 'Custom API',
+      label: label.trim() || 'Connector',
       method,
       url,
       auth,
@@ -40,8 +40,8 @@ export function ApiDesigner() {
     <section className="redos-metadata-card">
       <div className="redos-panel-heading">
         <span className="redos-kicker">API</span>
-        <h3>API & Connector Designer <HelpTip label="Custom Connector" text="Gunakan hanya untuk integrasi custom. Di builder, user tetap memilih Action." /></h3>
-        <p>Generated API tetap runtime-owned. Custom API dipanggil melalui Action step.</p>
+        <h3>Connector Designer <HelpTip label="Connector" text="Gunakan hanya untuk integrasi custom. Di builder, user tetap memilih Action." /></h3>
+        <p>Generated API tetap runtime-owned. Connector dipanggil melalui Action step.</p>
       </div>
 
       <section className="redos-tree-object">
@@ -71,7 +71,7 @@ export function ApiDesigner() {
             {actions.map((action) => <option key={action.code} value={action.code}>{action.label}</option>)}
           </select>
         </div>
-        <button className="redos-primary-action" data-redos-tooltip="Simpan connector agar bisa dipakai sebagai Action step." type="button" onClick={saveApi}>Save Custom API</button>
+        <button className="redos-primary-action" data-redos-tooltip="Simpan connector agar bisa dipakai sebagai Action step." type="button" onClick={saveApi}>Save Connector</button>
       </div>
 
       <div className="redos-metadata-list">
