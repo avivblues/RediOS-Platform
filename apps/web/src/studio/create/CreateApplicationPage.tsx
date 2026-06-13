@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import type { StudioTarget } from '../builder/types';
 import { AdminGuidePanel, HelpTip } from '../guide/AdminGuide';
-import { toMetadataCode } from '../metadata/metadata-store';
+import { seedApplicationMetadata, setActiveApplicationCode, toApplicationSlug, toMetadataCode } from '../metadata/metadata-store';
 
 interface StudioApplicationDraft {
   code: string;
   name: string;
+  slug: string;
   template: string;
   target: StudioTarget;
   createdAt: string;
@@ -32,7 +33,7 @@ const templates = [
 ];
 
 export function CreateApplicationPage() {
-  const [name, setName] = useState('Asset Maintenance');
+  const [name, setName] = useState('Inventory');
   const [template, setTemplate] = useState(templates[1].code);
   const [target, setTarget] = useState<StudioTarget>('web');
   const selectedTemplate = templates.find((item) => item.code === template) ?? templates[0];
@@ -41,13 +42,15 @@ export function CreateApplicationPage() {
     const nextApp: StudioApplicationDraft = {
       code: toMetadataCode(name),
       name: name.trim() || 'New Application',
+      slug: toApplicationSlug(name),
       template,
       target,
       createdAt: new Date().toISOString(),
     };
     const currentApps = loadApplications();
     window.localStorage.setItem(APPLICATIONS_KEY, JSON.stringify([nextApp, ...currentApps.filter((app) => app.code !== nextApp.code)]));
-    window.localStorage.setItem(`redios:studio:active-app:${target}`, nextApp.code);
+    setActiveApplicationCode(target, nextApp.code);
+    seedApplicationMetadata(nextApp.code, template);
     window.location.href = target === 'android' ? '/studio/builder/android' : '/studio/builder/web';
   }
 

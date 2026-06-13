@@ -1,12 +1,22 @@
 import { useState } from 'react';
 import { HelpTip } from '../../guide/AdminGuide';
-import { loadActions, loadCustomApis, saveActions, toMetadataCode, type StudioActionDraft } from '../metadata-store';
+import { loadActions, loadCustomApis, saveActions, toMetadataCode, type StudioActionDraft, type StudioActionTrigger } from '../metadata-store';
+
+const triggers: Array<{ label: string; value: StudioActionTrigger }> = [
+  { label: 'Button clicked', value: 'onClick' },
+  { label: 'Value changed', value: 'onChange' },
+  { label: 'Form submitted', value: 'onSubmit' },
+  { label: 'Component focused', value: 'onFocus' },
+  { label: 'Component blurred', value: 'onBlur' },
+  { label: 'Screen loaded', value: 'onLoad' },
+  { label: 'Process step reached', value: 'process' },
+];
 
 export function ActionDesigner() {
   const [actions, setActions] = useState(() => loadActions());
-  const [label, setLabel] = useState('Approve Asset');
-  const [trigger, setTrigger] = useState('Button click');
-  const [step, setStep] = useState('validate approval');
+  const [label, setLabel] = useState('Save Product');
+  const [trigger, setTrigger] = useState<StudioActionTrigger>('onClick');
+  const [step, setStep] = useState('save');
   const customApis = loadCustomApis();
 
   function persist(nextActions: StudioActionDraft[]) {
@@ -19,7 +29,7 @@ export function ActionDesigner() {
       code: toMetadataCode(label),
       label: label.trim() || 'New Action',
       trigger,
-      steps: ['validate', 'execute'],
+      steps: ['validate', 'save'],
     };
     persist([nextAction, ...actions.filter((action) => action.code !== nextAction.code)]);
   }
@@ -58,11 +68,8 @@ export function ActionDesigner() {
 
       <div className="redos-inline-form">
         <input data-redos-tooltip="Contoh Action: Save Product, Approve Asset, Submit Ticket." value={label} onChange={(event) => setLabel(event.target.value)} placeholder="Action label" />
-        <select data-redos-tooltip="Trigger menentukan kapan Action dijalankan oleh runtime." value={trigger} onChange={(event) => setTrigger(event.target.value)}>
-          <option>Button click</option>
-          <option>Value changed</option>
-          <option>Screen loaded</option>
-          <option>Workflow state changed</option>
+        <select data-redos-tooltip="Trigger menentukan kapan Action dijalankan oleh runtime." value={trigger} onChange={(event) => setTrigger(event.target.value as StudioActionTrigger)}>
+          {triggers.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}
         </select>
         <button data-redos-tooltip="Buat Action baru agar bisa dipilih di property inspector builder." type="button" onClick={addAction}>Create Action</button>
       </div>

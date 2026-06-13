@@ -25,6 +25,25 @@ export class RuntimeService {
     });
   }
 
+  createByMetadataAction(
+    headers: RuntimeHeaders,
+    entityCode: string,
+    actionCode: string,
+    payload: RuntimeCreateDto,
+  ): Promise<RuntimeExecutionResult> {
+    const context = this.contextEngine.resolve(headers);
+
+    // Universal runtime pipeline: auth/context -> metadata resolver -> permission/validation/action -> storage.
+    return this.runtimeExecutor.create({
+      context,
+      entityCode,
+      payload: {
+        ...payload.data,
+        __runtimeAction: actionCode,
+      },
+    });
+  }
+
   findMany(
     headers: RuntimeHeaders,
     entityCode: string,

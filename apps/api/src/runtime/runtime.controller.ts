@@ -10,6 +10,18 @@ import { RuntimeService } from './runtime.service';
 export class RuntimeController {
   constructor(private readonly runtimeService: RuntimeService) {}
 
+  @Post(':entityCode/create')
+  @ApiOperation({ summary: 'Run universal metadata create action for an entity.' })
+  @ApiParam({ name: 'entityCode', description: 'Metadata entity code.' })
+  @ApiBody({ type: RuntimeCreateDto })
+  createByMetadataAction(
+    @Headers() headers: RuntimeHeaders,
+    @Param('entityCode') entityCode: string,
+    @Body() payload: RuntimeCreateDto,
+  ) {
+    return this.runtimeService.createByMetadataAction(headers, entityCode, 'create', payload);
+  }
+
   @Post(':entityCode')
   @ApiOperation({ summary: 'Create a runtime document from metadata.' })
   @ApiParam({ name: 'entityCode', description: 'Metadata entity code.' })

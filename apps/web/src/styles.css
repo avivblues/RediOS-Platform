@@ -264,6 +264,80 @@ a:focus-visible {
   margin: var(--redios-spacing-xs) 0;
 }
 
+.runtime-sidebar {
+  min-width: 18rem;
+  margin: var(--redios-spacing-lg) 0 var(--redios-spacing-lg) var(--redios-spacing-lg);
+  border-radius: var(--redios-radius-large);
+  padding: var(--redios-spacing-md);
+  background: var(--redios-color-surface);
+  box-shadow: var(--redios-shadow-soft);
+}
+
+.runtime-nav-brand,
+.runtime-nav-group,
+.runtime-nav-list {
+  display: grid;
+  gap: var(--redios-spacing-xs);
+}
+
+.runtime-nav-brand {
+  margin-bottom: var(--redios-spacing-md);
+}
+
+.runtime-nav-list button {
+  border: 0;
+  border-radius: var(--redios-radius-medium);
+  padding: var(--redios-spacing-sm);
+  background: transparent;
+  color: var(--redios-color-text);
+  text-align: left;
+  cursor: pointer;
+}
+
+.runtime-nav-list .runtime-nav-active,
+.runtime-nav-list button:hover {
+  background: color-mix(in srgb, var(--redios-color-primary), var(--redios-color-surface) 88%);
+  color: var(--redios-color-primary);
+}
+
+.redos-runtime-canvas {
+  display: grid;
+  gap: var(--redios-spacing-md);
+}
+
+.redos-runtime-field {
+  display: grid;
+  gap: var(--redios-spacing-xs);
+}
+
+.redos-runtime-field input,
+.redos-runtime-field textarea {
+  min-height: var(--redos-builder-input-height, 44px);
+  border: 1px solid var(--redos-builder-input-border, #d8dee9);
+  border-radius: var(--redos-builder-input-radius, 12px);
+  padding: 0 var(--redios-spacing-sm);
+  background: var(--redios-color-surface);
+  color: var(--redios-color-text);
+}
+
+.redos-runtime-field textarea {
+  min-height: 120px;
+  padding-block: var(--redios-spacing-sm);
+}
+
+.redos-runtime-static,
+.runtime-record-list pre {
+  border: 1px solid color-mix(in srgb, var(--redios-color-text), transparent 86%);
+  border-radius: var(--redios-radius-medium);
+  padding: var(--redios-spacing-sm);
+  background: color-mix(in srgb, var(--redios-color-surface), #f8fafc 40%);
+}
+
+.runtime-record-list {
+  display: grid;
+  gap: var(--redios-spacing-sm);
+}
+
 .runtime-form-workspace,
 .runtime-form-section,
 .runtime-form-grid {

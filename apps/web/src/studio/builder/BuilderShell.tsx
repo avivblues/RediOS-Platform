@@ -3,7 +3,19 @@ import { Canvas } from './Canvas/Canvas';
 import { ComponentPanel } from './ComponentPanel/ComponentPanel';
 import { PropertyPanel } from './PropertyPanel/PropertyPanel';
 import { TreePanel } from './TreePanel/TreePanel';
-import { findCustomOrganism, loadDataObjects } from '../metadata/metadata-store';
+import {
+  findCustomOrganism,
+  loadActions,
+  loadCustomApis,
+  loadCustomOrganisms,
+  loadDataObjects,
+  loadMenu,
+  loadProcesses,
+  loadSecurity,
+  publishApplicationPackage,
+  resolveActiveApplicationCode,
+  toApplicationSlug,
+} from '../metadata/metadata-store';
 import { AdminGuidePanel } from '../guide/AdminGuide';
 import type {
   BuilderComponentDefinition,
@@ -25,7 +37,6 @@ interface BuilderDraftState {
 
 type BuilderTheme = 'Light' | 'Mint' | 'Dark';
 
-const ACTIVE_APP_KEY_PREFIX = 'redios:studio:active-app';
 const GRID_COLUMNS = 12;
 const MIN_COMPONENT_WIDTH = 2;
 const MIN_COMPONENT_HEIGHT = 48;
@@ -33,36 +44,58 @@ const MAX_COMPONENT_HEIGHT = 420;
 
 const initialComponents: CanvasComponent[] = [
   {
-    id: 'product_name',
-    type: 'TextInput',
-    label: 'Product Name',
-    placeholder: 'Enter product name',
+    id: 'product_form',
+    type: 'Form',
+    label: 'Product Form',
     width: 12,
-    height: 86,
+    height: 360,
     x: 0,
     y: 0,
-    binding: { object: 'Product', field: 'name' },
-  },
-  {
-    id: 'stock',
-    type: 'NumberInput',
-    label: 'Stock',
-    placeholder: 'Enter stock',
-    width: 12,
-    height: 86,
-    x: 0,
-    y: 1,
-    binding: { object: 'Product', field: 'stock' },
-  },
-  {
-    id: 'save_product',
-    type: 'Button',
-    label: 'Save Product',
-    width: 12,
-    height: 72,
-    x: 0,
-    y: 2,
-    events: { onClick: 'Save Product Action' },
+    children: [
+      {
+        id: 'product_name',
+        type: 'TextInput',
+        label: 'Product Name',
+        placeholder: 'Enter product name',
+        width: 12,
+        height: 60,
+        x: 0,
+        y: 0,
+        binding: { object: 'Product', field: 'name' },
+      },
+      {
+        id: 'product_stock',
+        type: 'NumberInput',
+        label: 'Stock',
+        placeholder: 'Enter stock',
+        width: 6,
+        height: 60,
+        x: 0,
+        y: 1,
+        binding: { object: 'Product', field: 'stock' },
+      },
+      {
+        id: 'product_price',
+        type: 'NumberInput',
+        label: 'Price',
+        placeholder: 'Enter price',
+        width: 6,
+        height: 60,
+        x: 6,
+        y: 2,
+        binding: { object: 'Product', field: 'price' },
+      },
+      {
+        id: 'save_product',
+        type: 'Button',
+        label: 'Save Product',
+        width: 4,
+        height: 56,
+        x: 0,
+        y: 3,
+        events: { onClick: 'Save Product' },
+      },
+    ],
   },
 ];
 
@@ -115,15 +148,17 @@ const builderTemplates: Array<{ id: string; label: string; components: CanvasCom
 ];
 
 export function BuilderShell({ target }: { target: StudioTarget }) {
+  const applicationCode = resolveActiveApplicationCode(target);
   const dataObjects = useMemo<BuilderDataObject[]>(() => loadDataObjects().map((object) => ({
     name: object.name,
     fields: object.attributes.map((attribute) => attribute.name),
-  })), []);
-  const savedDraft = loadBuilderDraft(target);
+  })), [applicationCode]);
+  const savedDraft = loadBuilderDraft(target, applicationCode);
+  const starterComponents = dataObjects.length === 0 ? [] : initialComponents;
   const [device, setDevice] = useState<StudioDevice>(savedDraft?.device ?? (target === 'android' ? 'Mobile' : 'Desktop'));
   const [tab, setTab] = useState<'Components' | 'Data'>('Components');
-  const [components, setComponents] = useState(savedDraft?.components ?? initialComponents);
-  const [selectedId, setSelectedId] = useState(savedDraft?.selectedId ?? 'product_name');
+  const [components, setComponents] = useState(savedDraft?.components ?? starterComponents);
+  const [selectedId, setSelectedId] = useState(savedDraft?.selectedId ?? starterComponents[0]?.id ?? '');
   const [statusMessage, setStatusMessage] = useState(savedDraft ? `Draft restored from ${formatSavedAt(savedDraft.savedAt)}` : 'Draft ready');
   const [isPreviewing, setIsPreviewing] = useState(false);
   const [isToolboxCollapsed, setIsToolboxCollapsed] = useState(false);
@@ -348,7 +383,7 @@ export function BuilderShell({ target }: { target: StudioTarget }) {
 
   function saveDraft() {
     const savedAt = new Date().toISOString();
-    window.localStorage.setItem(builderDraftKey(target), JSON.stringify({ components, device, selectedId, savedAt, theme }));
+    window.localStorage.setItem(builderDraftKey(target, applicationCode), JSON.stringify({ components, device, selectedId, savedAt, theme }));
     setStatusMessage(`Experience draft saved at ${formatSavedAt(savedAt)}`);
   }
 
@@ -372,10 +407,29 @@ export function BuilderShell({ target }: { target: StudioTarget }) {
 
   function publishExperience() {
     const savedAt = new Date().toISOString();
-    const applicationCode = resolvePublishedApplicationCode(target);
-    const productionPath = `/apps/${applicationCode}`;
+    const appSlug = resolvePublishedApplicationSlug(target, applicationCode);
+    const productionPath = `/apps/${appSlug}`;
 
-    window.localStorage.setItem(builderDraftKey(target), JSON.stringify({ components, device, selectedId, savedAt, theme }));
+    window.localStorage.setItem(builderDraftKey(target, applicationCode), JSON.stringify({ components, device, selectedId, savedAt, theme }));
+    publishApplicationPackage({
+      appCode: applicationCode,
+      appSlug,
+      appName: applicationNameFromCode(applicationCode),
+      target,
+      dataObjects: loadDataObjects(),
+      actions: loadActions(),
+      connectors: loadCustomApis(),
+      processes: loadProcesses(),
+      menu: loadMenu(),
+      security: loadSecurity(),
+      customOrganisms: loadCustomOrganisms(),
+      canvas: components,
+      theme: {
+        name: theme,
+        tokens: collectBuilderThemeTokens(),
+      },
+      publishedAt: savedAt,
+    });
     setStatusMessage(`Published draft opened at ${productionPath}`);
     window.open(productionPath, '_blank', 'noopener,noreferrer');
   }
@@ -828,23 +882,23 @@ function cloneTemplateComponent(component: CanvasComponent): CanvasComponent {
   };
 }
 
-function builderDraftKey(target: StudioTarget) {
-  return `redios:studio:${target}:draft`;
+function builderDraftKey(target: StudioTarget, applicationCode: string) {
+  return `redios:studio:${applicationCode}:${target}:draft`;
 }
 
-function resolvePublishedApplicationCode(target: StudioTarget) {
+function resolvePublishedApplicationSlug(target: StudioTarget, applicationCode: string) {
   const [, root, route, appCode] = window.location.pathname.split('/');
 
   if (root === 'studio' && route === 'apps' && appCode) {
-    return appCode;
+    return toApplicationSlug(appCode);
   }
 
-  return window.localStorage.getItem(`${ACTIVE_APP_KEY_PREFIX}:${target}`) ?? 'REDIOS_EXPERIENCE';
+  return target === 'android' ? `${toApplicationSlug(applicationCode)}-android` : toApplicationSlug(applicationCode);
 }
 
-function loadBuilderDraft(target: StudioTarget): BuilderDraftState | undefined {
+function loadBuilderDraft(target: StudioTarget, applicationCode: string): BuilderDraftState | undefined {
   try {
-    const rawDraft = window.localStorage.getItem(builderDraftKey(target));
+    const rawDraft = window.localStorage.getItem(builderDraftKey(target, applicationCode));
 
     if (!rawDraft) {
       return undefined;
@@ -863,6 +917,27 @@ function loadBuilderDraft(target: StudioTarget): BuilderDraftState | undefined {
   } catch {
     return undefined;
   }
+}
+
+function applicationNameFromCode(value: string) {
+  return value.toLowerCase().split('_').map((word) => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+}
+
+function collectBuilderThemeTokens() {
+  const tokens: Record<string, string> = {};
+  const styles = window.getComputedStyle(document.documentElement);
+
+  for (const name of Array.from(styles)) {
+    if (name.startsWith('--redos-builder-')) {
+      const value = styles.getPropertyValue(name).trim();
+
+      if (value) {
+        tokens[name] = value;
+      }
+    }
+  }
+
+  return tokens;
 }
 
 function formatSavedAt(value: string) {

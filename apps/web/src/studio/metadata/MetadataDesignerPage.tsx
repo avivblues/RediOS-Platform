@@ -3,8 +3,11 @@ import { ApiDesigner } from './api/ApiDesigner';
 import { DataDesigner } from './data/DataDesigner';
 import { AdminGuidePanel, HelpTip } from '../guide/AdminGuide';
 import { CustomOrganismDesigner } from './organisms/CustomOrganismDesigner';
+import { ProcessDesigner } from './process/ProcessDesigner';
+import { MenuDesigner } from './menu/MenuDesigner';
+import { SecurityDesigner } from './security/SecurityDesigner';
 
-type MetadataDesignerSection = 'overview' | 'data' | 'action' | 'connector' | 'organisms';
+type MetadataDesignerSection = 'overview' | 'data' | 'action' | 'connector' | 'process' | 'menu' | 'security' | 'organisms';
 
 const metadataSections: Array<{
   id: Exclude<MetadataDesignerSection, 'overview'>;
@@ -31,6 +34,24 @@ const metadataSections: Array<{
     path: '/studio/metadata/connector',
   },
   {
+    id: 'process',
+    title: 'Process Designer',
+    description: 'Buat routing bisnis dan approval.',
+    path: '/studio/metadata/process',
+  },
+  {
+    id: 'menu',
+    title: 'Menu Designer',
+    description: 'Buat menu aplikasi runtime.',
+    path: '/studio/metadata/menu',
+  },
+  {
+    id: 'security',
+    title: 'Security Designer',
+    description: 'Atur role, permission, field, dan action access.',
+    path: '/studio/metadata/security',
+  },
+  {
     id: 'organisms',
     title: 'Custom Organisms',
     description: 'Buat reusable block yang muncul di toolbox.',
@@ -46,8 +67,8 @@ export function MetadataDesignerPage() {
     <main className="redos-builder-page">
       <header className="redos-builder-header">
         <div>
-          <span className="redos-kicker">Advanced Mode</span>
-          <h1>{activeDefinition?.title ?? 'Metadata Designer'} <HelpTip label="Advanced Mode" text="Area ini untuk admin teknis. Business user tetap bekerja di Visual Builder." /></h1>
+          <span className="redos-kicker">System Analyst Workspace</span>
+          <h1>{activeDefinition?.title ?? 'Metadata Designer'} <HelpTip label="Advanced Mode" text="Area ini untuk System Analyst membuat blueprint aplikasi. Visual Builder tetap khusus UI metadata." /></h1>
           <p>{activeDefinition?.description ?? 'Pilih satu area metadata untuk dibuat atau dimodifikasi secara terpisah.'}</p>
         </div>
         <div className="redos-actions">
@@ -66,9 +87,13 @@ export function MetadataDesignerPage() {
                 title="Kapan memakai Advanced Mode?"
                 description="Gunakan halaman ini hanya saat admin perlu membuat data/action/connector/custom component yang belum tersedia di builder."
                 steps={[
+                  'System Analyst membuat blueprint aplikasi, bukan mengedit screen satu per satu.',
                   'Data Designer: buat Object dan Attribute yang akan dipakai binding.',
-                  'Action Designer: buat alur bisnis untuk tombol atau event.',
+                  'Action Designer: buat alur bisnis; button hanya memanggil Action.',
                   'Connector Designer: buat connector, lalu panggil lewat Action step.',
+                  'Process Designer: buat approval dan business routing, bukan URL routing.',
+                  'Menu Designer: bentuk sidebar/menu runtime dari metadata.',
+                  'Security Designer: atur role, permission, field access, dan Power User.',
                   'Custom Organisms: buat reusable block agar muncul di toolbox builder.',
                 ]}
               />
@@ -87,6 +112,9 @@ export function MetadataDesignerPage() {
               {activeSection === 'data' ? <DataDesigner /> : null}
               {activeSection === 'action' ? <ActionDesigner /> : null}
               {activeSection === 'connector' ? <ApiDesigner /> : null}
+              {activeSection === 'process' ? <ProcessDesigner /> : null}
+              {activeSection === 'menu' ? <MenuDesigner /> : null}
+              {activeSection === 'security' ? <SecurityDesigner /> : null}
               {activeSection === 'organisms' ? <CustomOrganismDesigner /> : null}
             </section>
           )}
@@ -165,6 +193,18 @@ function metadataSectionFromPath(pathname: string): MetadataDesignerSection {
 
   if (pathname.startsWith('/studio/metadata/connector')) {
     return 'connector';
+  }
+
+  if (pathname.startsWith('/studio/metadata/process')) {
+    return 'process';
+  }
+
+  if (pathname.startsWith('/studio/metadata/menu')) {
+    return 'menu';
+  }
+
+  if (pathname.startsWith('/studio/metadata/security')) {
+    return 'security';
   }
 
   if (pathname.startsWith('/studio/metadata/organisms')) {

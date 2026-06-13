@@ -1,4 +1,4 @@
-import type { BuilderComponentDefinition } from '../builder/types';
+import type { BuilderComponentDefinition, CanvasComponent, StudioTarget } from '../builder/types';
 
 export interface StudioDataAttribute {
   name: string;
@@ -13,9 +13,11 @@ export interface StudioDataObject {
 export interface StudioActionDraft {
   code: string;
   label: string;
-  trigger: string;
+  trigger: StudioActionTrigger;
   steps: string[];
 }
+
+export type StudioActionTrigger = 'onClick' | 'onChange' | 'onSubmit' | 'onFocus' | 'onBlur' | 'onLoad' | 'process';
 
 export interface StudioCustomApiDraft {
   code: string;
@@ -33,10 +35,70 @@ export interface StudioCustomOrganismDraft {
   components: string[];
 }
 
+export interface StudioProcessDraft {
+  code: string;
+  label: string;
+  description: string;
+  steps: Array<{
+    id: string;
+    label: string;
+    approver: string;
+    condition?: string;
+    delegation?: string;
+  }>;
+}
+
+export interface StudioMenuDraft {
+  id: string;
+  label: string;
+  route: string;
+  screen: string;
+  permission: string;
+  parent?: string;
+}
+
+export interface StudioSecurityDraft {
+  roles: Array<{
+    code: string;
+    label: string;
+    permissions: string[];
+    fieldAccess: Record<string, 'hidden' | 'read' | 'write'>;
+    actionAccess: string[];
+    powerUser?: boolean;
+  }>;
+}
+
+export interface StudioThemeDraft {
+  name: string;
+  tokens: Record<string, string>;
+}
+
+export interface StudioApplicationMetadataPackage {
+  appCode: string;
+  appSlug: string;
+  appName: string;
+  target: StudioTarget;
+  dataObjects: StudioDataObject[];
+  actions: StudioActionDraft[];
+  connectors: StudioCustomApiDraft[];
+  processes: StudioProcessDraft[];
+  menu: StudioMenuDraft[];
+  security: StudioSecurityDraft;
+  customOrganisms: StudioCustomOrganismDraft[];
+  canvas: CanvasComponent[];
+  theme: StudioThemeDraft;
+  publishedAt: string;
+}
+
 const DATA_OBJECTS_KEY = 'redios:studio:metadata:data-objects';
 const ACTIONS_KEY = 'redios:studio:metadata:actions';
 const CUSTOM_APIS_KEY = 'redios:studio:metadata:custom-apis';
 const CUSTOM_ORGANISMS_KEY = 'redios:studio:metadata:custom-organisms';
+const PROCESSES_KEY = 'redios:studio:metadata:processes';
+const MENU_KEY = 'redios:studio:metadata:menu';
+const SECURITY_KEY = 'redios:studio:metadata:security';
+const ACTIVE_APP_KEY_PREFIX = 'redios:studio:active-app';
+const PUBLISHED_APP_KEY_PREFIX = 'redios:studio:published-app';
 
 export const defaultDataObjects: StudioDataObject[] = [
   {
@@ -60,7 +122,7 @@ export const defaultActions: StudioActionDraft[] = [
   {
     code: 'SAVE_PRODUCT',
     label: 'Save Product',
-    trigger: 'Button click',
+    trigger: 'onClick',
     steps: ['validate', 'save', 'notify'],
   },
 ];
@@ -85,36 +147,118 @@ export const defaultCustomOrganisms: StudioCustomOrganismDraft[] = [
   },
 ];
 
+export const defaultProcesses: StudioProcessDraft[] = [
+  {
+    code: 'PRODUCT_APPROVAL',
+    label: 'Product Approval',
+    description: 'Optional approval process for product changes.',
+    steps: [
+      { id: 'submit', label: 'Submit', approver: 'Requester' },
+      { id: 'supervisor_approval', label: 'Supervisor Approval', approver: 'Supervisor', condition: 'stock > 100' },
+      { id: 'done', label: 'Done', approver: 'System' },
+    ],
+  },
+];
+
+export const defaultMenu: StudioMenuDraft[] = [
+  {
+    id: 'inventory',
+    label: 'Inventory',
+    route: '/inventory',
+    screen: 'inventory-root',
+    permission: 'inventory.view',
+  },
+  {
+    id: 'inventory-product',
+    label: 'Product',
+    route: '/product',
+    screen: 'product-screen',
+    permission: 'product.view',
+    parent: 'inventory',
+  },
+];
+
+export const defaultSecurity: StudioSecurityDraft = {
+  roles: [
+    {
+      code: 'ADMIN',
+      label: 'Admin',
+      permissions: ['*'],
+      fieldAccess: {},
+      actionAccess: ['*'],
+    },
+    {
+      code: 'POWER_USER',
+      label: 'Power User',
+      permissions: ['product.view', 'product.create', 'layout.customize', 'automation.create', 'approval.create', 'report.create'],
+      fieldAccess: {},
+      actionAccess: ['SAVE_PRODUCT'],
+      powerUser: true,
+    },
+    {
+      code: 'USER',
+      label: 'User',
+      permissions: ['product.view', 'product.create'],
+      fieldAccess: {},
+      actionAccess: ['SAVE_PRODUCT'],
+    },
+  ],
+};
+
 export function loadDataObjects() {
-  return readStoredValue(DATA_OBJECTS_KEY, defaultDataObjects);
+  return readStoredValue(scopedMetadataKey(DATA_OBJECTS_KEY), readStoredValue(DATA_OBJECTS_KEY, defaultDataObjects));
 }
 
 export function saveDataObjects(value: StudioDataObject[]) {
-  writeStoredValue(DATA_OBJECTS_KEY, value);
+  writeStoredValue(scopedMetadataKey(DATA_OBJECTS_KEY), value);
 }
 
 export function loadActions() {
-  return readStoredValue(ACTIONS_KEY, defaultActions);
+  return readStoredValue(scopedMetadataKey(ACTIONS_KEY), readStoredValue(ACTIONS_KEY, defaultActions));
 }
 
 export function saveActions(value: StudioActionDraft[]) {
-  writeStoredValue(ACTIONS_KEY, value);
+  writeStoredValue(scopedMetadataKey(ACTIONS_KEY), value);
 }
 
 export function loadCustomApis() {
-  return readStoredValue(CUSTOM_APIS_KEY, defaultCustomApis);
+  return readStoredValue(scopedMetadataKey(CUSTOM_APIS_KEY), readStoredValue(CUSTOM_APIS_KEY, defaultCustomApis));
 }
 
 export function saveCustomApis(value: StudioCustomApiDraft[]) {
-  writeStoredValue(CUSTOM_APIS_KEY, value);
+  writeStoredValue(scopedMetadataKey(CUSTOM_APIS_KEY), value);
 }
 
 export function loadCustomOrganisms() {
-  return readStoredValue(CUSTOM_ORGANISMS_KEY, defaultCustomOrganisms);
+  return readStoredValue(scopedMetadataKey(CUSTOM_ORGANISMS_KEY), readStoredValue(CUSTOM_ORGANISMS_KEY, defaultCustomOrganisms));
 }
 
 export function saveCustomOrganisms(value: StudioCustomOrganismDraft[]) {
-  writeStoredValue(CUSTOM_ORGANISMS_KEY, value);
+  writeStoredValue(scopedMetadataKey(CUSTOM_ORGANISMS_KEY), value);
+}
+
+export function loadProcesses() {
+  return readStoredValue(scopedMetadataKey(PROCESSES_KEY), defaultProcesses);
+}
+
+export function saveProcesses(value: StudioProcessDraft[]) {
+  writeStoredValue(scopedMetadataKey(PROCESSES_KEY), value);
+}
+
+export function loadMenu() {
+  return readStoredValue(scopedMetadataKey(MENU_KEY), defaultMenu);
+}
+
+export function saveMenu(value: StudioMenuDraft[]) {
+  writeStoredValue(scopedMetadataKey(MENU_KEY), value);
+}
+
+export function loadSecurity() {
+  return readStoredValue(scopedMetadataKey(SECURITY_KEY), defaultSecurity);
+}
+
+export function saveSecurity(value: StudioSecurityDraft) {
+  writeStoredValue(scopedMetadataKey(SECURITY_KEY), value);
 }
 
 export function customOrganismsAsComponents(): BuilderComponentDefinition[] {
@@ -128,6 +272,64 @@ export function customOrganismsAsComponents(): BuilderComponentDefinition[] {
 
 export function findCustomOrganism(type: string) {
   return loadCustomOrganisms().find((organism) => organism.type === type);
+}
+
+export function resolveActiveApplicationCode(target?: StudioTarget) {
+  if (target) {
+    const code = window.localStorage.getItem(`${ACTIVE_APP_KEY_PREFIX}:${target}`);
+
+    if (code) {
+      return code;
+    }
+  }
+
+  return window.localStorage.getItem(`${ACTIVE_APP_KEY_PREFIX}:web`)
+    ?? window.localStorage.getItem(`${ACTIVE_APP_KEY_PREFIX}:android`)
+    ?? 'INVENTORY';
+}
+
+export function setActiveApplicationCode(target: StudioTarget, appCode: string) {
+  window.localStorage.setItem(`${ACTIVE_APP_KEY_PREFIX}:${target}`, appCode);
+}
+
+export function toApplicationSlug(value: string) {
+  const slug = value
+    .trim()
+    .replace(/([a-z])([A-Z])/g, '$1-$2')
+    .replace(/[^a-zA-Z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .toLowerCase();
+
+  return slug || 'new-application';
+}
+
+export function publishApplicationPackage(packageValue: StudioApplicationMetadataPackage) {
+  writeStoredValue(`${PUBLISHED_APP_KEY_PREFIX}:${packageValue.appSlug}`, packageValue);
+}
+
+export function loadPublishedApplication(appSlug: string) {
+  return readStoredValue<StudioApplicationMetadataPackage | undefined>(`${PUBLISHED_APP_KEY_PREFIX}:${appSlug}`, undefined);
+}
+
+export function seedApplicationMetadata(appCode: string, template: string) {
+  if (template === 'BLANK_EXPERIENCE') {
+    writeStoredValue(scopedMetadataKey(DATA_OBJECTS_KEY, appCode), []);
+    writeStoredValue(scopedMetadataKey(ACTIONS_KEY, appCode), []);
+    writeStoredValue(scopedMetadataKey(CUSTOM_APIS_KEY, appCode), []);
+    writeStoredValue(scopedMetadataKey(CUSTOM_ORGANISMS_KEY, appCode), []);
+    writeStoredValue(scopedMetadataKey(PROCESSES_KEY, appCode), []);
+    writeStoredValue(scopedMetadataKey(MENU_KEY, appCode), []);
+    writeStoredValue(scopedMetadataKey(SECURITY_KEY, appCode), defaultSecurity);
+    return;
+  }
+
+  writeStoredValue(scopedMetadataKey(DATA_OBJECTS_KEY, appCode), defaultDataObjects);
+  writeStoredValue(scopedMetadataKey(ACTIONS_KEY, appCode), defaultActions);
+  writeStoredValue(scopedMetadataKey(CUSTOM_APIS_KEY, appCode), defaultCustomApis);
+  writeStoredValue(scopedMetadataKey(CUSTOM_ORGANISMS_KEY, appCode), defaultCustomOrganisms);
+  writeStoredValue(scopedMetadataKey(PROCESSES_KEY, appCode), defaultProcesses);
+  writeStoredValue(scopedMetadataKey(MENU_KEY, appCode), defaultMenu);
+  writeStoredValue(scopedMetadataKey(SECURITY_KEY, appCode), defaultSecurity);
 }
 
 export function toMetadataCode(value: string) {
@@ -146,6 +348,10 @@ export function toComponentType(value: string) {
   const type = words.map((word) => word.charAt(0).toUpperCase() + word.slice(1)).join('');
 
   return type ? `Custom${type}` : `CustomOrganism${Date.now()}`;
+}
+
+function scopedMetadataKey(key: string, appCode = resolveActiveApplicationCode()) {
+  return `redios:studio:apps:${appCode}:${key}`;
 }
 
 function readStoredValue<T>(key: string, fallback: T): T {
