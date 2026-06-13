@@ -8,6 +8,7 @@ export interface BuilderComponentDefinition {
   type: string;
   label: string;
   layer: ComponentLayer;
+  description?: string;
 }
 
 export interface CanvasComponent {
@@ -24,9 +25,15 @@ export interface CanvasComponent {
     field: string;
   };
   events?: {
+    onBlur?: string;
     onClick?: string;
     onChange?: string;
+    onFocus?: string;
+    onLoad?: string;
+    onSubmit?: string;
   };
+  themeOverrides?: Record<string, string>;
+  children?: CanvasComponent[];
 }
 
 export interface BuilderDataObject {

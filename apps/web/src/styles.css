@@ -20,6 +20,77 @@
   --redios-radius-small: 0.5rem;
   --redios-radius-medium: 0.85rem;
   --redios-radius-large: 1.25rem;
+  --redos-builder-primary: var(--redios-color-primary);
+  --redos-builder-primary-dark: #4f46e5;
+  --redos-builder-on-primary: #ffffff;
+  --redos-builder-danger: #ef4444;
+  --redos-builder-success: #10b981;
+  --redos-builder-gray-50: #f9fafb;
+  --redos-builder-gray-100: #f3f4f6;
+  --redos-builder-gray-200: #e5e7eb;
+  --redos-builder-gray-300: #d1d5db;
+  --redos-builder-gray-400: #9ca3af;
+  --redos-builder-gray-500: #6b7280;
+  --redos-builder-gray-700: #374151;
+  --redos-builder-font-family: var(--redios-font-family);
+  --redos-builder-font-size: 0.9375rem;
+  --redos-builder-line-height: 1.45;
+  --redos-builder-letter-spacing: 0;
+  --redos-builder-gutter: 0.85rem;
+  --redos-builder-radius-small: 0.42rem;
+  --redos-builder-input-height: 2.45rem;
+  --redos-builder-input-padding-x: 0.6rem;
+  --redos-builder-input-bg: #ffffff;
+  --redos-builder-input-border: #d1d5db;
+  --redos-builder-input-focus: #10b981;
+  --redos-builder-placeholder: var(--redos-builder-gray-400);
+  --redos-builder-select-height: var(--redos-builder-input-height);
+  --redos-builder-select-caret: var(--redos-builder-gray-500);
+  --redos-builder-option-bg: #ffffff;
+  --redos-builder-option-hover: var(--redos-builder-gray-100);
+  --redos-builder-selected-color: var(--redos-builder-primary);
+  --redos-builder-link-color: var(--redos-builder-primary);
+  --redos-builder-link-decoration: inherit;
+  --redos-builder-muted-text: var(--redos-builder-gray-500);
+  --redos-builder-passive-text: var(--redos-builder-gray-700);
+  --redos-builder-passive-bg: var(--redos-builder-gray-300);
+  --redos-builder-selected-bg: rgb(17 24 39 / 5%);
+  --redos-builder-handle-shadow: 0 1px 2px rgba(0, 0, 0, .12);
+  --redos-builder-button-height: 2.45rem;
+  --redos-builder-button-padding-x: 1rem;
+  --redos-builder-button-bg: linear-gradient(135deg, var(--redos-builder-primary), var(--redos-builder-primary-dark));
+  --redos-builder-button-text: var(--redos-builder-on-primary);
+  --redos-builder-button-radius: 0.68rem;
+  --redos-builder-button-shadow: none;
+  --redos-builder-checkbox-size: 1rem;
+  --redos-builder-checkbox-radius: 0.25rem;
+  --redos-builder-checkbox-checked-bg: var(--redos-builder-primary);
+  --redos-builder-checkbox-checked-mark: #ffffff;
+  --redos-builder-checkbox-label-gap: 0.5rem;
+  --redos-builder-table-header-bg: var(--redos-builder-gray-50);
+  --redos-builder-table-border: var(--redos-builder-gray-200);
+  --redos-builder-table-cell-padding: 0.625rem;
+  --redos-builder-table-row-hover: var(--redos-builder-gray-100);
+  --redos-builder-slider-track-height: 0.375rem;
+  --redos-builder-slider-track-bg: var(--redos-builder-gray-200);
+  --redos-builder-slider-fill-bg: var(--redos-builder-primary);
+  --redos-builder-slider-thumb-size: 1.125rem;
+  --redos-builder-toggle-width: 2.625rem;
+  --redos-builder-toggle-height: 1.5rem;
+  --redos-builder-toggle-on-bg: var(--redos-builder-primary);
+  --redos-builder-toggle-off-bg: var(--redos-builder-gray-300);
+  --redos-builder-image-height: 8rem;
+  --redos-builder-image-fit: cover;
+  --redos-builder-dropzone-bg: #eff6ff;
+  --redos-builder-dropzone-border: #93c5fd;
+  --redos-builder-signature-height: 10rem;
+  --redos-builder-signature-stroke: #111827;
+  --redos-builder-signature-stroke-width: 2px;
+  --redos-builder-signature-bg: var(--redos-builder-gray-50);
+  --redos-builder-heading-margin: 0.75rem;
+  --redos-builder-paragraph-color: var(--redos-builder-muted-text);
+  --redos-builder-divider: var(--redos-builder-gray-300);
+  --redos-builder-spacer-height: 2rem;
   color: var(--redios-color-text);
   background: var(--redios-color-background);
   font-family: var(--redios-font-family);
@@ -2120,8 +2191,11 @@ a:focus-visible {
 /* RediOS Visual Builder production polish. Keep this block last so the reset Studio
    is independent from legacy Studio styles and visible even before runtime themes load. */
 .redos-builder-page {
-  min-height: 100vh;
-  padding: 1rem;
+  display: grid;
+  grid-template-rows: 3.6rem 2.6rem minmax(0, 1fr);
+  height: 100vh;
+  overflow: hidden;
+  padding: 0.5rem;
   background:
     radial-gradient(circle at top left, rgb(37 99 235 / 16%), transparent 30rem),
     linear-gradient(135deg, #eef3ff 0%, #f8fafc 48%, #eef2ff 100%);
@@ -2203,9 +2277,13 @@ a:focus-visible {
 }
 
 .redos-builder-header {
-  grid-template-columns: minmax(280px, 1fr) auto auto;
-  border-radius: 1.5rem;
-  padding: 1.1rem;
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) auto;
+  gap: 0.6rem;
+  align-items: center;
+  border-radius: 0.95rem;
+  padding: 0.45rem 0.65rem;
+  min-height: 3.25rem;
 }
 
 .redos-builder-header h1,
@@ -2219,6 +2297,16 @@ a:focus-visible {
 .redos-panel-heading p {
   margin: 0.25rem 0 0;
   color: var(--redios-color-muted);
+}
+
+.redos-builder-header p,
+.redos-builder-header .redos-kicker {
+  display: none;
+}
+
+.redos-builder-header h1 {
+  font-size: 1rem;
+  white-space: nowrap;
 }
 
 .redos-kicker {
@@ -2241,21 +2329,24 @@ a:focus-visible {
 }
 
 .redos-actions button,
+.redos-actions select,
 .redos-chip,
 .redos-tabs button,
 .redos-builder-header button {
-  min-height: 2.4rem;
+  min-height: 2rem;
   border: 1px solid rgb(148 163 184 / 34%);
   border-radius: 999px;
-  padding: 0.55rem 0.9rem;
+  padding: 0.35rem 0.65rem;
   background: #ffffff;
   color: #0f172a;
+  font-size: 0.72rem;
   font-weight: 750;
-  box-shadow: 0 8px 22px rgb(15 23 42 / 6%);
+  box-shadow: 0 6px 14px rgb(15 23 42 / 5%);
   transition: transform 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
 }
 
 .redos-actions button:hover,
+.redos-actions select:hover,
 .redos-chip:hover,
 .redos-tabs button:hover,
 .redos-tool-button:hover,
@@ -2279,18 +2370,71 @@ a:focus-visible {
   color: #166534;
 }
 
+.redos-builder-page[data-redos-builder-theme='mint'] {
+  --redios-color-primary: #10b981;
+}
+
+.redos-builder-page[data-redos-builder-theme='mint'] .redos-canvas {
+  background:
+    linear-gradient(rgb(16 185 129 / 8%) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(16 185 129 / 8%) 1px, transparent 1px),
+    #ecfdf5;
+}
+
+.redos-builder-page[data-redos-builder-theme='dark'] {
+  color: #e5e7eb;
+}
+
+.redos-builder-page[data-redos-builder-theme='dark'] .redos-builder-header,
+.redos-builder-page[data-redos-builder-theme='dark'] .redos-builder-status,
+.redos-builder-page[data-redos-builder-theme='dark'] .redos-left-panel,
+.redos-builder-page[data-redos-builder-theme='dark'] .redos-property-panel,
+.redos-builder-page[data-redos-builder-theme='dark'] .redos-canvas {
+  border-color: rgb(148 163 184 / 20%);
+  background: #151719;
+  color: #f8fafc;
+}
+
+.redos-builder-page[data-redos-builder-theme='dark'] .redos-screen,
+.redos-builder-page[data-redos-builder-theme='dark'] .redos-form-container-body,
+.redos-builder-page[data-redos-builder-theme='dark'] .redos-tool-button,
+.redos-builder-page[data-redos-builder-theme='dark'] .redos-component-group,
+.redos-builder-page[data-redos-builder-theme='dark'] .redos-tree-object,
+.redos-builder-page[data-redos-builder-theme='dark'] .redos-property-panel section {
+  border-color: rgb(148 163 184 / 22%);
+  background: #202326;
+  color: #f8fafc;
+}
+
+.redos-builder-page[data-redos-builder-theme='dark'] input,
+.redos-builder-page[data-redos-builder-theme='dark'] select,
+.redos-builder-page[data-redos-builder-theme='dark'] textarea {
+  border-color: rgb(148 163 184 / 28%);
+  background: #111827;
+  color: #f8fafc;
+}
+
 .redos-builder-status {
   display: grid;
-  grid-template-columns: minmax(260px, 1fr) auto auto;
-  gap: 1rem;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.55rem;
   align-items: center;
-  border-radius: 1.25rem;
-  padding: 0.85rem 1rem;
+  border-radius: 0.8rem;
+  padding: 0.35rem 0.55rem;
+  min-height: 2.35rem;
 }
 
 .redos-builder-status > div:first-child {
   display: grid;
   gap: 0.1rem;
+}
+
+.redos-builder-status > div:first-child span {
+  display: none;
+}
+
+.redos-builder-status strong {
+  font-size: 0.75rem;
 }
 
 .redos-builder-status span,
@@ -2304,24 +2448,143 @@ a:focus-visible {
 .redos-canvas-badges span {
   border: 1px solid rgb(148 163 184 / 30%);
   border-radius: 999px;
-  padding: 0.35rem 0.6rem;
+  padding: 0.25rem 0.45rem;
   background: #f8fafc;
 }
 
 .redos-builder-workspace {
-  grid-template-columns: minmax(250px, 300px) minmax(0, 1fr) minmax(300px, 360px);
-  gap: 1rem;
+  display: grid;
+  grid-template-columns: 280px 3rem minmax(0, 1fr) 320px;
+  gap: 0.5rem;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.redos-builder-workspace-preview {
+  grid-template-columns: 3rem minmax(0, 1fr);
+  overflow: auto;
+}
+
+.redos-builder-workspace-toolbox-collapsed {
+  grid-template-columns: 2.5rem 3rem minmax(0, 1fr) 320px;
+}
+
+.redos-builder-workspace-preview.redos-builder-workspace-toolbox-collapsed {
+  grid-template-columns: 3rem minmax(0, 1fr);
+}
+
+.redos-builder-workspace-preview .redos-canvas {
+  max-width: 1080px;
+  margin: 0 auto;
+  width: 100%;
 }
 
 .redos-left-panel,
 .redos-property-panel,
 .redos-canvas {
-  border-radius: 1.5rem;
+  min-height: 0;
+  border-radius: 0.9rem;
+}
+
+.redos-builder-side-toolbar {
+  display: grid;
+  align-content: start;
+  gap: 0.4rem;
+  min-height: 0;
+  padding: 0.35rem;
+  order: 0;
+}
+
+.redos-builder-side-toolbar span {
+  display: block;
+  height: 0.5rem;
+}
+
+.redos-builder-side-toolbar button {
+  display: grid;
+  place-items: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border: 1px solid rgb(148 163 184 / 28%);
+  border-radius: 0.5rem;
+  background: rgb(15 23 42 / 82%);
+  color: #ffffff;
+  font-size: 0.82rem;
+  font-weight: 900;
+  cursor: pointer;
+  box-shadow: 0 8px 18px rgb(15 23 42 / 12%);
+}
+
+.redos-builder-side-toolbar button:hover,
+.redos-builder-side-toolbar .redos-side-tool-active {
+  border-color: rgb(16 185 129 / 80%);
+  background: #10b981;
+  color: #ffffff;
 }
 
 .redos-left-panel,
 .redos-property-panel {
-  padding: 1rem;
+  position: relative;
+  overflow: auto;
+  padding: 0.65rem;
+}
+
+.redos-property-panel {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  padding: 0;
+  overflow: hidden;
+}
+
+.redos-property-panel {
+  background: rgb(255 255 255 / 88%);
+  color: #0f172a;
+}
+
+.redos-right-panel-content {
+  display: grid;
+  align-content: start;
+  gap: 0.75rem;
+  min-height: 0;
+  overflow: auto;
+  padding: 0.65rem;
+}
+
+.redos-property-panel .redos-panel-heading,
+.redos-property-panel .redos-muted,
+.redos-property-panel label,
+.redos-property-panel h3,
+.redos-property-panel h4 {
+  color: #0f172a;
+}
+
+.redos-property-panel .redos-muted {
+  color: var(--redios-color-muted);
+}
+
+.redos-left-panel-collapsed {
+  overflow: hidden;
+  padding: 0.35rem;
+}
+
+.redos-panel-collapse-button {
+  display: grid;
+  place-items: center;
+  width: 1.85rem;
+  height: 1.85rem;
+  margin-left: auto;
+  border: 1px solid rgb(148 163 184 / 28%);
+  border-radius: 0.5rem;
+  background: #0f172a;
+  color: #ffffff;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.redos-left-panel:not(.redos-left-panel-collapsed) .redos-panel-collapse-button {
+  position: sticky;
+  top: 0;
+  z-index: 5;
 }
 
 .redos-panel-content,
@@ -2336,12 +2599,75 @@ a:focus-visible {
   gap: 0.18rem;
 }
 
+.redos-left-panel .redos-panel-heading h3,
+.redos-property-panel .redos-panel-heading h3 {
+  font-size: 0.95rem;
+}
+
+.redos-left-panel .redos-panel-heading p,
+.redos-property-panel .redos-panel-heading p {
+  font-size: 0.72rem;
+}
+
+.redos-component-search {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.5rem;
+  align-items: center;
+  border: 1px solid rgb(148 163 184 / 24%);
+  border-radius: 0.75rem;
+  padding: 0.45rem 0.6rem;
+  background: #ffffff;
+  color: var(--redios-color-muted);
+}
+
+.redos-component-search input {
+  min-height: 1.5rem;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  outline: none;
+}
+
+.redos-component-empty {
+  margin: 0;
+  border: 1px dashed rgb(148 163 184 / 28%);
+  border-radius: 0.75rem;
+  padding: 0.75rem;
+  color: var(--redios-color-muted);
+  font-size: 0.75rem;
+  text-align: center;
+}
+
+.redos-toolbox-tabs {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  overflow: hidden;
+  border: 1px solid rgb(148 163 184 / 24%);
+  border-radius: 0.9rem;
+  background: #ffffff;
+}
+
+.redos-toolbox-tabs button {
+  min-height: 2rem;
+  border: 0;
+  background: transparent;
+  color: #334155;
+  font-size: 0.72rem;
+  font-weight: 850;
+}
+
+.redos-toolbox-tabs .redos-toolbox-tab-active {
+  background: #0f172a;
+  color: #ffffff;
+}
+
 .redos-component-group,
 .redos-tree-object,
 .redos-property-panel section {
   border: 1px solid rgb(148 163 184 / 22%);
-  border-radius: 1rem;
-  padding: 0.85rem;
+  border-radius: 0.75rem;
+  padding: 0.55rem;
   background: #f8fafc;
 }
 
@@ -2364,32 +2690,41 @@ a:focus-visible {
   font-weight: 650;
 }
 
+.redos-component-group header {
+  display: flex;
+}
+
 .redos-tool-button,
 .redos-tree-field {
   grid-template-columns: auto 1fr;
   width: 100%;
   border: 1px solid rgb(148 163 184 / 28%);
-  border-radius: 0.9rem;
-  padding: 0.7rem;
+  border-radius: 0.7rem;
+  padding: 0.5rem;
   background: #ffffff;
-  box-shadow: 0 10px 24px rgb(15 23 42 / 5%);
+  box-shadow: 0 6px 14px rgb(15 23 42 / 4%);
 }
 
 .redos-tool-button > span:first-child {
   display: grid;
   place-items: center;
-  width: 1.75rem;
-  height: 1.75rem;
-  border-radius: 0.65rem;
-  background: #eff6ff;
-  color: #2563eb;
+  width: 1.9rem;
+  height: 1.9rem;
+  border-radius: 0.45rem;
+  background: #e2e8f0;
+  color: #334155;
+  font-size: 0.68rem;
   font-weight: 900;
 }
 
 .redos-tool-button > span:last-child,
 .redos-tree-field {
   display: grid;
-  gap: 0.12rem;
+  gap: 0.05rem;
+}
+
+.redos-tool-button strong {
+  font-size: 0.78rem;
 }
 
 .redos-tool-button[draggable='true'] {
@@ -2405,9 +2740,10 @@ a:focus-visible {
 .redos-canvas {
   display: grid;
   grid-template-rows: auto 1fr;
-  gap: 1rem;
-  min-height: 72vh;
-  padding: 1rem;
+  gap: 0.5rem;
+  min-height: 0;
+  overflow: auto;
+  padding: 0.65rem;
   background:
     linear-gradient(rgb(37 99 235 / 5%) 1px, transparent 1px),
     linear-gradient(90deg, rgb(37 99 235 / 5%) 1px, transparent 1px),
@@ -2418,18 +2754,26 @@ a:focus-visible {
 .redos-canvas-toolbar {
   display: flex;
   justify-content: space-between;
-  gap: 1rem;
+  gap: 0.65rem;
   align-items: center;
+}
+
+.redos-canvas-toolbar h2 {
+  font-size: 0.95rem;
+}
+
+.redos-canvas-toolbar .redos-kicker {
+  font-size: 0.62rem;
 }
 
 .redos-screen {
   align-content: start;
   width: 100%;
   max-width: 760px;
-  min-height: 580px;
+  min-height: 520px;
   border: 1px solid rgb(148 163 184 / 30%);
   border-radius: 1.35rem;
-  padding: 1.25rem;
+  padding: 1rem;
   background: #ffffff;
   box-shadow: 0 28px 80px rgb(15 23 42 / 14%);
 }
@@ -2447,6 +2791,10 @@ a:focus-visible {
   text-align: center;
 }
 
+.redos-screen[data-preview='runtime']::before {
+  display: none;
+}
+
 .redos-screen-tablet {
   max-width: 640px;
 }
@@ -2459,6 +2807,21 @@ a:focus-visible {
 
 .redos-screen[data-preview='runtime'] {
   outline: 5px solid rgb(37 99 235 / 10%);
+  margin-inline: auto;
+}
+
+.redos-screen[data-preview='runtime'] .redos-canvas-component {
+  cursor: default;
+}
+
+.redos-screen[data-preview='runtime'] .redos-canvas-component:hover {
+  border-color: transparent;
+  box-shadow: none;
+  transform: none;
+}
+
+.redos-screen[data-preview='runtime'] .redos-form-empty-state {
+  display: none;
 }
 
 .redos-empty-canvas {
@@ -2474,24 +2837,265 @@ a:focus-visible {
 
 .redos-canvas-component {
   position: relative;
-  border: 1px solid rgb(148 163 184 / 30%);
-  border-radius: 1rem;
-  padding: 0.85rem;
-  background: #ffffff;
-  box-shadow: 0 12px 30px rgb(15 23 42 / 6%);
+  border: 1px solid transparent;
+  border-radius: 0.65rem;
+  padding: 0;
+  background: transparent;
+  box-shadow: none;
   cursor: grab;
-  transition: transform 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
-}
-
-.redos-canvas-component:hover,
-.redos-canvas-component-selected {
-  border-color: rgb(37 99 235 / 72%);
-  box-shadow: 0 0 0 4px rgb(37 99 235 / 10%), 0 18px 44px rgb(37 99 235 / 14%);
-  transform: translateY(-1px);
+  transition: border-color 160ms ease, box-shadow 160ms ease;
 }
 
 .redos-canvas-component-selected {
-  padding-top: 0.85rem;
+  border-color: transparent;
+  box-shadow: none;
+}
+
+.redos-canvas-component:hover:not(.redos-canvas-component-selected) {
+  border-color: transparent;
+  box-shadow: none;
+}
+
+.redos-canvas-component-selected {
+  padding-top: 0;
+}
+
+.redos-screen[data-preview='runtime'] .redos-canvas-component,
+.redos-screen[data-preview='runtime'] .redos-canvas-component:hover,
+.redos-screen[data-preview='runtime'] .redos-canvas-component-selected {
+  border-color: transparent;
+  background: transparent;
+  box-shadow: none;
+}
+
+.redos-form-container-preview {
+  display: grid;
+  gap: 1rem;
+  border: 1px solid rgb(148 163 184 / 18%);
+  border-radius: 1rem;
+  padding: 1.15rem;
+  background: #ffffff;
+  box-shadow: 0 16px 42px rgb(15 23 42 / 6%);
+  font-family: var(--redos-builder-font-family);
+  font-size: var(--redos-builder-font-size);
+  line-height: var(--redos-builder-line-height);
+  letter-spacing: var(--redos-builder-letter-spacing);
+}
+
+.redos-form-container-header {
+  display: grid;
+  gap: 0.2rem;
+  padding-bottom: 0.85rem;
+  border-bottom: 1px solid rgb(148 163 184 / 22%);
+}
+
+.redos-form-container-header strong {
+  color: #111827;
+  font-size: 1.15rem;
+  font-weight: 900;
+  letter-spacing: -0.035em;
+}
+
+.redos-form-container-header small {
+  color: var(--redios-color-muted);
+  font-size: 0.72rem;
+}
+
+.redos-form-container-body {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: var(--redos-builder-gutter) var(--redos-builder-gutter);
+  border: 0;
+  border-radius: 0;
+  padding: 0;
+  background: transparent;
+}
+
+.redos-form-child {
+  position: relative;
+  border: 1px solid transparent;
+  border-radius: 0.62rem;
+  padding: 0.12rem;
+  background: transparent;
+  box-shadow: none;
+}
+
+.redos-form-child:hover,
+.redos-form-child-selected {
+  border-color: rgb(37 99 235 / 52%);
+  background: var(--redos-builder-selected-bg);
+  box-shadow: var(--redos-builder-handle-shadow);
+}
+
+.redos-screen[data-preview='runtime'] .redos-form-child {
+  border: 0;
+  padding: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.redos-form-container-body .redos-form-child > label {
+  display: grid;
+  gap: 0.35rem;
+  color: #111827;
+  font-size: 0.74rem;
+  font-weight: 800;
+}
+
+.redos-form-container-body .redos-form-child input,
+.redos-form-container-body .redos-form-child select,
+.redos-form-container-body .redos-form-child textarea {
+  min-height: var(--redos-builder-input-height);
+  height: var(--redos-builder-input-height);
+  border: 1px solid var(--redos-builder-input-border);
+  border-radius: var(--redos-builder-radius-small);
+  padding-inline: var(--redos-builder-input-padding-x);
+  background: var(--redos-builder-input-bg);
+  box-shadow: inset 0 1px 1px rgb(15 23 42 / 3%);
+}
+
+.redos-form-container-body .redos-form-child select {
+  min-height: var(--redos-builder-select-height);
+  height: var(--redos-builder-select-height);
+  color: var(--redos-builder-selected-color);
+  accent-color: var(--redos-builder-select-caret);
+}
+
+.redos-form-container-body .redos-form-child textarea {
+  min-height: calc(var(--redos-builder-input-height) * 2);
+  height: auto;
+  resize: vertical;
+}
+
+.redos-form-container-body .redos-form-child input::placeholder,
+.redos-form-container-body .redos-form-child textarea::placeholder {
+  color: var(--redos-builder-placeholder);
+}
+
+.redos-form-container-body .redos-form-child input:focus,
+.redos-form-container-body .redos-form-child select:focus,
+.redos-form-container-body .redos-form-child textarea:focus {
+  border-color: var(--redos-builder-input-focus);
+  outline: 3px solid color-mix(in srgb, var(--redos-builder-input-focus), transparent 84%);
+}
+
+.redos-screen[data-preview='runtime'] .redos-form-container-preview {
+  border-color: rgb(148 163 184 / 18%);
+  box-shadow: 0 18px 44px rgb(15 23 42 / 8%);
+}
+
+.redos-form-child-controls {
+  position: absolute;
+  top: -0.8rem;
+  left: 0.7rem;
+  right: 0.7rem;
+  z-index: 2;
+  display: grid;
+  grid-template-columns: auto auto auto;
+  justify-content: space-between;
+  gap: 0.35rem;
+  pointer-events: none;
+}
+
+.redos-form-child-controls button {
+  min-height: 1.55rem;
+  border-radius: 999px;
+  padding: 0.14rem 0.45rem;
+  font-size: 0.64rem;
+  font-weight: 900;
+  opacity: 0;
+  pointer-events: auto;
+  box-shadow: var(--redos-builder-handle-shadow);
+}
+
+.redos-form-child-move {
+  border: 1px solid rgb(37 99 235 / 24%);
+  background: #eff6ff;
+  color: #2563eb;
+  cursor: ns-resize;
+}
+
+.redos-form-child-delete {
+  border: 1px solid rgb(220 38 38 / 24%);
+  background: #fff1f2;
+  color: #be123c;
+}
+
+.redos-form-child-resize {
+  border: 1px solid rgb(37 99 235 / 24%);
+  background: #eff6ff;
+  color: #2563eb;
+  cursor: nwse-resize;
+}
+
+.redos-form-child:hover .redos-form-child-controls button,
+.redos-form-child-selected .redos-form-child-controls button,
+.redos-form-child-controls button:focus-visible {
+  opacity: 1;
+}
+
+.redos-form-empty-state {
+  grid-column: 1 / -1;
+  display: grid;
+  gap: 0.25rem;
+  place-items: center;
+  min-height: 7rem;
+  border: 1px dashed rgb(37 99 235 / 24%);
+  border-radius: 0.9rem;
+  color: var(--redios-color-muted);
+  text-align: center;
+}
+
+.redos-form-image-preview,
+.redos-form-upload-preview {
+  display: grid;
+  gap: 0.3rem;
+  place-items: center;
+  min-height: var(--redos-builder-image-height);
+  border-radius: 0.85rem;
+  text-align: center;
+}
+
+.redos-form-image-preview {
+  border: 1px dashed var(--redos-builder-dropzone-border);
+  background: var(--redos-builder-dropzone-bg);
+}
+
+.redos-form-image-preview > span {
+  display: grid;
+  place-items: center;
+  width: 2.2rem;
+  height: 2.2rem;
+  border-radius: 0.85rem;
+  background: #ffffff;
+  color: #2563eb;
+  font-size: 0.68rem;
+  font-weight: 900;
+}
+
+.redos-form-upload-preview {
+  border: 1px dashed var(--redos-builder-dropzone-border);
+  background: var(--redos-builder-dropzone-bg);
+  color: var(--redos-builder-passive-text);
+}
+
+.redos-file-picker-preview {
+  position: relative;
+  cursor: pointer;
+  user-select: none;
+}
+
+.redos-file-picker-preview:hover {
+  border-color: rgb(37 99 235 / 48%);
+  box-shadow: 0 0 0 4px rgb(37 99 235 / 8%);
+}
+
+.redos-file-picker-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
 }
 
 .redos-canvas-component-dragging {
@@ -2650,9 +3254,9 @@ a:focus-visible {
 .redos-canvas-component label,
 .redos-property-panel label {
   display: grid;
-  gap: 0.35rem;
+  gap: 0.25rem;
   color: #334155;
-  font-size: 0.82rem;
+  font-size: 0.75rem;
   font-weight: 750;
 }
 
@@ -2661,12 +3265,221 @@ a:focus-visible {
 .redos-canvas-component textarea,
 .redos-property-panel input,
 .redos-property-panel select {
-  min-height: 2.55rem;
-  border: 1px solid rgb(148 163 184 / 36%);
-  border-radius: 0.85rem;
-  padding: 0.6rem 0.75rem;
+  min-height: var(--redos-builder-input-height);
+  border: 1px solid var(--redos-builder-input-border);
+  border-radius: var(--redos-builder-radius-small);
+  padding: 0.45rem var(--redos-builder-input-padding-x);
+  background: var(--redos-builder-input-bg);
+  color: #0f172a;
+}
+
+.redos-canvas-component input,
+.redos-canvas-component select {
+  height: var(--redos-builder-input-height);
+}
+
+.redos-canvas-component select {
+  height: var(--redos-builder-select-height);
+}
+
+.redos-property-panel input,
+.redos-property-panel select {
+  min-height: 2.15rem;
+  height: auto;
+  border-color: rgb(148 163 184 / 36%);
+  border-radius: 0.65rem;
+  background: #f8fafc;
+}
+
+.redos-property-panel section h4 {
+  font-size: 0.78rem;
+}
+
+.redos-right-tabs {
+  z-index: 10;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  overflow: hidden;
+  margin: 0;
+  border: 1px solid rgb(148 163 184 / 28%);
+  border-bottom-width: 2px;
+  border-radius: 0.9rem 0.9rem 0 0;
+  background: #f8fafc;
+  box-shadow: 0 10px 24px rgb(15 23 42 / 6%);
+}
+
+.redos-right-tabs button {
+  min-height: 3rem;
+  border: 0;
+  border-right: 1px solid rgb(148 163 184 / 22%);
+  background: transparent;
+  color: #334155;
+  font-size: 0.84rem;
+  font-weight: 900;
+}
+
+.redos-right-tabs button:last-child {
+  border-right: 0;
+}
+
+.redos-right-tabs .redos-right-tab-active {
+  background: linear-gradient(135deg, #2563eb, #4f46e5);
+  color: #ffffff;
+  box-shadow: inset 0 -3px 0 rgb(16 185 129 / 90%);
+}
+
+.redos-builder-page[data-redos-builder-theme='dark'] .redos-right-tabs {
+  background: #202326;
+}
+
+.redos-theme-save-card {
+  gap: 0.5rem !important;
+  background: #ffffff !important;
+  border-color: rgb(148 163 184 / 22%) !important;
+}
+
+.redos-theme-editor {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.redos-theme-save-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.45rem;
+  align-items: end;
+}
+
+.redos-theme-save-row button {
+  min-height: 1.95rem;
+  border: 0;
+  border-radius: 0.55rem;
+  padding: 0 0.85rem;
+  background: #10b981;
+  color: #ffffff;
+  font-weight: 850;
+}
+
+.redos-theme-segmented {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  overflow: hidden;
+  border: 1px solid rgb(148 163 184 / 28%);
+  border-radius: 0.8rem;
+}
+
+.redos-theme-segmented button {
+  min-height: 1.95rem;
+  border: 0;
+  background: #ffffff;
+  color: #334155;
+  font-weight: 850;
+}
+
+.redos-theme-segmented .redos-theme-active {
+  background: #10b981;
+  color: #ffffff;
+}
+
+.redos-theme-accordion {
+  padding: 0 !important;
+  overflow: hidden;
+  border-color: rgb(148 163 184 / 22%) !important;
+  background: #ffffff !important;
+}
+
+.redos-theme-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  min-height: 2rem;
+  border: 0;
   background: #f8fafc;
   color: #0f172a;
+  padding: 0.5rem 0.65rem;
+  text-align: left;
+  cursor: pointer;
+}
+
+.redos-theme-section-header strong {
+  color: #0f172a;
+  font-size: 0.76rem;
+  font-weight: 900;
+}
+
+.redos-theme-section-header span {
+  color: var(--redios-color-muted);
+  font-size: 1rem;
+  font-weight: 900;
+}
+
+.redos-theme-property-list {
+  display: grid;
+  gap: 0;
+  padding: 0;
+}
+
+.redos-theme-property-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(7.4rem, 0.95fr);
+  gap: 0.5rem;
+  align-items: center;
+  min-height: 2.42rem;
+  border-top: 1px solid rgb(148 163 184 / 18%);
+  padding: 0.42rem 0.65rem;
+}
+
+.redos-theme-property-row > label {
+  color: #334155;
+  font-size: 0.68rem;
+  font-weight: 750;
+}
+
+.redos-theme-property-control {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  overflow: hidden;
+  border: 1px solid rgb(148 163 184 / 26%);
+  border-radius: 0.55rem;
+  background: #f8fafc;
+}
+
+.redos-theme-property-control input:not(.redos-theme-color-picker) {
+  width: 100%;
+  min-height: 1.72rem;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  font-size: 0.68rem;
+  text-align: left;
+}
+
+.redos-theme-unit {
+  padding: 0 0.42rem;
+  color: var(--redios-color-muted);
+  font-size: 0.65rem;
+  font-weight: 800;
+}
+
+.redos-theme-color-picker {
+  width: 1.46rem !important;
+  min-height: 1.46rem !important;
+  height: 1.46rem;
+  border: 1px solid rgb(148 163 184 / 28%) !important;
+  border-radius: 0.45rem !important;
+  padding: 0.1rem !important;
+  background: #ffffff !important;
+  cursor: pointer;
+}
+
+.redos-export-preview {
+  min-height: 22rem;
+  resize: vertical;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.68rem;
+  line-height: 1.45;
 }
 
 .redos-property-panel section h4 {
@@ -2695,12 +3508,18 @@ a:focus-visible {
 .redos-button-preview {
   display: grid;
   justify-items: center;
-  gap: 0.2rem;
-  border-radius: 0.95rem;
-  padding: 0.75rem 1rem;
-  background: linear-gradient(135deg, #2563eb, #4f46e5);
-  color: #ffffff;
+  gap: 0.15rem;
+  min-width: 9rem;
+  height: var(--redos-builder-button-height);
+  min-height: var(--redos-builder-button-height);
+  align-content: center;
+  border-radius: var(--redos-builder-button-radius);
+  padding: 0.55rem var(--redos-builder-button-padding-x);
+  background: var(--redos-builder-button-bg);
+  color: var(--redos-builder-button-text);
+  box-shadow: var(--redos-builder-button-shadow);
   text-align: center;
+  font-weight: 900;
 }
 
 .redos-button-preview small {
@@ -2716,11 +3535,11 @@ a:focus-visible {
 }
 
 .redos-image-preview {
-  min-height: 8rem;
+  min-height: var(--redos-builder-image-height);
   place-items: center;
-  border: 1px dashed rgb(148 163 184 / 45%);
+  border: 1px dashed var(--redos-builder-dropzone-border);
   border-radius: 1rem;
-  background: linear-gradient(135deg, #eff6ff, #faf5ff);
+  background: var(--redos-builder-dropzone-bg);
 }
 
 .redos-checkbox-preview {
@@ -2733,6 +3552,406 @@ a:focus-visible {
   border-radius: 1rem;
   padding: 0.75rem;
   background: #f1f5f9;
+}
+
+.redos-data-table-preview,
+.redos-input-table-preview {
+  display: grid;
+  gap: 0.75rem;
+  overflow-x: auto;
+}
+
+.redos-table-preview-header {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.redos-table-preview-header input {
+  max-width: 14rem;
+}
+
+.redos-data-table-preview table,
+.redos-input-table-preview table {
+  width: 100%;
+  min-width: 520px;
+  border-collapse: collapse;
+  overflow: hidden;
+  border: 1px solid var(--redos-builder-table-border);
+  border-radius: 0.9rem;
+  background: #ffffff;
+}
+
+.redos-data-table-preview th,
+.redos-data-table-preview td,
+.redos-input-table-preview th,
+.redos-input-table-preview td {
+  border-bottom: 1px solid var(--redos-builder-table-border);
+  padding: var(--redos-builder-table-cell-padding);
+  color: #334155;
+  font-size: 0.75rem;
+  text-align: left;
+}
+
+.redos-data-table-preview th,
+.redos-input-table-preview th {
+  background: var(--redos-builder-table-header-bg);
+  color: #0f172a;
+  font-weight: 900;
+}
+
+.redos-data-table-preview button,
+.redos-modal-actions button {
+  border: 1px solid rgb(37 99 235 / 28%);
+  border-radius: 999px;
+  padding: 0.35rem 0.65rem;
+  background: #eff6ff;
+  color: #2563eb;
+  font-weight: 850;
+}
+
+.redos-input-table-preview input {
+  min-height: var(--redos-builder-input-height);
+  height: var(--redos-builder-input-height);
+  width: 100%;
+  border: 1px solid rgb(148 163 184 / 24%);
+  border-radius: 0.45rem;
+  padding: 0.35rem 0.45rem;
+  background: #ffffff;
+}
+
+.redos-input-table-preview td {
+  padding: 0.25rem;
+}
+
+.redos-matrix-preview {
+  display: grid;
+  gap: 0.65rem;
+  overflow-x: auto;
+}
+
+.redos-matrix-preview table {
+  width: 100%;
+  min-width: 440px;
+  border-collapse: collapse;
+  border: 1px solid rgb(148 163 184 / 26%);
+  border-radius: 0.85rem;
+  background: #ffffff;
+}
+
+.redos-matrix-preview th,
+.redos-matrix-preview td {
+  border-bottom: 1px solid rgb(148 163 184 / 16%);
+  padding: 0.5rem;
+  color: #334155;
+  font-size: 0.74rem;
+  text-align: center;
+}
+
+.redos-matrix-preview th:first-child,
+.redos-matrix-preview td:first-child {
+  text-align: left;
+}
+
+.redos-form-heading-preview,
+.redos-section-heading-preview,
+.redos-subheading-preview {
+  margin: 0;
+  color: #0f172a;
+  letter-spacing: -0.035em;
+}
+
+.redos-form-heading-preview {
+  margin-bottom: var(--redos-builder-heading-margin);
+  padding-bottom: 0.8rem;
+  border-bottom: 1px solid rgb(148 163 184 / 28%);
+  font-size: 1.75rem;
+  line-height: 1.1;
+}
+
+.redos-section-heading-preview {
+  font-size: 1.18rem;
+}
+
+.redos-subheading-preview {
+  font-size: 1rem;
+}
+
+.redos-paragraph-preview {
+  margin: 0;
+  color: var(--redos-builder-paragraph-color);
+  line-height: 1.6;
+}
+
+.redos-link-preview {
+  color: var(--redos-builder-link-color);
+  text-decoration: var(--redos-builder-link-decoration);
+  font-weight: 850;
+}
+
+.redos-divider-preview {
+  width: 100%;
+  border: 0;
+  border-top: 1px solid var(--redos-builder-divider);
+}
+
+.redos-spacer-preview {
+  min-height: var(--redos-builder-spacer-height);
+  border: 1px dashed rgb(148 163 184 / 28%);
+  border-radius: 0.75rem;
+  background: repeating-linear-gradient(45deg, #f8fafc, #f8fafc 8px, #eef2ff 8px, #eef2ff 16px);
+}
+
+.redos-captcha-preview,
+.redos-decision-preview,
+.redos-toggle-preview {
+  display: flex !important;
+  gap: var(--redos-builder-checkbox-label-gap) !important;
+  align-items: center;
+  border: 0;
+  border-radius: 0;
+  padding: 0.2rem 0;
+  background: transparent;
+}
+
+.redos-decision-preview {
+  display: flex !important;
+  color: var(--redos-builder-passive-text);
+  font-weight: 650 !important;
+}
+
+.redos-decision-preview small {
+  display: none;
+}
+
+.redos-decision-preview input,
+.redos-captcha-preview input,
+.redos-toggle-preview input {
+  width: var(--redos-builder-checkbox-size) !important;
+  min-height: var(--redos-builder-checkbox-size) !important;
+  height: var(--redos-builder-checkbox-size);
+  border-radius: var(--redos-builder-checkbox-radius);
+  accent-color: var(--redos-builder-checkbox-checked-bg);
+}
+
+.redos-choice-preview {
+  display: grid;
+  gap: var(--redos-builder-checkbox-label-gap);
+  border: 1px solid rgb(148 163 184 / 28%);
+  border-radius: 0.85rem;
+  padding: 0.85rem;
+  background: #ffffff;
+}
+
+.redos-choice-preview legend {
+  padding: 0 0.35rem;
+  color: #0f172a;
+  font-weight: 850;
+}
+
+.redos-choice-preview label {
+  display: flex !important;
+  flex-direction: row;
+  align-items: center;
+  gap: var(--redos-builder-checkbox-label-gap);
+}
+
+.redos-choice-preview input {
+  width: var(--redos-builder-checkbox-size) !important;
+  min-height: var(--redos-builder-checkbox-size) !important;
+  height: var(--redos-builder-checkbox-size);
+  border-radius: var(--redos-builder-checkbox-radius);
+  accent-color: var(--redos-builder-checkbox-checked-bg);
+}
+
+.redos-tags-preview {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--redos-builder-tag-gap, 0.45rem);
+  align-items: center;
+}
+
+.redos-tags-preview strong {
+  width: 100%;
+}
+
+.redos-tags-preview span {
+  border-radius: var(--redos-builder-tag-radius, 999px);
+  padding: 0.35rem 0.55rem;
+  background: var(--redos-builder-tag-bg, #eff6ff);
+  color: var(--redos-builder-tag-text, #2563eb);
+  font-size: 0.72rem;
+  font-weight: 850;
+}
+
+.redos-toggle-preview {
+  justify-content: space-between;
+}
+
+.redos-toggle-preview input {
+  width: var(--redos-builder-toggle-width) !important;
+  min-height: var(--redos-builder-toggle-height) !important;
+  height: var(--redos-builder-toggle-height);
+  accent-color: var(--redos-builder-toggle-on-bg);
+}
+
+.redos-signature-preview,
+.redos-group-preview,
+.redos-pages-preview {
+  display: grid;
+  gap: 0.35rem;
+  border: 1px dashed var(--redos-builder-dropzone-border);
+  border-radius: 0.9rem;
+  padding: 0.85rem;
+  background: var(--redos-builder-signature-bg);
+}
+
+.redos-signature-preview {
+  min-height: var(--redos-builder-signature-height);
+  place-items: center;
+  text-align: center;
+}
+
+.redos-grid-preview {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+
+.redos-grid-preview span {
+  min-height: 3rem;
+  border: 1px dashed rgb(37 99 235 / 28%);
+  border-radius: 0.75rem;
+  background: #eff6ff;
+}
+
+.redos-pages-preview {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.redos-pages-preview span {
+  border-radius: 999px;
+  padding: 0.45rem 0.55rem;
+  background: #ffffff;
+  color: #2563eb;
+  font-size: 0.72rem;
+  font-weight: 850;
+  text-align: center;
+}
+
+.redos-modal-preview {
+  display: grid;
+  place-items: center;
+  min-height: 100%;
+  border: 1px solid rgb(37 99 235 / 18%);
+  border-radius: 1.25rem;
+  padding: 1rem;
+  background:
+    radial-gradient(circle at top, rgb(37 99 235 / 12%), transparent 45%),
+    rgb(15 23 42 / 6%);
+}
+
+.redos-modal-preview-card {
+  display: grid;
+  gap: 0.75rem;
+  width: min(100%, 430px);
+  border: 1px solid rgb(148 163 184 / 28%);
+  border-radius: 1rem;
+  padding: 1rem;
+  background: #ffffff;
+  box-shadow: 0 24px 60px rgb(15 23 42 / 16%);
+}
+
+.redos-modal-preview-card p {
+  margin: 0;
+  color: var(--redios-color-muted);
+  font-size: 0.82rem;
+}
+
+.redos-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+.redos-modal-actions button:last-child {
+  background: linear-gradient(135deg, #2563eb, #4f46e5);
+  color: #ffffff;
+}
+
+.redos-confirm-modal-preview .redos-modal-preview-card {
+  max-width: 360px;
+}
+
+.redos-custom-organism-canvas-preview {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.redos-custom-organism-header {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.redos-custom-organism-header small {
+  color: var(--redios-color-muted);
+  font-size: 0.76rem;
+}
+
+.redos-custom-organism-stack {
+  display: grid;
+  gap: 0.7rem;
+}
+
+.redos-custom-organism-field {
+  display: grid;
+  gap: 0.35rem;
+  border: 1px solid rgb(148 163 184 / 26%);
+  border-radius: 0.95rem;
+  padding: 0.7rem;
+  background: #ffffff;
+}
+
+.redos-custom-organism-field span {
+  color: #334155;
+  font-size: 0.78rem;
+  font-weight: 850;
+}
+
+.redos-custom-organism-field input,
+.redos-custom-organism-field select,
+.redos-custom-organism-field textarea {
+  width: 100%;
+  border: 1px solid rgb(148 163 184 / 34%);
+  border-radius: 0.75rem;
+  padding: 0.55rem 0.65rem;
+  background: #f8fafc;
+}
+
+.redos-custom-organism-button {
+  justify-self: start;
+  border-radius: 0.85rem;
+  padding: 0.6rem 0.95rem;
+  background: linear-gradient(135deg, #2563eb, #4f46e5);
+  color: #ffffff;
+  font-weight: 850;
+}
+
+.redos-custom-organism-block,
+.redos-custom-organism-empty {
+  display: grid;
+  gap: 0.2rem;
+  border: 1px dashed rgb(37 99 235 / 25%);
+  border-radius: 0.9rem;
+  padding: 0.75rem;
+  background: #eff6ff;
+}
+
+.redos-custom-organism-block small,
+.redos-custom-organism-empty {
+  color: var(--redios-color-muted);
+  font-size: 0.76rem;
 }
 
 .redos-metadata-grid {

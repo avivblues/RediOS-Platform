@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { atomComponents } from '../../atomic/atoms/catalog';
 import { moleculeComponents } from '../../atomic/molecules/catalog';
 import { organismComponents } from '../../atomic/organisms/catalog';
@@ -24,6 +24,68 @@ export function ComponentPanel({
   onAdd: (component: BuilderComponentDefinition) => void;
 }) {
   const customOrganisms = useMemo(() => customOrganismsAsComponents(), []);
+  const [activeCatalog, setActiveCatalog] = useState<'Fields' | 'Static' | 'Structure'>('Fields');
+  const [searchQuery, setSearchQuery] = useState('');
+  const normalizedSearch = searchQuery.trim().toLowerCase();
+  const fieldComponents = useMemo(() => [
+    ...atomComponents.filter((component) => !['Button', 'Icon', 'Paragraph', 'Image', 'Link'].includes(component.type)),
+    ...moleculeComponents,
+    ...(target === 'android' ? androidComponents : []),
+  ], [target]);
+  const staticComponents = useMemo(() => [
+    ...atomComponents.filter((component) => ['Paragraph', 'Image', 'Link', 'Icon'].includes(component.type)),
+    ...organismComponents.filter((component) => ['FormHeading', 'SectionHeading', 'Subheading', 'Divider', 'Spacer'].includes(component.type)),
+  ], []);
+  const structureComponents = useMemo(() => [
+    ...atomComponents.filter((component) => component.type === 'Button'),
+    ...organismComponents.filter((component) => !['FormHeading', 'SectionHeading', 'Subheading', 'Divider', 'Spacer'].includes(component.type)),
+    ...customOrganisms,
+  ], [customOrganisms]);
+  const customStructureGroups = useMemo(() => [
+    {
+      description: 'Single controls and static atoms',
+      title: 'Atoms',
+      components: atomComponents.filter((component) => activeCatalog === 'Fields'
+        ? !['Button', 'Icon', 'Paragraph', 'Image', 'Link'].includes(component.type)
+        : activeCatalog === 'Static'
+          ? ['Icon', 'Paragraph', 'Image', 'Link'].includes(component.type)
+          : ['Button'].includes(component.type)),
+    },
+    {
+      description: 'Field groups, uploads, choices, and date inputs',
+      title: 'Molecules',
+      components: activeCatalog === 'Fields' ? moleculeComponents : [],
+    },
+    {
+      description: 'Containers, tables, modals, headings, and layout blocks',
+      title: 'Organisms',
+      components: organismComponents.filter((component) => activeCatalog === 'Static'
+        ? ['FormHeading', 'SectionHeading', 'Subheading', 'Divider', 'Spacer'].includes(component.type)
+        : activeCatalog === 'Structure'
+          ? !['FormHeading', 'SectionHeading', 'Subheading', 'Divider', 'Spacer'].includes(component.type)
+          : false),
+    },
+    {
+      description: 'Reusable organisms created in Advanced Mode',
+      title: 'Custom Organisms',
+      components: activeCatalog === 'Structure' ? customOrganisms : [],
+    },
+    {
+      description: 'Mobile runtime capabilities',
+      title: 'Android',
+      components: activeCatalog === 'Fields' && target === 'android' ? androidComponents : [],
+    },
+  ].map((group) => ({
+    ...group,
+    components: normalizedSearch
+      ? group.components.filter((component) => [
+        component.label,
+        component.type,
+        component.description,
+        component.layer,
+      ].filter(Boolean).join(' ').toLowerCase().includes(normalizedSearch))
+      : group.components,
+  })).filter((group) => group.components.length > 0), [activeCatalog, customOrganisms, normalizedSearch, target]);
 
   return (
     <div className="redos-panel-content">
@@ -32,13 +94,39 @@ export function ComponentPanel({
         <h3>Components <HelpTip label="Components" text="Komponen adalah bagian layar seperti input, dropdown, tombol, tabel, dan custom organism." /></h3>
         <p className="redos-muted">Drag atau klik component untuk menambahkannya ke screen.</p>
       </div>
-      <ComponentGroup description="Single reusable controls" title="Atoms" components={atomComponents} onAdd={onAdd} />
-      <ComponentGroup description="Field groups and common inputs" title="Molecules" components={moleculeComponents} onAdd={onAdd} />
-      <ComponentGroup description="Composed screen sections" title="Organisms" components={organismComponents} onAdd={onAdd} />
-      {customOrganisms.length > 0 ? (
-        <ComponentGroup description="Reusable organisms created in Advanced Mode" title="Custom Organisms" components={customOrganisms} onAdd={onAdd} />
+      <label className="redos-component-search">
+        <span aria-hidden="true">⌕</span>
+        <input
+          aria-label="Search components"
+          placeholder="Search elements"
+          value={searchQuery}
+          onChange={(event) => setSearchQuery(event.target.value)}
+        />
+      </label>
+      <div className="redos-toolbox-tabs" aria-label="Component catalog">
+        {(['Fields', 'Static', 'Structure'] as const).map((catalog) => (
+          <button
+            key={catalog}
+            className={activeCatalog === catalog ? 'redos-toolbox-tab-active' : ''}
+            type="button"
+            onClick={() => setActiveCatalog(catalog)}
+          >
+            {catalog}
+          </button>
+        ))}
+      </div>
+      {customStructureGroups.map((group) => (
+        <ComponentGroup
+          key={group.title}
+          description={group.description}
+          title={group.title}
+          components={group.components}
+          onAdd={onAdd}
+        />
+      ))}
+      {customStructureGroups.length === 0 ? (
+        <p className="redos-component-empty">No components match “{searchQuery}”.</p>
       ) : null}
-      {target === 'android' ? <ComponentGroup description="Mobile runtime capabilities" title="Android" components={androidComponents} onAdd={onAdd} /> : null}
     </div>
   );
 }
@@ -78,13 +166,78 @@ function ComponentGroup({
           data-redos-tooltip={`Drag atau klik untuk menambahkan ${component.label} ke screen.`}
           title={`Drag or click to add ${component.label}`}
         >
-          <span aria-hidden="true">+</span>
+          <span aria-hidden="true">{componentIcon(component.type)}</span>
           <span>
             <strong>{component.label}</strong>
-            <small>{component.layer}</small>
+            <small>{component.description ?? component.layer}</small>
           </span>
         </button>
       ))}
     </section>
   );
+}
+
+function componentIcon(type: string) {
+  const iconMap: Record<string, string> = {
+    Barcode: '▥',
+    Button: '●',
+    Camera: '▣',
+    Captcha: '✓',
+    Checkbox: '☑',
+    ConfirmModal: '!',
+    DataTable: '▤',
+    DateInput: '◷',
+    DateRange: '↔',
+    DateTimeInput: '◴',
+    DecisionBox: '☑',
+    Divider: '─',
+    Dropdown: '▾',
+    EmailInput: '@',
+    Form: '□',
+    FormHeading: 'H1',
+    GPS: '⌖',
+    Grid: '▦',
+    Group: '▰',
+    Icon: '◆',
+    Image: '▧',
+    ImageUpload: '▧',
+    InputTable: '▦',
+    Link: '↗',
+    LocationInput: '⌖',
+    MatrixTable: '▦',
+    Modal: '▣',
+    MultiFileUpload: '▥',
+    MultiImageUpload: '▧',
+    MultipleChoice: '☷',
+    MultipleChoiceMatrix: '▦',
+    NumberInput: '123',
+    OfflineStorage: '▣',
+    Pages: '▱',
+    Paragraph: '¶',
+    PasswordInput: '🔒',
+    PhoneInput: '☎',
+    PushNotification: '•',
+    RangeSlider: '⇄',
+    Search: '⌕',
+    SectionHeading: 'H2',
+    Signature: '✎',
+    SingleChoice: '◉',
+    SingleChoiceMatrix: '▦',
+    Slider: '─',
+    Spacer: '↕',
+    Subheading: 'H3',
+    Submit: '✓',
+    Table: '▤',
+    Tags: '◇',
+    TextArea: '☰',
+    TextEditor: 'I',
+    TextInput: 'Aa',
+    TimeInput: '◷',
+    ToggleSwitch: '◉',
+    UploadField: '▥',
+    UrlInput: '↗',
+    WorkflowPanel: '↬',
+  };
+
+  return iconMap[type] ?? '□';
 }

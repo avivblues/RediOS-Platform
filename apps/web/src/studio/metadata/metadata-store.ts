@@ -122,7 +122,12 @@ export function customOrganismsAsComponents(): BuilderComponentDefinition[] {
     type: organism.type,
     label: organism.label,
     layer: 'ORGANISM',
+    description: organism.components.join(' + '),
   }));
+}
+
+export function findCustomOrganism(type: string) {
+  return loadCustomOrganisms().find((organism) => organism.type === type);
 }
 
 export function toMetadataCode(value: string) {
