@@ -197,6 +197,46 @@ Runtime Engine membaca metadata dan menjalankan behavior.
 
 ## 5. Domain Metadata
 
+### 5.0 Capability Registry
+
+Capability Registry adalah pusat daftar kemampuan aplikasi yang sudah disetujui oleh System Analyst.
+
+Form Builder dan View Builder wajib membaca capability dari registry ini. Builder tidak boleh menciptakan core API, core database contract, atau core process sendiri.
+
+Capability yang diekspos:
+
+- DATA: contoh `Product`, `Customer`
+- QUERY: contoh `Product List`, `Customer Lookup`
+- ACTION: contoh `Save Product`, `Delete Product`
+- API: contoh `Product Create API`, `Product Update API`
+- PROCESS: contoh `Approval Flow`
+- SECURITY: contoh `Permission Rules`
+
+Aturan utama:
+
+- System Analyst membuat dan mengelola capability.
+- Power User memilih dan memakai capability yang tersedia.
+- Jika capability belum ada, Power User membuat Capability Request.
+- Capability Request dikirim ke System Analyst untuk dianalisis dan dibuatkan metadata resmi.
+
+Contoh:
+
+```text
+Power User:
+"Saya butuh Export Product Excel"
+
+System:
+Membuat Capability Request
+
+System Analyst:
+Membuat Export Product Capability
+
+Power User:
+Dapat memakai capability tersebut di Builder
+```
+
+Builder hanya boleh menampilkan capability yang tersedia di registry.
+
 ### 5.1 Application Metadata
 
 Mendefinisikan satu generated application.
