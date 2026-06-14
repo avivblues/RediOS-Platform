@@ -32,6 +32,14 @@ export interface CanvasComponent {
     onLoad?: string;
     onSubmit?: string;
   };
+  confirmation?: {
+    enabled: boolean;
+    title: string;
+    message: string;
+    confirmLabel: string;
+    cancelLabel: string;
+    onConfirmAction?: string;
+  };
   themeOverrides?: Record<string, string>;
   children?: CanvasComponent[];
 }

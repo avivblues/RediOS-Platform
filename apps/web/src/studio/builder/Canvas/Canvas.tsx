@@ -1029,7 +1029,15 @@ function componentLabelOrFallback(component: CanvasComponent, fallback = compone
 }
 
 function componentActionHint(component: CanvasComponent, isPreviewing: boolean) {
-  if (isPreviewing || !component.events) {
+  if (isPreviewing) {
+    return undefined;
+  }
+
+  if (component.confirmation?.enabled) {
+    return `Confirm: ${component.confirmation.title} · On confirm: ${component.confirmation.onConfirmAction ?? component.events?.onClick ?? component.events?.onSubmit ?? 'No action'}`;
+  }
+
+  if (!component.events) {
     return undefined;
   }
 

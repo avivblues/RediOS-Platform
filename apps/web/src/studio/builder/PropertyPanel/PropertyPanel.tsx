@@ -333,6 +333,76 @@ export function PropertyPanel({
               <p className="redos-muted">Components bind to Action Metadata. Runtime menjalankan action berdasarkan event yang dipilih, bukan memanggil endpoint langsung dari builder.</p>
             </section>
 
+            {supportsConfirmation(selected.type) ? (
+              <section>
+                <h4>Confirmation <HelpTip label="Confirmation" text="Untuk tombol penting, tampilkan confirm modal sebelum Action dijalankan. Confirm tetap memilih Action Metadata, bukan API langsung." /></h4>
+                <label className="redos-confirm-toggle-row">
+                  <input
+                    checked={Boolean(selected.confirmation?.enabled)}
+                    type="checkbox"
+                    onChange={(event) => {
+                      onChange({
+                        confirmation: event.target.checked
+                          ? defaultConfirmation(selected)
+                          : undefined,
+                      });
+                    }}
+                  />
+                  Require confirmation before running action
+                </label>
+                {selected.confirmation?.enabled ? (
+                  <>
+                    <label>
+                      Confirmation Title
+                      <input
+                        value={selected.confirmation.title}
+                        onChange={(event) => onChange({ confirmation: { ...defaultConfirmation(selected), ...selected.confirmation, title: event.target.value } })}
+                      />
+                    </label>
+                    <label>
+                      Confirmation Message
+                      <textarea
+                        value={selected.confirmation.message}
+                        onChange={(event) => onChange({ confirmation: { ...defaultConfirmation(selected), ...selected.confirmation, message: event.target.value } })}
+                      />
+                    </label>
+                    <div className="redos-confirm-action-grid">
+                      <label>
+                        Confirm Button
+                        <input
+                          value={selected.confirmation.confirmLabel}
+                          onChange={(event) => onChange({ confirmation: { ...defaultConfirmation(selected), ...selected.confirmation, confirmLabel: event.target.value } })}
+                        />
+                      </label>
+                      <label>
+                        Cancel Button
+                        <input
+                          value={selected.confirmation.cancelLabel}
+                          onChange={(event) => onChange({ confirmation: { ...defaultConfirmation(selected), ...selected.confirmation, cancelLabel: event.target.value } })}
+                        />
+                      </label>
+                    </div>
+                    <label>
+                      On Confirm Action
+                      <select
+                        value={selected.confirmation.onConfirmAction ?? selected.events?.onClick ?? selected.events?.onSubmit ?? 'None'}
+                        onChange={(event) => {
+                          const action = event.target.value === 'None' ? undefined : event.target.value;
+                          onChange({
+                            confirmation: { ...defaultConfirmation(selected), ...selected.confirmation, onConfirmAction: action },
+                            events: nextEvents(selected.events, selected.type === 'Submit' ? 'onSubmit' : 'onClick', action ?? 'None'),
+                          });
+                        }}
+                      >
+                        {actionOptions.map((action) => <option key={action}>{action}</option>)}
+                      </select>
+                    </label>
+                    <p className="redos-muted">Confirm button calls Action Metadata. API/Connector target tetap dikonfigurasi di Action Designer.</p>
+                  </>
+                ) : null}
+              </section>
+            ) : null}
+
             <section className="redos-danger-zone">
               <h4>Delete <HelpTip label="Delete" text="Menghapus component dari screen. Data dan Action yang sudah dibuat tetap ada di Advanced Mode." /></h4>
               <p className="redos-muted">Remove this component from the screen. Saved backend metadata will be updated when metadata sync is connected.</p>
@@ -546,6 +616,24 @@ function supportsPlaceholder(type: string) {
     'Dropdown',
     'Lookup',
   ].includes(type);
+}
+
+function supportsConfirmation(type: string) {
+  return ['Button', 'Submit'].includes(type);
+}
+
+function defaultConfirmation(component: CanvasComponent): NonNullable<CanvasComponent['confirmation']> {
+  const action = component.confirmation?.onConfirmAction ?? component.events?.onClick ?? component.events?.onSubmit;
+  const label = component.label.trim() || component.type;
+
+  return {
+    enabled: true,
+    title: `${label}?`,
+    message: `Are you sure you want to continue with ${label}?`,
+    confirmLabel: label,
+    cancelLabel: 'Cancel',
+    onConfirmAction: action,
+  };
 }
 
 function eventKeysForComponent(type: string): EventKey[] {

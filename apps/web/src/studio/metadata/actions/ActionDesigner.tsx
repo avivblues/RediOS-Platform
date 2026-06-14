@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { HelpTip } from '../../guide/AdminGuide';
 import { loadActions, loadCustomApis, saveActions, toMetadataCode, type StudioActionDraft, type StudioActionTrigger } from '../metadata-store';
+import { MetadataConfirmDeleteModal } from '../shared/MetadataConfirmDeleteModal';
 
 const triggers: Array<{ label: string; value: StudioActionTrigger }> = [
   { label: 'Button clicked', value: 'onClick' },
@@ -17,6 +18,7 @@ export function ActionDesigner() {
   const [label, setLabel] = useState('Save Product');
   const [trigger, setTrigger] = useState<StudioActionTrigger>('onClick');
   const [step, setStep] = useState('save');
+  const [pendingDelete, setPendingDelete] = useState<{ kind: 'action'; code: string; label: string } | { kind: 'step'; code: string; step: string; index: number }>();
   const customApis = loadCustomApis();
 
   function persist(nextActions: StudioActionDraft[]) {
@@ -58,6 +60,20 @@ export function ActionDesigner() {
     } : action));
   }
 
+  function confirmDelete() {
+    if (!pendingDelete) {
+      return;
+    }
+
+    if (pendingDelete.kind === 'action') {
+      removeAction(pendingDelete.code);
+    } else {
+      removeStep(pendingDelete.code, pendingDelete.index);
+    }
+
+    setPendingDelete(undefined);
+  }
+
   return (
     <section className="redos-metadata-card">
       <div className="redos-panel-heading">
@@ -86,12 +102,12 @@ export function ActionDesigner() {
                 <strong>{action.label}</strong>
                 <small>{action.code} · {action.trigger}</small>
               </span>
-              <button data-redos-tooltip="Hapus Action dari draft metadata lokal." type="button" onClick={() => removeAction(action.code)}>Delete Action</button>
+              <button data-redos-tooltip="Hapus Action dari draft metadata lokal." type="button" onClick={() => setPendingDelete({ kind: 'action', code: action.code, label: action.label })}>Delete Action</button>
             </header>
             {action.steps.map((actionStep, index) => (
               <div key={`${action.code}-${actionStep}-${index}`} className="redos-list-row">
                 <strong>{actionStep}</strong>
-                <button data-redos-tooltip="Hapus step ini dari Action." type="button" onClick={() => removeStep(action.code, index)}>Delete</button>
+                <button data-redos-tooltip="Hapus step ini dari Action." type="button" onClick={() => setPendingDelete({ kind: 'step', code: action.code, step: actionStep, index })}>Delete</button>
               </div>
             ))}
             <div className="redos-inline-form">
@@ -105,6 +121,14 @@ export function ActionDesigner() {
           </section>
         ))}
       </div>
+      {pendingDelete ? (
+        <MetadataConfirmDeleteModal
+          title={pendingDelete.kind === 'action' ? 'Delete Action?' : 'Delete Action Step?'}
+          target={pendingDelete.kind === 'action' ? pendingDelete.label : pendingDelete.step}
+          onCancel={() => setPendingDelete(undefined)}
+          onConfirm={confirmDelete}
+        />
+      ) : null}
     </section>
   );
 }

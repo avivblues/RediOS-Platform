@@ -9,6 +9,7 @@ import {
   toComponentType,
   type StudioCustomOrganismDraft,
 } from '../metadata-store';
+import { MetadataConfirmDeleteModal } from '../shared/MetadataConfirmDeleteModal';
 
 const availableBlocks = [...atomComponents, ...moleculeComponents, ...organismComponents];
 
@@ -17,6 +18,7 @@ export function CustomOrganismDesigner() {
   const [label, setLabel] = useState('Approval Card');
   const [description, setDescription] = useState('Reusable approval experience with summary, status, and action.');
   const [selectedComponents, setSelectedComponents] = useState<string[]>(['TextInput', 'Dropdown', 'Button']);
+  const [pendingDelete, setPendingDelete] = useState<StudioCustomOrganismDraft>();
   const preview = useMemo(() => selectedComponents.join(' + '), [selectedComponents]);
 
   function persist(nextOrganisms: StudioCustomOrganismDraft[]) {
@@ -92,10 +94,21 @@ export function CustomOrganismDesigner() {
               <strong>{organism.label}</strong>
               <small>{organism.components.join(' + ')}</small>
             </span>
-            <button data-redos-tooltip="Hapus custom organism dari toolbox draft lokal." type="button" onClick={() => removeOrganism(organism.type)}>Delete</button>
+            <button data-redos-tooltip="Hapus custom organism dari toolbox draft lokal." type="button" onClick={() => setPendingDelete(organism)}>Delete</button>
           </div>
         ))}
       </div>
+      {pendingDelete ? (
+        <MetadataConfirmDeleteModal
+          title="Delete Custom Organism?"
+          target={pendingDelete.label}
+          onCancel={() => setPendingDelete(undefined)}
+          onConfirm={() => {
+            removeOrganism(pendingDelete.type);
+            setPendingDelete(undefined);
+          }}
+        />
+      ) : null}
     </section>
   );
 }

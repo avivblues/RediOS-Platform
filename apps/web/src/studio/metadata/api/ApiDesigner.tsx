@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { HelpTip } from '../../guide/AdminGuide';
 import { loadActions, loadCustomApis, saveCustomApis, toMetadataCode, type StudioCustomApiDraft } from '../metadata-store';
+import { MetadataConfirmDeleteModal } from '../shared/MetadataConfirmDeleteModal';
 
 const generatedApis = ['GET Product', 'POST Product', 'PUT Product', 'DELETE Product'];
 const methods: StudioCustomApiDraft['method'][] = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'];
@@ -13,6 +14,7 @@ export function ApiDesigner() {
   const [url, setUrl] = useState('https://finance.example.com/assets');
   const [auth, setAuth] = useState<StudioCustomApiDraft['auth']>('Bearer Token');
   const [mappedAction, setMappedAction] = useState('SAVE_PRODUCT');
+  const [pendingDelete, setPendingDelete] = useState<StudioCustomApiDraft>();
   const actions = loadActions();
 
   function persist(nextApis: StudioCustomApiDraft[]) {
@@ -81,10 +83,21 @@ export function ApiDesigner() {
               <strong>{api.label}</strong>
               <small>{api.method} · {api.url} · Action: {api.mappedAction || 'not mapped'}</small>
             </span>
-            <button data-redos-tooltip="Hapus connector custom dari draft metadata lokal." type="button" onClick={() => removeApi(api.code)}>Delete</button>
+            <button data-redos-tooltip="Hapus connector custom dari draft metadata lokal." type="button" onClick={() => setPendingDelete(api)}>Delete</button>
           </div>
         ))}
       </div>
+      {pendingDelete ? (
+        <MetadataConfirmDeleteModal
+          title="Delete Connector?"
+          target={pendingDelete.label}
+          onCancel={() => setPendingDelete(undefined)}
+          onConfirm={() => {
+            removeApi(pendingDelete.code);
+            setPendingDelete(undefined);
+          }}
+        />
+      ) : null}
     </section>
   );
 }

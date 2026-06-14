@@ -2490,12 +2490,12 @@ a:focus-visible {
 
 .redos-builder-status {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: minmax(140px, 0.45fr) minmax(0, 1.65fr) auto;
   gap: 0.55rem;
   align-items: center;
   border-radius: 0.8rem;
-  padding: 0.35rem 0.55rem;
-  min-height: 2.35rem;
+  padding: 0.28rem 0.5rem;
+  min-height: 2.1rem;
 }
 
 .redos-builder-status > div:first-child {
@@ -2524,6 +2524,61 @@ a:focus-visible {
   border-radius: 999px;
   padding: 0.25rem 0.45rem;
   background: #f8fafc;
+}
+
+.redos-builder-context-bar {
+  display: grid;
+  grid-template-columns: minmax(150px, 1fr) minmax(150px, 1fr) minmax(88px, 0.5fr) max-content;
+  gap: 0.4rem;
+  align-items: center;
+  min-width: 0;
+  border: 0;
+  border-radius: 0;
+  padding: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.redos-builder-context-bar label {
+  display: block;
+  min-width: 0;
+}
+
+.redos-builder-context-bar label > span {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.redos-builder-context-bar input,
+.redos-builder-context-bar select {
+  height: 1.75rem;
+  border: 1px solid rgb(148 163 184 / 32%);
+  border-radius: 0.62rem;
+  padding: 0 0.5rem;
+  background: #f8fafc;
+  color: #0f172a;
+  font-size: 0.7rem;
+  font-weight: 800;
+  text-transform: none;
+  min-width: 0;
+  width: 100%;
+}
+
+.redos-builder-context-bar button {
+  height: 1.75rem;
+  border: 1px solid rgb(37 99 235 / 35%);
+  border-radius: 0.62rem;
+  padding: 0 0.55rem;
+  background: #eff6ff;
+  color: #1d4ed8;
+  font-size: 0.68rem;
+  font-weight: 900;
+  white-space: nowrap;
+  cursor: pointer;
 }
 
 .redos-builder-workspace {
@@ -3579,6 +3634,23 @@ a:focus-visible {
   background: #b91c1c;
 }
 
+.redos-confirm-toggle-row {
+  display: flex !important;
+  align-items: center;
+  gap: 0.55rem !important;
+}
+
+.redos-confirm-toggle-row input {
+  width: auto !important;
+  min-height: auto !important;
+}
+
+.redos-confirm-action-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.55rem;
+}
+
 .redos-button-preview {
   display: grid;
   justify-items: center;
@@ -4245,6 +4317,429 @@ a:focus-visible {
   gap: 0.6rem;
 }
 
+.redos-data-command-grid {
+  display: grid;
+  grid-template-columns: minmax(260px, 0.62fr) minmax(520px, 1.38fr);
+  gap: 0.8rem;
+  align-items: stretch;
+}
+
+.redos-data-application-context {
+  display: grid;
+  grid-template-columns: minmax(280px, 0.8fr) minmax(260px, 1fr);
+  gap: 0.8rem;
+  align-items: end;
+  border: 1px solid rgb(37 99 235 / 14%);
+  border-radius: 1rem;
+  padding: 0.8rem;
+  background: linear-gradient(135deg, #eff6ff, #ffffff 58%);
+  box-shadow: 0 10px 24px rgb(15 23 42 / 4%);
+}
+
+.redos-data-application-context > div {
+  display: grid;
+  gap: 0.18rem;
+  border: 1px solid rgb(148 163 184 / 18%);
+  border-radius: 0.85rem;
+  padding: 0.7rem 0.8rem;
+  background: #ffffff;
+}
+
+.redos-data-application-context small {
+  color: var(--redios-color-muted);
+  font-size: 0.72rem;
+  font-weight: 650;
+}
+
+.redos-data-designer-form {
+  display: grid;
+  grid-template-columns: minmax(160px, 1fr);
+  gap: 0.7rem;
+  align-items: stretch;
+  border: 1px solid rgb(148 163 184 / 20%);
+  border-radius: 1rem;
+  padding: 0.8rem;
+  background: linear-gradient(180deg, #ffffff, #fbfdff);
+  box-shadow: 0 10px 24px rgb(15 23 42 / 4%);
+}
+
+.redos-data-attribute-form {
+  grid-template-columns: minmax(220px, 1fr) minmax(180px, 0.46fr);
+}
+
+.redos-data-designer-form label {
+  grid-template-rows: auto 2.35rem 1.55rem;
+  gap: 0.28rem;
+}
+
+.redos-data-designer-form input,
+.redos-data-designer-form select {
+  height: 2.35rem;
+  border-radius: 0.72rem;
+  padding: 0 0.75rem;
+  background: #f8fafc;
+}
+
+.redos-input-action-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 2.35rem;
+  gap: 0.45rem;
+  align-items: center;
+}
+
+.redos-input-action-row input,
+.redos-input-action-row select {
+  min-width: 0;
+}
+
+.redos-data-designer-form small {
+  color: var(--redios-color-muted);
+  font-size: 0.68rem;
+  font-weight: 650;
+  line-height: 1.25;
+  overflow: hidden;
+}
+
+.redos-data-form-actions {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: max-content;
+  gap: 0.4rem;
+  align-content: center;
+  align-items: center;
+  justify-content: end;
+  padding-top: 0;
+}
+
+.redos-data-form-actions button {
+  min-height: 2.35rem;
+}
+
+.redos-metadata-card button:disabled {
+  cursor: not-allowed;
+  opacity: 0.48;
+}
+
+.redos-data-master-detail {
+  display: grid;
+  grid-template-columns: minmax(240px, 0.45fr) minmax(420px, 1fr);
+  gap: 0.75rem;
+  align-items: start;
+}
+
+.redos-data-object-card {
+  gap: 0.7rem;
+  border-color: rgb(37 99 235 / 14%);
+  border-radius: 1rem;
+  padding: 0.8rem;
+  background: #ffffff;
+  box-shadow: 0 10px 24px rgb(15 23 42 / 4%);
+}
+
+.redos-data-object-card header {
+  align-items: center;
+}
+
+.redos-data-table {
+  display: grid;
+  gap: 0.45rem;
+  max-height: 22rem;
+  overflow: auto;
+  padding-right: 0.2rem;
+}
+
+.redos-data-table-row {
+  display: grid;
+  grid-template-columns: minmax(150px, 1fr) auto auto;
+  align-items: center;
+  gap: 0.65rem;
+  width: 100%;
+  border: 1px solid rgb(148 163 184 / 18%);
+  border-radius: 0.8rem;
+  min-height: 3.15rem;
+  padding: 0.55rem 0.68rem;
+  background: #f8fafc;
+  color: #0f172a;
+  text-align: left;
+}
+
+.redos-data-table-row:hover,
+.redos-data-table-row-active {
+  border-color: rgb(37 99 235 / 45%) !important;
+  background: #eff6ff !important;
+}
+
+.redos-data-table-row span:first-child,
+.redos-data-attribute-row > span:first-child {
+  display: grid;
+  gap: 0.12rem;
+}
+
+.redos-data-table-meta {
+  color: var(--redios-color-muted);
+  font-size: 0.72rem;
+  font-weight: 750;
+}
+
+.redos-data-chevron {
+  color: #64748b;
+  font-size: 0.68rem;
+  font-weight: 850;
+  text-transform: uppercase;
+}
+
+.redos-data-row-actions {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: max-content;
+  justify-content: flex-end;
+  gap: 0.35rem;
+}
+
+.redos-data-edit-row {
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) auto auto;
+  gap: 0.55rem;
+  align-items: end;
+  width: 100%;
+}
+
+.redos-data-attribute-edit-row {
+  grid-column: 1 / -1;
+  grid-template-columns: minmax(180px, 1fr) minmax(140px, 0.4fr) auto auto;
+}
+
+.redos-data-attribute-list {
+  display: grid;
+  gap: 0.45rem;
+  max-height: 22rem;
+  overflow: auto;
+  padding-right: 0.2rem;
+}
+
+.redos-data-attribute-row {
+  display: grid;
+  grid-template-columns: minmax(180px, 1fr) minmax(140px, 0.35fr) auto;
+  align-items: center;
+  border: 1px solid rgb(148 163 184 / 18%);
+  border-radius: 0.8rem;
+  min-height: 3.25rem;
+  padding: 0.5rem 0.65rem;
+  background: #f8fafc;
+  cursor: pointer;
+}
+
+.redos-inline-table-field {
+  display: grid;
+  gap: 0.22rem !important;
+  font-size: 0.7rem !important;
+}
+
+.redos-inline-table-field span {
+  color: var(--redios-color-muted);
+  font-size: 0.68rem;
+  font-weight: 850;
+  text-transform: uppercase;
+}
+
+.redos-inline-table-field input,
+.redos-inline-table-field select {
+  height: 2.25rem;
+  border: 1px solid rgb(37 99 235 / 26%);
+  border-radius: 0.65rem;
+  padding: 0 0.65rem;
+  background: #ffffff;
+  color: #0f172a;
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.redos-data-type-badge {
+  justify-self: start;
+  border-radius: 999px;
+  padding: 0.25rem 0.55rem;
+  background: #eef2ff;
+  color: #3730a3;
+  font-size: 0.7rem;
+  font-weight: 850;
+  text-transform: uppercase;
+}
+
+.redos-data-type-number,
+.redos-data-type-integer,
+.redos-data-type-decimal,
+.redos-data-type-double,
+.redos-data-type-currency,
+.redos-data-type-percentage {
+  background: #ecfdf5;
+  color: #047857;
+}
+
+.redos-data-type-date,
+.redos-data-type-time,
+.redos-data-type-datetime {
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+
+.redos-data-type-boolean {
+  background: #fff7ed;
+  color: #c2410c;
+}
+
+.redos-data-type-lookup {
+  background: #f5f3ff;
+  color: #6d28d9;
+}
+
+.redos-data-type-email,
+.redos-data-type-phone,
+.redos-data-type-url {
+  background: #f0f9ff;
+  color: #0369a1;
+}
+
+.redos-data-type-json {
+  background: #fef2f2;
+  color: #b91c1c;
+}
+
+.redos-data-type-file,
+.redos-data-type-image {
+  background: #fff7ed;
+  color: #c2410c;
+}
+
+.redos-data-type-longText {
+  background: #f8fafc;
+  color: #475569;
+}
+
+.redos-add-attribute-action {
+  width: 100%;
+  border-style: dashed !important;
+  background: #f8fafc !important;
+}
+
+.redos-data-empty-state {
+  border: 1px dashed rgb(148 163 184 / 30%);
+  border-radius: 0.8rem;
+  padding: 1rem;
+  color: var(--redios-color-muted);
+  text-align: center;
+  background: #f8fafc;
+}
+
+.redos-labeled-action,
+.redos-icon-action {
+  display: inline-grid;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  border: 1px solid rgb(148 163 184 / 24%) !important;
+  border-radius: 0.8rem !important;
+  background: #ffffff !important;
+  color: #334155 !important;
+  font-weight: 850;
+  line-height: 1;
+  box-shadow: 0 8px 18px rgb(15 23 42 / 5%);
+}
+
+.redos-labeled-action {
+  grid-auto-flow: column;
+  min-width: 7.4rem;
+  height: 2.35rem;
+  padding: 0 0.85rem !important;
+  white-space: nowrap;
+}
+
+.redos-icon-action {
+  place-items: center;
+  width: 2.35rem;
+  min-width: 2.35rem;
+  height: 2.35rem;
+  padding: 0 !important;
+  font-size: 1rem;
+}
+
+.redos-labeled-action svg,
+.redos-icon-action svg {
+  width: 1.05rem;
+  height: 1.05rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2.2;
+}
+
+.redos-labeled-action:hover:not(:disabled),
+.redos-icon-action:hover:not(:disabled) {
+  border-color: rgb(37 99 235 / 40%) !important;
+  background: #eff6ff !important;
+  color: #1d4ed8 !important;
+}
+
+.redos-action-primary {
+  border-color: rgb(37 99 235 / 50%) !important;
+  background: linear-gradient(135deg, #2563eb, #4f46e5) !important;
+  color: #ffffff !important;
+}
+
+.redos-action-danger {
+  border-color: rgb(220 38 38 / 22%) !important;
+  color: #b91c1c !important;
+}
+
+.redos-action-danger:hover:not(:disabled) {
+  border-color: rgb(220 38 38 / 36%) !important;
+  background: #fef2f2 !important;
+  color: #991b1b !important;
+}
+
+.redos-danger-action {
+  border-color: rgb(220 38 38 / 36%) !important;
+  background: #dc2626 !important;
+  color: #ffffff !important;
+}
+
+.redos-confirm-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  background: rgb(15 23 42 / 38%);
+  backdrop-filter: blur(4px);
+}
+
+.redos-confirm-modal {
+  display: grid;
+  gap: 1rem;
+  width: min(440px, 100%);
+  border: 1px solid rgb(148 163 184 / 28%);
+  border-radius: 1.1rem;
+  padding: 1rem;
+  background: #ffffff;
+  box-shadow: 0 22px 60px rgb(15 23 42 / 24%);
+}
+
+.redos-confirm-modal h3 {
+  margin: 0.15rem 0 0.35rem;
+}
+
+.redos-confirm-modal p {
+  margin: 0;
+  color: #475569;
+}
+
+.redos-confirm-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.55rem;
+}
+
 .redos-primary-action,
 .redos-inline-form button,
 .redos-metadata-card button,
@@ -4306,6 +4801,7 @@ a:focus-visible {
   .redos-builder-header,
   .redos-admin-guide,
   .redos-builder-status,
+  .redos-builder-context-bar,
   .redos-builder-workspace,
   .redos-metadata-shell,
   .redos-metadata-grid,

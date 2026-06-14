@@ -2,7 +2,26 @@ import type { BuilderComponentDefinition, CanvasComponent, StudioTarget } from '
 
 export interface StudioDataAttribute {
   name: string;
-  type: 'text' | 'number' | 'date' | 'boolean' | 'lookup';
+  type:
+    | 'text'
+    | 'longText'
+    | 'number'
+    | 'integer'
+    | 'decimal'
+    | 'double'
+    | 'currency'
+    | 'percentage'
+    | 'date'
+    | 'time'
+    | 'datetime'
+    | 'boolean'
+    | 'email'
+    | 'phone'
+    | 'url'
+    | 'lookup'
+    | 'json'
+    | 'file'
+    | 'image';
 }
 
 export interface StudioDataObject {
@@ -57,6 +76,15 @@ export interface StudioMenuDraft {
   parent?: string;
 }
 
+export interface StudioScreenDraft {
+  code: string;
+  label: string;
+  objectName?: string;
+  mode: 'create' | 'edit' | 'detail' | 'list';
+  target: StudioTarget;
+  updatedAt: string;
+}
+
 export interface StudioSecurityDraft {
   roles: Array<{
     code: string;
@@ -83,11 +111,21 @@ export interface StudioApplicationMetadataPackage {
   connectors: StudioCustomApiDraft[];
   processes: StudioProcessDraft[];
   menu: StudioMenuDraft[];
+  screens: StudioScreenDraft[];
   security: StudioSecurityDraft;
   customOrganisms: StudioCustomOrganismDraft[];
   canvas: CanvasComponent[];
   theme: StudioThemeDraft;
   publishedAt: string;
+}
+
+export interface StudioApplicationDraft {
+  code: string;
+  name: string;
+  slug: string;
+  template: string;
+  target: StudioTarget;
+  createdAt: string;
 }
 
 const DATA_OBJECTS_KEY = 'redios:studio:metadata:data-objects';
@@ -96,7 +134,9 @@ const CUSTOM_APIS_KEY = 'redios:studio:metadata:custom-apis';
 const CUSTOM_ORGANISMS_KEY = 'redios:studio:metadata:custom-organisms';
 const PROCESSES_KEY = 'redios:studio:metadata:processes';
 const MENU_KEY = 'redios:studio:metadata:menu';
+const SCREENS_KEY = 'redios:studio:metadata:screens';
 const SECURITY_KEY = 'redios:studio:metadata:security';
+const APPLICATIONS_KEY = 'redios:studio:applications';
 const ACTIVE_APP_KEY_PREFIX = 'redios:studio:active-app';
 const PUBLISHED_APP_KEY_PREFIX = 'redios:studio:published-app';
 
@@ -178,6 +218,17 @@ export const defaultMenu: StudioMenuDraft[] = [
   },
 ];
 
+export const defaultScreens: StudioScreenDraft[] = [
+  {
+    code: 'product-screen',
+    label: 'Product Form',
+    objectName: 'Product',
+    mode: 'create',
+    target: 'web',
+    updatedAt: new Date().toISOString(),
+  },
+];
+
 export const defaultSecurity: StudioSecurityDraft = {
   roles: [
     {
@@ -205,12 +256,12 @@ export const defaultSecurity: StudioSecurityDraft = {
   ],
 };
 
-export function loadDataObjects() {
-  return readStoredValue(scopedMetadataKey(DATA_OBJECTS_KEY), readStoredValue(DATA_OBJECTS_KEY, defaultDataObjects));
+export function loadDataObjects(appCode?: string) {
+  return readStoredValue(scopedMetadataKey(DATA_OBJECTS_KEY, appCode), readStoredValue(DATA_OBJECTS_KEY, defaultDataObjects));
 }
 
-export function saveDataObjects(value: StudioDataObject[]) {
-  writeStoredValue(scopedMetadataKey(DATA_OBJECTS_KEY), value);
+export function saveDataObjects(value: StudioDataObject[], appCode?: string) {
+  writeStoredValue(scopedMetadataKey(DATA_OBJECTS_KEY, appCode), value);
 }
 
 export function loadActions() {
@@ -245,12 +296,20 @@ export function saveProcesses(value: StudioProcessDraft[]) {
   writeStoredValue(scopedMetadataKey(PROCESSES_KEY), value);
 }
 
-export function loadMenu() {
-  return readStoredValue(scopedMetadataKey(MENU_KEY), defaultMenu);
+export function loadMenu(appCode?: string) {
+  return readStoredValue(scopedMetadataKey(MENU_KEY, appCode), defaultMenu);
 }
 
-export function saveMenu(value: StudioMenuDraft[]) {
-  writeStoredValue(scopedMetadataKey(MENU_KEY), value);
+export function saveMenu(value: StudioMenuDraft[], appCode?: string) {
+  writeStoredValue(scopedMetadataKey(MENU_KEY, appCode), value);
+}
+
+export function loadScreens(appCode?: string) {
+  return readStoredValue(scopedMetadataKey(SCREENS_KEY, appCode), defaultScreens);
+}
+
+export function saveScreens(value: StudioScreenDraft[], appCode?: string) {
+  writeStoredValue(scopedMetadataKey(SCREENS_KEY, appCode), value);
 }
 
 export function loadSecurity() {
@@ -292,6 +351,25 @@ export function setActiveApplicationCode(target: StudioTarget, appCode: string) 
   window.localStorage.setItem(`${ACTIVE_APP_KEY_PREFIX}:${target}`, appCode);
 }
 
+export function loadStudioApplications(): StudioApplicationDraft[] {
+  const applications = readStoredValue<StudioApplicationDraft[]>(APPLICATIONS_KEY, []);
+
+  if (applications.length > 0) {
+    return applications;
+  }
+
+  return [
+    {
+      code: resolveActiveApplicationCode('web'),
+      name: 'Inventory',
+      slug: 'inventory',
+      template: 'INVENTORY_EXPERIENCE',
+      target: 'web',
+      createdAt: new Date().toISOString(),
+    },
+  ];
+}
+
 export function toApplicationSlug(value: string) {
   const slug = value
     .trim()
@@ -319,6 +397,7 @@ export function seedApplicationMetadata(appCode: string, template: string) {
     writeStoredValue(scopedMetadataKey(CUSTOM_ORGANISMS_KEY, appCode), []);
     writeStoredValue(scopedMetadataKey(PROCESSES_KEY, appCode), []);
     writeStoredValue(scopedMetadataKey(MENU_KEY, appCode), []);
+    writeStoredValue(scopedMetadataKey(SCREENS_KEY, appCode), []);
     writeStoredValue(scopedMetadataKey(SECURITY_KEY, appCode), defaultSecurity);
     return;
   }
@@ -329,6 +408,7 @@ export function seedApplicationMetadata(appCode: string, template: string) {
   writeStoredValue(scopedMetadataKey(CUSTOM_ORGANISMS_KEY, appCode), defaultCustomOrganisms);
   writeStoredValue(scopedMetadataKey(PROCESSES_KEY, appCode), defaultProcesses);
   writeStoredValue(scopedMetadataKey(MENU_KEY, appCode), defaultMenu);
+  writeStoredValue(scopedMetadataKey(SCREENS_KEY, appCode), defaultScreens);
   writeStoredValue(scopedMetadataKey(SECURITY_KEY, appCode), defaultSecurity);
 }
 

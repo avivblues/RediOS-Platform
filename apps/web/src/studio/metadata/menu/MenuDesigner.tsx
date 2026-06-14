@@ -1,17 +1,50 @@
 import { useState } from 'react';
 import { HelpTip } from '../../guide/AdminGuide';
-import { loadMenu, saveMenu, toMetadataCode, toApplicationSlug, type StudioMenuDraft } from '../metadata-store';
+import {
+  loadMenu,
+  loadScreens,
+  loadStudioApplications,
+  resolveActiveApplicationCode,
+  saveMenu,
+  setActiveApplicationCode,
+  toApplicationSlug,
+  toMetadataCode,
+  type StudioApplicationDraft,
+  type StudioMenuDraft,
+} from '../metadata-store';
+import { MetadataConfirmDeleteModal } from '../shared/MetadataConfirmDeleteModal';
 
 export function MenuDesigner() {
-  const [menuItems, setMenuItems] = useState(() => loadMenu());
+  const applications = loadStudioApplications();
+  const activeApplicationCode = resolveActiveApplicationCode();
+  const initialApplication = applications.find((application) => application.code === activeApplicationCode) ?? applications[0];
+  const [selectedApplicationCode, setSelectedApplicationCode] = useState(initialApplication?.code ?? 'INVENTORY');
+  const [selectedApplication, setSelectedApplication] = useState<StudioApplicationDraft | undefined>(initialApplication);
+  const [screens, setScreens] = useState(() => loadScreens(initialApplication?.code));
+  const [menuItems, setMenuItems] = useState(() => loadMenu(initialApplication?.code));
   const [label, setLabel] = useState('Product');
   const [parent, setParent] = useState('inventory');
-  const [screen, setScreen] = useState('product-screen');
+  const [screen, setScreen] = useState(screens[0]?.code ?? 'product-screen');
   const [permission, setPermission] = useState('product.view');
+  const [pendingDelete, setPendingDelete] = useState<StudioMenuDraft>();
 
   function persist(nextMenu: StudioMenuDraft[]) {
     setMenuItems(nextMenu);
-    saveMenu(nextMenu);
+    saveMenu(nextMenu, selectedApplicationCode);
+  }
+
+  function selectApplication(appCode: string) {
+    const nextApplication = applications.find((application) => application.code === appCode);
+    const nextScreens = loadScreens(appCode);
+
+    setSelectedApplicationCode(appCode);
+    setSelectedApplication(nextApplication);
+    if (nextApplication) {
+      setActiveApplicationCode(nextApplication.target, nextApplication.code);
+    }
+    setScreens(nextScreens);
+    setMenuItems(loadMenu(appCode));
+    setScreen(nextScreens[0]?.code ?? '');
   }
 
   function addMenuItem() {
@@ -41,6 +74,23 @@ export function MenuDesigner() {
         <p>Bangun header/sidebar/menu runtime dari metadata, bukan hardcoded navigation.</p>
       </div>
 
+      <section className="redos-data-application-context">
+        <label>
+          <span>Application</span>
+          <select value={selectedApplicationCode} onChange={(event) => selectApplication(event.target.value)}>
+            {applications.map((application) => (
+              <option key={application.code} value={application.code}>{application.name}</option>
+            ))}
+          </select>
+          <small>Menu yang dibuat akan tersimpan untuk aplikasi ini.</small>
+        </label>
+        <div>
+          <span className="redos-kicker">Active Menu Scope</span>
+          <strong>{selectedApplication?.name ?? selectedApplicationCode}</strong>
+          <small>{screens.length} screen/forms available</small>
+        </div>
+      </section>
+
       <div className="redos-designer-form">
         <label>
           Menu Label
@@ -51,8 +101,13 @@ export function MenuDesigner() {
           <input value={parent} onChange={(event) => setParent(event.target.value)} placeholder="empty for root" />
         </label>
         <label>
-          Screen Code
-          <input value={screen} onChange={(event) => setScreen(event.target.value)} />
+          Screen / Form
+          <select value={screen} onChange={(event) => setScreen(event.target.value)}>
+            {screens.length === 0 ? <option value="">No screen registered</option> : null}
+            {screens.map((screenItem) => (
+              <option key={screenItem.code} value={screenItem.code}>{screenItem.label}</option>
+            ))}
+          </select>
         </label>
         <label>
           Permission
@@ -68,10 +123,21 @@ export function MenuDesigner() {
               <strong>{item.parent ? `${item.parent} > ${item.label}` : item.label}</strong>
               <small>{item.route} · screen: {item.screen} · permission: {item.permission}</small>
             </span>
-            <button type="button" onClick={() => removeMenuItem(item.id)}>Delete</button>
+            <button type="button" onClick={() => setPendingDelete(item)}>Delete</button>
           </div>
         ))}
       </div>
+      {pendingDelete ? (
+        <MetadataConfirmDeleteModal
+          title="Delete Menu?"
+          target={pendingDelete.label}
+          onCancel={() => setPendingDelete(undefined)}
+          onConfirm={() => {
+            removeMenuItem(pendingDelete.id);
+            setPendingDelete(undefined);
+          }}
+        />
+      ) : null}
     </section>
   );
 }

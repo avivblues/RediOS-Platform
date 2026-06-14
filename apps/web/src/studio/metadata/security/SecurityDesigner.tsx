@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { HelpTip } from '../../guide/AdminGuide';
 import { loadSecurity, saveSecurity, toMetadataCode, type StudioSecurityDraft } from '../metadata-store';
+import { MetadataConfirmDeleteModal } from '../shared/MetadataConfirmDeleteModal';
 
 export function SecurityDesigner() {
   const [security, setSecurity] = useState<StudioSecurityDraft>(() => loadSecurity());
@@ -8,6 +9,7 @@ export function SecurityDesigner() {
   const [permissions, setPermissions] = useState('product.view, product.create, layout.customize');
   const [actionAccess, setActionAccess] = useState('SAVE_PRODUCT');
   const [powerUser, setPowerUser] = useState(true);
+  const [pendingDelete, setPendingDelete] = useState<StudioSecurityDraft['roles'][number]>();
 
   function persist(nextSecurity: StudioSecurityDraft) {
     setSecurity(nextSecurity);
@@ -70,7 +72,7 @@ export function SecurityDesigner() {
                 <strong>{role.label}</strong>
                 <small>{role.code}{role.powerUser ? ' · Power User' : ''}</small>
               </span>
-              <button type="button" onClick={() => removeRole(role.code)}>Delete Role</button>
+              <button type="button" onClick={() => setPendingDelete(role)}>Delete Role</button>
             </header>
             <div className="redos-list-row">
               <span>
@@ -87,6 +89,17 @@ export function SecurityDesigner() {
           </section>
         ))}
       </div>
+      {pendingDelete ? (
+        <MetadataConfirmDeleteModal
+          title="Delete Role?"
+          target={pendingDelete.label}
+          onCancel={() => setPendingDelete(undefined)}
+          onConfirm={() => {
+            removeRole(pendingDelete.code);
+            setPendingDelete(undefined);
+          }}
+        />
+      ) : null}
     </section>
   );
 }

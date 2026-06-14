@@ -293,8 +293,26 @@ function PublishedComponent({
   }
 
   if (component.type === 'Button' || component.type === 'Submit') {
+    const action = component.confirmation?.enabled
+      ? component.confirmation.onConfirmAction
+      : component.events?.onClick ?? component.events?.onSubmit;
+
     return (
-      <button className="redos-button-preview" type="button" onClick={() => onAction(component.events?.onClick ?? component.events?.onSubmit)}>
+      <button
+        className="redos-button-preview"
+        type="button"
+        onClick={() => {
+          if (component.confirmation?.enabled) {
+            const accepted = window.confirm(`${component.confirmation.title}\n\n${component.confirmation.message}`);
+
+            if (!accepted) {
+              return;
+            }
+          }
+
+          onAction(action);
+        }}
+      >
         {component.label || 'Run Action'}
       </button>
     );

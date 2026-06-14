@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { type ReactNode, useMemo, useState } from 'react';
 import { Canvas } from './Canvas/Canvas';
 import { ComponentPanel } from './ComponentPanel/ComponentPanel';
 import { PropertyPanel } from './PropertyPanel/PropertyPanel';
@@ -12,9 +12,15 @@ import {
   loadMenu,
   loadProcesses,
   loadSecurity,
+  loadScreens,
+  loadStudioApplications,
   publishApplicationPackage,
   resolveActiveApplicationCode,
+  saveScreens,
+  setActiveApplicationCode,
   toApplicationSlug,
+  type StudioDataObject,
+  type StudioScreenDraft,
 } from '../metadata/metadata-store';
 import { AdminGuidePanel } from '../guide/AdminGuide';
 import type {
@@ -148,13 +154,26 @@ const builderTemplates: Array<{ id: string; label: string; components: CanvasCom
 ];
 
 export function BuilderShell({ target }: { target: StudioTarget }) {
-  const applicationCode = resolveActiveApplicationCode(target);
-  const dataObjects = useMemo<BuilderDataObject[]>(() => loadDataObjects().map((object) => ({
+  const applications = useMemo(() => loadStudioApplications(), []);
+  const initialApplicationCode = applications.find((application) => application.code === resolveActiveApplicationCode(target))?.code
+    ?? applications[0]?.code
+    ?? resolveActiveApplicationCode(target);
+  const initialDataObjectDrafts = loadDataObjects(initialApplicationCode);
+  const initialScreens = ensureApplicationScreens(loadScreens(initialApplicationCode), initialDataObjectDrafts, target);
+  const initialScreen = initialScreens.find((screen) => screen.target === target) ?? initialScreens[0];
+  const [applicationCode, setApplicationCode] = useState(initialApplicationCode);
+  const [screens, setScreens] = useState(initialScreens);
+  const [screenCode, setScreenCode] = useState(initialScreen?.code ?? defaultScreenCode(initialDataObjectDrafts[0]?.name));
+  const [screenSearch, setScreenSearch] = useState(initialScreen?.label ?? '');
+  const [screenObjectName, setScreenObjectName] = useState(initialScreen?.objectName ?? initialDataObjectDrafts[0]?.name ?? '');
+  const selectedScreen = screens.find((screen) => screen.code === screenCode);
+  const dataObjectDrafts = useMemo(() => loadDataObjects(applicationCode), [applicationCode]);
+  const dataObjects = useMemo<BuilderDataObject[]>(() => dataObjectDrafts.map((object) => ({
     name: object.name,
     fields: object.attributes.map((attribute) => attribute.name),
-  })), [applicationCode]);
-  const savedDraft = loadBuilderDraft(target, applicationCode);
-  const starterComponents = dataObjects.length === 0 ? [] : initialComponents;
+  })), [dataObjectDrafts]);
+  const savedDraft = loadBuilderDraft(target, applicationCode, screenCode);
+  const starterComponents = dataObjects.length === 0 ? [] : componentsForObject(screenObjectName || dataObjectDrafts[0]?.name, dataObjectDrafts);
   const [device, setDevice] = useState<StudioDevice>(savedDraft?.device ?? (target === 'android' ? 'Mobile' : 'Desktop'));
   const [tab, setTab] = useState<'Components' | 'Data'>('Components');
   const [components, setComponents] = useState(savedDraft?.components ?? starterComponents);
@@ -163,6 +182,7 @@ export function BuilderShell({ target }: { target: StudioTarget }) {
   const [isPreviewing, setIsPreviewing] = useState(false);
   const [isToolboxCollapsed, setIsToolboxCollapsed] = useState(false);
   const [theme, setTheme] = useState<BuilderTheme>(savedDraft?.theme ?? 'Light');
+  const [saveConfirmationOpen, setSaveConfirmationOpen] = useState(false);
   const selected = findComponentById(components, selectedId);
   const metadataSummary = useMemo(() => {
     const allComponents = flattenComponents(components);
@@ -175,6 +195,108 @@ export function BuilderShell({ target }: { target: StudioTarget }) {
       actions: boundActions,
     };
   }, [components]);
+
+  function persistCurrentDraft() {
+    const savedAt = new Date().toISOString();
+    window.localStorage.setItem(builderDraftKey(target, applicationCode, screenCode), JSON.stringify({ components, device, selectedId, savedAt, theme }));
+
+    return savedAt;
+  }
+
+  function openBuilderContext(nextApplicationCode: string, nextScreenCode: string, nextScreens = screens, nextDataObjects = dataObjectDrafts) {
+    const nextScreen = nextScreens.find((screen) => screen.code === nextScreenCode) ?? nextScreens[0];
+    const nextObjectName = nextScreen?.objectName ?? nextDataObjects[0]?.name ?? '';
+    const nextDraft = loadBuilderDraft(target, nextApplicationCode, nextScreen?.code ?? defaultScreenCode(nextObjectName));
+    const nextComponents = nextDraft?.components ?? componentsForObject(nextObjectName, nextDataObjects);
+
+    setScreenCode(nextScreen?.code ?? defaultScreenCode(nextObjectName));
+    setScreenSearch(nextScreen?.label ?? '');
+    setScreenObjectName(nextObjectName);
+    setComponents(nextComponents);
+    setSelectedId(nextDraft?.selectedId ?? nextComponents[0]?.id ?? '');
+    setDevice(nextDraft?.device ?? (target === 'android' ? 'Mobile' : 'Desktop'));
+    setTheme(nextDraft?.theme ?? 'Light');
+    setStatusMessage(nextDraft ? `Draft restored from ${formatSavedAt(nextDraft.savedAt)}` : `Editing ${nextScreen?.label ?? 'New Screen'}`);
+  }
+
+  function changeApplication(nextApplicationCode: string) {
+    persistCurrentDraft();
+    const nextApplication = applications.find((application) => application.code === nextApplicationCode);
+    const nextDataObjects = loadDataObjects(nextApplicationCode);
+    const nextScreens = ensureApplicationScreens(loadScreens(nextApplicationCode), nextDataObjects, target);
+
+    if (loadScreens(nextApplicationCode).length === 0 && nextScreens.length > 0) {
+      saveScreens(nextScreens, nextApplicationCode);
+    }
+
+    setApplicationCode(nextApplicationCode);
+    setScreens(nextScreens);
+    if (nextApplication) {
+      setActiveApplicationCode(nextApplication.target, nextApplication.code);
+    }
+    setScreenSearch(nextScreens[0]?.label ?? '');
+    openBuilderContext(nextApplicationCode, nextScreens[0]?.code ?? defaultScreenCode(nextDataObjects[0]?.name), nextScreens, nextDataObjects);
+  }
+
+  function changeScreen(nextScreenCode: string) {
+    persistCurrentDraft();
+    openBuilderContext(applicationCode, nextScreenCode);
+  }
+
+  function searchScreen(value: string) {
+    setScreenSearch(value);
+
+    const matchedScreen = screens.find((screen) => screen.label === value || screen.code === value);
+
+    if (matchedScreen && matchedScreen.code !== screenCode) {
+      changeScreen(matchedScreen.code);
+    }
+  }
+
+  function changeScreenObject(nextObjectName: string) {
+    const nextScreens = screens.map((screen) => screen.code === screenCode ? {
+      ...screen,
+      objectName: nextObjectName || undefined,
+      updatedAt: new Date().toISOString(),
+    } : screen);
+
+    setScreens(nextScreens);
+    saveScreens(nextScreens, applicationCode);
+    setScreenObjectName(nextObjectName);
+    setStatusMessage(nextObjectName ? `${selectedScreen?.label ?? screenCode} linked to ${nextObjectName}` : `${selectedScreen?.label ?? screenCode} is unbound`);
+  }
+
+  function changeScreenMode(nextMode: StudioScreenDraft['mode']) {
+    const nextScreens = screens.map((screen) => screen.code === screenCode ? {
+      ...screen,
+      mode: nextMode,
+      updatedAt: new Date().toISOString(),
+    } : screen);
+
+    setScreens(nextScreens);
+    saveScreens(nextScreens, applicationCode);
+    setStatusMessage(`${selectedScreen?.label ?? screenCode} mode set to ${nextMode}`);
+  }
+
+  function createScreenForCurrentObject() {
+    const objectName = screenObjectName || dataObjectDrafts[0]?.name;
+    const codeBase = defaultScreenCode(objectName);
+    const code = uniqueScreenCode(codeBase, screens);
+    const nextScreen: StudioScreenDraft = {
+      code,
+      label: objectName ? `${objectName} Form` : 'Unbound Screen',
+      objectName,
+      mode: 'create',
+      target,
+      updatedAt: new Date().toISOString(),
+    };
+    const nextScreens = [nextScreen, ...screens];
+
+    persistCurrentDraft();
+    setScreens(nextScreens);
+    saveScreens(nextScreens, applicationCode);
+    openBuilderContext(applicationCode, code, nextScreens);
+  }
 
   function addComponent(definition: BuilderComponentDefinition, insertIndex = components.length, parentId?: string) {
     const customOrganism = findCustomOrganism(definition.type);
@@ -382,8 +504,9 @@ export function BuilderShell({ target }: { target: StudioTarget }) {
   }
 
   function saveDraft() {
-    const savedAt = new Date().toISOString();
-    window.localStorage.setItem(builderDraftKey(target, applicationCode), JSON.stringify({ components, device, selectedId, savedAt, theme }));
+    const savedAt = persistCurrentDraft();
+    saveScreens(screens, applicationCode);
+    setSaveConfirmationOpen(false);
     setStatusMessage(`Experience draft saved at ${formatSavedAt(savedAt)}`);
   }
 
@@ -410,17 +533,18 @@ export function BuilderShell({ target }: { target: StudioTarget }) {
     const appSlug = resolvePublishedApplicationSlug(target, applicationCode);
     const productionPath = `/apps/${appSlug}`;
 
-    window.localStorage.setItem(builderDraftKey(target, applicationCode), JSON.stringify({ components, device, selectedId, savedAt, theme }));
+    window.localStorage.setItem(builderDraftKey(target, applicationCode, screenCode), JSON.stringify({ components, device, selectedId, savedAt, theme }));
     publishApplicationPackage({
       appCode: applicationCode,
       appSlug,
       appName: applicationNameFromCode(applicationCode),
       target,
-      dataObjects: loadDataObjects(),
+      dataObjects: loadDataObjects(applicationCode),
       actions: loadActions(),
       connectors: loadCustomApis(),
       processes: loadProcesses(),
-      menu: loadMenu(),
+      menu: loadMenu(applicationCode),
+      screens,
       security: loadSecurity(),
       customOrganisms: loadCustomOrganisms(),
       canvas: components,
@@ -456,7 +580,7 @@ export function BuilderShell({ target }: { target: StudioTarget }) {
             {builderTemplates.map((template) => <option key={template.id} value={template.id}>{template.label}</option>)}
           </select>
           <button data-redos-tooltip="Mulai aplikasi baru dari template experience, bukan dari database." type="button" onClick={() => { window.location.href = '/studio/create'; }}>Create App</button>
-          <button data-redos-tooltip="Simpan draft layout visual di browser. Backend metadata sync menyusul di tahap production." type="button" onClick={saveDraft}>Save</button>
+          <button data-redos-tooltip="Konfirmasi lalu simpan canvas dan screen metadata aktif." type="button" onClick={() => setSaveConfirmationOpen(true)}>Save</button>
           <button className="redos-launch-action" data-redos-tooltip="Publish draft dan buka hasil production di tab baru." type="button" onClick={publishExperience}>Publish</button>
           <button data-redos-tooltip="Advanced Mode untuk Data, Action, Connector, dan Custom Organism." type="button" onClick={() => { window.location.href = '/studio/metadata'; }}>Metadata</button>
         </div>
@@ -467,6 +591,42 @@ export function BuilderShell({ target }: { target: StudioTarget }) {
           <strong>{statusMessage}</strong>
           <span>{target === 'android' ? 'Mobile runtime target' : 'Web runtime target'} · {device} preview</span>
         </div>
+        {!isPreviewing ? (
+          <div className="redos-builder-context-bar" aria-label="Builder context">
+            <label>
+              <span>Application</span>
+              <select value={applicationCode} onChange={(event) => changeApplication(event.target.value)}>
+                {applications.map((application) => (
+                  <option key={application.code} value={application.code}>{application.name}</option>
+                ))}
+              </select>
+            </label>
+            <label>
+              <span>Screen / Form</span>
+              <input
+                list="redos-builder-screen-options"
+                placeholder="Search screen/form"
+                value={screenSearch}
+                onChange={(event) => searchScreen(event.target.value)}
+              />
+              <datalist id="redos-builder-screen-options">
+                {screens.map((screen) => (
+                  <option key={screen.code} value={screen.label} />
+                ))}
+              </datalist>
+            </label>
+            <label>
+              <span>Mode</span>
+              <select value={selectedScreen?.mode ?? 'create'} onChange={(event) => changeScreenMode(event.target.value as StudioScreenDraft['mode'])}>
+                <option value="create">Input Form</option>
+                <option value="edit">Edit Form</option>
+                <option value="detail">Detail View</option>
+                <option value="list">List View</option>
+              </select>
+            </label>
+            <button type="button" onClick={createScreenForCurrentObject}>New Screen</button>
+          </div>
+        ) : null}
         <div className="redos-metadata-pills" aria-label="Generated metadata summary">
           <span>{metadataSummary.components} Components</span>
           <span>{metadataSummary.fields} Data bindings</span>
@@ -545,7 +705,50 @@ export function BuilderShell({ target }: { target: StudioTarget }) {
           />
         ) : null}
       </section>
+      {saveConfirmationOpen ? (
+        <BuilderConfirmModal
+          confirmLabel="Save Metadata"
+          kicker="Confirm Save"
+          title="Save Current Screen?"
+          onCancel={() => setSaveConfirmationOpen(false)}
+          onConfirm={saveDraft}
+        >
+          Canvas draft, selected screen/form, mode, and screen registry for <strong>{applicationNameFromCode(applicationCode)}</strong> will be saved.
+        </BuilderConfirmModal>
+      ) : null}
     </main>
+  );
+}
+
+function BuilderConfirmModal({
+  children,
+  confirmLabel,
+  kicker,
+  onCancel,
+  onConfirm,
+  title,
+}: {
+  children: ReactNode;
+  confirmLabel: string;
+  kicker: string;
+  onCancel: () => void;
+  onConfirm: () => void;
+  title: string;
+}) {
+  return (
+    <div className="redos-confirm-backdrop" role="presentation">
+      <section className="redos-confirm-modal" role="dialog" aria-modal="true" aria-labelledby="redos-builder-confirm-title">
+        <div>
+          <span className="redos-kicker">{kicker}</span>
+          <h3 id="redos-builder-confirm-title">{title}</h3>
+          <p>{children}</p>
+        </div>
+        <div className="redos-confirm-actions">
+          <button type="button" onClick={onCancel}>Cancel</button>
+          <button className="redos-primary-action" type="button" onClick={onConfirm}>{confirmLabel}</button>
+        </div>
+      </section>
+    </div>
   );
 }
 
@@ -882,8 +1085,8 @@ function cloneTemplateComponent(component: CanvasComponent): CanvasComponent {
   };
 }
 
-function builderDraftKey(target: StudioTarget, applicationCode: string) {
-  return `redios:studio:${applicationCode}:${target}:draft`;
+function builderDraftKey(target: StudioTarget, applicationCode: string, screenCode: string) {
+  return `redios:studio:${applicationCode}:${screenCode}:${target}:draft`;
 }
 
 function resolvePublishedApplicationSlug(target: StudioTarget, applicationCode: string) {
@@ -896,9 +1099,9 @@ function resolvePublishedApplicationSlug(target: StudioTarget, applicationCode: 
   return target === 'android' ? `${toApplicationSlug(applicationCode)}-android` : toApplicationSlug(applicationCode);
 }
 
-function loadBuilderDraft(target: StudioTarget, applicationCode: string): BuilderDraftState | undefined {
+function loadBuilderDraft(target: StudioTarget, applicationCode: string, screenCode: string): BuilderDraftState | undefined {
   try {
-    const rawDraft = window.localStorage.getItem(builderDraftKey(target, applicationCode));
+    const rawDraft = window.localStorage.getItem(builderDraftKey(target, applicationCode, screenCode));
 
     if (!rawDraft) {
       return undefined;
@@ -917,6 +1120,140 @@ function loadBuilderDraft(target: StudioTarget, applicationCode: string): Builde
   } catch {
     return undefined;
   }
+}
+
+function ensureApplicationScreens(screens: StudioScreenDraft[], dataObjects: StudioDataObject[], target: StudioTarget): StudioScreenDraft[] {
+  if (screens.length > 0) {
+    return screens;
+  }
+
+  const firstObject = dataObjects[0];
+
+  return [
+    {
+      code: defaultScreenCode(firstObject?.name),
+      label: firstObject ? `${firstObject.name} Form` : 'Unbound Screen',
+      objectName: firstObject?.name,
+      mode: 'create',
+      target,
+      updatedAt: new Date().toISOString(),
+    },
+  ];
+}
+
+function componentsForObject(objectName: string | undefined, dataObjects: StudioDataObject[]): CanvasComponent[] {
+  const object = dataObjects.find((item) => item.name === objectName) ?? dataObjects[0];
+
+  if (!object) {
+    return [];
+  }
+
+  return [
+    {
+      id: `${toApplicationSlug(object.name)}_form`,
+      type: 'Form',
+      label: `${object.name} Form`,
+      width: 12,
+      height: 320,
+      x: 0,
+      y: 0,
+      children: [
+        ...object.attributes.map((attribute, index) => ({
+          id: `${toApplicationSlug(object.name)}_${toApplicationSlug(attribute.name)}`,
+          type: componentTypeForAttribute(attribute.type),
+          label: attribute.name,
+          placeholder: `Enter ${attribute.name}`,
+          width: attribute.type === 'longText' || attribute.type === 'json' ? 12 : 6,
+          height: attribute.type === 'longText' || attribute.type === 'json' ? 72 : 60,
+          x: index % 2 === 0 ? 0 : 6,
+          y: index,
+          binding: { object: object.name, field: attribute.name },
+        })),
+        {
+          id: `save_${toApplicationSlug(object.name)}`,
+          type: 'Button',
+          label: `Save ${object.name}`,
+          width: 4,
+          height: 56,
+          x: 0,
+          y: object.attributes.length,
+          events: { onClick: `Save ${object.name}` },
+        },
+      ],
+    },
+  ];
+}
+
+function componentTypeForAttribute(type: StudioDataObject['attributes'][number]['type']) {
+  if (['number', 'integer', 'decimal', 'double', 'currency', 'percentage'].includes(type)) {
+    return 'NumberInput';
+  }
+
+  if (type === 'date') {
+    return 'DateInput';
+  }
+
+  if (type === 'time') {
+    return 'TimeInput';
+  }
+
+  if (type === 'datetime') {
+    return 'DateInput';
+  }
+
+  if (type === 'email') {
+    return 'EmailInput';
+  }
+
+  if (type === 'phone') {
+    return 'PhoneInput';
+  }
+
+  if (type === 'url') {
+    return 'UrlInput';
+  }
+
+  if (type === 'boolean') {
+    return 'Checkbox';
+  }
+
+  if (type === 'lookup') {
+    return 'Lookup';
+  }
+
+  if (type === 'file') {
+    return 'UploadField';
+  }
+
+  if (type === 'image') {
+    return 'ImageUpload';
+  }
+
+  if (type === 'longText' || type === 'json') {
+    return 'TextArea';
+  }
+
+  return 'TextInput';
+}
+
+function defaultScreenCode(objectName?: string) {
+  return objectName ? `${toApplicationSlug(objectName)}-screen` : 'unbound-screen';
+}
+
+function uniqueScreenCode(baseCode: string, screens: StudioScreenDraft[]) {
+  if (!screens.some((screen) => screen.code === baseCode)) {
+    return baseCode;
+  }
+
+  let index = 2;
+  let nextCode = `${baseCode}-${index}`;
+
+  while (screens.some((screen) => screen.code === nextCode)) {
+    index += 1;
+    nextCode = `${baseCode}-${index}`;
+  }
+
+  return nextCode;
 }
 
 function applicationNameFromCode(value: string) {
