@@ -299,7 +299,7 @@ export function BuilderShell({ target }: { target: StudioTarget }) {
   }
 
   function addComponent(definition: BuilderComponentDefinition, insertIndex = components.length, parentId?: string) {
-    const customOrganism = findCustomOrganism(definition.type);
+    const customOrganism = findCustomOrganism(definition.type, applicationCode);
     const selectedParentId = selected?.type === 'Form' ? selected.id : findParentComponentId(components, selectedId);
     const targetParentId = parentId ?? selectedParentId;
     const next: CanvasComponent = {
@@ -534,20 +534,29 @@ export function BuilderShell({ target }: { target: StudioTarget }) {
     const productionPath = `/apps/${appSlug}`;
 
     window.localStorage.setItem(builderDraftKey(target, applicationCode, screenCode), JSON.stringify({ components, device, selectedId, savedAt, theme }));
+    saveScreens(screens, applicationCode);
     publishApplicationPackage({
       appCode: applicationCode,
       appSlug,
       appName: applicationNameFromCode(applicationCode),
       target,
       dataObjects: loadDataObjects(applicationCode),
-      actions: loadActions(),
-      connectors: loadCustomApis(),
-      processes: loadProcesses(),
+      actions: loadActions(applicationCode),
+      connectors: loadCustomApis(applicationCode),
+      processes: loadProcesses(applicationCode),
       menu: loadMenu(applicationCode),
       screens,
-      security: loadSecurity(),
-      customOrganisms: loadCustomOrganisms(),
+      security: loadSecurity(applicationCode),
+      customOrganisms: loadCustomOrganisms(applicationCode),
       canvas: components,
+      screenCanvases: collectPublishedScreenCanvases({
+        activeComponents: components,
+        activeScreenCode: screenCode,
+        applicationCode,
+        dataObjects: loadDataObjects(applicationCode),
+        screens,
+        target,
+      }),
       theme: {
         name: theme,
         tokens: collectBuilderThemeTokens(),
@@ -661,7 +670,7 @@ export function BuilderShell({ target }: { target: StudioTarget }) {
               ))}
             </div>
             {tab === 'Components' ? (
-              <ComponentPanel target={target} onAdd={addComponent} />
+              <ComponentPanel applicationCode={applicationCode} target={target} onAdd={addComponent} />
             ) : (
               <TreePanel dataObjects={dataObjects} onBindField={bindField} />
             )}
@@ -679,6 +688,7 @@ export function BuilderShell({ target }: { target: StudioTarget }) {
         />
 
         <Canvas
+          applicationCode={applicationCode}
           components={components}
           device={device}
           isPreviewing={isPreviewing}
@@ -695,6 +705,7 @@ export function BuilderShell({ target }: { target: StudioTarget }) {
 
         {!isPreviewing ? (
           <PropertyPanel
+            applicationCode={applicationCode}
             components={components}
             dataObjects={dataObjects}
             selected={selected}
@@ -1120,6 +1131,31 @@ function loadBuilderDraft(target: StudioTarget, applicationCode: string, screenC
   } catch {
     return undefined;
   }
+}
+
+function collectPublishedScreenCanvases({
+  activeComponents,
+  activeScreenCode,
+  applicationCode,
+  dataObjects,
+  screens,
+  target,
+}: {
+  activeComponents: CanvasComponent[];
+  activeScreenCode: string;
+  applicationCode: string;
+  dataObjects: StudioDataObject[];
+  screens: StudioScreenDraft[];
+  target: StudioTarget;
+}) {
+  return Object.fromEntries(screens.map((screen) => {
+    if (screen.code === activeScreenCode) {
+      return [screen.code, activeComponents];
+    }
+
+    const draft = loadBuilderDraft(target, applicationCode, screen.code);
+    return [screen.code, draft?.components ?? componentsForObject(screen.objectName, dataObjects)];
+  }));
 }
 
 function ensureApplicationScreens(screens: StudioScreenDraft[], dataObjects: StudioDataObject[], target: StudioTarget): StudioScreenDraft[] {

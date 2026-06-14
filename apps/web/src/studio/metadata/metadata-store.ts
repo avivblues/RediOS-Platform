@@ -115,6 +115,7 @@ export interface StudioApplicationMetadataPackage {
   security: StudioSecurityDraft;
   customOrganisms: StudioCustomOrganismDraft[];
   canvas: CanvasComponent[];
+  screenCanvases: Record<string, CanvasComponent[]>;
   theme: StudioThemeDraft;
   publishedAt: string;
 }
@@ -264,36 +265,36 @@ export function saveDataObjects(value: StudioDataObject[], appCode?: string) {
   writeStoredValue(scopedMetadataKey(DATA_OBJECTS_KEY, appCode), value);
 }
 
-export function loadActions() {
-  return readStoredValue(scopedMetadataKey(ACTIONS_KEY), readStoredValue(ACTIONS_KEY, defaultActions));
+export function loadActions(appCode?: string) {
+  return readStoredValue(scopedMetadataKey(ACTIONS_KEY, appCode), readStoredValue(ACTIONS_KEY, defaultActions));
 }
 
-export function saveActions(value: StudioActionDraft[]) {
-  writeStoredValue(scopedMetadataKey(ACTIONS_KEY), value);
+export function saveActions(value: StudioActionDraft[], appCode?: string) {
+  writeStoredValue(scopedMetadataKey(ACTIONS_KEY, appCode), value);
 }
 
-export function loadCustomApis() {
-  return readStoredValue(scopedMetadataKey(CUSTOM_APIS_KEY), readStoredValue(CUSTOM_APIS_KEY, defaultCustomApis));
+export function loadCustomApis(appCode?: string) {
+  return readStoredValue(scopedMetadataKey(CUSTOM_APIS_KEY, appCode), readStoredValue(CUSTOM_APIS_KEY, defaultCustomApis));
 }
 
-export function saveCustomApis(value: StudioCustomApiDraft[]) {
-  writeStoredValue(scopedMetadataKey(CUSTOM_APIS_KEY), value);
+export function saveCustomApis(value: StudioCustomApiDraft[], appCode?: string) {
+  writeStoredValue(scopedMetadataKey(CUSTOM_APIS_KEY, appCode), value);
 }
 
-export function loadCustomOrganisms() {
-  return readStoredValue(scopedMetadataKey(CUSTOM_ORGANISMS_KEY), readStoredValue(CUSTOM_ORGANISMS_KEY, defaultCustomOrganisms));
+export function loadCustomOrganisms(appCode?: string) {
+  return readStoredValue(scopedMetadataKey(CUSTOM_ORGANISMS_KEY, appCode), readStoredValue(CUSTOM_ORGANISMS_KEY, defaultCustomOrganisms));
 }
 
-export function saveCustomOrganisms(value: StudioCustomOrganismDraft[]) {
-  writeStoredValue(scopedMetadataKey(CUSTOM_ORGANISMS_KEY), value);
+export function saveCustomOrganisms(value: StudioCustomOrganismDraft[], appCode?: string) {
+  writeStoredValue(scopedMetadataKey(CUSTOM_ORGANISMS_KEY, appCode), value);
 }
 
-export function loadProcesses() {
-  return readStoredValue(scopedMetadataKey(PROCESSES_KEY), defaultProcesses);
+export function loadProcesses(appCode?: string) {
+  return readStoredValue(scopedMetadataKey(PROCESSES_KEY, appCode), defaultProcesses);
 }
 
-export function saveProcesses(value: StudioProcessDraft[]) {
-  writeStoredValue(scopedMetadataKey(PROCESSES_KEY), value);
+export function saveProcesses(value: StudioProcessDraft[], appCode?: string) {
+  writeStoredValue(scopedMetadataKey(PROCESSES_KEY, appCode), value);
 }
 
 export function loadMenu(appCode?: string) {
@@ -312,16 +313,16 @@ export function saveScreens(value: StudioScreenDraft[], appCode?: string) {
   writeStoredValue(scopedMetadataKey(SCREENS_KEY, appCode), value);
 }
 
-export function loadSecurity() {
-  return readStoredValue(scopedMetadataKey(SECURITY_KEY), defaultSecurity);
+export function loadSecurity(appCode?: string) {
+  return readStoredValue(scopedMetadataKey(SECURITY_KEY, appCode), defaultSecurity);
 }
 
-export function saveSecurity(value: StudioSecurityDraft) {
-  writeStoredValue(scopedMetadataKey(SECURITY_KEY), value);
+export function saveSecurity(value: StudioSecurityDraft, appCode?: string) {
+  writeStoredValue(scopedMetadataKey(SECURITY_KEY, appCode), value);
 }
 
-export function customOrganismsAsComponents(): BuilderComponentDefinition[] {
-  return loadCustomOrganisms().map((organism) => ({
+export function customOrganismsAsComponents(appCode?: string): BuilderComponentDefinition[] {
+  return loadCustomOrganisms(appCode).map((organism) => ({
     type: organism.type,
     label: organism.label,
     layer: 'ORGANISM',
@@ -329,8 +330,8 @@ export function customOrganismsAsComponents(): BuilderComponentDefinition[] {
   }));
 }
 
-export function findCustomOrganism(type: string) {
-  return loadCustomOrganisms().find((organism) => organism.type === type);
+export function findCustomOrganism(type: string, appCode?: string) {
+  return loadCustomOrganisms(appCode).find((organism) => organism.type === type);
 }
 
 export function resolveActiveApplicationCode(target?: StudioTarget) {

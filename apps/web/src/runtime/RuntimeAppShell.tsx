@@ -17,6 +17,14 @@ interface RuntimeAppState {
   activePageCode?: string;
 }
 
+interface PendingRuntimeConfirmation {
+  action?: string;
+  cancelLabel: string;
+  confirmLabel: string;
+  message: string;
+  title: string;
+}
+
 export function RuntimeAppShell({ applicationCode }: { applicationCode: string }) {
   const publishedApplication = loadPublishedApplication(applicationCode);
   const { context } = useRuntimeContext();
@@ -137,11 +145,21 @@ export function RuntimeAppShell({ applicationCode }: { applicationCode: string }
 function PublishedMetadataRuntime({ application }: { application: StudioApplicationMetadataPackage }) {
   const firstMenu = application.menu.find((item) => item.parent) ?? application.menu.find((item) => !item.parent) ?? application.menu[0];
   const [activeMenuId, setActiveMenuId] = useState(firstMenu?.id ?? '');
-  const [document, setDocument] = useState<Record<string, string>>(() => initialDocumentFromCanvas(application.canvas));
   const [status, setStatus] = useState('Ready');
   const activeMenu = application.menu.find((item) => item.id === activeMenuId) ?? firstMenu;
-  const primaryObject = objectNameFromCanvas(application.canvas) ?? application.dataObjects[0]?.name ?? 'Record';
+  const activeScreenCode = activeMenu?.screen ?? application.screens[0]?.code ?? '';
+  const activeScreen = application.screens.find((screen) => screen.code === activeScreenCode);
+  const activeCanvas = application.screenCanvases?.[activeScreenCode] ?? application.canvas;
+  const [document, setDocument] = useState<Record<string, string>>(() => initialDocumentFromCanvas(activeCanvas));
+  const [pendingConfirmation, setPendingConfirmation] = useState<PendingRuntimeConfirmation>();
+  const primaryObject = objectNameFromCanvas(activeCanvas) ?? activeScreen?.objectName ?? application.dataObjects[0]?.name ?? 'Record';
   const records = loadRuntimeRecords(application.appSlug, primaryObject);
+  const rootMenus = application.menu.filter((item) => !item.parent || !application.menu.some((candidate) => candidate.id === item.parent));
+
+  useEffect(() => {
+    setDocument(initialDocumentFromCanvas(activeCanvas));
+    setStatus(activeScreen ? `Screen ${activeScreen.label} loaded` : 'Generated screen loaded');
+  }, [activeScreenCode]);
 
   function updateField(component: CanvasComponent, value: string) {
     const fieldKey = component.binding ? `${component.binding.object}.${component.binding.field}` : component.id;
@@ -156,7 +174,7 @@ function PublishedMetadataRuntime({ application }: { application: StudioApplicat
       return;
     }
 
-    const objectName = objectNameFromCanvas(application.canvas) ?? application.dataObjects[0]?.name;
+    const objectName = objectNameFromCanvas(activeCanvas) ?? activeScreen?.objectName ?? application.dataObjects[0]?.name;
 
     if (!objectName) {
       setStatus('No Data Object metadata found');
@@ -175,11 +193,12 @@ function PublishedMetadataRuntime({ application }: { application: StudioApplicat
         { id: `${objectName}_${Date.now()}`, ...nextRecord },
         ...savedRecords,
       ]);
-      setStatus(`${action.label} executed. ${objectName} saved.`);
+      const connectorMessages = connectorExecutionMessages(action.steps, application.connectors);
+      setStatus([`${action.label} executed. ${objectName} saved.`, ...connectorMessages].join(' '));
       return;
     }
 
-    setStatus(`${action.label} executed.`);
+    setStatus([`${action.label} executed.`, ...connectorExecutionMessages(action.steps, application.connectors)].join(' '));
   }
 
   return (
@@ -190,7 +209,7 @@ function PublishedMetadataRuntime({ application }: { application: StudioApplicat
           <strong>{application.appName}</strong>
         </div>
         <nav className="runtime-nav-list" aria-label="Application menu">
-          {application.menu.filter((item) => !item.parent).map((item) => (
+          {rootMenus.map((item) => (
             <div key={item.id} className="runtime-nav-group">
               <button
                 className={activeMenuId === item.id ? 'runtime-nav-active' : ''}
@@ -216,12 +235,12 @@ function PublishedMetadataRuntime({ application }: { application: StudioApplicat
       <main className="runtime-main runtime-app-main">
         <header className="runtime-card runtime-app-header">
           <span className="studio-kicker">Runtime Application</span>
-          <h1>{activeMenu?.label ?? application.appName}</h1>
-          <p>{application.appName} · {activeMenu?.permission ?? 'runtime.access'} · published {formatRuntimeDate(application.publishedAt)}</p>
+          <h1>{activeScreen?.label ?? activeMenu?.label ?? application.appName}</h1>
+          <p>{application.appName} · {activeMenu?.permission ?? 'runtime.access'} · {activeScreen?.mode ?? 'runtime'} · published {formatRuntimeDate(application.publishedAt)}</p>
           <div className="redos-metadata-pills">
             <span>Header</span>
             <span>Sidebar Menu</span>
-            <span>Breadcrumb: {application.appName} / {activeMenu?.label ?? 'Home'}</span>
+            <span>Breadcrumb: {application.appName} / {activeMenu?.label ?? 'Home'} / {activeScreen?.label ?? activeScreenCode}</span>
             <span>User Profile</span>
             <span>Notification</span>
             <span>Permission Guard</span>
@@ -231,17 +250,18 @@ function PublishedMetadataRuntime({ application }: { application: StudioApplicat
         <section className="runtime-card">
           <div className="redos-panel-heading">
             <span className="redos-kicker">UI Metadata</span>
-            <h3>{activeMenu?.screen ?? 'Generated Screen'}</h3>
+            <h3>{activeScreen?.label ?? activeMenu?.screen ?? 'Generated Screen'}</h3>
             <p>{status}</p>
           </div>
           <div className="redos-runtime-canvas">
-            {application.canvas.map((component) => (
+            {activeCanvas.map((component) => (
               <PublishedComponent
                 key={component.id}
                 component={component}
                 document={document}
                 onChange={updateField}
                 onAction={executeAction}
+                onConfirmAction={setPendingConfirmation}
               />
             ))}
           </div>
@@ -263,6 +283,31 @@ function PublishedMetadataRuntime({ application }: { application: StudioApplicat
             </div>
           )}
         </section>
+        {pendingConfirmation ? (
+          <div className="redos-confirm-backdrop" role="presentation">
+            <section className="redos-confirm-modal" role="dialog" aria-modal="true" aria-labelledby="redos-runtime-confirm-title">
+              <div>
+                <span className="redos-kicker">Confirm Action</span>
+                <h3 id="redos-runtime-confirm-title">{pendingConfirmation.title}</h3>
+                <p>{pendingConfirmation.message}</p>
+              </div>
+              <div className="redos-confirm-actions">
+                <button type="button" onClick={() => setPendingConfirmation(undefined)}>{pendingConfirmation.cancelLabel}</button>
+                <button
+                  className="redos-primary-action"
+                  type="button"
+                  onClick={() => {
+                    const action = pendingConfirmation.action;
+                    setPendingConfirmation(undefined);
+                    executeAction(action);
+                  }}
+                >
+                  {pendingConfirmation.confirmLabel}
+                </button>
+              </div>
+            </section>
+          </div>
+        ) : null}
       </main>
     </div>
   );
@@ -273,11 +318,13 @@ function PublishedComponent({
   document,
   onChange,
   onAction,
+  onConfirmAction,
 }: {
   component: CanvasComponent;
   document: Record<string, string>;
   onChange: (component: CanvasComponent, value: string) => void;
   onAction: (actionLabelOrCode?: string) => void;
+  onConfirmAction: (confirmation: PendingRuntimeConfirmation) => void;
 }) {
   if (component.type === 'Form') {
     return (
@@ -285,7 +332,7 @@ function PublishedComponent({
         <header>{component.label}</header>
         <div className="redos-form-container-body">
           {component.children?.map((child) => (
-            <PublishedComponent key={child.id} component={child} document={document} onChange={onChange} onAction={onAction} />
+            <PublishedComponent key={child.id} component={child} document={document} onChange={onChange} onAction={onAction} onConfirmAction={onConfirmAction} />
           ))}
         </div>
       </section>
@@ -303,11 +350,14 @@ function PublishedComponent({
         type="button"
         onClick={() => {
           if (component.confirmation?.enabled) {
-            const accepted = window.confirm(`${component.confirmation.title}\n\n${component.confirmation.message}`);
-
-            if (!accepted) {
-              return;
-            }
+            onConfirmAction({
+              action,
+              cancelLabel: component.confirmation.cancelLabel,
+              confirmLabel: component.confirmation.confirmLabel,
+              message: component.confirmation.message,
+              title: component.confirmation.title,
+            });
+            return;
           }
 
           onAction(action);
@@ -404,6 +454,27 @@ function isInputComponent(type: string) {
     'Dropdown',
     'Tags',
   ].includes(type);
+}
+
+function connectorExecutionMessages(
+  steps: string[],
+  connectors: StudioApplicationMetadataPackage['connectors'],
+) {
+  return steps.flatMap((step) => {
+    const connectorCode = step.match(/^call\s+(.+)$/i)?.[1]?.trim();
+
+    if (!connectorCode) {
+      return [];
+    }
+
+    const connector = connectors.find((item) => item.code === connectorCode);
+
+    if (!connector) {
+      return [`Connector ${connectorCode} not found.`];
+    }
+
+    return [`Connector ${connector.label} prepared (${connector.method} ${connector.url}).`];
+  });
 }
 
 function runtimeRecordsKey(appSlug: string, objectName: string) {

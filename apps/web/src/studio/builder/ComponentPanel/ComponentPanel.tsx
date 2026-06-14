@@ -17,13 +17,15 @@ const androidComponents: BuilderComponentDefinition[] = [
 ];
 
 export function ComponentPanel({
+  applicationCode,
   target,
   onAdd,
 }: {
+  applicationCode: string;
   target: StudioTarget;
   onAdd: (component: BuilderComponentDefinition) => void;
 }) {
-  const customOrganisms = useMemo(() => customOrganismsAsComponents(), []);
+  const customOrganisms = useMemo(() => customOrganismsAsComponents(applicationCode), [applicationCode]);
   const [activeCatalog, setActiveCatalog] = useState<'Fields' | 'Static' | 'Structure'>('Fields');
   const [searchQuery, setSearchQuery] = useState('');
   const normalizedSearch = searchQuery.trim().toLowerCase();

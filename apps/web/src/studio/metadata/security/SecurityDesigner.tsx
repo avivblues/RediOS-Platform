@@ -1,19 +1,42 @@
 import { useState } from 'react';
 import { HelpTip } from '../../guide/AdminGuide';
-import { loadSecurity, saveSecurity, toMetadataCode, type StudioSecurityDraft } from '../metadata-store';
+import {
+  loadSecurity,
+  loadStudioApplications,
+  resolveActiveApplicationCode,
+  saveSecurity,
+  setActiveApplicationCode,
+  toMetadataCode,
+  type StudioSecurityDraft,
+} from '../metadata-store';
 import { MetadataConfirmDeleteModal } from '../shared/MetadataConfirmDeleteModal';
 
 export function SecurityDesigner() {
-  const [security, setSecurity] = useState<StudioSecurityDraft>(() => loadSecurity());
+  const applications = loadStudioApplications();
+  const activeApplicationCode = resolveActiveApplicationCode();
+  const initialApplication = applications.find((application) => application.code === activeApplicationCode) ?? applications[0];
+  const [selectedApplicationCode, setSelectedApplicationCode] = useState(initialApplication?.code ?? 'INVENTORY');
+  const [security, setSecurity] = useState<StudioSecurityDraft>(() => loadSecurity(initialApplication?.code));
   const [label, setLabel] = useState('Power User');
   const [permissions, setPermissions] = useState('product.view, product.create, layout.customize');
   const [actionAccess, setActionAccess] = useState('SAVE_PRODUCT');
   const [powerUser, setPowerUser] = useState(true);
   const [pendingDelete, setPendingDelete] = useState<StudioSecurityDraft['roles'][number]>();
+  const selectedApplication = applications.find((application) => application.code === selectedApplicationCode);
 
   function persist(nextSecurity: StudioSecurityDraft) {
     setSecurity(nextSecurity);
-    saveSecurity(nextSecurity);
+    saveSecurity(nextSecurity, selectedApplicationCode);
+  }
+
+  function selectApplication(appCode: string) {
+    const nextApplication = applications.find((application) => application.code === appCode);
+
+    setSelectedApplicationCode(appCode);
+    setSecurity(loadSecurity(appCode));
+    if (nextApplication) {
+      setActiveApplicationCode(nextApplication.target, nextApplication.code);
+    }
   }
 
   function addRole() {
@@ -43,6 +66,23 @@ export function SecurityDesigner() {
         <h3>Security Designer <HelpTip label="Security Designer" text="Atur Role, Permission, Field Access, Action Access, dan Power User boundary." /></h3>
         <p>Security metadata menjaga power user tetap bisa konfigurasi tanpa merusak core system metadata atau API contract.</p>
       </div>
+
+      <section className="redos-data-application-context">
+        <label>
+          <span>Application</span>
+          <select value={selectedApplicationCode} onChange={(event) => selectApplication(event.target.value)}>
+            {applications.map((application) => (
+              <option key={application.code} value={application.code}>{application.name}</option>
+            ))}
+          </select>
+          <small>Role dan permission akan tersimpan untuk aplikasi ini.</small>
+        </label>
+        <div>
+          <span className="redos-kicker">Active Security Scope</span>
+          <strong>{selectedApplication?.name ?? selectedApplicationCode}</strong>
+          <small>{security.roles.length} roles configured</small>
+        </div>
+      </section>
 
       <div className="redos-designer-form">
         <label>

@@ -19,6 +19,7 @@ const MIN_COMPONENT_HEIGHT = 48;
 const componentCatalog = [...atomComponents, ...moleculeComponents, ...organismComponents];
 
 export function Canvas({
+  applicationCode,
   components,
   device,
   isPreviewing,
@@ -32,6 +33,7 @@ export function Canvas({
   onSelect,
   onUpdateComponentLayout,
 }: {
+  applicationCode: string;
   components: CanvasComponent[];
   device: StudioDevice;
   isPreviewing: boolean;
@@ -263,6 +265,7 @@ export function Canvas({
               </button>
             ) : null}
             <CanvasPreview
+              applicationCode={applicationCode}
               component={component}
               isPreviewing={isPreviewing}
               onDeleteComponent={onDeleteComponent}
@@ -336,6 +339,7 @@ function componentDefinitionFromDrop(event: DragEvent) {
 }
 
 function CanvasPreview({
+  applicationCode,
   component,
   isPreviewing,
   onDeleteComponent,
@@ -345,6 +349,7 @@ function CanvasPreview({
   onUpdateComponentLayout,
   selectedId,
 }: {
+  applicationCode: string;
   component: CanvasComponent;
   isPreviewing: boolean;
   onDeleteComponent: (id: string) => void;
@@ -354,7 +359,7 @@ function CanvasPreview({
   onUpdateComponentLayout: (id: string, next: Partial<Pick<CanvasComponent, 'height' | 'width' | 'x'>>) => void;
   selectedId?: string;
 }) {
-  const customOrganism = findCustomOrganism(component.type);
+  const customOrganism = findCustomOrganism(component.type, applicationCode);
 
   if (customOrganism) {
     return <CustomOrganismCanvasPreview isPreviewing={isPreviewing} organism={customOrganism} />;

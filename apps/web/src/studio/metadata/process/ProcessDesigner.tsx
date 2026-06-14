@@ -1,20 +1,43 @@
 import { useState } from 'react';
 import { HelpTip } from '../../guide/AdminGuide';
-import { loadProcesses, saveProcesses, toMetadataCode, type StudioProcessDraft } from '../metadata-store';
+import {
+  loadProcesses,
+  loadStudioApplications,
+  resolveActiveApplicationCode,
+  saveProcesses,
+  setActiveApplicationCode,
+  toMetadataCode,
+  type StudioProcessDraft,
+} from '../metadata-store';
 import { MetadataConfirmDeleteModal } from '../shared/MetadataConfirmDeleteModal';
 
 export function ProcessDesigner() {
-  const [processes, setProcesses] = useState(() => loadProcesses());
+  const applications = loadStudioApplications();
+  const activeApplicationCode = resolveActiveApplicationCode();
+  const initialApplication = applications.find((application) => application.code === activeApplicationCode) ?? applications[0];
+  const [selectedApplicationCode, setSelectedApplicationCode] = useState(initialApplication?.code ?? 'INVENTORY');
+  const [processes, setProcesses] = useState(() => loadProcesses(initialApplication?.code));
   const [label, setLabel] = useState('Purchase Request');
   const [description, setDescription] = useState('Submit, approve, and complete a business request.');
   const [stepLabel, setStepLabel] = useState('Supervisor Approval');
   const [approver, setApprover] = useState('Supervisor');
   const [condition, setCondition] = useState('amount > 1000');
   const [pendingDelete, setPendingDelete] = useState<{ kind: 'process'; code: string; label: string } | { kind: 'step'; processCode: string; stepId: string; label: string }>();
+  const selectedApplication = applications.find((application) => application.code === selectedApplicationCode);
 
   function persist(nextProcesses: StudioProcessDraft[]) {
     setProcesses(nextProcesses);
-    saveProcesses(nextProcesses);
+    saveProcesses(nextProcesses, selectedApplicationCode);
+  }
+
+  function selectApplication(appCode: string) {
+    const nextApplication = applications.find((application) => application.code === appCode);
+
+    setSelectedApplicationCode(appCode);
+    setProcesses(loadProcesses(appCode));
+    if (nextApplication) {
+      setActiveApplicationCode(nextApplication.target, nextApplication.code);
+    }
   }
 
   function createProcess() {
@@ -85,6 +108,23 @@ export function ProcessDesigner() {
         <h3>Process Designer <HelpTip label="Process Designer" text="Business routing dan approval. Ini bukan URL routing." /></h3>
         <p>Definisikan approval, kondisi, hirarki organisasi, dan delegasi sebagai metadata proses.</p>
       </div>
+
+      <section className="redos-data-application-context">
+        <label>
+          <span>Application</span>
+          <select value={selectedApplicationCode} onChange={(event) => selectApplication(event.target.value)}>
+            {applications.map((application) => (
+              <option key={application.code} value={application.code}>{application.name}</option>
+            ))}
+          </select>
+          <small>Process metadata akan dipakai hanya oleh aplikasi ini.</small>
+        </label>
+        <div>
+          <span className="redos-kicker">Active Process Scope</span>
+          <strong>{selectedApplication?.name ?? selectedApplicationCode}</strong>
+          <small>{processes.length} processes configured</small>
+        </div>
+      </section>
 
       <div className="redos-designer-form">
         <label>

@@ -192,6 +192,7 @@ const themePropertySections: Array<{ title: string; rows: ThemeProperty[] }> = [
 ];
 
 export function PropertyPanel({
+  applicationCode,
   components,
   dataObjects,
   selected,
@@ -200,6 +201,7 @@ export function PropertyPanel({
   onDelete,
   onThemeChange,
 }: {
+  applicationCode: string;
   components: CanvasComponent[];
   dataObjects: BuilderDataObject[];
   selected?: CanvasComponent;
@@ -208,7 +210,7 @@ export function PropertyPanel({
   onDelete: () => void;
   onThemeChange: (theme: BuilderTheme) => void;
 }) {
-  const actionOptions = useMemo(() => ['None', ...loadActions().map((action) => action.label)], []);
+  const actionOptions = useMemo(() => ['None', ...loadActions(applicationCode).map((action) => action.label)], [applicationCode]);
   const [activeTab, setActiveTab] = useState<RightPanelTab>('Settings');
 
   if (!selected) {

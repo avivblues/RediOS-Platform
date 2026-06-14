@@ -1,6 +1,16 @@
 import { useState } from 'react';
 import { HelpTip } from '../../guide/AdminGuide';
-import { loadActions, loadCustomApis, saveActions, toMetadataCode, type StudioActionDraft, type StudioActionTrigger } from '../metadata-store';
+import {
+  loadActions,
+  loadCustomApis,
+  loadStudioApplications,
+  resolveActiveApplicationCode,
+  saveActions,
+  setActiveApplicationCode,
+  toMetadataCode,
+  type StudioActionDraft,
+  type StudioActionTrigger,
+} from '../metadata-store';
 import { MetadataConfirmDeleteModal } from '../shared/MetadataConfirmDeleteModal';
 
 const triggers: Array<{ label: string; value: StudioActionTrigger }> = [
@@ -14,16 +24,31 @@ const triggers: Array<{ label: string; value: StudioActionTrigger }> = [
 ];
 
 export function ActionDesigner() {
-  const [actions, setActions] = useState(() => loadActions());
+  const applications = loadStudioApplications();
+  const activeApplicationCode = resolveActiveApplicationCode();
+  const initialApplication = applications.find((application) => application.code === activeApplicationCode) ?? applications[0];
+  const [selectedApplicationCode, setSelectedApplicationCode] = useState(initialApplication?.code ?? 'INVENTORY');
+  const [actions, setActions] = useState(() => loadActions(initialApplication?.code));
   const [label, setLabel] = useState('Save Product');
   const [trigger, setTrigger] = useState<StudioActionTrigger>('onClick');
   const [step, setStep] = useState('save');
   const [pendingDelete, setPendingDelete] = useState<{ kind: 'action'; code: string; label: string } | { kind: 'step'; code: string; step: string; index: number }>();
-  const customApis = loadCustomApis();
+  const selectedApplication = applications.find((application) => application.code === selectedApplicationCode);
+  const customApis = loadCustomApis(selectedApplicationCode);
 
   function persist(nextActions: StudioActionDraft[]) {
     setActions(nextActions);
-    saveActions(nextActions);
+    saveActions(nextActions, selectedApplicationCode);
+  }
+
+  function selectApplication(appCode: string) {
+    const nextApplication = applications.find((application) => application.code === appCode);
+
+    setSelectedApplicationCode(appCode);
+    setActions(loadActions(appCode));
+    if (nextApplication) {
+      setActiveApplicationCode(nextApplication.target, nextApplication.code);
+    }
   }
 
   function addAction() {
@@ -81,6 +106,23 @@ export function ActionDesigner() {
         <h3>Action Designer <HelpTip label="Action Designer" text="Buat alur bisnis untuk tombol dan event. Button memilih Action, bukan endpoint." /></h3>
         <p>Action adalah langkah kerja bisnis yang dapat berisi validasi, simpan data, notifikasi, atau connector.</p>
       </div>
+
+      <section className="redos-data-application-context">
+        <label>
+          <span>Application</span>
+          <select value={selectedApplicationCode} onChange={(event) => selectApplication(event.target.value)}>
+            {applications.map((application) => (
+              <option key={application.code} value={application.code}>{application.name}</option>
+            ))}
+          </select>
+          <small>Action yang dibuat akan tersedia untuk button/event aplikasi ini.</small>
+        </label>
+        <div>
+          <span className="redos-kicker">Active Action Scope</span>
+          <strong>{selectedApplication?.name ?? selectedApplicationCode}</strong>
+          <small>{actions.length} actions · {customApis.length} connectors available</small>
+        </div>
+      </section>
 
       <div className="redos-inline-form">
         <input data-redos-tooltip="Contoh Action: Save Product, Approve Asset, Submit Ticket." value={label} onChange={(event) => setLabel(event.target.value)} placeholder="Action label" />

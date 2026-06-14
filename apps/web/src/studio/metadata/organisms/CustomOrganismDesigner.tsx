@@ -5,7 +5,10 @@ import { organismComponents } from '../../atomic/organisms/catalog';
 import { HelpTip } from '../../guide/AdminGuide';
 import {
   loadCustomOrganisms,
+  loadStudioApplications,
+  resolveActiveApplicationCode,
   saveCustomOrganisms,
+  setActiveApplicationCode,
   toComponentType,
   type StudioCustomOrganismDraft,
 } from '../metadata-store';
@@ -14,16 +17,31 @@ import { MetadataConfirmDeleteModal } from '../shared/MetadataConfirmDeleteModal
 const availableBlocks = [...atomComponents, ...moleculeComponents, ...organismComponents];
 
 export function CustomOrganismDesigner() {
-  const [organisms, setOrganisms] = useState(() => loadCustomOrganisms());
+  const applications = loadStudioApplications();
+  const activeApplicationCode = resolveActiveApplicationCode();
+  const initialApplication = applications.find((application) => application.code === activeApplicationCode) ?? applications[0];
+  const [selectedApplicationCode, setSelectedApplicationCode] = useState(initialApplication?.code ?? 'INVENTORY');
+  const [organisms, setOrganisms] = useState(() => loadCustomOrganisms(initialApplication?.code));
   const [label, setLabel] = useState('Approval Card');
   const [description, setDescription] = useState('Reusable approval experience with summary, status, and action.');
   const [selectedComponents, setSelectedComponents] = useState<string[]>(['TextInput', 'Dropdown', 'Button']);
   const [pendingDelete, setPendingDelete] = useState<StudioCustomOrganismDraft>();
   const preview = useMemo(() => selectedComponents.join(' + '), [selectedComponents]);
+  const selectedApplication = applications.find((application) => application.code === selectedApplicationCode);
 
   function persist(nextOrganisms: StudioCustomOrganismDraft[]) {
     setOrganisms(nextOrganisms);
-    saveCustomOrganisms(nextOrganisms);
+    saveCustomOrganisms(nextOrganisms, selectedApplicationCode);
+  }
+
+  function selectApplication(appCode: string) {
+    const nextApplication = applications.find((application) => application.code === appCode);
+
+    setSelectedApplicationCode(appCode);
+    setOrganisms(loadCustomOrganisms(appCode));
+    if (nextApplication) {
+      setActiveApplicationCode(nextApplication.target, nextApplication.code);
+    }
   }
 
   function toggleComponent(type: string) {
@@ -51,6 +69,23 @@ export function CustomOrganismDesigner() {
         <h3>Custom Organisms <HelpTip label="Custom Organism" text="Reusable block buatan admin, misalnya Approval Card atau Inventory Header, lalu muncul di toolbox builder." /></h3>
         <p>Buat komposisi component yang bisa dipakai ulang oleh admin lain.</p>
       </div>
+
+      <section className="redos-data-application-context">
+        <label>
+          <span>Application</span>
+          <select value={selectedApplicationCode} onChange={(event) => selectApplication(event.target.value)}>
+            {applications.map((application) => (
+              <option key={application.code} value={application.code}>{application.name}</option>
+            ))}
+          </select>
+          <small>Reusable organism akan muncul di toolbox aplikasi ini.</small>
+        </label>
+        <div>
+          <span className="redos-kicker">Active Organism Scope</span>
+          <strong>{selectedApplication?.name ?? selectedApplicationCode}</strong>
+          <small>{organisms.length} custom organisms configured</small>
+        </div>
+      </section>
 
       <div className="redos-designer-grid">
         <div className="redos-designer-form">
