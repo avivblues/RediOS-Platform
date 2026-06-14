@@ -302,7 +302,14 @@ a:focus-visible {
 
 .redos-runtime-canvas {
   display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
   gap: var(--redios-spacing-md);
+}
+
+.redos-published-component {
+  display: grid;
+  min-width: 0;
+  align-content: start;
 }
 
 .redos-runtime-field {

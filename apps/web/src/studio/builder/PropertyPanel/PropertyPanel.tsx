@@ -195,6 +195,7 @@ export function PropertyPanel({
   applicationCode,
   components,
   dataObjects,
+  metadataVersion,
   selected,
   theme,
   onChange,
@@ -204,13 +205,14 @@ export function PropertyPanel({
   applicationCode: string;
   components: CanvasComponent[];
   dataObjects: BuilderDataObject[];
+  metadataVersion: number;
   selected?: CanvasComponent;
   theme: BuilderTheme;
   onChange: (next: Partial<CanvasComponent>) => void;
   onDelete: () => void;
   onThemeChange: (theme: BuilderTheme) => void;
 }) {
-  const actionOptions = useMemo(() => ['None', ...loadActions(applicationCode).map((action) => action.label)], [applicationCode]);
+  const actionOptions = useMemo(() => ['None', ...loadActions(applicationCode).map((action) => action.label)], [applicationCode, metadataVersion]);
   const [activeTab, setActiveTab] = useState<RightPanelTab>('Settings');
 
   if (!selected) {
@@ -240,6 +242,7 @@ export function PropertyPanel({
   const fieldOptions = dataObjects.find((object) => object.name === selectedObject)?.fields ?? [];
   const selectedField = selected.binding?.field ?? fieldOptions[0] ?? '';
   const showPlaceholder = supportsPlaceholder(selected.type);
+  const showDataBinding = supportsDataBinding(selected.type);
   const eventKeys = eventKeysForComponent(selected.type);
 
   return (
@@ -293,31 +296,35 @@ export function PropertyPanel({
               </label>
             </section>
 
-            <section>
-              <h4>Data Binding <HelpTip label="Data Binding" text="Hubungkan component ke Data agar nilai bisa disimpan atau ditampilkan oleh runtime." /></h4>
-              <label>
-                Object
-                <select
-                  value={selectedObject}
-                  onChange={(event) => {
-                    const nextObject = dataObjects.find((object) => object.name === event.target.value);
-                    onChange({ binding: { object: event.target.value, field: nextObject?.fields[0] ?? '' } });
-                  }}
-                >
-                  {dataObjects.map((object) => <option key={object.name}>{object.name}</option>)}
-                </select>
-              </label>
-              <label>
-                Field
-                <select
-                  value={selectedField}
-                  onChange={(event) => onChange({ binding: { object: selectedObject, field: event.target.value } })}
-                >
-                  {fieldOptions.map((field) => <option key={field}>{field}</option>)}
-                </select>
-              </label>
-              <p className="redos-muted">This generates DATA binding metadata behind the scenes.</p>
-            </section>
+            {showDataBinding ? (
+              <section>
+                <h4>Data Binding <HelpTip label="Data Binding" text="Hubungkan component ke Data agar nilai bisa disimpan atau ditampilkan oleh runtime." /></h4>
+                <label>
+                  Object
+                  <select
+                    value={selectedObject}
+                    onChange={(event) => {
+                      const nextObject = dataObjects.find((object) => object.name === event.target.value);
+                      onChange({ binding: { object: event.target.value, field: nextObject?.fields[0] ?? '' } });
+                    }}
+                  >
+                    {dataObjects.map((object) => <option key={object.name}>{object.name}</option>)}
+                  </select>
+                </label>
+                <label>
+                  Field
+                  <select
+                    value={selectedField}
+                    onChange={(event) => onChange({ binding: { object: selectedObject, field: event.target.value } })}
+                  >
+                    {selectedField && !fieldOptions.includes(selectedField) ? <option value={selectedField}>{selectedField}</option> : null}
+                    {fieldOptions.length === 0 ? <option value="">Auto from component label on Save</option> : null}
+                    {fieldOptions.map((field) => <option key={field}>{field}</option>)}
+                  </select>
+                </label>
+                <p className="redos-muted">This generates DATA binding metadata behind the scenes. Jika Field kosong, Save akan membuat attribute dari label component.</p>
+              </section>
+            ) : null}
 
             <section>
               <h4>Events <HelpTip label="Events" text="Event menentukan kapan Action berjalan, misalnya saat button diklik, value berubah, form submit, atau screen load." /></h4>
@@ -622,6 +629,36 @@ function supportsPlaceholder(type: string) {
 
 function supportsConfirmation(type: string) {
   return ['Button', 'Submit'].includes(type);
+}
+
+function supportsDataBinding(type: string) {
+  return [
+    'TextInput',
+    'NumberInput',
+    'Search',
+    'EmailInput',
+    'PhoneInput',
+    'PasswordInput',
+    'UrlInput',
+    'LocationInput',
+    'TextArea',
+    'TextEditor',
+    'Dropdown',
+    'Lookup',
+    'Checkbox',
+    'SingleChoice',
+    'MultipleChoice',
+    'DecisionBox',
+    'Tags',
+    'ToggleSwitch',
+    'DateInput',
+    'TimeInput',
+    'DateTimeInput',
+    'UploadField',
+    'ImageUpload',
+    'MultiFileUpload',
+    'MultiImageUpload',
+  ].includes(type);
 }
 
 function defaultConfirmation(component: CanvasComponent): NonNullable<CanvasComponent['confirmation']> {

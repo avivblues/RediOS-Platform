@@ -16,9 +16,14 @@ import {
   loadStudioApplications,
   publishApplicationPackage,
   resolveActiveApplicationCode,
+  saveActions,
+  saveDataObjects,
   saveScreens,
   setActiveApplicationCode,
   toApplicationSlug,
+  toMetadataCode,
+  type StudioActionDraft,
+  type StudioDataAttribute,
   type StudioDataObject,
   type StudioScreenDraft,
 } from '../metadata/metadata-store';
@@ -164,16 +169,17 @@ export function BuilderShell({ target }: { target: StudioTarget }) {
   const [applicationCode, setApplicationCode] = useState(initialApplicationCode);
   const [screens, setScreens] = useState(initialScreens);
   const [screenCode, setScreenCode] = useState(initialScreen?.code ?? defaultScreenCode(initialDataObjectDrafts[0]?.name));
-  const [screenSearch, setScreenSearch] = useState(initialScreen?.label ?? '');
+  const [screenSearch, setScreenSearch] = useState(initialScreen ? screenOptionLabel(initialScreen) : '');
   const [screenObjectName, setScreenObjectName] = useState(initialScreen?.objectName ?? initialDataObjectDrafts[0]?.name ?? '');
+  const [metadataVersion, setMetadataVersion] = useState(0);
   const selectedScreen = screens.find((screen) => screen.code === screenCode);
-  const dataObjectDrafts = useMemo(() => loadDataObjects(applicationCode), [applicationCode]);
+  const dataObjectDrafts = useMemo(() => loadDataObjects(applicationCode), [applicationCode, metadataVersion]);
   const dataObjects = useMemo<BuilderDataObject[]>(() => dataObjectDrafts.map((object) => ({
     name: object.name,
     fields: object.attributes.map((attribute) => attribute.name),
   })), [dataObjectDrafts]);
   const savedDraft = loadBuilderDraft(target, applicationCode, screenCode);
-  const starterComponents = dataObjects.length === 0 ? [] : componentsForObject(screenObjectName || dataObjectDrafts[0]?.name, dataObjectDrafts);
+  const starterComponents = dataObjects.length === 0 ? [] : componentsForObject(screenObjectName || dataObjectDrafts[0]?.name, dataObjectDrafts, initialScreen?.mode);
   const [device, setDevice] = useState<StudioDevice>(savedDraft?.device ?? (target === 'android' ? 'Mobile' : 'Desktop'));
   const [tab, setTab] = useState<'Components' | 'Data'>('Components');
   const [components, setComponents] = useState(savedDraft?.components ?? starterComponents);
@@ -196,9 +202,9 @@ export function BuilderShell({ target }: { target: StudioTarget }) {
     };
   }, [components]);
 
-  function persistCurrentDraft() {
+  function persistCurrentDraft(nextComponents = components) {
     const savedAt = new Date().toISOString();
-    window.localStorage.setItem(builderDraftKey(target, applicationCode, screenCode), JSON.stringify({ components, device, selectedId, savedAt, theme }));
+    window.localStorage.setItem(builderDraftKey(target, applicationCode, screenCode), JSON.stringify({ components: nextComponents, device, selectedId, savedAt, theme }));
 
     return savedAt;
   }
@@ -207,10 +213,10 @@ export function BuilderShell({ target }: { target: StudioTarget }) {
     const nextScreen = nextScreens.find((screen) => screen.code === nextScreenCode) ?? nextScreens[0];
     const nextObjectName = nextScreen?.objectName ?? nextDataObjects[0]?.name ?? '';
     const nextDraft = loadBuilderDraft(target, nextApplicationCode, nextScreen?.code ?? defaultScreenCode(nextObjectName));
-    const nextComponents = nextDraft?.components ?? componentsForObject(nextObjectName, nextDataObjects);
+    const nextComponents = nextDraft?.components ?? componentsForObject(nextObjectName, nextDataObjects, nextScreen?.mode);
 
     setScreenCode(nextScreen?.code ?? defaultScreenCode(nextObjectName));
-    setScreenSearch(nextScreen?.label ?? '');
+    setScreenSearch(nextScreen ? screenOptionLabel(nextScreen) : '');
     setScreenObjectName(nextObjectName);
     setComponents(nextComponents);
     setSelectedId(nextDraft?.selectedId ?? nextComponents[0]?.id ?? '');
@@ -234,7 +240,7 @@ export function BuilderShell({ target }: { target: StudioTarget }) {
     if (nextApplication) {
       setActiveApplicationCode(nextApplication.target, nextApplication.code);
     }
-    setScreenSearch(nextScreens[0]?.label ?? '');
+    setScreenSearch(nextScreens[0] ? screenOptionLabel(nextScreens[0]) : '');
     openBuilderContext(nextApplicationCode, nextScreens[0]?.code ?? defaultScreenCode(nextDataObjects[0]?.name), nextScreens, nextDataObjects);
   }
 
@@ -246,7 +252,7 @@ export function BuilderShell({ target }: { target: StudioTarget }) {
   function searchScreen(value: string) {
     setScreenSearch(value);
 
-    const matchedScreen = screens.find((screen) => screen.label === value || screen.code === value);
+    const matchedScreen = screens.find((screen) => screenOptionLabel(screen) === value || screen.label === value || screen.code === value);
 
     if (matchedScreen && matchedScreen.code !== screenCode) {
       changeScreen(matchedScreen.code);
@@ -267,26 +273,55 @@ export function BuilderShell({ target }: { target: StudioTarget }) {
   }
 
   function changeScreenMode(nextMode: StudioScreenDraft['mode']) {
+    const existingScreen = screens.find((screen) =>
+      screen.code !== screenCode
+      && screen.objectName === screenObjectName
+      && screen.mode === nextMode
+      && screen.target === target);
+
+    if (existingScreen) {
+      persistCurrentDraft();
+      openBuilderContext(applicationCode, existingScreen.code, screens);
+      setStatusMessage(`${screenOptionLabel(existingScreen)} sudah ada. Builder membuka screen existing.`);
+      return;
+    }
+
     const nextScreens = screens.map((screen) => screen.code === screenCode ? {
       ...screen,
+      label: screenLabelForMode(screen.objectName ?? screenObjectName, nextMode),
       mode: nextMode,
       updatedAt: new Date().toISOString(),
     } : screen);
+    const nextComponents = componentsForObject(screenObjectName, dataObjectDrafts, nextMode);
 
     setScreens(nextScreens);
+    setComponents(nextComponents);
+    setSelectedId(nextComponents[0]?.id ?? '');
     saveScreens(nextScreens, applicationCode);
-    setStatusMessage(`${selectedScreen?.label ?? screenCode} mode set to ${nextMode}`);
+    setScreenSearch(screenOptionLabel(nextScreens.find((screen) => screen.code === screenCode) ?? selectedScreen));
+    setStatusMessage(`${selectedScreen?.label ?? screenCode} mode set to ${screenModeLabel(nextMode)} dan default screen dibuat dari Data Designer`);
   }
 
   function createScreenForCurrentObject() {
     const objectName = screenObjectName || dataObjectDrafts[0]?.name;
-    const codeBase = defaultScreenCode(objectName);
+    const preferredMode = selectedScreen?.mode ?? 'create';
+    const mode = nextCreatableScreenMode(screens, objectName, target, preferredMode);
+    const existingScreen = screens.find((screen) => screen.objectName === objectName && screen.mode === mode && screen.target === target);
+
+    if (existingScreen) {
+      persistCurrentDraft();
+      openBuilderContext(applicationCode, existingScreen.code, screens);
+      setStatusMessage(`Semua mode screen untuk ${objectName ?? 'object ini'} sudah ada. Builder membuka ${screenOptionLabel(existingScreen)}.`);
+      return;
+    }
+
+    const codeBase = modeScreenCode(objectName, mode);
     const code = uniqueScreenCode(codeBase, screens);
     const nextScreen: StudioScreenDraft = {
       code,
-      label: objectName ? `${objectName} Form` : 'Unbound Screen',
+      label: screenLabelForMode(objectName, mode),
       objectName,
-      mode: 'create',
+      mode,
       target,
       updatedAt: new Date().toISOString(),
     };
@@ -504,10 +539,18 @@ export function BuilderShell({ target }: { target: StudioTarget }) {
   }
 
   function saveDraft() {
-    const savedAt = persistCurrentDraft();
+    const syncedMetadata = syncBuilderMetadataToDesigners({
+      applicationCode,
+      components,
+      screenObjectName,
+    });
+    const savedAt = persistCurrentDraft(syncedMetadata.components);
+
+    setComponents(syncedMetadata.components);
+    setMetadataVersion((current) => current + 1);
     saveScreens(screens, applicationCode);
     setSaveConfirmationOpen(false);
-    setStatusMessage(`Experience draft saved at ${formatSavedAt(savedAt)}`);
+    setStatusMessage(`Experience draft saved at ${formatSavedAt(savedAt)} · DATA/ACTION metadata synced`);
   }
 
   function loadTemplate(templateId: string) {
@@ -532,28 +575,35 @@ export function BuilderShell({ target }: { target: StudioTarget }) {
     const savedAt = new Date().toISOString();
     const appSlug = resolvePublishedApplicationSlug(target, applicationCode);
     const productionPath = `/apps/${appSlug}`;
+    const syncedMetadata = syncBuilderMetadataToDesigners({
+      applicationCode,
+      components,
+      screenObjectName,
+    });
 
-    window.localStorage.setItem(builderDraftKey(target, applicationCode, screenCode), JSON.stringify({ components, device, selectedId, savedAt, theme }));
+    setComponents(syncedMetadata.components);
+    setMetadataVersion((current) => current + 1);
+    window.localStorage.setItem(builderDraftKey(target, applicationCode, screenCode), JSON.stringify({ components: syncedMetadata.components, device, selectedId, savedAt, theme }));
     saveScreens(screens, applicationCode);
     publishApplicationPackage({
       appCode: applicationCode,
       appSlug,
       appName: applicationNameFromCode(applicationCode),
       target,
-      dataObjects: loadDataObjects(applicationCode),
-      actions: loadActions(applicationCode),
+      dataObjects: syncedMetadata.dataObjects,
+      actions: syncedMetadata.actions,
       connectors: loadCustomApis(applicationCode),
       processes: loadProcesses(applicationCode),
       menu: loadMenu(applicationCode),
       screens,
       security: loadSecurity(applicationCode),
       customOrganisms: loadCustomOrganisms(applicationCode),
-      canvas: components,
+      canvas: syncedMetadata.components,
       screenCanvases: collectPublishedScreenCanvases({
-        activeComponents: components,
+        activeComponents: syncedMetadata.components,
         activeScreenCode: screenCode,
         applicationCode,
-        dataObjects: loadDataObjects(applicationCode),
+        dataObjects: syncedMetadata.dataObjects,
         screens,
         target,
       }),
@@ -620,7 +670,7 @@ export function BuilderShell({ target }: { target: StudioTarget }) {
               />
               <datalist id="redos-builder-screen-options">
                 {screens.map((screen) => (
-                  <option key={screen.code} value={screen.label} />
+                  <option key={screen.code} value={screenOptionLabel(screen)} />
                 ))}
               </datalist>
             </label>
@@ -630,6 +680,7 @@ export function BuilderShell({ target }: { target: StudioTarget }) {
                 <option value="create">Input Form</option>
                 <option value="edit">Edit Form</option>
                 <option value="detail">Detail View</option>
+                <option value="table">Table View</option>
                 <option value="list">List View</option>
               </select>
             </label>
@@ -708,6 +759,7 @@ export function BuilderShell({ target }: { target: StudioTarget }) {
             applicationCode={applicationCode}
             components={components}
             dataObjects={dataObjects}
+            metadataVersion={metadataVersion}
             selected={selected}
             theme={theme}
             onChange={updateSelected}
@@ -1133,6 +1185,266 @@ function loadBuilderDraft(target: StudioTarget, applicationCode: string, screenC
   }
 }
 
+function syncBuilderMetadataToDesigners({
+  applicationCode,
+  components,
+  screenObjectName,
+}: {
+  applicationCode: string;
+  components: CanvasComponent[];
+  screenObjectName: string;
+}) {
+  const currentDataObjects = loadDataObjects(applicationCode);
+  const currentActions = loadActions(applicationCode);
+  const dataSync = syncDataMetadataFromComponents(components, currentDataObjects, screenObjectName);
+  const actions = syncActionMetadataFromComponents(dataSync.components, currentActions);
+
+  saveDataObjects(dataSync.dataObjects, applicationCode);
+  saveActions(actions, applicationCode);
+
+  return {
+    actions,
+    components: dataSync.components,
+    dataObjects: dataSync.dataObjects,
+  };
+}
+
+function syncDataMetadataFromComponents(
+  components: CanvasComponent[],
+  dataObjects: StudioDataObject[],
+  screenObjectName: string,
+): { components: CanvasComponent[]; dataObjects: StudioDataObject[] } {
+  let nextDataObjects = [...dataObjects];
+  const fallbackObjectName = objectNameFromFormComponents(components) || screenObjectName.trim();
+
+  const nextComponents = mapComponents(components, (component) => {
+    if (!supportsDataMetadataSync(component.type)) {
+      return component;
+    }
+
+    const objectName = component.binding?.object?.trim() || fallbackObjectName;
+
+    if (!objectName) {
+      return component;
+    }
+
+    const fieldName = component.binding?.field?.trim() || dataFieldNameFromComponent(component);
+
+    if (!fieldName) {
+      return component;
+    }
+
+    const attribute: StudioDataAttribute = {
+      name: fieldName,
+      type: attributeTypeFromComponent(component.type),
+    };
+
+    nextDataObjects = upsertDataAttribute(nextDataObjects, objectName, attribute);
+
+    if (component.binding?.object === objectName && component.binding?.field === fieldName) {
+      return component;
+    }
+
+    return {
+      ...component,
+      binding: {
+        object: objectName,
+        field: fieldName,
+      },
+    };
+  });
+
+  return {
+    components: nextComponents,
+    dataObjects: nextDataObjects,
+  };
+}
+
+function objectNameFromFormComponents(components: CanvasComponent[]) {
+  const form = flattenComponents(components).find((component) => component.type === 'Form');
+  const label = form?.label.trim();
+
+  if (!label) {
+    return '';
+  }
+
+  return label.replace(/\s+form$/i, '').trim();
+}
+
+function syncActionMetadataFromComponents(components: CanvasComponent[], actions: StudioActionDraft[]) {
+  const nextActions = [...actions];
+
+  for (const component of flattenComponents(components)) {
+    for (const [eventKey, actionLabel] of Object.entries(component.events ?? {})) {
+      if (actionLabel) {
+        upsertActionDraft(nextActions, actionLabel, eventKey as StudioActionDraft['trigger']);
+      }
+    }
+
+    if (component.confirmation?.enabled && component.confirmation.onConfirmAction) {
+      upsertActionDraft(nextActions, component.confirmation.onConfirmAction, component.type === 'Submit' ? 'onSubmit' : 'onClick');
+    }
+  }
+
+  return nextActions;
+}
+
+function upsertDataAttribute(dataObjects: StudioDataObject[], objectName: string, attribute: StudioDataAttribute) {
+  const objectIndex = dataObjects.findIndex((object) => object.name === objectName);
+
+  if (objectIndex < 0) {
+    return [{ name: objectName, attributes: [attribute] }, ...dataObjects];
+  }
+
+  return dataObjects.map((object, index) => {
+    if (index !== objectIndex) {
+      return object;
+    }
+
+    if (object.attributes.some((current) => current.name === attribute.name)) {
+      return object;
+    }
+
+    return {
+      ...object,
+      attributes: [...object.attributes, attribute],
+    };
+  });
+}
+
+function upsertActionDraft(actions: StudioActionDraft[], actionLabelOrCode: string, trigger: StudioActionDraft['trigger']) {
+  const cleanLabel = actionLabelOrCode.trim();
+
+  if (!cleanLabel || cleanLabel === 'None') {
+    return;
+  }
+
+  const code = toMetadataCode(cleanLabel);
+  const existingAction = actions.find((action) => action.code === cleanLabel || action.label === cleanLabel || action.code === code);
+
+  if (existingAction) {
+    return;
+  }
+
+  actions.unshift({
+    code,
+    label: cleanLabel,
+    trigger,
+    steps: defaultActionSteps(cleanLabel),
+  });
+}
+
+function defaultActionSteps(actionLabel: string) {
+  const normalized = actionLabel.toLowerCase();
+
+  if (['save', 'simpan', 'submit', 'create', 'add', 'buat'].some((keyword) => normalized.includes(keyword))) {
+    return ['validate', 'save'];
+  }
+
+  return ['validate'];
+}
+
+function mapComponents(components: CanvasComponent[], mapper: (component: CanvasComponent) => CanvasComponent): CanvasComponent[] {
+  return components.map((component) => {
+    const mappedComponent = mapper(component);
+
+    if (!mappedComponent.children?.length) {
+      return mappedComponent;
+    }
+
+    return {
+      ...mappedComponent,
+      children: mapComponents(mappedComponent.children, mapper),
+    };
+  });
+}
+
+function dataFieldNameFromComponent(component: CanvasComponent) {
+  return component.label.trim() || component.placeholder?.trim() || component.id;
+}
+
+function supportsDataMetadataSync(type: string) {
+  return [
+    'TextInput',
+    'NumberInput',
+    'Search',
+    'EmailInput',
+    'PhoneInput',
+    'PasswordInput',
+    'UrlInput',
+    'LocationInput',
+    'TextArea',
+    'TextEditor',
+    'Dropdown',
+    'Lookup',
+    'Checkbox',
+    'SingleChoice',
+    'MultipleChoice',
+    'DecisionBox',
+    'Tags',
+    'ToggleSwitch',
+    'DateInput',
+    'TimeInput',
+    'DateTimeInput',
+    'UploadField',
+    'ImageUpload',
+    'MultiFileUpload',
+    'MultiImageUpload',
+  ].includes(type);
+}
+
+function attributeTypeFromComponent(type: string): StudioDataAttribute['type'] {
+  if (type === 'NumberInput') {
+    return 'number';
+  }
+
+  if (type === 'DateInput') {
+    return 'date';
+  }
+
+  if (type === 'TimeInput') {
+    return 'time';
+  }
+
+  if (type === 'DateTimeInput') {
+    return 'datetime';
+  }
+
+  if (type === 'EmailInput') {
+    return 'email';
+  }
+
+  if (type === 'PhoneInput') {
+    return 'phone';
+  }
+
+  if (type === 'UrlInput') {
+    return 'url';
+  }
+
+  if (['TextArea', 'TextEditor'].includes(type)) {
+    return 'longText';
+  }
+
+  if (type === 'Lookup') {
+    return 'lookup';
+  }
+
+  if (['Checkbox', 'DecisionBox', 'ToggleSwitch'].includes(type)) {
+    return 'boolean';
+  }
+
+  if (['UploadField', 'MultiFileUpload'].includes(type)) {
+    return 'file';
+  }
+
+  if (['ImageUpload', 'MultiImageUpload'].includes(type)) {
+    return 'image';
+  }
+
+  return 'text';
+}
+
 function collectPublishedScreenCanvases({
   activeComponents,
   activeScreenCode,
@@ -1154,7 +1466,7 @@ function collectPublishedScreenCanvases({
     }
 
     const draft = loadBuilderDraft(target, applicationCode, screen.code);
-    return [screen.code, draft?.components ?? componentsForObject(screen.objectName, dataObjects)];
+    return [screen.code, draft?.components ?? componentsForObject(screen.objectName, dataObjects, screen.mode)];
   }));
 }
 
@@ -1177,18 +1489,26 @@ function ensureApplicationScreens(screens: StudioScreenDraft[], dataObjects: Stu
   ];
 }
 
-function componentsForObject(objectName: string | undefined, dataObjects: StudioDataObject[]): CanvasComponent[] {
+function componentsForObject(
+  objectName: string | undefined,
+  dataObjects: StudioDataObject[],
+  mode: StudioScreenDraft['mode'] = 'create',
+): CanvasComponent[] {
   const object = dataObjects.find((item) => item.name === objectName) ?? dataObjects[0];
 
   if (!object) {
     return [];
   }
 
+  if (mode === 'table' || mode === 'list') {
+    return componentsForObjectView(object, mode);
+  }
+
   return [
     {
-      id: `${toApplicationSlug(object.name)}_form`,
+      id: `${toApplicationSlug(object.name)}_${mode}_form`,
       type: 'Form',
-      label: `${object.name} Form`,
+      label: screenLabelForMode(object.name, mode),
       width: 12,
       height: 320,
       x: 0,
@@ -1205,17 +1525,68 @@ function componentsForObject(objectName: string | undefined, dataObjects: Studio
           y: index,
           binding: { object: object.name, field: attribute.name },
         })),
-        {
-          id: `save_${toApplicationSlug(object.name)}`,
+        ...(mode === 'detail' ? [] : [{
+          id: `${mode === 'edit' ? 'update' : 'save'}_${toApplicationSlug(object.name)}`,
           type: 'Button',
-          label: `Save ${object.name}`,
+          label: `${mode === 'edit' ? 'Update' : 'Save'} ${object.name}`,
           width: 4,
           height: 56,
           x: 0,
           y: object.attributes.length,
-          events: { onClick: `Save ${object.name}` },
-        },
+          events: { onClick: `${mode === 'edit' ? 'Update' : 'Save'} ${object.name}` },
+        }]),
       ],
+    },
+  ];
+}
+
+function componentsForObjectView(object: StudioDataObject, mode: Extract<StudioScreenDraft['mode'], 'table' | 'list'>): CanvasComponent[] {
+  return [
+    {
+      id: `${toApplicationSlug(object.name)}_${mode}_heading`,
+      type: 'FormHeading',
+      label: screenLabelForMode(object.name, mode),
+      width: 12,
+      height: 64,
+      x: 0,
+      y: 0,
+    },
+    {
+      id: `${toApplicationSlug(object.name)}_${mode}_search`,
+      type: 'Search',
+      label: `Search ${object.name}`,
+      placeholder: `Search ${object.name}`,
+      width: 12,
+      height: 60,
+      x: 0,
+      y: 1,
+      binding: {
+        object: object.name,
+        field: object.attributes[0]?.name ?? '',
+      },
+    },
+    {
+      id: `${toApplicationSlug(object.name)}_${mode}_table`,
+      type: 'DataTable',
+      label: `${object.name} ${mode === 'table' ? 'Table' : 'List'}`,
+      width: 12,
+      height: 260,
+      x: 0,
+      y: 2,
+      binding: {
+        object: object.name,
+        field: object.attributes[0]?.name ?? '',
+      },
+    },
+    {
+      id: `create_${toApplicationSlug(object.name)}`,
+      type: 'Button',
+      label: `Create ${object.name}`,
+      width: 4,
+      height: 56,
+      x: 0,
+      y: 3,
+      events: { onClick: `Open ${object.name} Create Form` },
     },
   ];
 }
@@ -1270,6 +1641,50 @@ function componentTypeForAttribute(type: StudioDataObject['attributes'][number][
   }
 
   return 'TextInput';
+}
+
+function screenModeLabel(mode: StudioScreenDraft['mode'] = 'create') {
+  const labels: Record<StudioScreenDraft['mode'], string> = {
+    create: 'Create Form',
+    edit: 'Edit Form',
+    detail: 'Detail View',
+    table: 'Table View',
+    list: 'List View',
+  };
+
+  return labels[mode];
+}
+
+function nextCreatableScreenMode(
+  screens: StudioScreenDraft[],
+  objectName: string | undefined,
+  target: StudioTarget,
+  preferredMode: StudioScreenDraft['mode'],
+) {
+  const modeOrder: StudioScreenDraft['mode'][] = ['create', 'edit', 'detail', 'table', 'list'];
+  const orderedModes = [preferredMode, ...modeOrder.filter((mode) => mode !== preferredMode)];
+
+  return orderedModes.find((mode) => !screens.some((screen) => screen.objectName === objectName && screen.mode === mode && screen.target === target))
+    ?? preferredMode;
+}
+
+function screenLabelForMode(objectName: string | undefined, mode: StudioScreenDraft['mode'] = 'create') {
+  const objectLabel = objectName?.trim() || 'Unbound';
+  return `${objectLabel} ${screenModeLabel(mode)}`;
+}
+
+function screenOptionLabel(screen: StudioScreenDraft | undefined) {
+  if (!screen) {
+    return '';
+  }
+
+  const modeLabel = screenModeLabel(screen.mode);
+  return screen.label.toLowerCase().includes(modeLabel.toLowerCase()) ? screen.label : `${screen.label} · ${modeLabel}`;
+}
+
+function modeScreenCode(objectName: string | undefined, mode: StudioScreenDraft['mode']) {
+  const objectCode = objectName ? toApplicationSlug(objectName) : 'unbound';
+  return `${objectCode}-${mode}-screen`;
 }
 
 function defaultScreenCode(objectName?: string) {

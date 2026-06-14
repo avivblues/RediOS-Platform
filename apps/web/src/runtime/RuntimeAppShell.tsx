@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { type CSSProperties, type ReactNode, useEffect, useMemo, useState } from 'react';
 import { ThemeProvider } from '../core/theme/theme-provider';
 import { createMetadataClient } from '../core/metadata-client/metadata-client';
 import { useRuntimeContext } from '../core/context/runtime-context';
@@ -328,7 +328,7 @@ function PublishedComponent({
 }) {
   if (component.type === 'Form') {
     return (
-      <section className="redos-form-container-preview">
+      <section className="redos-form-container-preview" style={publishedComponentStyle(component)}>
         <header>{component.label}</header>
         <div className="redos-form-container-body">
           {component.children?.map((child) => (
@@ -345,33 +345,36 @@ function PublishedComponent({
       : component.events?.onClick ?? component.events?.onSubmit;
 
     return (
-      <button
-        className="redos-button-preview"
-        type="button"
-        onClick={() => {
-          if (component.confirmation?.enabled) {
-            onConfirmAction({
-              action,
-              cancelLabel: component.confirmation.cancelLabel,
-              confirmLabel: component.confirmation.confirmLabel,
-              message: component.confirmation.message,
-              title: component.confirmation.title,
-            });
-            return;
-          }
+      <PublishedComponentFrame component={component}>
+        <button
+          className="redos-button-preview"
+          type="button"
+          onClick={() => {
+            if (component.confirmation?.enabled) {
+              onConfirmAction({
+                action,
+                cancelLabel: component.confirmation.cancelLabel,
+                confirmLabel: component.confirmation.confirmLabel,
+                message: component.confirmation.message,
+                title: component.confirmation.title,
+              });
+              return;
+            }
 
-          onAction(action);
-        }}
-      >
-        {component.label || 'Run Action'}
-      </button>
+            onAction(action);
+          }}
+        >
+          {component.label || 'Run Action'}
+        </button>
+      </PublishedComponentFrame>
     );
   }
 
   if (isInputComponent(component.type)) {
     const fieldKey = component.binding ? `${component.binding.object}.${component.binding.field}` : component.id;
     return (
-      <label className="redos-runtime-field">
+      <PublishedComponentFrame component={component}>
+        <label className="redos-runtime-field">
         <span>{component.label}</span>
         <input
           inputMode={component.type === 'NumberInput' ? 'decimal' : undefined}
@@ -380,29 +383,52 @@ function PublishedComponent({
           value={document[fieldKey] ?? ''}
           onChange={(event) => onChange(component, event.target.value)}
         />
-      </label>
+        </label>
+      </PublishedComponentFrame>
     );
   }
 
   if (component.type === 'TextArea' || component.type === 'TextEditor') {
     const fieldKey = component.binding ? `${component.binding.object}.${component.binding.field}` : component.id;
     return (
-      <label className="redos-runtime-field">
+      <PublishedComponentFrame component={component}>
+        <label className="redos-runtime-field">
         <span>{component.label}</span>
         <textarea
           placeholder={component.placeholder}
           value={document[fieldKey] ?? ''}
           onChange={(event) => onChange(component, event.target.value)}
         />
-      </label>
+        </label>
+      </PublishedComponentFrame>
     );
   }
 
   return (
-    <div className="redos-runtime-static">
-      <strong>{component.label || component.type}</strong>
+    <PublishedComponentFrame component={component}>
+      <div className="redos-runtime-static">
+        <strong>{component.label || component.type}</strong>
+      </div>
+    </PublishedComponentFrame>
+  );
+}
+
+function PublishedComponentFrame({ children, component }: { children: ReactNode; component: CanvasComponent }) {
+  return (
+    <div className="redos-published-component" style={publishedComponentStyle(component)}>
+      {children}
     </div>
   );
+}
+
+function publishedComponentStyle(component: CanvasComponent): CSSProperties {
+  const width = Math.max(1, Math.min(Number(component.width) || 12, 12));
+  const x = Math.max(0, Math.min(Number(component.x) || 0, 12 - width));
+
+  return {
+    gridColumn: `${x + 1} / span ${width}`,
+    minHeight: component.height || undefined,
+  };
 }
 
 function firstNavigationPage(navigation: RuntimeNavigation): string | undefined {

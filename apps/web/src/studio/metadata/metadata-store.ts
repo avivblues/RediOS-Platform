@@ -80,7 +80,7 @@ export interface StudioScreenDraft {
   code: string;
   label: string;
   objectName?: string;
-  mode: 'create' | 'edit' | 'detail' | 'list';
+  mode: 'create' | 'edit' | 'detail' | 'table' | 'list';
   target: StudioTarget;
   updatedAt: string;
 }
