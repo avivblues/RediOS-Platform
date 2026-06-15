@@ -3,6 +3,7 @@ import { atomComponents } from '../../atomic/atoms/catalog';
 import { moleculeComponents } from '../../atomic/molecules/catalog';
 import { organismComponents } from '../../atomic/organisms/catalog';
 import { findCustomOrganism } from '../../metadata/metadata-store';
+import { isTailAdminTemplateComponent, RediosTemplateComponent } from '../../../components/redios-template/TemplateComponents';
 import type {
   BuilderComponentDefinition,
   CanvasComponent,
@@ -363,6 +364,10 @@ function CanvasPreview({
 
   if (customOrganism) {
     return <CustomOrganismCanvasPreview isPreviewing={isPreviewing} organism={customOrganism} />;
+  }
+
+  if (isTailAdminTemplateComponent(component.type)) {
+    return <RediosTemplateComponent component={component} mode="builder" />;
   }
 
   if (component.type === 'Form') {

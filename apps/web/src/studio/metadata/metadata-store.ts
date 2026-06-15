@@ -1,8 +1,15 @@
 import type { BuilderComponentDefinition, CanvasComponent, StudioTarget } from '../builder/types';
+import {
+  REDIOS_ADMIN_APPLICATION,
+  rediosAdminPublishedPackage,
+  rediosAdminSeedMetadata,
+  rediosAdminSystemObjectContracts,
+} from './identity/identity-metadata';
 
 export interface StudioDataAttribute {
   name: string;
   type:
+    | 'string'
     | 'text'
     | 'longText'
     | 'number'
@@ -21,11 +28,30 @@ export interface StudioDataAttribute {
     | 'lookup'
     | 'json'
     | 'file'
-    | 'image';
+    | 'image'
+    | 'uuid'
+    | 'password'
+    | 'enum';
+  editable?: boolean;
+  hidden?: boolean;
+  label?: string;
+  locked?: boolean;
+  position?: number;
+  primary?: boolean;
+  required?: boolean;
+  secure?: boolean;
+  systemField?: boolean;
+  unique?: boolean;
+  values?: string[];
 }
 
 export interface StudioDataObject {
   name: string;
+  locked?: boolean;
+  objectCode?: string;
+  owner?: string;
+  type?: 'BUSINESS_OBJECT' | 'SYSTEM_OBJECT';
+  upgradeSafe?: boolean;
   attributes: StudioDataAttribute[];
 }
 
@@ -258,15 +284,17 @@ export const defaultSecurity: StudioSecurityDraft = {
 };
 
 export function loadDataObjects(appCode?: string) {
-  return readStoredValue(scopedMetadataKey(DATA_OBJECTS_KEY, appCode), readStoredValue(DATA_OBJECTS_KEY, defaultDataObjects));
+  const fallbackObjects = isRediosAdminApplication(appCode) ? rediosAdminSeedMetadata.dataObjects : readStoredValue(DATA_OBJECTS_KEY, defaultDataObjects);
+  const storedObjects = readStoredValue(scopedMetadataKey(DATA_OBJECTS_KEY, appCode), fallbackObjects);
+  return isRediosAdminApplication(appCode) ? rediosAdminSystemObjectContracts(storedObjects) : storedObjects;
 }
 
 export function saveDataObjects(value: StudioDataObject[], appCode?: string) {
-  writeStoredValue(scopedMetadataKey(DATA_OBJECTS_KEY, appCode), value);
+  writeStoredValue(scopedMetadataKey(DATA_OBJECTS_KEY, appCode), isRediosAdminApplication(appCode) ? rediosAdminSystemObjectContracts(value) : value);
 }
 
 export function loadActions(appCode?: string) {
-  return readStoredValue(scopedMetadataKey(ACTIONS_KEY, appCode), readStoredValue(ACTIONS_KEY, defaultActions));
+  return readStoredValue(scopedMetadataKey(ACTIONS_KEY, appCode), isRediosAdminApplication(appCode) ? rediosAdminSeedMetadata.actions : readStoredValue(ACTIONS_KEY, defaultActions));
 }
 
 export function saveActions(value: StudioActionDraft[], appCode?: string) {
@@ -298,7 +326,7 @@ export function saveProcesses(value: StudioProcessDraft[], appCode?: string) {
 }
 
 export function loadMenu(appCode?: string) {
-  return readStoredValue(scopedMetadataKey(MENU_KEY, appCode), defaultMenu);
+  return readStoredValue(scopedMetadataKey(MENU_KEY, appCode), isRediosAdminApplication(appCode) ? rediosAdminSeedMetadata.menu : defaultMenu);
 }
 
 export function saveMenu(value: StudioMenuDraft[], appCode?: string) {
@@ -306,7 +334,7 @@ export function saveMenu(value: StudioMenuDraft[], appCode?: string) {
 }
 
 export function loadScreens(appCode?: string) {
-  return readStoredValue(scopedMetadataKey(SCREENS_KEY, appCode), defaultScreens);
+  return readStoredValue(scopedMetadataKey(SCREENS_KEY, appCode), isRediosAdminApplication(appCode) ? rediosAdminSeedMetadata.screens : defaultScreens);
 }
 
 export function saveScreens(value: StudioScreenDraft[], appCode?: string) {
@@ -314,7 +342,7 @@ export function saveScreens(value: StudioScreenDraft[], appCode?: string) {
 }
 
 export function loadSecurity(appCode?: string) {
-  return readStoredValue(scopedMetadataKey(SECURITY_KEY, appCode), defaultSecurity);
+  return readStoredValue(scopedMetadataKey(SECURITY_KEY, appCode), isRediosAdminApplication(appCode) ? rediosAdminSeedMetadata.security : defaultSecurity);
 }
 
 export function saveSecurity(value: StudioSecurityDraft, appCode?: string) {
@@ -356,10 +384,10 @@ export function loadStudioApplications(): StudioApplicationDraft[] {
   const applications = readStoredValue<StudioApplicationDraft[]>(APPLICATIONS_KEY, []);
 
   if (applications.length > 0) {
-    return applications;
+    return withSystemApplications(applications);
   }
 
-  return [
+  return withSystemApplications([
     {
       code: resolveActiveApplicationCode('web'),
       name: 'Inventory',
@@ -368,7 +396,7 @@ export function loadStudioApplications(): StudioApplicationDraft[] {
       target: 'web',
       createdAt: new Date().toISOString(),
     },
-  ];
+  ]);
 }
 
 export function toApplicationSlug(value: string) {
@@ -387,10 +415,25 @@ export function publishApplicationPackage(packageValue: StudioApplicationMetadat
 }
 
 export function loadPublishedApplication(appSlug: string) {
-  return readStoredValue<StudioApplicationMetadataPackage | undefined>(`${PUBLISHED_APP_KEY_PREFIX}:${appSlug}`, undefined);
+  return readStoredValue<StudioApplicationMetadataPackage | undefined>(
+    `${PUBLISHED_APP_KEY_PREFIX}:${appSlug}`,
+    appSlug === REDIOS_ADMIN_APPLICATION.slug || appSlug === REDIOS_ADMIN_APPLICATION.code ? rediosAdminPublishedPackage() : undefined,
+  );
 }
 
 export function seedApplicationMetadata(appCode: string, template: string) {
+  if (isRediosAdminApplication(appCode) || template === REDIOS_ADMIN_APPLICATION.template) {
+    writeStoredValue(scopedMetadataKey(DATA_OBJECTS_KEY, appCode), rediosAdminSeedMetadata.dataObjects);
+    writeStoredValue(scopedMetadataKey(ACTIONS_KEY, appCode), rediosAdminSeedMetadata.actions);
+    writeStoredValue(scopedMetadataKey(CUSTOM_APIS_KEY, appCode), rediosAdminSeedMetadata.connectors);
+    writeStoredValue(scopedMetadataKey(CUSTOM_ORGANISMS_KEY, appCode), rediosAdminSeedMetadata.customOrganisms);
+    writeStoredValue(scopedMetadataKey(PROCESSES_KEY, appCode), rediosAdminSeedMetadata.processes);
+    writeStoredValue(scopedMetadataKey(MENU_KEY, appCode), rediosAdminSeedMetadata.menu);
+    writeStoredValue(scopedMetadataKey(SCREENS_KEY, appCode), rediosAdminSeedMetadata.screens);
+    writeStoredValue(scopedMetadataKey(SECURITY_KEY, appCode), rediosAdminSeedMetadata.security);
+    return;
+  }
+
   if (template === 'BLANK_EXPERIENCE') {
     writeStoredValue(scopedMetadataKey(DATA_OBJECTS_KEY, appCode), []);
     writeStoredValue(scopedMetadataKey(ACTIONS_KEY, appCode), []);
@@ -433,6 +476,18 @@ export function toComponentType(value: string) {
 
 function scopedMetadataKey(key: string, appCode = resolveActiveApplicationCode()) {
   return `redios:studio:apps:${appCode}:${key}`;
+}
+
+function isRediosAdminApplication(appCode = resolveActiveApplicationCode()) {
+  return appCode === REDIOS_ADMIN_APPLICATION.code || appCode === REDIOS_ADMIN_APPLICATION.slug;
+}
+
+function withSystemApplications(applications: StudioApplicationDraft[]) {
+  if (applications.some((application) => application.code === REDIOS_ADMIN_APPLICATION.code)) {
+    return applications;
+  }
+
+  return [REDIOS_ADMIN_APPLICATION, ...applications];
 }
 
 function readStoredValue<T>(key: string, fallback: T): T {

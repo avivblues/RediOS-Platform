@@ -219,6 +219,1230 @@ a:focus-visible {
   background: var(--redios-color-background);
 }
 
+.redios-dashboard-shell {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 18rem minmax(0, 1fr);
+  background:
+    radial-gradient(circle at top left, rgb(70 95 255 / 10%), transparent 28rem),
+    linear-gradient(180deg, #f7f9ff 0%, var(--redios-color-background) 100%);
+  color: var(--redios-color-text);
+  transition: grid-template-columns 180ms ease;
+}
+
+.redios-dashboard-shell[data-sidebar-auto-hide='true'] {
+  grid-template-columns: 5.25rem minmax(0, 1fr);
+}
+
+.redios-dashboard-shell[data-sidebar-auto-hide='true']:has(.redios-dashboard-sidebar:hover),
+.redios-dashboard-shell[data-sidebar-auto-hide='true']:has(.redios-dashboard-sidebar:focus-within) {
+  grid-template-columns: 18rem minmax(0, 1fr);
+}
+
+.redios-dashboard-sidebar {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 1.25rem;
+  border-right: 1px solid rgb(16 24 40 / 8%);
+  padding: 1.25rem;
+  background: rgb(255 255 255 / 92%);
+  box-shadow: 20px 0 60px rgb(16 24 40 / 5%);
+}
+
+.redios-dashboard-shell[data-sidebar-auto-hide='true'] .redios-dashboard-sidebar {
+  overflow: hidden;
+}
+
+.redios-dashboard-brand {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.85rem;
+  align-items: center;
+  border: 1px solid rgb(70 95 255 / 16%);
+  border-radius: 1.25rem;
+  padding: 0.8rem;
+  background: linear-gradient(135deg, #ffffff, #f2f7ff);
+}
+
+.redios-dashboard-brand span {
+  display: block;
+  color: #667085;
+  font-size: 0.74rem;
+  font-weight: 750;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.redios-dashboard-brand strong {
+  display: block;
+  margin-top: 0.15rem;
+  overflow: hidden;
+  color: #101828;
+  font-size: 1rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.redios-dashboard-brand-icon,
+.redios-dashboard-nav-icon {
+  display: inline-grid;
+  place-items: center;
+  width: 2.4rem;
+  height: 2.4rem;
+  border-radius: 0.9rem;
+  background: #465fff;
+  color: #ffffff;
+}
+
+.redios-dashboard-nav {
+  display: grid;
+  align-content: start;
+  gap: 0.55rem;
+  overflow: auto;
+}
+
+.redios-dashboard-nav-group,
+.redios-dashboard-nav-children {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.redios-dashboard-nav-children {
+  margin-left: 3.15rem;
+}
+
+.redios-dashboard-nav button {
+  width: 100%;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 0.7rem;
+  align-items: center;
+  border: 0;
+  border-radius: 0.95rem;
+  padding: 0.68rem;
+  background: transparent;
+  color: #475467;
+  text-align: left;
+  cursor: pointer;
+}
+
+.redios-dashboard-nav-children button {
+  grid-template-columns: minmax(0, 1fr);
+  padding: 0.62rem 0.75rem;
+}
+
+.redios-dashboard-nav button:hover,
+.redios-dashboard-nav .redios-dashboard-nav-active {
+  background: #f2f7ff;
+  color: #465fff;
+}
+
+.redios-dashboard-nav .redios-dashboard-nav-active .redios-dashboard-nav-icon {
+  background: #ecf3ff;
+  color: #465fff;
+}
+
+.redios-dashboard-nav small {
+  color: #98a2b3;
+  font-size: 0.72rem;
+}
+
+.redios-dashboard-shell[data-sidebar-auto-hide='true']:not(:has(.redios-dashboard-sidebar:hover)):not(:has(.redios-dashboard-sidebar:focus-within)) .redios-dashboard-brand div,
+.redios-dashboard-shell[data-sidebar-auto-hide='true']:not(:has(.redios-dashboard-sidebar:hover)):not(:has(.redios-dashboard-sidebar:focus-within)) .redios-dashboard-nav button > span:not(.redios-dashboard-nav-icon),
+.redios-dashboard-shell[data-sidebar-auto-hide='true']:not(:has(.redios-dashboard-sidebar:hover)):not(:has(.redios-dashboard-sidebar:focus-within)) .redios-dashboard-nav button > svg,
+.redios-dashboard-shell[data-sidebar-auto-hide='true']:not(:has(.redios-dashboard-sidebar:hover)):not(:has(.redios-dashboard-sidebar:focus-within)) .redios-dashboard-nav-children {
+  width: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.redios-dashboard-shell[data-sidebar-auto-hide='true']:not(:has(.redios-dashboard-sidebar:hover)):not(:has(.redios-dashboard-sidebar:focus-within)) .redios-dashboard-brand,
+.redios-dashboard-shell[data-sidebar-auto-hide='true']:not(:has(.redios-dashboard-sidebar:hover)):not(:has(.redios-dashboard-sidebar:focus-within)) .redios-dashboard-nav button {
+  grid-template-columns: auto;
+  justify-content: center;
+}
+
+.redios-dashboard-workspace {
+  min-width: 0;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+}
+
+.redios-dashboard-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid rgb(16 24 40 / 8%);
+  padding: 1rem 1.5rem;
+  background: rgb(255 255 255 / 88%);
+  backdrop-filter: blur(16px);
+}
+
+.redios-dashboard-search {
+  min-width: 0;
+  display: flex;
+  gap: 0.65rem;
+  align-items: center;
+  max-width: 40rem;
+  border: 1px solid #e4e7ec;
+  border-radius: 0.95rem;
+  padding: 0.68rem 0.9rem;
+  background: #ffffff;
+  color: #667085;
+  box-shadow: 0 1px 2px rgb(16 24 40 / 4%);
+}
+
+.redios-dashboard-search span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.redios-dashboard-topbar-meta {
+  display: flex;
+  gap: 0.6rem;
+  align-items: center;
+}
+
+.redios-dashboard-topbar-meta button,
+.redios-dashboard-status {
+  display: inline-flex;
+  gap: 0.45rem;
+  align-items: center;
+  border: 1px solid #e4e7ec;
+  border-radius: 999px;
+  padding: 0.55rem 0.75rem;
+  background: #ffffff;
+  color: #344054;
+}
+
+.redios-dashboard-status {
+  max-width: 22rem;
+  overflow: hidden;
+  color: #039855;
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.redios-dashboard-main {
+  display: grid;
+  gap: 1.25rem;
+  align-content: start;
+  padding: 1.5rem;
+}
+
+.redios-page-hero,
+.redios-dashboard-card {
+  border: 1px solid rgb(16 24 40 / 8%);
+  border-radius: 1.4rem;
+  background: rgb(255 255 255 / 94%);
+  box-shadow: 0 20px 40px -18px rgb(16 24 40 / 28%);
+}
+
+.redios-page-hero {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 1.4rem;
+}
+
+.redios-page-hero h1,
+.redios-dashboard-card h3,
+.redios-modal h3 {
+  margin: 0.3rem 0;
+  color: #101828;
+}
+
+.redios-page-hero p,
+.redios-dashboard-card-header p,
+.redios-modal-body {
+  margin: 0;
+  color: #667085;
+}
+
+.redios-page-hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  justify-content: flex-end;
+}
+
+.redios-breadcrumbs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  align-items: center;
+  color: #667085;
+  font-size: 0.8rem;
+  font-weight: 650;
+}
+
+.redios-breadcrumbs span,
+.redios-status-pills {
+  display: inline-flex;
+  gap: 0.35rem;
+  align-items: center;
+}
+
+.redios-status-pills {
+  flex-wrap: wrap;
+}
+
+.redios-status-pills span {
+  border: 1px solid #d0d5dd;
+  border-radius: 999px;
+  padding: 0.45rem 0.65rem;
+  background: #ffffff;
+  color: #344054;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.redios-dashboard-card {
+  display: grid;
+  gap: 1rem;
+  padding: 1.15rem;
+}
+
+.redios-dashboard-metrics,
+.redios-dashboard-insight-grid {
+  display: grid;
+  gap: 1rem;
+}
+
+.redios-dashboard-metrics {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.redios-dashboard-metric-card,
+.redios-dashboard-chart,
+.redios-dashboard-activity {
+  border: 1px solid #eaecf0;
+  border-radius: 1.1rem;
+  background: linear-gradient(180deg, #ffffff 0%, #fcfcfd 100%);
+}
+
+.redios-dashboard-metric-card {
+  display: grid;
+  gap: 0.25rem;
+  padding: 1rem;
+}
+
+.redios-dashboard-metric-card span,
+.redios-dashboard-feed span {
+  color: #667085;
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.redios-dashboard-metric-card strong {
+  color: #101828;
+  font-size: 1.75rem;
+  line-height: 1;
+}
+
+.redios-dashboard-metric-card small,
+.redios-dashboard-feed small {
+  color: #667085;
+}
+
+.redios-dashboard-insight-grid {
+  grid-template-columns: minmax(0, 1.25fr) minmax(280px, 0.75fr);
+}
+
+.redios-dashboard-chart,
+.redios-dashboard-activity {
+  display: grid;
+  gap: 1rem;
+  align-content: start;
+  padding: 1rem;
+}
+
+.redios-dashboard-bars,
+.redios-dashboard-feed {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.redios-dashboard-bar-row {
+  display: grid;
+  grid-template-columns: 6rem minmax(0, 1fr) 3rem;
+  gap: 0.75rem;
+  align-items: center;
+  color: #475467;
+  font-size: 0.84rem;
+}
+
+.redios-dashboard-bar-row div {
+  height: 0.65rem;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #f2f4f7;
+}
+
+.redios-dashboard-bar-row i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #465fff, #12b76a);
+}
+
+.redios-dashboard-feed article {
+  display: grid;
+  gap: 0.22rem;
+  border-left: 3px solid #465fff;
+  padding-left: 0.75rem;
+}
+
+.redios-dashboard-feed strong {
+  color: #101828;
+}
+
+.redios-dashboard-card-header {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.redios-dashboard-eyebrow {
+  color: #465fff;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.redios-data-table-wrap {
+  overflow: auto;
+  border: 1px solid #eaecf0;
+  border-radius: 1rem;
+}
+
+.redios-data-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #ffffff;
+}
+
+.redios-data-table th,
+.redios-data-table td {
+  border-bottom: 1px solid #eaecf0;
+  padding: 0.78rem 0.9rem;
+  color: #475467;
+  font-size: 0.86rem;
+  text-align: left;
+  vertical-align: top;
+}
+
+.redios-data-table th {
+  background: #f9fafb;
+  color: #667085;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.redios-data-table tr:last-child td {
+  border-bottom: 0;
+}
+
+.redios-dashboard-empty {
+  border: 1px dashed #d0d5dd;
+  border-radius: 1rem;
+  padding: 1.2rem;
+  background: #fcfcfd;
+  color: #667085;
+  text-align: center;
+}
+
+.redios-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  background: rgb(16 24 40 / 54%);
+  backdrop-filter: blur(8px);
+}
+
+.redios-modal {
+  width: min(100%, 30rem);
+  display: grid;
+  gap: 1.25rem;
+  border: 1px solid rgb(255 255 255 / 45%);
+  border-radius: 1.4rem;
+  padding: 1.25rem;
+  background: #ffffff;
+  box-shadow: 0 24px 80px rgb(16 24 40 / 26%);
+}
+
+.redios-modal-actions {
+  display: flex;
+  gap: 0.65rem;
+  justify-content: flex-end;
+}
+
+.redios-modal-actions button {
+  border: 1px solid #d0d5dd;
+  border-radius: 0.8rem;
+  padding: 0.72rem 1rem;
+  background: #ffffff;
+  color: #344054;
+  cursor: pointer;
+}
+
+.redios-modal-actions .redios-modal-primary {
+  border-color: #465fff;
+  background: #465fff;
+  color: #ffffff;
+}
+
+.redios-dashboard-shell svg {
+  width: 1.1rem;
+  height: 1.1rem;
+  flex: 0 0 auto;
+  fill: currentColor;
+}
+
+.redios-template-card,
+.redios-template-metric,
+.redios-template-alert,
+.redios-template-avatar-card,
+.redios-template-dropzone,
+.redios-template-app-header,
+.redios-template-app-sidebar,
+.redios-template-breadcrumb {
+  min-width: 0;
+  border: 1px solid #eaecf0;
+  border-radius: 1rem;
+  background: linear-gradient(180deg, #ffffff 0%, #fcfcfd 100%);
+  color: #101828;
+  box-shadow: 0 12px 28px -20px rgb(16 24 40 / 34%);
+}
+
+.redios-template-card {
+  display: grid;
+  gap: 0.8rem;
+  height: 100%;
+  padding: 1rem;
+}
+
+.redios-template-chart {
+  min-height: 260px;
+}
+
+.redios-template-header {
+  display: grid;
+  gap: 0.12rem;
+}
+
+.redios-template-eyebrow,
+.redios-template-metric span {
+  color: #465fff;
+  font-size: 0.72rem;
+  font-weight: 850;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.redios-template-header strong,
+.redios-template-metric strong {
+  color: #101828;
+  font-size: 1rem;
+}
+
+.redios-template-header small,
+.redios-template-metric small,
+.redios-template-card small {
+  color: #667085;
+}
+
+.redios-template-metrics {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.redios-template-metric {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.7rem;
+  align-items: end;
+  padding: 1rem;
+}
+
+.redios-template-metric-icon {
+  grid-row: span 2;
+  align-self: start;
+  display: grid;
+  place-items: center;
+  width: 3rem;
+  height: 3rem;
+  border-radius: 0.9rem;
+  background: #f2f4f7;
+  color: #344054;
+  font-size: 1.1rem;
+  font-weight: 900;
+}
+
+.redios-template-metric strong {
+  display: block;
+  margin-top: 0.35rem;
+  font-size: 1.45rem;
+}
+
+.redios-template-metric small {
+  justify-self: end;
+  border-radius: 999px;
+  padding: 0.25rem 0.45rem;
+  font-weight: 850;
+}
+
+.redios-template-trend-up {
+  background: #ecfdf3;
+  color: #039855;
+}
+
+.redios-template-trend-down {
+  background: #fef3f2;
+  color: #d92d20;
+}
+
+.redios-template-chart-header,
+.redios-template-chart-footer {
+  display: flex;
+  gap: 0.75rem;
+  align-items: start;
+  justify-content: space-between;
+}
+
+.redios-template-chart-header button {
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: #98a2b3;
+  cursor: pointer;
+}
+
+.redios-template-chart-header button:hover {
+  background: #f2f4f7;
+  color: #344054;
+}
+
+.redios-template-chart-footer span {
+  color: #344054;
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.redios-template-bars {
+  height: 11rem;
+  display: flex;
+  gap: 0.55rem;
+  align-items: end;
+  padding: 0.75rem 0.35rem 0;
+  border-bottom: 1px solid #eaecf0;
+  background:
+    linear-gradient(#eaecf0 1px, transparent 1px) 0 20% / 100% 25%,
+    linear-gradient(#ffffff, #ffffff);
+}
+
+.redios-template-bars i {
+  flex: 1;
+  min-height: 12%;
+  max-width: 2rem;
+  border-radius: 0.45rem 0.45rem 0 0;
+  background: #465fff;
+}
+
+.redios-template-bar-chart {
+  min-width: 0;
+  overflow: hidden;
+}
+
+.redios-template-chart-axis {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding-top: 0.55rem;
+  color: #667085;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.redios-template-line-chart {
+  overflow: hidden;
+  border-bottom: 1px solid #eaecf0;
+}
+
+.redios-template-line-chart svg {
+  width: 100%;
+  height: clamp(10rem, 24vw, 14rem);
+}
+
+.redios-template-grid-line {
+  fill: none;
+  stroke: #eaecf0;
+  stroke-width: 1;
+}
+
+.redios-template-area-fill {
+  fill: rgb(70 95 255 / 9%);
+  stroke: none;
+}
+
+.redios-template-line-primary,
+.redios-template-line-secondary {
+  fill: none;
+  stroke-linejoin: round;
+  stroke-width: 3;
+}
+
+.redios-template-line-primary {
+  stroke: #465fff;
+}
+
+.redios-template-line-secondary {
+  stroke: #9cb9ff;
+}
+
+.redios-template-radial {
+  display: grid;
+  place-items: center;
+  gap: 0.5rem;
+  height: 12rem;
+}
+
+.redios-template-radial i {
+  display: grid;
+  place-items: center;
+  width: 7rem;
+  height: 7rem;
+  border-radius: 999px;
+  background:
+    radial-gradient(circle, #ffffff 0 52%, transparent 53%),
+    conic-gradient(#465fff 0 var(--redios-template-radial-value, 76%), #eaecf0 var(--redios-template-radial-value, 76%) 100%);
+  color: #101828;
+  font-size: 1.7rem;
+  font-style: normal;
+  font-weight: 850;
+}
+
+.redios-template-radial span {
+  border-radius: 999px;
+  padding: 0.28rem 0.65rem;
+  background: #ecfdf3;
+  color: #039855;
+  font-size: 0.78rem;
+  font-weight: 850;
+}
+
+.redios-template-map > div {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0.5rem;
+  min-height: 9rem;
+  align-content: center;
+  border-radius: 0.9rem;
+  padding: 1rem;
+  background: #f2f7ff;
+}
+
+.redios-template-map > div span {
+  display: grid;
+  place-items: center;
+  min-height: 3rem;
+  border-radius: 999px;
+  background: #ffffff;
+  color: #465fff;
+  font-weight: 900;
+}
+
+.redios-template-table-wrap {
+  overflow: auto;
+  border: 1px solid #eaecf0;
+  border-radius: 0.85rem;
+}
+
+.redios-template-table-wrap table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.redios-template-table-wrap th,
+.redios-template-table-wrap td {
+  border-bottom: 1px solid #eaecf0;
+  padding: 0.65rem;
+  color: #475467;
+  font-size: 0.82rem;
+  text-align: left;
+}
+
+.redios-template-table-wrap th {
+  background: #f9fafb;
+  color: #667085;
+  font-weight: 850;
+}
+
+.redios-template-table-wrap button,
+.redios-template-auth button,
+.redios-template-error button {
+  border: 0;
+  border-radius: 0.65rem;
+  padding: 0.42rem 0.7rem;
+  background: #465fff;
+  color: #ffffff;
+  cursor: pointer;
+}
+
+.redios-template-calendar {
+  grid-template-columns: minmax(0, 1.2fr) minmax(220px, 0.8fr);
+}
+
+.redios-template-calendar .redios-template-header {
+  grid-column: 1 / -1;
+}
+
+.redios-template-calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 0.35rem;
+}
+
+.redios-template-calendar-grid span {
+  display: grid;
+  place-items: center;
+  min-height: 2.2rem;
+  border-radius: 0.65rem;
+  background: #f9fafb;
+  color: #667085;
+  font-weight: 750;
+}
+
+.redios-template-calendar-grid .redios-template-calendar-active {
+  background: #ecf3ff;
+  color: #465fff;
+}
+
+.redios-template-feed {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.redios-template-feed article {
+  display: grid;
+  gap: 0.15rem;
+  border-left: 3px solid #465fff;
+  padding-left: 0.65rem;
+}
+
+.redios-template-profile {
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
+}
+
+.redios-template-avatar {
+  display: grid;
+  place-items: center;
+  width: 3.25rem;
+  height: 3.25rem;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #465fff, #12b76a);
+  color: #ffffff;
+  font-weight: 900;
+}
+
+.redios-template-profile dl {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.45rem;
+  margin: 0.5rem 0 0;
+}
+
+.redios-template-profile dt {
+  color: #667085;
+  font-size: 0.72rem;
+  text-transform: capitalize;
+}
+
+.redios-template-profile dd {
+  margin: 0;
+  color: #101828;
+  font-weight: 750;
+}
+
+.redios-template-auth {
+  align-content: start;
+}
+
+.redios-template-auth input,
+.redios-template-app-header input,
+.redios-template-field-card input,
+.redios-template-field-card select,
+.redios-template-field-card textarea {
+  min-height: 2.5rem;
+  border: 1px solid #d0d5dd;
+  border-radius: 0.75rem;
+  padding: 0 0.75rem;
+  background: #ffffff;
+  color: #101828;
+}
+
+.redios-template-field-card {
+  display: grid;
+  gap: 0.65rem;
+  height: 100%;
+  border: 1px solid #eaecf0;
+  border-radius: 1rem;
+  padding: 1rem;
+  background: #ffffff;
+  color: #101828;
+  box-shadow: 0 12px 28px -20px rgb(16 24 40 / 34%);
+}
+
+.redios-template-field-heading {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.redios-template-field-heading strong {
+  font-size: 0.92rem;
+}
+
+.redios-template-field-heading small,
+.redios-template-field-card > small {
+  color: #667085;
+  font-size: 0.78rem;
+}
+
+.redios-template-input-icon-row,
+.redios-template-phone-row,
+.redios-template-date-input {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  overflow: hidden;
+  border: 1px solid #d0d5dd;
+  border-radius: 0.75rem;
+  background: #ffffff;
+}
+
+.redios-template-phone-row {
+  grid-template-columns: 5.5rem minmax(0, 1fr);
+}
+
+.redios-template-input-icon-row > span,
+.redios-template-date-input > span {
+  display: grid;
+  place-items: center;
+  min-height: 2.5rem;
+  padding: 0 0.75rem;
+  border-right: 1px solid #eaecf0;
+  background: #f9fafb;
+  color: #667085;
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.redios-template-input-icon-row input,
+.redios-template-phone-row input,
+.redios-template-phone-row select,
+.redios-template-date-input input {
+  border: 0;
+  border-radius: 0;
+  min-width: 0;
+}
+
+.redios-template-input-success {
+  border-color: #12b76a !important;
+  background: #f6fef9 !important;
+}
+
+.redios-template-input-error {
+  border-color: #f04438 !important;
+  background: #fffbfa !important;
+}
+
+.redios-template-field-card textarea {
+  min-height: 6rem;
+  padding-block: 0.75rem;
+  resize: vertical;
+}
+
+.redios-template-file-input {
+  display: grid;
+  gap: 0.45rem;
+  border: 1px dashed #d0d5dd;
+  border-radius: 0.85rem;
+  padding: 0.8rem;
+  background: #fcfcfd;
+  color: #475467;
+  cursor: pointer;
+}
+
+.redios-template-file-input span {
+  font-weight: 850;
+}
+
+.redios-template-choice-card {
+  border: 1px solid #eaecf0;
+}
+
+.redios-template-choice-card legend {
+  padding: 0;
+}
+
+.redios-template-choice-card label {
+  display: flex;
+  gap: 0.6rem;
+  align-items: center;
+  color: #344054;
+  font-size: 0.86rem;
+}
+
+.redios-template-choice-card input {
+  min-height: auto;
+  width: 1rem;
+  height: 1rem;
+  accent-color: #465fff;
+}
+
+.redios-template-switch-card label {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 2.8rem;
+  gap: 0.75rem;
+  align-items: center;
+  color: #344054;
+  font-size: 0.86rem;
+}
+
+.redios-template-switch-card input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.redios-template-switch-card i {
+  position: relative;
+  width: 2.75rem;
+  height: 1.55rem;
+  border-radius: 999px;
+  background: #d0d5dd;
+}
+
+.redios-template-switch-card i::after {
+  content: '';
+  position: absolute;
+  top: 0.18rem;
+  left: 0.2rem;
+  width: 1.15rem;
+  height: 1.15rem;
+  border-radius: 999px;
+  background: #ffffff;
+  box-shadow: 0 1px 3px rgb(16 24 40 / 20%);
+}
+
+.redios-template-switch-card input:checked + i {
+  background: #465fff;
+}
+
+.redios-template-switch-card input:checked + i::after {
+  transform: translateX(1.18rem);
+}
+
+.redios-template-multi-select {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  min-height: 2.5rem;
+  border: 1px solid #d0d5dd;
+  border-radius: 0.75rem;
+  padding: 0.45rem;
+  background: #ffffff;
+}
+
+.redios-template-multi-select span {
+  border-radius: 999px;
+  padding: 0.3rem 0.55rem;
+  background: #ecf3ff;
+  color: #465fff;
+  font-size: 0.78rem;
+  font-weight: 850;
+}
+
+.redios-template-alert {
+  display: grid;
+  gap: 0.2rem;
+  padding: 0.85rem;
+}
+
+.redios-template-alert-success,
+.redios-template-badge-success {
+  border-color: #a6f4c5;
+  background: #ecfdf3;
+  color: #027a48;
+}
+
+.redios-template-alert-warning,
+.redios-template-badge-warning {
+  border-color: #fedf89;
+  background: #fffaeb;
+  color: #b54708;
+}
+
+.redios-template-alert-error,
+.redios-template-badge-error {
+  border-color: #fecdca;
+  background: #fef3f2;
+  color: #b42318;
+}
+
+.redios-template-badge,
+.redios-template-badge-info {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  border: 1px solid #b9e6fe;
+  border-radius: 999px;
+  padding: 0.35rem 0.65rem;
+  background: #f0f9ff;
+  color: #026aa2;
+  font-size: 0.82rem;
+  font-weight: 850;
+}
+
+.redios-template-avatar-card,
+.redios-template-dropzone {
+  display: grid;
+  gap: 0.45rem;
+  place-items: center;
+  padding: 1rem;
+  text-align: center;
+}
+
+.redios-template-media > div {
+  display: grid;
+  place-items: center;
+  min-height: 6rem;
+  border-radius: 0.85rem;
+  background:
+    linear-gradient(135deg, rgb(70 95 255 / 14%), rgb(18 183 106 / 12%)),
+    #f9fafb;
+  color: #465fff;
+  font-weight: 900;
+}
+
+.redios-template-dropzone {
+  min-height: 100%;
+  border-style: dashed;
+  background: #f2f7ff;
+}
+
+.redios-template-app-header {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  gap: 0.75rem;
+  align-items: center;
+  padding: 0.8rem;
+}
+
+.redios-template-app-sidebar {
+  display: grid;
+  align-content: start;
+  gap: 0.55rem;
+  padding: 0.85rem;
+}
+
+.redios-template-app-sidebar span {
+  border-radius: 0.7rem;
+  padding: 0.5rem;
+  background: #f9fafb;
+  color: #475467;
+}
+
+.redios-template-error {
+  place-items: center;
+  text-align: center;
+}
+
+.redios-template-error > strong {
+  font-size: 1.6rem;
+}
+
+.redios-template-breadcrumb {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  align-items: center;
+  padding: 0.75rem;
+  color: #667085;
+}
+
+@media (max-width: 980px) {
+  .redios-dashboard-shell {
+    grid-template-columns: 1fr;
+  }
+
+  .redios-dashboard-shell[data-sidebar-auto-hide='true'] {
+    grid-template-columns: 1fr;
+  }
+
+  .redios-dashboard-sidebar {
+    position: relative;
+    height: auto;
+    border-right: 0;
+    border-bottom: 1px solid rgb(16 24 40 / 8%);
+  }
+
+  .redios-dashboard-shell[data-sidebar-auto-hide='true'] .redios-dashboard-brand div,
+  .redios-dashboard-shell[data-sidebar-auto-hide='true'] .redios-dashboard-nav button > span:not(.redios-dashboard-nav-icon),
+  .redios-dashboard-shell[data-sidebar-auto-hide='true'] .redios-dashboard-nav button > svg,
+  .redios-dashboard-shell[data-sidebar-auto-hide='true'] .redios-dashboard-nav-children {
+    width: auto;
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .redios-dashboard-shell[data-sidebar-auto-hide='true'] .redios-dashboard-brand {
+    grid-template-columns: auto minmax(0, 1fr);
+    justify-content: stretch;
+  }
+
+  .redios-dashboard-shell[data-sidebar-auto-hide='true'] .redios-dashboard-nav button {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    justify-content: stretch;
+  }
+
+  .redios-dashboard-topbar,
+  .redios-page-hero {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .redios-dashboard-metrics,
+  .redios-dashboard-insight-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 .runtime-app-navigation {
   display: flex;
   flex-direction: column;
@@ -2605,8 +3829,21 @@ a:focus-visible {
   grid-template-columns: 2.5rem 3rem minmax(0, 1fr) 320px;
 }
 
+.redos-builder-workspace-toolbar-collapsed {
+  grid-template-columns: 280px 1.6rem minmax(0, 1fr) 320px;
+}
+
+.redos-builder-workspace-toolbox-collapsed.redos-builder-workspace-toolbar-collapsed {
+  grid-template-columns: 2.5rem 1.6rem minmax(0, 1fr) 320px;
+}
+
 .redos-builder-workspace-preview.redos-builder-workspace-toolbox-collapsed {
   grid-template-columns: 3rem minmax(0, 1fr);
+}
+
+.redos-builder-workspace-preview.redos-builder-workspace-toolbar-collapsed,
+.redos-builder-workspace-preview.redos-builder-workspace-toolbox-collapsed.redos-builder-workspace-toolbar-collapsed {
+  grid-template-columns: 1.6rem minmax(0, 1fr);
 }
 
 .redos-builder-workspace-preview .redos-canvas {
@@ -2656,6 +3893,27 @@ a:focus-visible {
   border-color: rgb(16 185 129 / 80%);
   background: #10b981;
   color: #ffffff;
+}
+
+.redos-builder-toolbar-peek {
+  align-self: start;
+  display: grid;
+  place-items: center;
+  width: 1.5rem;
+  height: 3.75rem;
+  border: 1px solid rgb(148 163 184 / 28%);
+  border-radius: 0.65rem;
+  background: rgb(15 23 42 / 88%);
+  color: #ffffff;
+  font-size: 1.1rem;
+  font-weight: 900;
+  cursor: pointer;
+  box-shadow: 0 8px 18px rgb(15 23 42 / 12%);
+}
+
+.redos-builder-toolbar-peek:hover {
+  border-color: rgb(16 185 129 / 80%);
+  background: #10b981;
 }
 
 .redos-left-panel,
@@ -2776,21 +4034,28 @@ a:focus-visible {
 }
 
 .redos-toolbox-tabs {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  overflow: hidden;
+  display: flex;
+  gap: 0.25rem;
+  overflow-x: auto;
+  overflow-y: hidden;
   border: 1px solid rgb(148 163 184 / 24%);
   border-radius: 0.9rem;
+  padding: 0.18rem;
   background: #ffffff;
 }
 
 .redos-toolbox-tabs button {
+  flex: 0 0 auto;
   min-height: 2rem;
   border: 0;
+  border-radius: 0.68rem;
   background: transparent;
+  padding: 0 0.6rem;
   color: #334155;
   font-size: 0.72rem;
   font-weight: 850;
+  white-space: nowrap;
+  cursor: pointer;
 }
 
 .redos-toolbox-tabs .redos-toolbox-tab-active {
@@ -2905,7 +4170,7 @@ a:focus-visible {
 .redos-screen {
   align-content: start;
   width: 100%;
-  max-width: 760px;
+  max-width: 1180px;
   min-height: 520px;
   border: 1px solid rgb(148 163 184 / 30%);
   border-radius: 1.35rem;
@@ -2929,6 +4194,10 @@ a:focus-visible {
 
 .redos-screen[data-preview='runtime']::before {
   display: none;
+}
+
+.redos-screen-desktop {
+  max-width: min(1180px, 100%);
 }
 
 .redos-screen-tablet {

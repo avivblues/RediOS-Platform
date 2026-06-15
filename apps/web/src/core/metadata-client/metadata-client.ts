@@ -50,6 +50,26 @@ export class MetadataClient {
     return this.post(`/runtime/${request.entityCode}/${request.documentId}/actions/${request.actionCode}`, request.payload ?? {});
   }
 
+  createObject(objectCode: string, data: Record<string, unknown>): Promise<unknown> {
+    return this.post(`/runtime/object/${objectCode}`, { data });
+  }
+
+  findObjects(objectCode: string, query?: Record<string, unknown>): Promise<Array<Record<string, unknown>>> {
+    const params = query ? `?${new URLSearchParams(stringRecord(query)).toString()}` : '';
+    return this.get(`/runtime/object/${objectCode}${params}`);
+  }
+
+  getObject(objectCode: string, id: string): Promise<Record<string, unknown> | null> {
+    return this.get(`/runtime/object/${objectCode}/${id}`);
+  }
+
+  updateObject(objectCode: string, id: string, data: Record<string, unknown>): Promise<unknown> {
+    return this.request(`/runtime/object/${objectCode}/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ data }),
+    });
+  }
+
   private get<TResponse>(path: string): Promise<TResponse> {
     return this.request<TResponse>(path);
   }
@@ -88,4 +108,8 @@ export class MetadataClient {
 
 export function createMetadataClient(context: RuntimeContext): MetadataClient {
   return new MetadataClient(context);
+}
+
+function stringRecord(value: Record<string, unknown>) {
+  return Object.fromEntries(Object.entries(value).map(([key, item]) => [key, String(item)]));
 }

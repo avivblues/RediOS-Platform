@@ -10,6 +10,55 @@ import { RuntimeService } from './runtime.service';
 export class RuntimeController {
   constructor(private readonly runtimeService: RuntimeService) {}
 
+  @Post('object/:entityCode')
+  @ApiOperation({ summary: 'Create a runtime object document from metadata.' })
+  @ApiParam({ name: 'entityCode', description: 'Metadata object code.' })
+  @ApiBody({ type: RuntimeCreateDto })
+  createObject(
+    @Headers() headers: RuntimeHeaders,
+    @Param('entityCode') entityCode: string,
+    @Body() payload: RuntimeCreateDto,
+  ) {
+    return this.runtimeService.create(headers, entityCode, payload);
+  }
+
+  @Get('object/:entityCode')
+  @ApiOperation({ summary: 'Find runtime object documents by metadata.' })
+  @ApiParam({ name: 'entityCode', description: 'Metadata object code.' })
+  findManyObjects(
+    @Headers() headers: RuntimeHeaders,
+    @Param('entityCode') entityCode: string,
+    @Query() query: Record<string, unknown>,
+  ) {
+    return this.runtimeService.findMany(headers, entityCode, query);
+  }
+
+  @Get('object/:entityCode/:id')
+  @ApiOperation({ summary: 'Find one runtime object document by id.' })
+  @ApiParam({ name: 'entityCode', description: 'Metadata object code.' })
+  @ApiParam({ name: 'id', description: 'Runtime document id.' })
+  findOneObject(
+    @Headers() headers: RuntimeHeaders,
+    @Param('entityCode') entityCode: string,
+    @Param('id') id: string,
+  ) {
+    return this.runtimeService.findOne(headers, entityCode, id);
+  }
+
+  @Patch('object/:entityCode/:id')
+  @ApiOperation({ summary: 'Update a runtime object document.' })
+  @ApiParam({ name: 'entityCode', description: 'Metadata object code.' })
+  @ApiParam({ name: 'id', description: 'Runtime document id.' })
+  @ApiBody({ type: RuntimeUpdateDto })
+  updateObject(
+    @Headers() headers: RuntimeHeaders,
+    @Param('entityCode') entityCode: string,
+    @Param('id') id: string,
+    @Body() payload: RuntimeUpdateDto,
+  ) {
+    return this.runtimeService.update(headers, entityCode, id, payload);
+  }
+
   @Post(':entityCode/create')
   @ApiOperation({ summary: 'Run universal metadata create action for an entity.' })
   @ApiParam({ name: 'entityCode', description: 'Metadata entity code.' })

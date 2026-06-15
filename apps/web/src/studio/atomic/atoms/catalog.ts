@@ -1,4 +1,5 @@
 import type { BuilderComponentDefinition } from '../../builder/types';
+import { tailAdminBuilderComponents } from '../../templates/tailadmin-template-registry';
 
 export const atomComponents: BuilderComponentDefinition[] = [
   { type: 'TextInput', label: 'Short text', layer: 'ATOM', description: 'Single line input' },
@@ -17,4 +18,5 @@ export const atomComponents: BuilderComponentDefinition[] = [
   { type: 'Checkbox', label: 'Checkbox', layer: 'ATOM', description: 'Single checkbox input' },
   { type: 'Button', label: 'Button', layer: 'ATOM', description: 'Generic button' },
   { type: 'Icon', label: 'Icon', layer: 'ATOM', description: 'Small visual icon' },
+  ...tailAdminBuilderComponents.filter((component) => component.layer === 'ATOM'),
 ];

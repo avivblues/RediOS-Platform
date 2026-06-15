@@ -28,6 +28,7 @@ import {
   type StudioScreenDraft,
 } from '../metadata/metadata-store';
 import { AdminGuidePanel } from '../guide/AdminGuide';
+import { tailAdminPageTemplates } from '../templates/tailadmin-template-registry';
 import type {
   BuilderComponentDefinition,
   BuilderDataObject,
@@ -110,53 +111,11 @@ const initialComponents: CanvasComponent[] = [
   },
 ];
 
-const builderTemplates: Array<{ id: string; label: string; components: CanvasComponent[] }> = [
-  {
-    id: 'create_account',
-    label: 'Create account',
-    components: [
-      {
-        id: 'template_form',
-        type: 'Form',
-        label: 'Create account',
-        width: 12,
-        height: 420,
-        x: 0,
-        y: 0,
-        children: [
-          { id: 'first_name', type: 'TextInput', label: 'First name', placeholder: 'First name', width: 6, height: 76, x: 0, y: 0 },
-          { id: 'last_name', type: 'TextInput', label: 'Last name', placeholder: 'Last name', width: 6, height: 76, x: 6, y: 1 },
-          { id: 'birthday', type: 'DateInput', label: 'Birthday', width: 12, height: 76, x: 0, y: 2 },
-          { id: 'country', type: 'Dropdown', label: 'Country', placeholder: 'Country', width: 12, height: 76, x: 0, y: 3 },
-          { id: 'phone', type: 'PhoneInput', label: 'Phone', width: 12, height: 76, x: 0, y: 4 },
-          { id: 'email', type: 'EmailInput', label: 'Email', width: 12, height: 76, x: 0, y: 5 },
-          { id: 'password', type: 'PasswordInput', label: 'Password', width: 12, height: 76, x: 0, y: 6 },
-          { id: 'terms', type: 'DecisionBox', label: 'I accept the Terms & Conditions', width: 12, height: 64, x: 0, y: 7 },
-          { id: 'submit_account', type: 'Submit', label: 'Create account', width: 4, height: 64, x: 4, y: 8 },
-        ],
-      },
-    ],
-  },
-  {
-    id: 'survey_matrix',
-    label: 'Survey form',
-    components: [
-      { id: 'survey_heading', type: 'FormHeading', label: 'Customer feedback', width: 12, height: 64, x: 0, y: 0 },
-      { id: 'satisfaction', type: 'SingleChoiceMatrix', label: 'Satisfaction matrix', width: 12, height: 260, x: 0, y: 1 },
-      { id: 'feedback_notes', type: 'TextEditor', label: 'Feedback notes', width: 12, height: 132, x: 0, y: 2 },
-      { id: 'survey_submit', type: 'Submit', label: 'Submit survey', width: 4, height: 64, x: 4, y: 3 },
-    ],
-  },
-  {
-    id: 'asset_table',
-    label: 'Asset table',
-    components: [
-      { id: 'asset_header', type: 'FormHeading', label: 'Asset management', width: 12, height: 64, x: 0, y: 0 },
-      { id: 'asset_data_table', type: 'DataTable', label: 'Asset DataTable', width: 12, height: 260, x: 0, y: 1 },
-      { id: 'asset_confirm', type: 'ConfirmModal', label: 'Confirm asset action', width: 8, height: 220, x: 2, y: 2 },
-    ],
-  },
-];
+const builderTemplates = tailAdminPageTemplates.map((template) => ({
+  components: template.components,
+  id: template.code,
+  label: template.label,
+}));
 
 export function BuilderShell({ target }: { target: StudioTarget }) {
   const applications = useMemo(() => loadStudioApplications(), []);
@@ -187,6 +146,7 @@ export function BuilderShell({ target }: { target: StudioTarget }) {
   const [statusMessage, setStatusMessage] = useState(savedDraft ? `Draft restored from ${formatSavedAt(savedDraft.savedAt)}` : 'Draft ready');
   const [isPreviewing, setIsPreviewing] = useState(false);
   const [isToolboxCollapsed, setIsToolboxCollapsed] = useState(false);
+  const [isSideToolbarCollapsed, setIsSideToolbarCollapsed] = useState(false);
   const [theme, setTheme] = useState<BuilderTheme>(savedDraft?.theme ?? 'Light');
   const [saveConfirmationOpen, setSaveConfirmationOpen] = useState(false);
   const selected = findComponentById(components, selectedId);
@@ -341,11 +301,12 @@ export function BuilderShell({ target }: { target: StudioTarget }) {
       id: `${definition.type}_${Date.now()}`,
       type: definition.type,
       label: definition.label,
-      width: defaultComponentWidth(definition.type, Boolean(targetParentId || customOrganism)),
-      height: defaultComponentHeight(definition.type, customOrganism?.components.length, Boolean(targetParentId)),
+      width: definition.defaultSize?.width ?? defaultComponentWidth(definition.type, Boolean(targetParentId || customOrganism)),
+      height: definition.defaultSize?.height ?? defaultComponentHeight(definition.type, customOrganism?.components.length, Boolean(targetParentId)),
       x: 0,
       y: components.length,
       children: definition.type === 'Form' ? [] : undefined,
+      template: definition.defaultConfig,
     };
 
     if (targetParentId && definition.type !== 'Form') {
@@ -567,8 +528,10 @@ export function BuilderShell({ target }: { target: StudioTarget }) {
   }
 
   function previewExperience() {
-    setIsPreviewing((current) => !current);
-    setStatusMessage(isPreviewing ? 'Builder canvas mode active' : 'Runtime preview mode active');
+    const nextPreviewing = !isPreviewing;
+    setIsPreviewing(nextPreviewing);
+    setIsSideToolbarCollapsed(nextPreviewing);
+    setStatusMessage(nextPreviewing ? 'Runtime preview mode active. Toolbar auto-hidden.' : 'Builder canvas mode active');
   }
 
   function publishExperience() {
@@ -698,6 +661,7 @@ export function BuilderShell({ target }: { target: StudioTarget }) {
         'redos-builder-workspace',
         isPreviewing ? 'redos-builder-workspace-preview' : '',
         isToolboxCollapsed ? 'redos-builder-workspace-toolbox-collapsed' : '',
+        isSideToolbarCollapsed ? 'redos-builder-workspace-toolbar-collapsed' : '',
       ].filter(Boolean).join(' ')}
       >
         {!isPreviewing ? (
@@ -730,13 +694,26 @@ export function BuilderShell({ target }: { target: StudioTarget }) {
           </aside>
         ) : null}
 
-        <BuilderSideToolbar
-          device={device}
-          isPreviewing={isPreviewing}
-          target={target}
-          onDeviceChange={setDevice}
-          onPreviewToggle={previewExperience}
-        />
+        {isSideToolbarCollapsed ? (
+          <button
+            aria-label="Show builder tools"
+            className="redos-builder-toolbar-peek"
+            data-redos-tooltip="Tampilkan toolbar builder"
+            type="button"
+            onClick={() => setIsSideToolbarCollapsed(false)}
+          >
+            ›
+          </button>
+        ) : (
+          <BuilderSideToolbar
+            device={device}
+            isPreviewing={isPreviewing}
+            target={target}
+            onCollapse={() => setIsSideToolbarCollapsed(true)}
+            onDeviceChange={setDevice}
+            onPreviewToggle={previewExperience}
+          />
+        )}
 
         <Canvas
           applicationCode={applicationCode}
@@ -818,18 +795,27 @@ function BuilderConfirmModal({
 function BuilderSideToolbar({
   device,
   isPreviewing,
+  onCollapse,
   onDeviceChange,
   onPreviewToggle,
   target,
 }: {
   device: StudioDevice;
   isPreviewing: boolean;
+  onCollapse: () => void;
   onDeviceChange: (device: StudioDevice) => void;
   onPreviewToggle: () => void;
   target: StudioTarget;
 }) {
   return (
     <aside className="redos-builder-side-toolbar" aria-label="Builder view controls">
+      <button
+        data-redos-tooltip="Auto-hide toolbar"
+        type="button"
+        onClick={onCollapse}
+      >
+        «
+      </button>
       <button
         className={!isPreviewing ? 'redos-side-tool-active' : ''}
         data-redos-tooltip="Edit mode: susun komponen dan metadata."
@@ -1079,6 +1065,10 @@ function clamp(value: number, min: number, max: number) {
 }
 
 function defaultComponentWidth(type: string, insideContainer: boolean) {
+  if (type.startsWith('Template')) {
+    return ['TemplateBadge', 'TemplateAvatar'].includes(type) ? 3 : 12;
+  }
+
   if (insideContainer) {
     if (['DataTable', 'InputTable', 'Modal', 'ConfirmModal'].includes(type)) {
       return 12;
@@ -1109,6 +1099,22 @@ function defaultComponentHeight(type: string, customOrganismComponentCount?: num
 
   if (type === 'Table') {
     return 180;
+  }
+
+  if (type.startsWith('Template')) {
+    if (['TemplateBadge', 'TemplateAlert', 'TemplateAvatar', 'TemplateBreadcrumb', 'TemplateAppHeader'].includes(type)) {
+      return 96;
+    }
+
+    if (['TemplateImageCard', 'TemplateVideoCard', 'TemplateDropzone', 'TemplateProfileCard', 'TemplateNotificationList'].includes(type)) {
+      return 190;
+    }
+
+    if (['TemplateChartPanel', 'TemplateLineChart', 'TemplateBarChart', 'TemplateCalendarBoard', 'TemplateAuthForm'].includes(type)) {
+      return 320;
+    }
+
+    return 240;
   }
 
   if (type === 'Form') {
@@ -1218,6 +1224,19 @@ function syncDataMetadataFromComponents(
   const fallbackObjectName = objectNameFromFormComponents(components) || screenObjectName.trim();
 
   const nextComponents = mapComponents(components, (component) => {
+    if (component.type.startsWith('Template') && fallbackObjectName && !component.template?.dataSource?.object) {
+      return {
+        ...component,
+        template: {
+          ...component.template,
+          dataSource: {
+            ...component.template?.dataSource,
+            object: fallbackObjectName,
+          },
+        },
+      };
+    }
+
     if (!supportsDataMetadataSync(component.type)) {
       return component;
     }
@@ -1390,6 +1409,16 @@ function supportsDataMetadataSync(type: string) {
     'ImageUpload',
     'MultiFileUpload',
     'MultiImageUpload',
+    'TemplateCheckboxGroup',
+    'TemplateDatePicker',
+    'TemplateFileInput',
+    'TemplateInputGroup',
+    'TemplateInputState',
+    'TemplatePhoneInputGroup',
+    'TemplateRadioGroup',
+    'TemplateSelectGroup',
+    'TemplateSwitchGroup',
+    'TemplateTextareaState',
   ].includes(type);
 }
 
@@ -1399,6 +1428,10 @@ function attributeTypeFromComponent(type: string): StudioDataAttribute['type'] {
   }
 
   if (type === 'DateInput') {
+    return 'date';
+  }
+
+  if (type === 'TemplateDatePicker') {
     return 'date';
   }
 
@@ -1418,11 +1451,15 @@ function attributeTypeFromComponent(type: string): StudioDataAttribute['type'] {
     return 'phone';
   }
 
+  if (type === 'TemplatePhoneInputGroup') {
+    return 'phone';
+  }
+
   if (type === 'UrlInput') {
     return 'url';
   }
 
-  if (['TextArea', 'TextEditor'].includes(type)) {
+  if (['TextArea', 'TextEditor', 'TemplateTextareaState'].includes(type)) {
     return 'longText';
   }
 
@@ -1430,11 +1467,11 @@ function attributeTypeFromComponent(type: string): StudioDataAttribute['type'] {
     return 'lookup';
   }
 
-  if (['Checkbox', 'DecisionBox', 'ToggleSwitch'].includes(type)) {
+  if (['Checkbox', 'DecisionBox', 'ToggleSwitch', 'TemplateCheckboxGroup', 'TemplateSwitchGroup'].includes(type)) {
     return 'boolean';
   }
 
-  if (['UploadField', 'MultiFileUpload'].includes(type)) {
+  if (['UploadField', 'MultiFileUpload', 'TemplateFileInput'].includes(type)) {
     return 'file';
   }
 
@@ -1612,6 +1649,10 @@ function componentTypeForAttribute(type: StudioDataObject['attributes'][number][
     return 'EmailInput';
   }
 
+  if (type === 'password') {
+    return 'PasswordInput';
+  }
+
   if (type === 'phone') {
     return 'PhoneInput';
   }
@@ -1626,6 +1667,10 @@ function componentTypeForAttribute(type: StudioDataObject['attributes'][number][
 
   if (type === 'lookup') {
     return 'Lookup';
+  }
+
+  if (type === 'enum') {
+    return 'Dropdown';
   }
 
   if (type === 'file') {

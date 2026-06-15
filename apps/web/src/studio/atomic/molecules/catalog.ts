@@ -1,4 +1,5 @@
 import type { BuilderComponentDefinition } from '../../builder/types';
+import { tailAdminBuilderComponents } from '../../templates/tailadmin-template-registry';
 
 export const moleculeComponents: BuilderComponentDefinition[] = [
   { type: 'Search', label: 'Search', layer: 'MOLECULE' },
@@ -23,4 +24,5 @@ export const moleculeComponents: BuilderComponentDefinition[] = [
   { type: 'ImageUpload', label: 'Image upload', layer: 'MOLECULE', description: 'File upload with image only' },
   { type: 'MultiFileUpload', label: 'Multi-file upload', layer: 'MOLECULE', description: 'Multi-file upload input' },
   { type: 'MultiImageUpload', label: 'Multi-image upload', layer: 'MOLECULE', description: 'Multi-file upload with images only' },
+  ...tailAdminBuilderComponents.filter((component) => component.layer === 'MOLECULE'),
 ];

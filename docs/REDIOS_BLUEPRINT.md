@@ -291,6 +291,47 @@ Hasil:
 - sumber validation
 - sumber query
 
+#### 5.2.1 System Object
+
+System Object adalah metadata object milik RediOS yang dipakai platform untuk membangun dirinya sendiri.
+
+Contoh pertama:
+
+```text
+Object: USER
+Type: SYSTEM_OBJECT
+Owner: REDIOS
+Locked: true
+Upgrade safe: true
+```
+
+Aturan:
+
+- Field sistem boleh tampil di Data Designer, tetapi wajib dilindungi.
+- Power User boleh menambah custom field, mengganti label, mengubah posisi, dan menyembunyikan field.
+- Power User tidak boleh menghapus, rename, atau mengganti tipe field sistem.
+- Data system object tetap disimpan lewat runtime persistence yang sama dengan business object.
+- API tidak dibuat sebagai controller khusus, tetapi muncul dari runtime object metadata.
+
+Contoh capability yang digenerate dari `USER`:
+
+```text
+USER.CREATE
+USER.UPDATE
+USER.DELETE
+USER.DISABLE
+USER.LIST
+USER.GET
+```
+
+Contoh route generic:
+
+```text
+POST /runtime/object/USER
+GET /runtime/object/USER
+PATCH /runtime/object/USER/{id}
+```
+
 ### 5.3 Query Metadata
 
 Mendefinisikan reusable data source.
@@ -587,6 +628,62 @@ Runtime behavior wajib meliputi:
 - notification menampilkan hasil
 
 Runtime berbasis localStorage hanya boleh untuk prototype validation. Production runtime wajib memakai generic runtime API dan metadata engines.
+
+### 7.1 Identity Metadata
+
+Identity di RediOS bukan aplikasi authentication tradisional.
+
+Tidak boleh dibuat:
+
+- User model class khusus.
+- User CRUD controller khusus.
+- User page hardcoded.
+- UserBusinessService.
+
+Identity wajib dibangun dari metadata:
+
+- `USER` sebagai `SYSTEM_OBJECT`.
+- `LOGIN_FORM` sebagai form metadata.
+- `REGISTER_FORM` sebagai form metadata.
+- `USER_FORM`, `USER_EDIT_FORM`, `USER_DETAIL`, dan `USER_LIST` sebagai screen/view metadata.
+- `AUTH.LOGIN`, `USER.REGISTER`, `USER.CREATE`, `USER.UPDATE`, `USER.DISABLE`, `USER.DELETE`, `USER.LIST`, dan `USER.GET` sebagai Action/Capability metadata.
+
+Identity Runtime hanya boleh berupa engine platform:
+
+```text
+IdentityEngine
+SessionEngine
+PasswordProvider
+```
+
+Alur login:
+
+```text
+Input
+  -> Validate
+  -> IdentityEngine
+  -> Resolve USER metadata
+  -> Create Session
+  -> Load Permission
+  -> Redirect
+```
+
+### 7.2 Generated Admin Application
+
+RediOS wajib dapat membangun aplikasi admin miliknya sendiri.
+
+System application pertama:
+
+```text
+Application: REDIOS ADMIN
+Menu:
+- Security
+  - Users
+  - Roles
+  - Permission
+```
+
+Menu, form, view, action, dan security tetap metadata. Runtime hanya membaca package metadata dan menjalankan engine generik.
 
 ---
 

@@ -4,16 +4,29 @@ import { moleculeComponents } from '../../atomic/molecules/catalog';
 import { organismComponents } from '../../atomic/organisms/catalog';
 import { customOrganismsAsComponents } from '../../metadata/metadata-store';
 import { HelpTip } from '../../guide/AdminGuide';
-import type { BuilderComponentDefinition, StudioTarget } from '../types';
+import type { BuilderComponentCategory, BuilderComponentDefinition, StudioTarget } from '../types';
 
 const REDIOS_COMPONENT_MIME = 'application/x-redios-component';
+const toolboxCategories: BuilderComponentCategory[] = [
+  'Fields',
+  'Static',
+  'Layout',
+  'Data Display',
+  'Dashboard',
+  'Charts',
+  'Navigation',
+  'Feedback',
+  'Media',
+  'Advanced',
+  'Page Templates',
+];
 
 const androidComponents: BuilderComponentDefinition[] = [
-  { type: 'Camera', label: 'Camera', layer: 'ANDROID' },
-  { type: 'GPS', label: 'GPS', layer: 'ANDROID' },
-  { type: 'Barcode', label: 'Barcode', layer: 'ANDROID' },
-  { type: 'OfflineStorage', label: 'Offline Storage', layer: 'ANDROID' },
-  { type: 'PushNotification', label: 'Push Notification', layer: 'ANDROID' },
+  { type: 'Camera', label: 'Camera', layer: 'ANDROID', category: 'Advanced' },
+  { type: 'GPS', label: 'GPS', layer: 'ANDROID', category: 'Advanced' },
+  { type: 'Barcode', label: 'Barcode', layer: 'ANDROID', category: 'Advanced' },
+  { type: 'OfflineStorage', label: 'Offline Storage', layer: 'ANDROID', category: 'Advanced' },
+  { type: 'PushNotification', label: 'Push Notification', layer: 'ANDROID', category: 'Advanced' },
 ];
 
 export function ComponentPanel({
@@ -26,56 +39,43 @@ export function ComponentPanel({
   onAdd: (component: BuilderComponentDefinition) => void;
 }) {
   const customOrganisms = useMemo(() => customOrganismsAsComponents(applicationCode), [applicationCode]);
-  const [activeCatalog, setActiveCatalog] = useState<'Fields' | 'Static' | 'Structure'>('Fields');
+  const [activeCatalog, setActiveCatalog] = useState<BuilderComponentCategory>('Fields');
   const [searchQuery, setSearchQuery] = useState('');
   const normalizedSearch = searchQuery.trim().toLowerCase();
-  const fieldComponents = useMemo(() => [
-    ...atomComponents.filter((component) => !['Button', 'Icon', 'Paragraph', 'Image', 'Link'].includes(component.type)),
-    ...moleculeComponents,
-    ...(target === 'android' ? androidComponents : []),
-  ], [target]);
-  const staticComponents = useMemo(() => [
-    ...atomComponents.filter((component) => ['Paragraph', 'Image', 'Link', 'Icon'].includes(component.type)),
-    ...organismComponents.filter((component) => ['FormHeading', 'SectionHeading', 'Subheading', 'Divider', 'Spacer'].includes(component.type)),
-  ], []);
-  const structureComponents = useMemo(() => [
-    ...atomComponents.filter((component) => component.type === 'Button'),
-    ...organismComponents.filter((component) => !['FormHeading', 'SectionHeading', 'Subheading', 'Divider', 'Spacer'].includes(component.type)),
-    ...customOrganisms,
-  ], [customOrganisms]);
-  const customStructureGroups = useMemo(() => [
+  const customStructureGroups = useMemo(() => {
+    const allComponents = [
+      ...atomComponents,
+      ...moleculeComponents,
+      ...organismComponents,
+      ...(target === 'android' ? androidComponents : []),
+      ...customOrganisms.map((component) => ({ ...component, category: 'Advanced' as const })),
+    ];
+
+    return [
     {
-      description: 'Single controls and static atoms',
+      description: 'Single controls, static atoms, and template atoms',
       title: 'Atoms',
-      components: atomComponents.filter((component) => activeCatalog === 'Fields'
-        ? !['Button', 'Icon', 'Paragraph', 'Image', 'Link'].includes(component.type)
-        : activeCatalog === 'Static'
-          ? ['Icon', 'Paragraph', 'Image', 'Link'].includes(component.type)
-          : ['Button'].includes(component.type)),
+      components: allComponents.filter((component) => component.layer === 'ATOM' && componentCategory(component) === activeCatalog),
     },
     {
-      description: 'Field groups, uploads, choices, and date inputs',
+      description: 'Field groups, navigation pieces, uploads, and template molecules',
       title: 'Molecules',
-      components: activeCatalog === 'Fields' ? moleculeComponents : [],
+      components: allComponents.filter((component) => component.layer === 'MOLECULE' && componentCategory(component) === activeCatalog),
     },
     {
-      description: 'Containers, tables, modals, headings, and layout blocks',
+      description: 'Containers, tables, dashboard blocks, pages, and imported organisms',
       title: 'Organisms',
-      components: organismComponents.filter((component) => activeCatalog === 'Static'
-        ? ['FormHeading', 'SectionHeading', 'Subheading', 'Divider', 'Spacer'].includes(component.type)
-        : activeCatalog === 'Structure'
-          ? !['FormHeading', 'SectionHeading', 'Subheading', 'Divider', 'Spacer'].includes(component.type)
-          : false),
+      components: allComponents.filter((component) => component.layer === 'ORGANISM' && componentCategory(component) === activeCatalog),
     },
     {
       description: 'Reusable organisms created in Advanced Mode',
       title: 'Custom Organisms',
-      components: activeCatalog === 'Structure' ? customOrganisms : [],
+      components: allComponents.filter((component) => component.layer !== 'ATOM' && component.layer !== 'MOLECULE' && component.layer !== 'ORGANISM' && componentCategory(component) === activeCatalog),
     },
     {
       description: 'Mobile runtime capabilities',
       title: 'Android',
-      components: activeCatalog === 'Fields' && target === 'android' ? androidComponents : [],
+      components: target === 'android' ? allComponents.filter((component) => component.layer === 'ANDROID' && componentCategory(component) === activeCatalog) : [],
     },
   ].map((group) => ({
     ...group,
@@ -87,7 +87,8 @@ export function ComponentPanel({
         component.layer,
       ].filter(Boolean).join(' ').toLowerCase().includes(normalizedSearch))
       : group.components,
-  })).filter((group) => group.components.length > 0), [activeCatalog, customOrganisms, normalizedSearch, target]);
+  })).filter((group) => group.components.length > 0);
+  }, [activeCatalog, customOrganisms, normalizedSearch, target]);
 
   return (
     <div className="redos-panel-content">
@@ -106,7 +107,7 @@ export function ComponentPanel({
         />
       </label>
       <div className="redos-toolbox-tabs" aria-label="Component catalog">
-        {(['Fields', 'Static', 'Structure'] as const).map((catalog) => (
+        {toolboxCategories.map((catalog) => (
           <button
             key={catalog}
             className={activeCatalog === catalog ? 'redos-toolbox-tab-active' : ''}
@@ -131,6 +132,30 @@ export function ComponentPanel({
       ) : null}
     </div>
   );
+}
+
+function componentCategory(component: BuilderComponentDefinition): BuilderComponentCategory {
+  if (component.category) {
+    return component.category;
+  }
+
+  if (['Paragraph', 'Image', 'Link', 'Icon', 'FormHeading', 'SectionHeading', 'Subheading', 'Divider', 'Spacer'].includes(component.type)) {
+    return 'Static';
+  }
+
+  if (['Form', 'Pages', 'Group', 'Grid', 'Modal', 'ConfirmModal', 'Submit', 'Button'].includes(component.type)) {
+    return 'Layout';
+  }
+
+  if (['Table', 'DataTable', 'InputTable', 'MatrixTable'].includes(component.type)) {
+    return 'Data Display';
+  }
+
+  if (['Dashboard', 'WorkflowPanel', 'Timeline', 'Captcha'].includes(component.type)) {
+    return 'Advanced';
+  }
+
+  return 'Fields';
 }
 
 function ComponentGroup({

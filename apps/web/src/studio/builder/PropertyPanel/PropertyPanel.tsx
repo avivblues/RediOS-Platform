@@ -7,6 +7,9 @@ type BuilderTheme = 'Light' | 'Mint' | 'Dark';
 type RightPanelTab = 'Settings' | 'Theme' | 'Export';
 type ThemePropertyKind = 'color' | 'value';
 type EventKey = keyof NonNullable<CanvasComponent['events']>;
+type TemplateChartKind = NonNullable<NonNullable<CanvasComponent['template']>['chart']>['kind'];
+type TemplateColumn = NonNullable<NonNullable<CanvasComponent['template']>['columns']>[number];
+type TemplateMetric = NonNullable<NonNullable<CanvasComponent['template']>['metrics']>[number];
 interface ThemeProperty {
   label: string;
   value: string;
@@ -243,6 +246,7 @@ export function PropertyPanel({
   const selectedField = selected.binding?.field ?? fieldOptions[0] ?? '';
   const showPlaceholder = supportsPlaceholder(selected.type);
   const showDataBinding = supportsDataBinding(selected.type);
+  const showTemplateMetadata = supportsTemplateMetadata(selected);
   const eventKeys = eventKeysForComponent(selected.type);
 
   return (
@@ -323,6 +327,142 @@ export function PropertyPanel({
                   </select>
                 </label>
                 <p className="redos-muted">This generates DATA binding metadata behind the scenes. Jika Field kosong, Save akan membuat attribute dari label component.</p>
+              </section>
+            ) : null}
+
+            {showTemplateMetadata ? (
+              <section>
+                <h4>Template Metadata <HelpTip label="Template Metadata" text="Hubungkan komponen template ke Data Object, Query, Field mapping, Action, dan Permission. Template tetap UI metadata, bukan logic hardcoded." /></h4>
+                <label>
+                  Data Object
+                  <select
+                    value={selected.template?.dataSource?.object ?? selected.binding?.object ?? selectedObject}
+                    onChange={(event) => onChange({
+                      template: {
+                        ...selected.template,
+                        dataSource: {
+                          ...selected.template?.dataSource,
+                          object: event.target.value,
+                        },
+                      },
+                    })}
+                  >
+                    {dataObjects.map((object) => <option key={object.name}>{object.name}</option>)}
+                  </select>
+                </label>
+                <label>
+                  Query Code
+                  <input
+                    placeholder="Example: product_list"
+                    value={selected.template?.dataSource?.query ?? ''}
+                    onChange={(event) => onChange({
+                      template: {
+                        ...selected.template,
+                        dataSource: {
+                          ...selected.template?.dataSource,
+                          query: event.target.value,
+                        },
+                      },
+                    })}
+                  />
+                </label>
+                <label>
+                  Permission
+                  <input
+                    placeholder="Example: inventory.product.read"
+                    value={selected.template?.permission ?? ''}
+                    onChange={(event) => onChange({ template: { ...selected.template, permission: event.target.value } })}
+                  />
+                </label>
+                <label>
+                  Variant
+                  <input
+                    placeholder="success, warning, signin, meta, 404"
+                    value={selected.template?.variant ?? ''}
+                    onChange={(event) => onChange({ template: { ...selected.template, variant: event.target.value } })}
+                  />
+                </label>
+                {supportsTemplateChart(selected.type) ? (
+                  <>
+                    <label>
+                      Chart Type
+                      <select
+                        value={selected.template?.chart?.kind ?? 'line'}
+                        onChange={(event) => onChange({
+                          template: {
+                            ...selected.template,
+                            chart: {
+                              kind: event.target.value as TemplateChartKind,
+                              metricField: selected.template?.chart?.metricField,
+                              seriesField: selected.template?.chart?.seriesField,
+                            },
+                          },
+                        })}
+                      >
+                        <option value="area">Area</option>
+                        <option value="bar">Bar</option>
+                        <option value="line">Line</option>
+                        <option value="pie">Pie</option>
+                        <option value="radial">Radial</option>
+                      </select>
+                    </label>
+                    <label>
+                      Metric Field
+                      <input
+                        placeholder="revenue"
+                        value={selected.template?.chart?.metricField ?? ''}
+                        onChange={(event) => onChange({
+                          template: {
+                            ...selected.template,
+                            chart: {
+                              kind: selected.template?.chart?.kind ?? 'line',
+                              metricField: event.target.value,
+                              seriesField: selected.template?.chart?.seriesField,
+                            },
+                          },
+                        })}
+                      />
+                    </label>
+                    <label>
+                      Series Field
+                      <input
+                        placeholder="month"
+                        value={selected.template?.chart?.seriesField ?? ''}
+                        onChange={(event) => onChange({
+                          template: {
+                            ...selected.template,
+                            chart: {
+                              kind: selected.template?.chart?.kind ?? 'line',
+                              metricField: selected.template?.chart?.metricField,
+                              seriesField: event.target.value,
+                            },
+                          },
+                        })}
+                      />
+                    </label>
+                  </>
+                ) : null}
+                {supportsTemplateColumns(selected.type) ? (
+                  <label>
+                    Columns
+                    <textarea
+                      placeholder="name:Name&#10;status:Status"
+                      value={formatTemplateColumns(selected.template?.columns)}
+                      onChange={(event) => onChange({ template: { ...selected.template, columns: parseTemplateColumns(event.target.value) } })}
+                    />
+                  </label>
+                ) : null}
+                {supportsTemplateMetrics(selected.type) ? (
+                  <label>
+                    Metrics
+                    <textarea
+                      placeholder="customers:Customers:3,782&#10;orders:Orders:5,359"
+                      value={formatTemplateMetrics(selected.template?.metrics)}
+                      onChange={(event) => onChange({ template: { ...selected.template, metrics: parseTemplateMetrics(event.target.value) } })}
+                    />
+                  </label>
+                ) : null}
+                <p className="redos-muted">Save/Publish akan membawa config ini ke runtime. Action tetap dipilih lewat Events di bawah.</p>
               </section>
             ) : null}
 
@@ -658,7 +798,79 @@ function supportsDataBinding(type: string) {
     'ImageUpload',
     'MultiFileUpload',
     'MultiImageUpload',
+    'TemplateCheckboxGroup',
+    'TemplateDatePicker',
+    'TemplateFileInput',
+    'TemplateInputGroup',
+    'TemplateInputState',
+    'TemplatePhoneInputGroup',
+    'TemplateRadioGroup',
+    'TemplateSelectGroup',
+    'TemplateSwitchGroup',
+    'TemplateTextareaState',
   ].includes(type);
+}
+
+function supportsTemplateMetadata(component: CanvasComponent) {
+  return Boolean(component.template) || component.type.startsWith('Template');
+}
+
+function supportsTemplateChart(type: string) {
+  return ['TemplateChartPanel', 'TemplateLineChart', 'TemplateBarChart'].includes(type);
+}
+
+function supportsTemplateColumns(type: string) {
+  return ['TemplateRecentOrders', 'TemplateBasicTable', 'TemplateCalendarBoard'].includes(type);
+}
+
+function supportsTemplateMetrics(type: string) {
+  return type === 'TemplateMetricGroup';
+}
+
+function formatTemplateColumns(columns: NonNullable<CanvasComponent['template']>['columns'] | undefined) {
+  if (!Array.isArray(columns)) {
+    return '';
+  }
+
+  return columns.map((column) => `${column.field}:${column.label}`).join('\n');
+}
+
+function parseTemplateColumns(value: string): TemplateColumn[] {
+  return value.split('\n').map((line) => {
+    const [field, ...labelParts] = line.split(':');
+    const cleanField = field.trim();
+    const label = labelParts.join(':').trim() || cleanField;
+
+    return cleanField ? { field: cleanField, label } : undefined;
+  }).filter((column): column is TemplateColumn => Boolean(column));
+}
+
+function formatTemplateMetrics(metrics: NonNullable<CanvasComponent['template']>['metrics'] | undefined) {
+  if (!Array.isArray(metrics)) {
+    return '';
+  }
+
+  return metrics.map((metric) => `${metric.field ?? ''}:${metric.label}:${metric.value ?? ''}`).join('\n');
+}
+
+function parseTemplateMetrics(value: string): TemplateMetric[] {
+  return value.split('\n').flatMap((line) => {
+    const [field, label, ...valueParts] = line.split(':');
+    const cleanLabel = (label || field).trim();
+
+    if (!cleanLabel) {
+      return [];
+    }
+
+    const cleanField = field.trim();
+    const cleanValue = valueParts.join(':').trim();
+
+    return [{
+      ...(cleanField ? { field: cleanField } : {}),
+      label: cleanLabel,
+      ...(cleanValue ? { value: cleanValue } : {}),
+    }];
+  });
 }
 
 function defaultConfirmation(component: CanvasComponent): NonNullable<CanvasComponent['confirmation']> {
@@ -676,12 +888,16 @@ function defaultConfirmation(component: CanvasComponent): NonNullable<CanvasComp
 }
 
 function eventKeysForComponent(type: string): EventKey[] {
-  if (type === 'Form') {
+  if (type === 'Form' || type === 'TemplateAuthForm') {
     return ['onSubmit', 'onLoad'];
   }
 
-  if (['Button', 'Submit', 'ConfirmModal'].includes(type)) {
+  if (['Button', 'Submit', 'ConfirmModal', 'TemplateErrorState'].includes(type)) {
     return ['onClick', 'onFocus', 'onBlur'];
+  }
+
+  if (['TemplateRecentOrders', 'TemplateBasicTable', 'TemplateCalendarBoard', 'TemplateNotificationList'].includes(type)) {
+    return ['onClick', 'onLoad'];
   }
 
   if ([
@@ -716,6 +932,16 @@ function eventKeysForComponent(type: string): EventKey[] {
     'ImageUpload',
     'MultiFileUpload',
     'MultiImageUpload',
+    'TemplateCheckboxGroup',
+    'TemplateDatePicker',
+    'TemplateFileInput',
+    'TemplateInputGroup',
+    'TemplateInputState',
+    'TemplatePhoneInputGroup',
+    'TemplateRadioGroup',
+    'TemplateSelectGroup',
+    'TemplateSwitchGroup',
+    'TemplateTextareaState',
   ].includes(type)) {
     return ['onChange', 'onFocus', 'onBlur'];
   }

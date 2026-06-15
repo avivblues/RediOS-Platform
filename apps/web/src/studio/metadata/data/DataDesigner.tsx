@@ -12,6 +12,7 @@ import {
 } from '../metadata-store';
 
 const attributeTypes: Array<{ value: StudioDataAttribute['type']; label: string; description: string }> = [
+  { value: 'string', label: 'String', description: 'Teks pendek untuk kode, username, atau identifier bisnis' },
   { value: 'text', label: 'Text', description: 'Nama, kode, status, catatan pendek' },
   { value: 'longText', label: 'Long Text', description: 'Catatan panjang, deskripsi, instruksi' },
   { value: 'number', label: 'Number', description: 'Angka umum tanpa format khusus' },
@@ -31,6 +32,9 @@ const attributeTypes: Array<{ value: StudioDataAttribute['type']; label: string;
   { value: 'json', label: 'JSON', description: 'Data fleksibel seperti konfigurasi atau payload API' },
   { value: 'file', label: 'File', description: 'Dokumen atau lampiran' },
   { value: 'image', label: 'Image', description: 'Foto produk, bukti, atau gambar pendukung' },
+  { value: 'uuid', label: 'UUID', description: 'Identifier unik yang dibuat runtime' },
+  { value: 'password', label: 'Password', description: 'Field rahasia yang disimpan oleh provider password' },
+  { value: 'enum', label: 'Enum', description: 'Pilihan nilai tetap seperti ACTIVE, INACTIVE, LOCKED' },
 ];
 
 type DeleteConfirmation =
@@ -154,6 +158,12 @@ export function DataDesigner() {
   }
 
   function removeObject(name: string) {
+    const object = objects.find((item) => item.name === name);
+
+    if (isLockedObject(object)) {
+      return;
+    }
+
     const nextObjects = objects.filter((object) => object.name !== name);
     persist(nextObjects);
 
@@ -166,6 +176,13 @@ export function DataDesigner() {
   }
 
   function removeAttribute(objectNameValue: string, attributeNameValue: string) {
+    const object = objects.find((item) => item.name === objectNameValue);
+    const attribute = object?.attributes.find((item) => item.name === attributeNameValue);
+
+    if (isLockedAttribute(attribute)) {
+      return;
+    }
+
     persist(objects.map((object) => object.name === objectNameValue ? {
       ...object,
       attributes: object.attributes.filter((attribute) => attribute.name !== attributeNameValue),
@@ -200,6 +217,12 @@ export function DataDesigner() {
 
   function requestSaveSelectedObject() {
     if (!selectedObject) {
+      return;
+    }
+
+    if (isLockedObject(selectedObject)) {
+      setEditingObjectName('');
+      setObjectEditName(selectedObject.name);
       return;
     }
 
@@ -249,6 +272,15 @@ export function DataDesigner() {
 
   function requestSaveSelectedAttribute() {
     if (!selectedObject || !selectedAttributeName) {
+      return;
+    }
+
+    const currentAttribute = selectedObject.attributes.find((attribute) => attribute.name === selectedAttributeName);
+
+    if (currentAttribute && isLockedAttribute(currentAttribute)) {
+      setEditingAttributeName('');
+      setAttributeEditName(currentAttribute.name);
+      setAttributeEditType(currentAttribute.type);
       return;
     }
 
@@ -429,19 +461,20 @@ export function DataDesigner() {
                     <label className="redos-inline-table-field">
                       <span>Object Name</span>
                       <input
+                        disabled={isLockedObject(object)}
                         value={objectEditName}
                         onChange={(event) => setObjectEditName(event.target.value)}
                         onClick={(event) => event.stopPropagation()}
                       />
                     </label>
-                    <span className="redos-data-table-meta">{object.attributes.length} attributes</span>
+                    <span className="redos-data-table-meta">{object.attributes.length} attributes {isLockedObject(object) ? '· SYSTEM_OBJECT' : ''}</span>
                     <span className="redos-data-row-actions">
-                      <ActionButton compact icon="save" label="Save Object" onClick={(event) => {
+                      <ActionButton compact disabled={isLockedObject(object)} icon="save" label="Save Object" onClick={(event) => {
                         event.stopPropagation();
                         requestSaveSelectedObject();
                       }}
                       />
-                      <ActionButton compact danger icon="delete" label="Delete Object" onClick={(event) => {
+                      <ActionButton compact danger disabled={isLockedObject(object)} icon="delete" label="Delete Object" onClick={(event) => {
                         event.stopPropagation();
                         setDeleteConfirmation({ kind: 'object', objectName: object.name });
                       }}
@@ -452,16 +485,16 @@ export function DataDesigner() {
                   <>
                     <span>
                       <strong>{object.name}</strong>
-                      <small>{object.attributes.length} attributes</small>
+                      <small>{object.attributes.length} attributes {isLockedObject(object) ? '· SYSTEM_OBJECT locked' : ''}</small>
                     </span>
                     <span className="redos-data-chevron">{selectedObject?.name === object.name ? 'Selected' : 'Open'}</span>
                     <span className="redos-data-row-actions">
-                      <ActionButton compact icon="edit" label="Edit Object" onClick={(event) => {
+                      <ActionButton compact disabled={isLockedObject(object)} icon="edit" label="Edit Object" onClick={(event) => {
                         event.stopPropagation();
                         startEditObject(object);
                       }}
                       />
-                      <ActionButton compact danger icon="delete" label="Delete Object" onClick={(event) => {
+                      <ActionButton compact danger disabled={isLockedObject(object)} icon="delete" label="Delete Object" onClick={(event) => {
                         event.stopPropagation();
                         setDeleteConfirmation({ kind: 'object', objectName: object.name });
                       }}
@@ -493,6 +526,7 @@ export function DataDesigner() {
                     <label className="redos-inline-table-field">
                       <span>Attribute Name</span>
                       <input
+                        disabled={isLockedAttribute(attribute)}
                         value={attributeEditName}
                         onChange={(event) => setAttributeEditName(event.target.value)}
                         onClick={(event) => event.stopPropagation()}
@@ -501,6 +535,7 @@ export function DataDesigner() {
                     <label className="redos-inline-table-field">
                       <span>Data Type</span>
                       <select
+                        disabled={isLockedAttribute(attribute)}
                         value={attributeEditType}
                         onChange={(event) => setAttributeEditType(event.target.value as StudioDataAttribute['type'])}
                         onClick={(event) => event.stopPropagation()}
@@ -509,12 +544,12 @@ export function DataDesigner() {
                       </select>
                     </label>
                     <span className="redos-data-row-actions">
-                      <ActionButton compact icon="save" label="Save Attribute" onClick={(event) => {
+                      <ActionButton compact disabled={isLockedAttribute(attribute)} icon="save" label="Save Attribute" onClick={(event) => {
                         event.stopPropagation();
                         requestSaveSelectedAttribute();
                       }}
                       />
-                      <ActionButton compact danger icon="delete" label="Delete Attribute" onClick={(event) => {
+                      <ActionButton compact danger disabled={isLockedAttribute(attribute)} icon="delete" label="Delete Attribute" onClick={(event) => {
                         event.stopPropagation();
                         setDeleteConfirmation({ kind: 'attribute', objectName: selectedObject.name, attributeName: attribute.name });
                       }}
@@ -524,17 +559,17 @@ export function DataDesigner() {
                 ) : (
                   <>
                     <span>
-                      <strong>{attribute.name}</strong>
-                      <small>Attribute</small>
+                      <strong>{attribute.label ?? attribute.name}</strong>
+                      <small>{attribute.name} · {isLockedAttribute(attribute) ? 'System Field locked' : 'Custom Field editable'}</small>
                     </span>
                     <span className={`redos-data-type-badge redos-data-type-${attribute.type}`}>{attribute.type}</span>
                     <span className="redos-data-row-actions">
-                      <ActionButton compact icon="edit" label="Edit Attribute" onClick={(event) => {
+                      <ActionButton compact disabled={isLockedAttribute(attribute)} icon="edit" label="Edit Attribute" onClick={(event) => {
                         event.stopPropagation();
                         startEditAttribute(attribute);
                       }}
                       />
-                      <ActionButton compact danger icon="delete" label="Delete Attribute" onClick={(event) => {
+                      <ActionButton compact danger disabled={isLockedAttribute(attribute)} icon="delete" label="Delete Attribute" onClick={(event) => {
                         event.stopPropagation();
                         setDeleteConfirmation({ kind: 'attribute', objectName: selectedObject.name, attributeName: attribute.name });
                       }}
@@ -610,6 +645,14 @@ export function DataDesigner() {
       ) : null}
     </section>
   );
+}
+
+function isLockedObject(object?: StudioDataObject) {
+  return Boolean(object?.locked || object?.type === 'SYSTEM_OBJECT');
+}
+
+function isLockedAttribute(attribute?: StudioDataAttribute) {
+  return Boolean(attribute?.locked || attribute?.systemField);
 }
 
 function ActionButton({

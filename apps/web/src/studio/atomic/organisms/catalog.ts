@@ -1,4 +1,5 @@
 import type { BuilderComponentDefinition } from '../../builder/types';
+import { tailAdminBuilderComponents } from '../../templates/tailadmin-template-registry';
 
 export const organismComponents: BuilderComponentDefinition[] = [
   { type: 'Form', label: 'Form', layer: 'ORGANISM' },
@@ -20,4 +21,5 @@ export const organismComponents: BuilderComponentDefinition[] = [
   { type: 'WorkflowPanel', label: 'Workflow', layer: 'ORGANISM' },
   { type: 'Dashboard', label: 'Dashboard', layer: 'ORGANISM' },
   { type: 'Timeline', label: 'Timeline', layer: 'ORGANISM' },
+  ...tailAdminBuilderComponents.filter((component) => component.layer === 'ORGANISM'),
 ];
