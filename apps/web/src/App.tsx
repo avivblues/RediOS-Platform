@@ -1,3 +1,7 @@
+import { AuthProvider } from './auth/context/AuthProvider';
+import { LoginPage } from './auth/pages/LoginPage';
+import { ProfilePage } from './auth/pages/ProfilePage';
+import { RegisterPage } from './auth/pages/RegisterPage';
 import { RuntimeContextProvider } from './core/context/runtime-context';
 import { StudioPage } from './app/studio/StudioPage';
 import { RuntimePage } from './pages/RuntimePage';
@@ -5,18 +9,24 @@ import { RuntimeAppShell } from './runtime/RuntimeAppShell';
 
 export function App() {
   const isStudio = window.location.pathname.startsWith('/studio');
-  const identityScreenCode = identityScreenCodeFromLocation(window.location.pathname);
+  const authRoute = authRouteFromLocation(window.location.pathname);
   const generatedApplicationCode = generatedApplicationCodeFromLocation(window.location.pathname);
 
   return (
     <RuntimeContextProvider>
-      {isStudio
-        ? <StudioPage />
-        : identityScreenCode
-          ? <RuntimeAppShell applicationCode="redios-admin" initialScreenCode={identityScreenCode} />
-          : generatedApplicationCode
-            ? <RuntimeAppShell applicationCode={generatedApplicationCode} />
-            : <RuntimePage />}
+      <AuthProvider>
+        {isStudio
+          ? <StudioPage />
+          : authRoute === 'login'
+            ? <LoginPage />
+            : authRoute === 'register'
+              ? <RegisterPage />
+              : authRoute === 'profile'
+                ? <ProfilePage />
+                : generatedApplicationCode
+                  ? <RuntimeAppShell applicationCode={generatedApplicationCode} />
+                  : <RuntimePage />}
+      </AuthProvider>
     </RuntimeContextProvider>
   );
 }
@@ -26,13 +36,17 @@ function generatedApplicationCodeFromLocation(pathname: string): string | undefi
   return route === 'apps' && applicationCode ? applicationCode : undefined;
 }
 
-function identityScreenCodeFromLocation(pathname: string): string | undefined {
+function authRouteFromLocation(pathname: string): 'login' | 'profile' | 'register' | undefined {
   if (pathname === '/login') {
-    return 'LOGIN_FORM';
+    return 'login';
   }
 
   if (pathname === '/register') {
-    return 'REGISTER_FORM';
+    return 'register';
+  }
+
+  if (pathname === '/profile') {
+    return 'profile';
   }
 
   return undefined;

@@ -15,5 +15,3 @@ export const PlatformTenantSchema = new Schema(
     timestamps: true,
   },
 );
-
-PlatformTenantSchema.index({ code: 1 }, { unique: true });

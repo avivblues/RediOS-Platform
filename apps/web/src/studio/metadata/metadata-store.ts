@@ -55,6 +55,35 @@ export interface StudioDataObject {
   attributes: StudioDataAttribute[];
 }
 
+export interface StudioQueryDraft {
+  code: string;
+  label: string;
+  objectName: string;
+  fields: string[];
+  sourceObjects?: string[];
+  columns?: StudioQueryColumnDraft[];
+  filter: string;
+  sort: string;
+  distinct?: boolean;
+  limit?: number;
+  offset?: number;
+  mode: 'list' | 'lookup' | 'dashboard' | 'report';
+  sqlPreview?: string;
+}
+
+export interface StudioQueryColumnDraft {
+  objectName: string;
+  field: string;
+  alias: string;
+  visible: boolean;
+  sortType?: 'none' | 'ascending' | 'descending';
+  sortOrder?: number;
+  aggregate?: 'none' | 'count' | 'sum' | 'avg' | 'min' | 'max';
+  grouping?: boolean;
+  criteria?: string;
+  operator?: 'and' | 'or';
+}
+
 export interface StudioActionDraft {
   code: string;
   label: string;
@@ -71,6 +100,9 @@ export interface StudioCustomApiDraft {
   url: string;
   auth: 'None' | 'API Key' | 'Bearer Token';
   mappedAction?: string;
+  objectName?: string;
+  queryCode?: string;
+  source?: 'OBJECT' | 'QUERY' | 'EXTERNAL';
 }
 
 export interface StudioCustomOrganismDraft {
@@ -133,6 +165,7 @@ export interface StudioApplicationMetadataPackage {
   appName: string;
   target: StudioTarget;
   dataObjects: StudioDataObject[];
+  queries: StudioQueryDraft[];
   actions: StudioActionDraft[];
   connectors: StudioCustomApiDraft[];
   processes: StudioProcessDraft[];
@@ -156,6 +189,7 @@ export interface StudioApplicationDraft {
 }
 
 const DATA_OBJECTS_KEY = 'redios:studio:metadata:data-objects';
+const QUERIES_KEY = 'redios:studio:metadata:queries';
 const ACTIONS_KEY = 'redios:studio:metadata:actions';
 const CUSTOM_APIS_KEY = 'redios:studio:metadata:custom-apis';
 const CUSTOM_ORGANISMS_KEY = 'redios:studio:metadata:custom-organisms';
@@ -191,6 +225,28 @@ export const defaultActions: StudioActionDraft[] = [
     label: 'Save Product',
     trigger: 'onClick',
     steps: ['validate', 'save', 'notify'],
+  },
+];
+
+export const defaultQueries: StudioQueryDraft[] = [
+  {
+    code: 'PRODUCT_LIST',
+    label: 'Product List',
+    objectName: 'Product',
+    fields: ['name', 'stock', 'price'],
+    sourceObjects: ['Product'],
+    columns: [
+      { objectName: 'Product', field: 'name', alias: 'Name', visible: true, sortType: 'ascending', sortOrder: 1, aggregate: 'none', grouping: false, criteria: '', operator: 'and' },
+      { objectName: 'Product', field: 'stock', alias: 'Stock', visible: true, sortType: 'none', aggregate: 'none', grouping: false, criteria: '', operator: 'and' },
+      { objectName: 'Product', field: 'price', alias: 'Price', visible: true, sortType: 'none', aggregate: 'none', grouping: false, criteria: '', operator: 'and' },
+    ],
+    filter: 'status != DELETED',
+    sort: 'name asc',
+    distinct: false,
+    limit: 100,
+    offset: 0,
+    mode: 'list',
+    sqlPreview: 'SELECT Product.name AS Name, Product.stock AS Stock, Product.price AS Price\nFROM Product\nWHERE status != DELETED\nORDER BY name asc\nLIMIT 100',
   },
 ];
 
@@ -291,6 +347,14 @@ export function loadDataObjects(appCode?: string) {
 
 export function saveDataObjects(value: StudioDataObject[], appCode?: string) {
   writeStoredValue(scopedMetadataKey(DATA_OBJECTS_KEY, appCode), isRediosAdminApplication(appCode) ? rediosAdminSystemObjectContracts(value) : value);
+}
+
+export function loadQueries(appCode?: string) {
+  return readStoredValue(scopedMetadataKey(QUERIES_KEY, appCode), isRediosAdminApplication(appCode) ? rediosAdminSeedMetadata.queries : readStoredValue(QUERIES_KEY, defaultQueries));
+}
+
+export function saveQueries(value: StudioQueryDraft[], appCode?: string) {
+  writeStoredValue(scopedMetadataKey(QUERIES_KEY, appCode), value);
 }
 
 export function loadActions(appCode?: string) {
@@ -424,6 +488,7 @@ export function loadPublishedApplication(appSlug: string) {
 export function seedApplicationMetadata(appCode: string, template: string) {
   if (isRediosAdminApplication(appCode) || template === REDIOS_ADMIN_APPLICATION.template) {
     writeStoredValue(scopedMetadataKey(DATA_OBJECTS_KEY, appCode), rediosAdminSeedMetadata.dataObjects);
+    writeStoredValue(scopedMetadataKey(QUERIES_KEY, appCode), rediosAdminSeedMetadata.queries);
     writeStoredValue(scopedMetadataKey(ACTIONS_KEY, appCode), rediosAdminSeedMetadata.actions);
     writeStoredValue(scopedMetadataKey(CUSTOM_APIS_KEY, appCode), rediosAdminSeedMetadata.connectors);
     writeStoredValue(scopedMetadataKey(CUSTOM_ORGANISMS_KEY, appCode), rediosAdminSeedMetadata.customOrganisms);
@@ -436,6 +501,7 @@ export function seedApplicationMetadata(appCode: string, template: string) {
 
   if (template === 'BLANK_EXPERIENCE') {
     writeStoredValue(scopedMetadataKey(DATA_OBJECTS_KEY, appCode), []);
+    writeStoredValue(scopedMetadataKey(QUERIES_KEY, appCode), []);
     writeStoredValue(scopedMetadataKey(ACTIONS_KEY, appCode), []);
     writeStoredValue(scopedMetadataKey(CUSTOM_APIS_KEY, appCode), []);
     writeStoredValue(scopedMetadataKey(CUSTOM_ORGANISMS_KEY, appCode), []);
@@ -447,6 +513,7 @@ export function seedApplicationMetadata(appCode: string, template: string) {
   }
 
   writeStoredValue(scopedMetadataKey(DATA_OBJECTS_KEY, appCode), defaultDataObjects);
+  writeStoredValue(scopedMetadataKey(QUERIES_KEY, appCode), defaultQueries);
   writeStoredValue(scopedMetadataKey(ACTIONS_KEY, appCode), defaultActions);
   writeStoredValue(scopedMetadataKey(CUSTOM_APIS_KEY, appCode), defaultCustomApis);
   writeStoredValue(scopedMetadataKey(CUSTOM_ORGANISMS_KEY, appCode), defaultCustomOrganisms);

@@ -107,6 +107,14 @@ export class IdentityEngine {
     return this.sessionEngine.createSession(user);
   }
 
+  currentSession() {
+    return this.sessionEngine.currentSession();
+  }
+
+  logout() {
+    this.sessionEngine.clearSession();
+  }
+
   executeCapability(actionCode: string, payload: Record<string, unknown>, context?: RuntimeContext) {
     if (actionCode === 'AUTH.LOGIN') {
       return this.login(payload);

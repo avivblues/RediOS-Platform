@@ -11,6 +11,7 @@ import {
   loadDataObjects,
   loadMenu,
   loadProcesses,
+  loadQueries,
   loadSecurity,
   loadScreens,
   loadStudioApplications,
@@ -554,6 +555,7 @@ export function BuilderShell({ target }: { target: StudioTarget }) {
       appName: applicationNameFromCode(applicationCode),
       target,
       dataObjects: syncedMetadata.dataObjects,
+      queries: loadQueries(applicationCode),
       actions: syncedMetadata.actions,
       connectors: loadCustomApis(applicationCode),
       processes: loadProcesses(applicationCode),
@@ -604,7 +606,9 @@ export function BuilderShell({ target }: { target: StudioTarget }) {
           <button data-redos-tooltip="Mulai aplikasi baru dari template experience, bukan dari database." type="button" onClick={() => { window.location.href = '/studio/create'; }}>Create App</button>
           <button data-redos-tooltip="Konfirmasi lalu simpan canvas dan screen metadata aktif." type="button" onClick={() => setSaveConfirmationOpen(true)}>Save</button>
           <button className="redos-launch-action" data-redos-tooltip="Publish draft dan buka hasil production di tab baru." type="button" onClick={publishExperience}>Publish</button>
-          <button data-redos-tooltip="Advanced Mode untuk Data, Action, Connector, dan Custom Organism." type="button" onClick={() => { window.location.href = '/studio/metadata'; }}>Metadata</button>
+          <button data-redos-tooltip="Advanced Mode untuk Data, Action, Process, Menu, Security, dan Custom Organism." type="button" onClick={() => { window.location.href = '/studio/metadata'; }}>Metadata</button>
+          <button data-redos-tooltip="Kelola reusable datasource untuk table, lookup, report, dan dashboard." type="button" onClick={() => { window.location.href = '/studio/query'; }}>Query Builder</button>
+          <button data-redos-tooltip="Kelola generated API dan connector external." type="button" onClick={() => { window.location.href = '/studio/api'; }}>API Builder</button>
         </div>
       </header>
 

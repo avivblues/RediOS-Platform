@@ -215,6 +215,346 @@ a:focus-visible {
   padding: var(--redios-spacing-md);
 }
 
+.redios-auth-page {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(420px, 520px);
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at 18% 18%, rgb(37 99 235 / 28%), transparent 28%),
+    radial-gradient(circle at 82% 8%, rgb(124 58 237 / 20%), transparent 26%),
+    linear-gradient(135deg, #0f172a 0%, #172554 48%, #eef3ff 48%, #f8fafc 100%);
+}
+
+.redios-auth-hero {
+  display: grid;
+  align-content: center;
+  gap: 2rem;
+  min-height: 100vh;
+  padding: clamp(2rem, 7vw, 6rem);
+  color: #ffffff;
+}
+
+.redios-auth-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.85rem;
+  width: fit-content;
+  border: 1px solid rgb(255 255 255 / 18%);
+  border-radius: 999px;
+  padding: 0.55rem 1rem 0.55rem 0.55rem;
+  background: rgb(255 255 255 / 10%);
+  backdrop-filter: blur(18px);
+}
+
+.redios-auth-brand span {
+  display: grid;
+  place-items: center;
+  width: 2.15rem;
+  height: 2.15rem;
+  border-radius: 999px;
+  background: #ffffff;
+  color: #2563eb;
+  font-weight: 950;
+}
+
+.redios-auth-brand strong {
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.redios-auth-eyebrow,
+.redios-auth-form-heading span,
+.redios-auth-success > span {
+  color: #2563eb;
+  font-size: 0.76rem;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.redios-auth-hero .redios-auth-eyebrow {
+  color: #bfdbfe;
+}
+
+.redios-auth-hero h1 {
+  max-width: 720px;
+  margin: 0.6rem 0 1rem;
+  font-size: clamp(2.4rem, 5vw, 5rem);
+  line-height: 0.96;
+  letter-spacing: -0.055em;
+}
+
+.redios-auth-hero p {
+  max-width: 620px;
+  margin: 0;
+  color: rgb(219 234 254 / 86%);
+  font-size: clamp(1rem, 1.5vw, 1.22rem);
+  line-height: 1.75;
+}
+
+.redios-auth-hero ul {
+  display: grid;
+  gap: 0.8rem;
+  max-width: 520px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.redios-auth-hero li {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  color: #e0f2fe;
+  font-weight: 750;
+}
+
+.redios-auth-hero li::before {
+  width: 0.65rem;
+  height: 0.65rem;
+  border-radius: 999px;
+  background: #38bdf8;
+  box-shadow: 0 0 0 0.35rem rgb(56 189 248 / 16%);
+  content: "";
+}
+
+.redios-auth-panel {
+  display: grid;
+  align-content: center;
+  min-height: 100vh;
+  padding: clamp(1.25rem, 4vw, 3.5rem);
+}
+
+.redios-auth-form {
+  display: grid;
+  gap: 1rem;
+  width: 100%;
+  border: 1px solid rgb(148 163 184 / 24%);
+  border-radius: 1.65rem;
+  padding: clamp(1.35rem, 3vw, 2.35rem);
+  background: rgb(255 255 255 / 92%);
+  box-shadow: 0 28px 80px rgb(15 23 42 / 16%);
+  backdrop-filter: blur(18px);
+}
+
+.redios-auth-form-heading {
+  display: grid;
+  gap: 0.4rem;
+  margin-bottom: 0.35rem;
+}
+
+.redios-auth-form h2,
+.redios-auth-success h2 {
+  margin: 0;
+  color: #0f172a;
+  font-size: clamp(1.75rem, 3vw, 2.35rem);
+  letter-spacing: -0.04em;
+}
+
+.redios-auth-form-heading p,
+.redios-auth-success p {
+  margin: 0;
+  color: #64748b;
+  line-height: 1.65;
+}
+
+.redios-auth-form label {
+  display: grid;
+  gap: 0.42rem;
+  color: #0f172a;
+  font-size: 0.88rem;
+  font-weight: 820;
+}
+
+.redios-auth-form input {
+  width: 100%;
+  border: 1px solid rgb(148 163 184 / 34%);
+  border-radius: 0.9rem;
+  padding: 0.86rem 1rem;
+  background: #ffffff;
+  color: #0f172a;
+  transition: border-color 160ms ease, box-shadow 160ms ease;
+}
+
+.redios-auth-form input:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 4px rgb(37 99 235 / 12%);
+  outline: none;
+}
+
+.redios-auth-form label small {
+  color: #dc2626;
+  font-size: 0.76rem;
+  font-weight: 750;
+}
+
+.redios-auth-error {
+  border: 1px solid rgb(220 38 38 / 22%);
+  border-radius: 0.95rem;
+  padding: 0.85rem 1rem;
+  background: #fef2f2;
+  color: #991b1b;
+  font-weight: 780;
+}
+
+.redios-auth-primary {
+  border: 0;
+  border-radius: 0.95rem;
+  padding: 0.95rem 1.2rem;
+  background: linear-gradient(135deg, #2563eb, #4f46e5);
+  color: #ffffff;
+  font-weight: 900;
+  box-shadow: 0 18px 32px rgb(37 99 235 / 24%);
+}
+
+.redios-auth-primary:disabled {
+  cursor: not-allowed;
+  opacity: 0.68;
+}
+
+.redios-auth-switch {
+  margin: 0;
+  color: #64748b;
+  text-align: center;
+}
+
+.redios-auth-switch a {
+  color: #2563eb;
+  font-weight: 850;
+  text-decoration: none;
+}
+
+.redios-auth-todo {
+  margin: 0;
+  border: 1px dashed rgb(37 99 235 / 30%);
+  border-radius: 0.9rem;
+  padding: 0.8rem;
+  background: #eff6ff;
+  color: #475569;
+  font-size: 0.78rem;
+  line-height: 1.55;
+}
+
+.redios-password-strength {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.65rem;
+  align-items: center;
+  color: #64748b;
+  font-size: 0.78rem;
+  font-weight: 760;
+}
+
+.redios-password-strength i {
+  height: 0.45rem;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #e2e8f0;
+}
+
+.redios-password-strength i::before {
+  display: block;
+  width: 20%;
+  height: 100%;
+  border-radius: inherit;
+  background: #ef4444;
+  content: "";
+}
+
+.redios-password-strength[data-score="2"] i::before,
+.redios-password-strength[data-score="3"] i::before {
+  width: 62%;
+  background: #f59e0b;
+}
+
+.redios-password-strength[data-score="4"] i::before {
+  width: 100%;
+  background: #16a34a;
+}
+
+.redios-auth-success {
+  place-items: start;
+  text-align: left;
+}
+
+.redios-profile-card {
+  gap: 1.25rem;
+}
+
+.redios-profile-heading {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  border-bottom: 1px solid rgb(148 163 184 / 22%);
+  padding-bottom: 1.1rem;
+}
+
+.redios-profile-heading > span {
+  display: grid;
+  place-items: center;
+  width: 4rem;
+  height: 4rem;
+  border-radius: 1.25rem;
+  background: linear-gradient(135deg, #2563eb, #7c3aed);
+  color: #ffffff;
+  font-size: 1.3rem;
+  font-weight: 950;
+}
+
+.redios-profile-heading strong {
+  display: block;
+  color: #0f172a;
+  font-size: 1.25rem;
+}
+
+.redios-profile-heading small {
+  color: #64748b;
+  font-weight: 760;
+}
+
+.redios-profile-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.85rem;
+}
+
+.redios-profile-grid div {
+  display: grid;
+  gap: 0.25rem;
+  border: 1px solid rgb(148 163 184 / 22%);
+  border-radius: 1rem;
+  padding: 0.85rem;
+  background: #f8fafc;
+}
+
+.redios-profile-grid span {
+  color: #64748b;
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.redios-profile-grid strong {
+  overflow-wrap: anywhere;
+  color: #0f172a;
+}
+
+.redios-profile-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+}
+
+.redios-profile-actions button:not(.redios-auth-primary) {
+  border: 1px solid rgb(148 163 184 / 34%);
+  border-radius: 0.95rem;
+  padding: 0.95rem 1.2rem;
+  background: #ffffff;
+  color: #334155;
+  font-weight: 850;
+}
+
 .runtime-app-shell {
   background: var(--redios-color-background);
 }
@@ -6073,7 +6413,381 @@ a:focus-visible {
   background: linear-gradient(135deg, #eff6ff, #faf5ff);
 }
 
+.redos-query-builder-shell {
+  display: grid;
+  grid-template-columns: 260px minmax(0, 1fr);
+  gap: 0;
+  min-height: calc(100vh - 7rem);
+  overflow: hidden;
+  border: 1px solid rgb(148 163 184 / 28%);
+  border-radius: 1.25rem;
+  background: #f8fafc;
+  box-shadow: 0 24px 60px rgb(15 23 42 / 10%);
+}
+
+.redos-query-browser {
+  overflow: auto;
+  border-right: 1px solid rgb(148 163 184 / 28%);
+  background: #ffffff;
+}
+
+.redos-query-tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  background: linear-gradient(180deg, #60c7df, #2c9ebf);
+}
+
+.redos-query-tabs button {
+  border: 0;
+  border-radius: 0;
+  padding: 0.85rem;
+  background: transparent;
+  color: #e0f2fe;
+  font-weight: 800;
+}
+
+.redos-query-tabs .redos-query-tab-active {
+  background: rgb(15 23 42 / 22%);
+  color: #ffffff;
+}
+
+.redos-query-search {
+  display: grid;
+  gap: 0.35rem;
+  padding: 0.85rem;
+  border-bottom: 1px solid rgb(148 163 184 / 22%);
+}
+
+.redos-query-search span {
+  color: #64748b;
+  font-size: 0.75rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.redos-query-search input {
+  width: 100%;
+  border: 1px solid rgb(148 163 184 / 35%);
+  border-radius: 0.75rem;
+  padding: 0.7rem 0.8rem;
+}
+
+.redos-query-tree {
+  display: grid;
+  gap: 0.35rem;
+  padding: 0.65rem;
+}
+
+.redos-query-tree section,
+.redos-query-tree > button {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.redos-query-tree button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  width: 100%;
+  border: 0;
+  border-radius: 0.65rem;
+  padding: 0.55rem 0.65rem;
+  background: transparent;
+  color: #0f172a;
+  text-align: left;
+}
+
+.redos-query-tree button:hover {
+  background: #eef6ff;
+}
+
+.redos-query-tree section > button strong::before {
+  content: "> ";
+  color: #0ea5e9;
+}
+
+.redos-query-tree section > div {
+  display: grid;
+  margin-left: 0.7rem;
+  padding-left: 0.6rem;
+  border-left: 1px solid rgb(148 163 184 / 28%);
+}
+
+.redos-query-tree small {
+  color: #64748b;
+  font-size: 0.72rem;
+  font-style: italic;
+}
+
+.redos-query-workspace {
+  display: grid;
+  grid-template-rows: auto minmax(320px, 46vh) auto auto auto;
+  min-width: 0;
+}
+
+.redos-query-topbar {
+  display: grid;
+  grid-template-columns: minmax(180px, 1fr) minmax(220px, 1.3fr) 150px 150px;
+  gap: 0.75rem;
+  align-items: end;
+  padding: 0.85rem;
+  border-bottom: 1px solid rgb(148 163 184 / 24%);
+  background: #ffffff;
+}
+
+.redos-query-topbar label {
+  display: grid;
+  gap: 0.3rem;
+  color: #334155;
+  font-size: 0.78rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.redos-query-topbar input,
+.redos-query-topbar select {
+  border: 1px solid rgb(148 163 184 / 35%);
+  border-radius: 0.7rem;
+  padding: 0.7rem 0.8rem;
+  color: #0f172a;
+  text-transform: none;
+}
+
+.redos-query-canvas-wrap {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 230px;
+  min-height: 0;
+}
+
+.redos-query-canvas {
+  position: relative;
+  overflow: auto;
+  min-height: 320px;
+  background:
+    radial-gradient(circle at 1px 1px, rgb(14 165 233 / 14%) 1px, transparent 0),
+    linear-gradient(180deg, #f8fbff, #eef6ff);
+  background-size: 22px 22px, auto;
+}
+
+.redos-query-empty {
+  display: grid;
+  place-items: center;
+  height: 100%;
+  color: #64748b;
+  font-weight: 800;
+}
+
+.redos-query-table-card {
+  position: absolute;
+  z-index: 2;
+  width: min(270px, 28vw);
+  max-height: 255px;
+  overflow: auto;
+  border: 1px solid rgb(14 165 233 / 42%);
+  border-radius: 0.85rem;
+  background: #ffffff;
+  box-shadow: 0 16px 32px rgb(15 23 42 / 16%);
+}
+
+.redos-query-table-card header {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.65rem 0.75rem;
+  background: linear-gradient(180deg, #64c5dc, #35a4c5);
+  color: #ffffff;
+}
+
+.redos-query-table-card header button {
+  border: 0;
+  border-radius: 999px;
+  width: 1.55rem;
+  height: 1.55rem;
+  background: rgb(255 255 255 / 22%);
+  color: #ffffff;
+  font-weight: 900;
+}
+
+.redos-query-table-card label {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 0.55rem;
+  align-items: center;
+  padding: 0.48rem 0.7rem;
+  border-bottom: 1px solid rgb(226 232 240 / 85%);
+  color: #0f172a;
+}
+
+.redos-query-table-card small {
+  color: #64748b;
+  font-size: 0.72rem;
+  font-style: italic;
+}
+
+.redos-query-relation-line {
+  position: absolute;
+  left: 23%;
+  right: 28%;
+  top: 47%;
+  height: 3px;
+  border-radius: 999px;
+  background: #0f172a;
+  transform: rotate(-12deg);
+  opacity: 0.72;
+}
+
+.redos-query-properties {
+  display: grid;
+  align-content: start;
+  gap: 0.75rem;
+  padding: 0.85rem;
+  border-left: 1px solid rgb(148 163 184 / 28%);
+  background: #f8fafc;
+}
+
+.redos-query-properties h3 {
+  margin: -0.85rem -0.85rem 0;
+  padding: 0.65rem 0.85rem;
+  background: linear-gradient(180deg, #73c153, #4da536);
+  color: #ffffff;
+  font-size: 0.95rem;
+}
+
+.redos-query-properties label {
+  display: grid;
+  gap: 0.35rem;
+  color: #334155;
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.redos-query-properties label:first-of-type {
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+}
+
+.redos-query-properties input {
+  border: 1px solid rgb(148 163 184 / 35%);
+  border-radius: 0.55rem;
+  padding: 0.55rem 0.65rem;
+}
+
+.redos-query-properties textarea {
+  min-height: 120px;
+  resize: vertical;
+  border: 1px solid rgb(148 163 184 / 35%);
+  border-radius: 0.55rem;
+  padding: 0.65rem;
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  font-size: 0.78rem;
+  line-height: 1.45;
+}
+
+.redos-query-properties button {
+  border: 1px solid rgb(37 99 235 / 36%);
+  border-radius: 0.7rem;
+  padding: 0.65rem 0.85rem;
+  background: #eff6ff;
+  color: #1d4ed8;
+  font-weight: 850;
+}
+
+.redos-query-grid-wrap {
+  overflow: auto;
+  border-top: 1px solid rgb(14 165 233 / 34%);
+  background: #ffffff;
+}
+
+.redos-query-grid {
+  width: 100%;
+  min-width: 1100px;
+  border-collapse: collapse;
+  font-size: 0.82rem;
+}
+
+.redos-query-grid th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  padding: 0.55rem;
+  background: linear-gradient(180deg, #58bfdb, #2a9cbd);
+  color: #ffffff;
+  text-align: left;
+}
+
+.redos-query-grid td {
+  border: 1px solid rgb(203 213 225 / 78%);
+  padding: 0.4rem;
+  background: #ffffff;
+}
+
+.redos-query-grid input,
+.redos-query-grid select {
+  width: 100%;
+  border: 1px solid rgb(203 213 225 / 85%);
+  border-radius: 0.45rem;
+  padding: 0.42rem 0.5rem;
+  background: #ffffff;
+}
+
+.redos-query-grid input[type="checkbox"] {
+  width: auto;
+}
+
+.redos-query-sql-preview {
+  overflow: auto;
+  max-height: 185px;
+  border-top: 1px solid rgb(148 163 184 / 24%);
+  background: #f8fafc;
+}
+
+.redos-query-sql-preview pre {
+  margin: 0;
+  padding: 0.85rem 1rem;
+  color: #334155;
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  font-size: 0.82rem;
+  line-height: 1.55;
+  white-space: pre-wrap;
+}
+
+.redos-query-saved {
+  display: grid;
+  gap: 0.65rem;
+  max-height: 180px;
+  overflow: auto;
+  padding: 0.85rem;
+  border-top: 1px solid rgb(148 163 184 / 24%);
+  background: #ffffff;
+}
+
+.redos-query-saved-actions {
+  display: flex;
+  gap: 0.45rem;
+}
+
 @media (max-width: 1200px) {
+  .redios-auth-page {
+    grid-template-columns: 1fr;
+    background:
+      radial-gradient(circle at 18% 18%, rgb(37 99 235 / 24%), transparent 28%),
+      linear-gradient(180deg, #0f172a 0%, #172554 42%, #eef3ff 42%, #f8fafc 100%);
+  }
+
+  .redios-auth-hero {
+    min-height: auto;
+    padding-bottom: 2rem;
+  }
+
+  .redios-auth-panel {
+    min-height: auto;
+    padding-top: 0;
+  }
+
   .redos-builder-header,
   .redos-admin-guide,
   .redos-builder-status,
@@ -6085,7 +6799,10 @@ a:focus-visible {
   .redos-designer-grid,
   .redos-template-grid,
   .redos-metadata-nav-grid,
-  .redos-metadata-map > div {
+  .redos-metadata-map > div,
+  .redos-query-builder-shell,
+  .redos-query-canvas-wrap,
+  .redos-query-topbar {
     grid-template-columns: 1fr;
   }
 
@@ -6099,8 +6816,15 @@ a:focus-visible {
 
   .redos-left-panel,
   .redos-property-panel,
-  .redos-metadata-sidebar {
+  .redos-metadata-sidebar,
+  .redos-query-browser {
     position: static;
     max-height: none;
+  }
+
+  .redos-query-table-card {
+    position: static;
+    width: auto;
+    margin: 1rem;
   }
 }

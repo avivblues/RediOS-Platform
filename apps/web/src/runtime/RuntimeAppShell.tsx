@@ -21,6 +21,7 @@ import {
   type RediosNavGroup,
 } from '../components/redios-ui/DashboardKit';
 import { isTailAdminTemplateComponent, RediosTemplateComponent } from '../components/redios-template/TemplateComponents';
+import { useAuth } from '../auth/context/AuthProvider';
 import { IdentityEngine, REDIOS_ADMIN_APP_CODE } from '../identity/identity-engine';
 import { loadRuntimeRecords, saveRuntimeRecords } from './runtime-record-store';
 
@@ -169,6 +170,7 @@ function PublishedMetadataRuntime({
   const [overrideScreenCode, setOverrideScreenCode] = useState(initialScreenCode);
   const [status, setStatus] = useState('Ready');
   const { context, updateContext } = useRuntimeContext();
+  const auth = useAuth();
   const identityEngine = useMemo(() => new IdentityEngine(), []);
   const activeMenu = application.menu.find((item) => item.id === activeMenuId) ?? firstMenu;
   const activeScreenCode = overrideScreenCode ?? activeMenu?.screen ?? application.screens[0]?.code ?? '';
@@ -290,8 +292,18 @@ function PublishedMetadataRuntime({
       topbar={(
         <RediosDashboardTopbar
           context={`${application.appName} / ${activeMenu?.label ?? 'Home'} / ${activeScreen?.label ?? activeScreenCode}`}
+          onLogout={() => {
+            auth.logout();
+            updateContext({
+              permissions: [],
+              roles: [],
+              userId: 'anonymous',
+            });
+            window.location.href = '/login';
+          }}
+          onProfile={() => { window.location.href = '/profile'; }}
           status={status}
-          title="Runtime User"
+          title={auth.session?.displayName ?? context.userId}
         />
       )}
     >

@@ -1,8 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import type { CapabilityDefinition } from '@redios/shared';
 import { Model } from 'mongoose';
-import { CAPABILITY_DEFINITION_MODEL } from '../platform/capability/schemas/capability-definition.schema';
+import { CapabilityRegistry } from '../platform/capability/capability-registry.service';
 import { PLATFORM_APPLICATION_MODEL } from '../platform/domain/schemas/platform-application.schema';
 import { PLATFORM_ROLE_MODEL } from '../platform/domain/schemas/platform-role.schema';
 import { PLATFORM_TENANT_MODEL } from '../platform/domain/schemas/tenant.schema';
@@ -24,7 +23,7 @@ export class PlatformSeedRunner {
     @InjectModel(PLATFORM_USER_MODEL) private readonly userModel: Model<Record<string, unknown>>,
     @InjectModel(PLATFORM_ROLE_MODEL) private readonly roleModel: Model<Record<string, unknown>>,
     @InjectModel(PLATFORM_APPLICATION_MODEL) private readonly applicationModel: Model<Record<string, unknown>>,
-    @InjectModel(CAPABILITY_DEFINITION_MODEL) private readonly capabilityModel: Model<CapabilityDefinition>,
+    private readonly capabilityRegistry: CapabilityRegistry,
   ) {}
 
   async run(): Promise<void> {
@@ -62,7 +61,7 @@ export class PlatformSeedRunner {
 
   private async upsertCapabilities(): Promise<void> {
     for (const capability of capabilitySeedRecords) {
-      await this.capabilityModel.updateOne({ code: capability.code }, { $set: capability }, { upsert: true }).exec();
+      await this.capabilityRegistry.upsert(capability);
     }
   }
 }

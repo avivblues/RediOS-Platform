@@ -1,5 +1,4 @@
 import { ActionDesigner } from './actions/ActionDesigner';
-import { ApiDesigner } from './api/ApiDesigner';
 import { DataDesigner } from './data/DataDesigner';
 import { AdminGuidePanel, HelpTip } from '../guide/AdminGuide';
 import { CustomOrganismDesigner } from './organisms/CustomOrganismDesigner';
@@ -7,7 +6,7 @@ import { ProcessDesigner } from './process/ProcessDesigner';
 import { MenuDesigner } from './menu/MenuDesigner';
 import { SecurityDesigner } from './security/SecurityDesigner';
 
-type MetadataDesignerSection = 'overview' | 'data' | 'action' | 'connector' | 'process' | 'menu' | 'security' | 'organisms';
+type MetadataDesignerSection = 'overview' | 'data' | 'action' | 'process' | 'menu' | 'security' | 'organisms';
 
 const metadataSections: Array<{
   id: Exclude<MetadataDesignerSection, 'overview'>;
@@ -26,12 +25,6 @@ const metadataSections: Array<{
     title: 'Action Designer',
     description: 'Buat alur bisnis untuk tombol dan event.',
     path: '/studio/metadata/action',
-  },
-  {
-    id: 'connector',
-    title: 'Connector Designer',
-    description: 'Hubungkan Action ke sistem eksternal.',
-    path: '/studio/metadata/connector',
   },
   {
     id: 'process',
@@ -73,6 +66,8 @@ export function MetadataDesignerPage() {
         </div>
         <div className="redos-actions">
           <button data-redos-tooltip="Kembali ke Visual Builder untuk menyusun screen aplikasi." type="button" onClick={() => { window.location.href = '/studio'; }}>Back to Builder</button>
+          <button data-redos-tooltip="Kelola reusable datasource untuk table, lookup, report, dan dashboard." type="button" onClick={() => { window.location.href = '/studio/query'; }}>Query Builder</button>
+          <button data-redos-tooltip="Kelola generated API dan connector external." type="button" onClick={() => { window.location.href = '/studio/api'; }}>API Builder</button>
           <button data-redos-tooltip="Mulai aplikasi baru dari experience/template." type="button" onClick={() => { window.location.href = '/studio/create'; }}>Create App</button>
         </div>
       </header>
@@ -85,12 +80,13 @@ export function MetadataDesignerPage() {
             <>
               <AdminGuidePanel
                 title="Kapan memakai Advanced Mode?"
-                description="Gunakan halaman ini hanya saat admin perlu membuat data/action/connector/custom component yang belum tersedia di builder."
+                description="Gunakan halaman ini untuk data, action, process, menu, security, dan reusable organism. Query/API punya builder sendiri."
                 steps={[
                   'System Analyst membuat blueprint aplikasi, bukan mengedit screen satu per satu.',
                   'Data Designer: buat Object dan Attribute yang akan dipakai binding.',
                   'Action Designer: buat alur bisnis; button hanya memanggil Action.',
-                  'Connector Designer: buat connector, lalu panggil lewat Action step.',
+                  'Query Builder: buat datasource reusable untuk table, lookup, dashboard, dan report.',
+                  'API Builder: kelola generated API dan connector, lalu panggil lewat Action step.',
                   'Process Designer: buat approval dan business routing, bukan URL routing.',
                   'Menu Designer: bentuk sidebar/menu runtime dari metadata.',
                   'Security Designer: atur role, permission, field access, dan Power User.',
@@ -105,13 +101,22 @@ export function MetadataDesignerPage() {
                   <p>Setiap area dibuka di halaman terpisah supaya modifikasi lebih fokus dan tidak penuh dalam satu layar.</p>
                 </div>
                 <MetadataDesignerNav activeSection={activeSection} />
+                <div className="redos-metadata-nav-grid">
+                  <button type="button" onClick={() => { window.location.href = '/studio/query'; }}>
+                    <strong>Query Builder</strong>
+                    <span>Datasource, filter, sort, dan output fields.</span>
+                  </button>
+                  <button type="button" onClick={() => { window.location.href = '/studio/api'; }}>
+                    <strong>API Builder</strong>
+                    <span>Generated API dan external connector.</span>
+                  </button>
+                </div>
               </section>
             </>
           ) : (
             <section className="redos-metadata-single-page">
               {activeSection === 'data' ? <DataDesigner /> : null}
               {activeSection === 'action' ? <ActionDesigner /> : null}
-              {activeSection === 'connector' ? <ApiDesigner /> : null}
               {activeSection === 'process' ? <ProcessDesigner /> : null}
               {activeSection === 'menu' ? <MenuDesigner /> : null}
               {activeSection === 'security' ? <SecurityDesigner /> : null}
@@ -154,6 +159,14 @@ function MetadataDesignerSidebar({ activeSection }: { activeSection: MetadataDes
             <span>{section.description}</span>
           </button>
         ))}
+        <button type="button" onClick={() => { window.location.href = '/studio/query'; }}>
+          <strong>Query Builder</strong>
+          <span>Datasource capability</span>
+        </button>
+        <button type="button" onClick={() => { window.location.href = '/studio/api'; }}>
+          <strong>API Builder</strong>
+          <span>API and connector capability</span>
+        </button>
       </nav>
 
       <div className="redos-metadata-sidebar-actions">
@@ -189,10 +202,6 @@ function metadataSectionFromPath(pathname: string): MetadataDesignerSection {
 
   if (pathname.startsWith('/studio/metadata/action')) {
     return 'action';
-  }
-
-  if (pathname.startsWith('/studio/metadata/connector')) {
-    return 'connector';
   }
 
   if (pathname.startsWith('/studio/metadata/process')) {

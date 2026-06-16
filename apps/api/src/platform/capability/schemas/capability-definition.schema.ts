@@ -20,5 +20,4 @@ export const CapabilityDefinitionSchema = new Schema(
   },
 );
 
-CapabilityDefinitionSchema.index({ code: 1 }, { unique: true });
 CapabilityDefinitionSchema.index({ module: 1 });

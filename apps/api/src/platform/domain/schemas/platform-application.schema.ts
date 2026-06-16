@@ -16,5 +16,3 @@ export const PlatformApplicationSchema = new Schema(
     timestamps: true,
   },
 );
-
-PlatformApplicationSchema.index({ code: 1 }, { unique: true });

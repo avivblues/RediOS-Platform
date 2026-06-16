@@ -64,7 +64,9 @@ export function CreateApplicationPage() {
         </div>
         <div className="redos-actions">
           <button data-redos-tooltip="Kembali ke canvas builder untuk menyusun layar aplikasi." type="button" onClick={() => { window.location.href = '/studio'; }}>Back to Builder</button>
-          <button data-redos-tooltip="Advanced Mode untuk admin teknis: Data, Action, Connector, dan Organism." type="button" onClick={() => { window.location.href = '/studio/metadata'; }}>Metadata</button>
+          <button data-redos-tooltip="Advanced Mode untuk admin teknis: Data, Action, Process, Menu, Security, dan Organism." type="button" onClick={() => { window.location.href = '/studio/metadata'; }}>Metadata</button>
+          <button data-redos-tooltip="Kelola query/datasource reusable." type="button" onClick={() => { window.location.href = '/studio/query'; }}>Query Builder</button>
+          <button data-redos-tooltip="Kelola generated API dan connector external." type="button" onClick={() => { window.location.href = '/studio/api'; }}>API Builder</button>
         </div>
       </header>
 

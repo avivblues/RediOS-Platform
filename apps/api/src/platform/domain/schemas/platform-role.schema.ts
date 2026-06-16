@@ -15,5 +15,3 @@ export const PlatformRoleSchema = new Schema(
     timestamps: true,
   },
 );
-
-PlatformRoleSchema.index({ code: 1 }, { unique: true });

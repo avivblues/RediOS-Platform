@@ -105,10 +105,14 @@ export function RediosDashboardSidebar({
 
 export function RediosDashboardTopbar({
   context,
+  onLogout,
+  onProfile,
   status,
   title,
 }: {
   context: string;
+  onLogout?: () => void;
+  onProfile?: () => void;
   status: string;
   title: string;
 }) {
@@ -123,10 +127,11 @@ export function RediosDashboardTopbar({
         <button type="button" aria-label="Notifications">
           <RediosIcon name="bell" />
         </button>
-        <button type="button" aria-label="User profile">
+        <button type="button" aria-label="User profile" onClick={onProfile}>
           <RediosIcon name="user" />
           <span>{title}</span>
         </button>
+        {onLogout ? <button type="button" onClick={onLogout}>Logout</button> : null}
       </div>
     </header>
   );

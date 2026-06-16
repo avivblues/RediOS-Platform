@@ -6,6 +6,7 @@ import type {
   StudioDataAttribute,
   StudioDataObject,
   StudioMenuDraft,
+  StudioQueryDraft,
   StudioScreenDraft,
   StudioSecurityDraft,
 } from '../metadata-store';
@@ -51,6 +52,29 @@ export const rediosAdminActions: StudioActionDraft[] = [
   { code: 'USER.DELETE', label: 'Delete User', trigger: 'onClick', steps: ['confirm', 'identity USER.DELETE', 'notify'] },
   { code: 'USER.LIST', label: 'List Users', trigger: 'onLoad', steps: ['identity USER.LIST'] },
   { code: 'USER.GET', label: 'Get User', trigger: 'onLoad', steps: ['identity USER.GET'] },
+];
+
+export const rediosAdminQueries: StudioQueryDraft[] = [
+  {
+    code: 'USER.LIST',
+    label: 'User List',
+    objectName: 'USER',
+    fields: ['username', 'email', 'displayName', 'status'],
+    sourceObjects: ['USER'],
+    columns: [
+      { objectName: 'USER', field: 'username', alias: 'Username', visible: true, sortType: 'ascending', sortOrder: 1, aggregate: 'none', grouping: false, criteria: '', operator: 'and' },
+      { objectName: 'USER', field: 'email', alias: 'Email', visible: true, sortType: 'none', aggregate: 'none', grouping: false, criteria: '', operator: 'and' },
+      { objectName: 'USER', field: 'displayName', alias: 'Display Name', visible: true, sortType: 'none', aggregate: 'none', grouping: false, criteria: '', operator: 'and' },
+      { objectName: 'USER', field: 'status', alias: 'Status', visible: true, sortType: 'none', aggregate: 'none', grouping: false, criteria: "!= 'DELETED'", operator: 'and' },
+    ],
+    filter: 'status != DELETED',
+    sort: 'username asc',
+    distinct: false,
+    limit: 100,
+    offset: 0,
+    mode: 'list',
+    sqlPreview: "SELECT USER.username AS Username, USER.email AS Email, USER.displayName AS Display_Name, USER.status AS Status\nFROM USER\nWHERE USER.status != 'DELETED'\nORDER BY USER.username ASC\nLIMIT 100",
+  },
 ];
 
 export const rediosAdminMenu: StudioMenuDraft[] = [
@@ -158,6 +182,7 @@ export const rediosAdminScreenCanvases: Record<string, CanvasComponent[]> = {
 
 export const rediosAdminSeedMetadata = {
   dataObjects: [userSystemObject],
+  queries: rediosAdminQueries,
   actions: rediosAdminActions,
   connectors: [],
   customOrganisms: [],
@@ -174,6 +199,7 @@ export function rediosAdminPublishedPackage(): StudioApplicationMetadataPackage 
     appName: REDIOS_ADMIN_APPLICATION.name,
     target: REDIOS_ADMIN_APPLICATION.target,
     dataObjects: rediosAdminSystemObjectContracts(rediosAdminSeedMetadata.dataObjects),
+    queries: rediosAdminQueries,
     actions: rediosAdminActions,
     connectors: [],
     processes: [],
