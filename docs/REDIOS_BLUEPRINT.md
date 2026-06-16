@@ -51,7 +51,53 @@ RediOS memisahkan:
 - permission/security
 - runtime execution
 
-Tidak boleh ada aplikasi bisnis yang membutuhkan controller, screen, service, atau module hardcoded.
+### 2.1 Hybrid ERP Architecture (Phase 19.99)
+
+RediOS bukan pure metadata database.
+
+RediOS adalah:
+
+```text
+Enterprise Domain Core + Metadata Customization Layer
+```
+
+| Layer | Owner | Contoh |
+| --- | --- | --- |
+| Domain Core | Developer | Finance journal, inventory stock, tenant, platform user |
+| Metadata | System Analyst | Form, menu, screen, action binding, workflow |
+| Extension | Power User | Custom field, label, layout |
+
+Stack runtime:
+
+```text
+Visual Builder → Metadata → Capability Registry → Domain Runtime → Real Database
+```
+
+Dokumen boundary lengkap: `docs/ARCHITECTURE_BOUNDARY.md`
+
+**Domain vs Metadata:**
+
+- Journal GL disimpan di tabel `gl_journal_header` / `gl_journal_line` (domain).
+- Layout form journal disimpan di metadata form.
+- Tombol Post memanggil capability `JOURNAL.POST`, bukan API langsung.
+
+**Capability Pattern:**
+
+- Setiap action runtime wajib menunjuk `capabilityCode`.
+- Registry: `GET /api/capabilities`, collection `capability_definitions`.
+- Domain handler di `modules/{module}/capability/`.
+
+**Extension Strategy:**
+
+- System field locked di domain + metadata.
+- Power User menambah custom field via `custom_field_definitions` / `custom_field_values`.
+- Power User tidak boleh mengubah datatype system field atau domain logic.
+
+User experience tetap metadata-driven. Domain logic tetap di developer-owned modules.
+
+Tidak boleh ada screen bisnis hardcoded untuk aplikasi yang dibuat System Analyst.
+
+Domain core module (Finance, Inventory) boleh punya service dan repository — tetapi screen dan action binding tetap metadata.
 
 Arah yang dilarang:
 
@@ -201,7 +247,31 @@ Runtime Engine membaca metadata dan menjalankan behavior.
 
 Capability Registry adalah pusat daftar kemampuan aplikasi yang sudah disetujui oleh System Analyst.
 
+Implementasi foundation (Phase 19.99):
+
+- Service: `apps/api/src/platform/capability/capability-registry.service.ts`
+- Collection: `capability_definitions`
+- API: `GET /api/capabilities`, `GET /api/capabilities/:code`
+- Seed: `apps/api/src/seed/platform-seed.records.ts`
+
+Format capability:
+
+```json
+{
+  "code": "JOURNAL.POST",
+  "name": "Post Journal",
+  "module": "FINANCE",
+  "inputSchema": {},
+  "outputSchema": {},
+  "implementationStatus": "CONTRACT"
+}
+```
+
 Form Builder dan View Builder wajib membaca capability dari registry ini. Builder tidak boleh menciptakan core API, core database contract, atau core process sendiri.
+
+**Builder Connection Rule:** Builder memilih capability dan mengikat action. Builder tidak membuat tabel database.
+
+**Query Builder Rule:** Query Builder mengonsumsi Query Capability (contoh `FINANCE.TRIAL_BALANCE`). Query Builder tidak menghasilkan SQL acak untuk modul ERP.
 
 Capability yang diekspos:
 
@@ -740,7 +810,9 @@ Status:
 | Process Designer | PARTIAL | Process draft application-scoped sudah ada. Masih butuh runtime process execution, hierarchy organisasi, delegation, dan approval state. |
 | Menu Designer | PARTIAL | Menu application-scoped dengan screen selection sudah ada. Masih butuh route generation, permission validation, root/child validation, dan runtime URL mapping. |
 | Security Designer | PARTIAL | Role, permission, action access sudah ada. Masih butuh runtime enforcement untuk field/action/menu guard. |
+| Capability Registry | PARTIAL | Foundation locked Phase 19.99: registry service, seed contracts, API list. Domain handlers masih CONTRACT. |
 | Custom Organisms | PARTIAL | Reusable component composition application-scoped sudah ada. Masih butuh nested component metadata dan safe power-user boundary. |
+| Platform Domain Core | PARTIAL | Phase 19.99: tenant, user, role, application seed + custom field schemas. Identity runtime bridge belum full. |
 | Runtime Renderer | PARTIAL | Published app render menu dan screen canvas dari metadata. Save demo localStorage sudah ada. Masih butuh backend runtime API, query loading, permission guard, notification, dan connector execution. |
 | Publish Flow | PARTIAL | Package metadata dan screen canvases lokal sudah ada. Masih butuh full validation, all-screen sync, backend publish/versioning, dan acceptance test automation. |
 

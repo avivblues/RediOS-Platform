@@ -8,6 +8,7 @@
     "start": "nest start --entryFile apps/api/src/main",
     "start:dev": "nest start --watch --entryFile apps/api/src/main",
     "seed:metadata": "nest start --entryFile apps/api/src/seed/main",
+    "seed:platform": "nest start --entryFile apps/api/src/seed/platform-main",
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {

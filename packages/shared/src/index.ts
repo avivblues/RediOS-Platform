@@ -1,4 +1,7 @@
 export * from './action-definition';
+export * from './capability-definition';
+export * from './custom-field-definition';
+export * from './platform-domain-definition';
 export * from './application-definition';
 export * from './business-definition';
 export * from './conflict-definition';

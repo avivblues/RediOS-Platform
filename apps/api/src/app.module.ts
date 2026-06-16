@@ -42,6 +42,7 @@ import { MetadataValidationModule } from './metadata/metadata-validation.module'
 import { NavigationModule } from './navigation/navigation.module';
 import { QueryModule } from './query/query.module';
 import { RuntimeModule as RuntimeApiModule } from './runtime/runtime.module';
+import { PlatformModule } from './platform/platform.module';
 import { RuntimePackageModule } from './runtime-package/runtime-package.module';
 import { RuntimeTracesModule } from './runtime-traces/runtime-traces.module';
 import { SecurityPolicyModule } from './security-policy/security-policy.module';
@@ -80,6 +81,7 @@ import { UIModule } from './ui/ui.module';
     IntegrationsModule,
     QueryModule,
     RuntimeApiModule,
+    PlatformModule,
     RuntimePackageModule,
     RuntimeTracesModule,
     RelationsModule,

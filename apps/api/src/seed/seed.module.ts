@@ -3,7 +3,9 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { databaseConfig } from '../config/database.config';
 import { MetadataModule } from '../core/metadata/metadata.module';
+import { PlatformModule } from '../platform/platform.module';
 import { MetadataSeedRunner } from './metadata-seed.runner';
+import { PlatformSeedRunner } from './platform-seed.runner';
 
 @Module({
   imports: [
@@ -18,7 +20,8 @@ import { MetadataSeedRunner } from './metadata-seed.runner';
       }),
     }),
     MetadataModule,
+    PlatformModule,
   ],
-  providers: [MetadataSeedRunner],
+  providers: [MetadataSeedRunner, PlatformSeedRunner],
 })
 export class SeedModule {}

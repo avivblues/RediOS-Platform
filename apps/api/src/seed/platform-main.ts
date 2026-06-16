@@ -1,15 +1,12 @@
 import { NestFactory } from '@nestjs/core';
-import { MetadataSeedRunner } from './metadata-seed.runner';
 import { PlatformSeedRunner } from './platform-seed.runner';
 import { SeedModule } from './seed.module';
 
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.createApplicationContext(SeedModule);
-  const platformRunner = app.get(PlatformSeedRunner);
-  const metadataRunner = app.get(MetadataSeedRunner);
+  const runner = app.get(PlatformSeedRunner);
 
-  await platformRunner.run();
-  await metadataRunner.run();
+  await runner.run();
   await app.close();
 }
 
