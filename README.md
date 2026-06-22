@@ -1,2392 +1,3182 @@
-# RediOS Dynamic Business Operating System
+# 🌱 REDI-OS Platform
 
-# AI_ARCHITECTURE_CONTEXT.md
+## Dynamic Industrial Business Operating System
 
-Version: 3.0
+Version : 3.0  
+Owner   : PT Revolusi Digital Solusi
 
+---
 
-============================================================
+# 1. Introduction
 
-# 1. CORE VISION
+REDI-OS adalah **Industrial 5.0 Enterprise Operating Platform**.
 
-RediOS is NOT an ERP application.
+REDI-OS bukan aplikasi ERP biasa.
 
-RediOS is a Dynamic Business Operating System.
+REDI-OS adalah sebuah platform foundation untuk membangun:
 
-The goal is to create a platform where applications are not hardcoded,
-but generated and controlled by metadata, workflow, rules, and business context.
+- Enterprise Application
+- Industrial Application
+- Business Automation
+- Digital Operation Platform
 
+berbasis:
 
-DO NOT think:
-
-    RediERP
-    RediPOS
-    RediClinic
-
-
-Think:
-
-    RediOS Kernel
-
-          |
-
-    Dynamic Engine
-
-          |
-
-    Business Application Composer
+```
+Metadata
++
+Workflow Engine
++
+Event Driven Architecture
++
+Integration Platform
++
+Artificial Intelligence
+```
 
 
+Tujuan REDI-OS:
 
-Any future business application should be created by configuration,
-not source code changes.
+Membuat bisnis berubah melalui konfigurasi, bukan perubahan source code.
 
 
-Examples:
+---
 
-- Retail System
+# 2. What REDI-OS Is
+
+
+REDI-OS adalah gabungan konsep dari:
+
+
+## Enterprise Resource Platform
+
+Mengakomodir:
+
 - ERP
-- Clinic
-- ISP Billing
-- Manufacturing
-- Custom Industry Software
-
-are only compositions of modules.
-
-
-============================================================
+- Finance
+- Procurement
+- Inventory
+- Warehouse
+- Costing
 
 
-# 2. EXISTING SOURCE CODE INTERPRETATION
+---
+
+## Manufacturing Platform
 
 
-Important:
-
-The current code is not just CRUD.
-
-Several concepts already exist and must be preserved.
+Mengakomodir:
 
 
-------------------------------------------------------------
+MES
 
-## appProcess
-
-Current:
-
-Dynamic application/process definition.
+Manufacturing Execution System
 
 
-Future:
+QMS
 
-Application Metadata Engine.
-
-
-Responsibilities:
-
-- define business object
-- define process
-- define available actions
-- connect form
-- connect workflow
-- connect reports
-- control application behavior
+Quality Management System
 
 
-DO NOT replace appProcess with hardcoded controller.
+CMMS
+
+Computerized Maintenance Management System
 
 
-------------------------------------------------------------
+Dengan support:
+
+- IoT Machine Data
+- Automation
+- Traceability
+- Compliance
 
 
-## appRouting
+---
+
+## Service Management Platform
 
 
-Current:
+Inspired by:
 
-Dynamic routing/process configuration.
-
-
-Future:
-
-Workflow Engine / Business Process Engine.
+- ServiceNow
+- Freshworks
+- GLPI
+- PC24
 
 
-Responsibilities:
+Untuk:
 
-- approval workflow
-- process routing
-- conditional flow
-- state transition
-- automation trigger
-- business orchestration
+
+- IT Service Management
+- Work Order
+- Helpdesk
+- Asset Management
+- Field Service
+
+
+---
+
+## Automation Platform
+
+
+Inspired by:
+
+
+- n8n
+- BPM Engine
+- Workflow Automation
+
+
+Untuk:
+
+
+- Approval Flow
+- Integration Flow
+- Human Task
+- System Task
+
+
+---
+
+# 3. What REDI-OS Is NOT
+
+
+REDI-OS bukan:
+
+
+❌ Traditional ERP
+
+
+❌ Hardcoded Business Application
+
+
+❌ Single Purpose Application
+
+
+❌ Simple CRUD Generator
+
+
+
+REDI-OS adalah:
+
+
+✔ Platform
+
+
+✔ Runtime Engine
+
+
+✔ Business Capability Framework
+
+
+✔ Industrial Digital Foundation
+
+
+---
+
+# 4. Core Architecture Principle
+
+
+Traditional Application:
+
+
+```
+Business Requirement Change
+
+        |
+
+Developer Modify Code
+
+        |
+
+Testing
+
+        |
+
+Deployment
+```
+
+
+REDI-OS Approach:
+
+
+```
+Business Requirement Change
+
+        |
+
+Metadata Update
+
+        |
+
+Workflow Update
+
+        |
+
+Runtime Execution
+```
+
+
+---
+
+# 5. Metadata Driven Architecture
+
+
+REDI-OS existing concept:
+
+```
+appProcess
+```
+
+
+berevolusi menjadi:
+
+
+```
+Metadata Engine
+```
+
+
+Metadata mengatur:
+
+
+- Application Definition
+
+- Module Definition
+
+- Object Definition
+
+- Field Definition
+
+- Form Definition
+
+- Menu Definition
+
+- Action Definition
+
+- Report Definition
 
 
 Example:
 
 
-purchase.submit
+Bukan membuat:
+
+
+```
+Customer Table
+
+Vendor Table
+
+Asset Table
+```
+
+
+hardcoded.
+
+
+Tetapi:
+
+
+```
+Object Definition
 
         |
 
- Workflow Engine
+Runtime Object
 
         |
 
- + approval
- + inventory movement
- + accounting journal
- + notification
+Business Data
+```
 
 
+---
 
-Rules:
-
-Business process must be configurable.
-
-Avoid:
-
-purchaseService.approve()
+# 6. Dynamic Business Context Engine
 
 
-Prefer:
-
-workflow.execute(
-    event,
-    context
-)
+Existing concept:
 
 
-------------------------------------------------------------
+```
+domainCode
+```
 
 
-## domainCode
+berevolusi menjadi:
 
 
-IMPORTANT CONCEPT.
+```
+Business Context Engine
+```
 
 
-domainCode is NOT only a code separator.
-
-domainCode is Business Context Engine.
+Tujuan:
 
 
-It handles:
-
-- owner context
-- multiple companies
-- multiple business types
-- multiple branches
-- data isolation
-- dynamic query context
-- reporting context
-- business segmentation
+Satu engine dapat menjalankan banyak konteks bisnis.
 
 
 Example:
 
 
-OWNER GROUP A
+```
+Document Engine
 
 
-        |
-
-        + Restaurant Business
-        |
-        + Distribution Business
-        |
-        + Manufacturing Business
+     + Customer Complaint
 
 
-Each business may have:
-
-- different workflow
-- different report
-- different module
-- different user access
+     + Purchase Request
 
 
-Structure:
+     + Work Order
 
 
+     + QC Release
+
+
+     + Ticket
+```
+
+
+Tanpa membuat aplikasi baru.
+
+
+---
+
+# 7. Universal Document Engine
+
+
+REDI-OS menggunakan konsep:
+
+
+```
+Everything is Business Document
+```
+
+
+Common Model:
+
+
+```json
+{
+    "documentType": "",
+    "status": "",
+    "workflow": "",
+    "owner": "",
+    "data": {},
+    "attachment": [],
+    "history": []
+}
+```
+
+
+Digunakan oleh:
+
+
+- Ticket
+
+- Work Order
+
+- Purchase Request
+
+- Sales Order
+
+- Production Order
+
+- QC Release
+
+- Payment Approval
+
+
+Benefit:
+
+
+- Single lifecycle
+
+- Single workflow
+
+- Single approval engine
+
+- Single audit trail
+
+
+---
+
+# 8. Platform Layer Overview
+
+
+High Level Architecture:
+
+
+```
+                    AI Agent Layer
+
+
+                          |
+
+
+                  REDI Intelligence
+
+
+                          |
+
+
+                     REDI Studio
+
+
+                          |
+
+
+                 Experience Engine
+
+
+                          |
+
+
+                  TunasFlow Engine
+
+
+                          |
+
+
+             Universal Document Engine
+
+
+                          |
+
+
+                    REDI Kernel
+
+
+                          |
+
+
+             Business Capability Module
+
+
+                          |
+
+
+              REDI Integration Hub
+
+
+                          |
+
+
+              External Ecosystem
+```
+
+
+---
+
+# 9. REDI Kernel Concept
+
+
+Kernel adalah jantung REDI-OS.
+
+
+Kernel bukan business module.
+
+
+Kernel menyediakan capability yang dipakai semua module.
+
+
+Kernel Components:
+
+
+```
+REDI Kernel
+
+
+├── Identity Engine
+
+
+├── Security Engine
+
+
+├── Metadata Engine
+
+
+├── Runtime Engine
+
+
+├── Event Engine
+
+
+├── Rule Engine
+
+
+└── Workflow Foundation
+```
+
+
+---
+
+# 10. Identity Engine
+
+
+Existing REDI-OS multi tenant capability diperkuat menjadi:
+
+
+```
 Tenant
 
-   |
+  |
 
 Organization
 
-   |
+  |
 
-Business Domain
+Company
 
-(domainCode)
+  |
 
-   |
+Site
 
-Branch
+  |
 
-   |
+Department
 
-Data Context
+  |
 
+User
+```
 
 
-Every query must understand domainCode.
+Support:
 
 
-NEVER bypass domain context.
-============================================================
+## Shared Database Mode
 
-# 3. REDIOS KERNEL ARCHITECTURE
 
+Multiple tenant:
 
-RediOS Kernel is the core layer.
+```
+1 Database
 
-Kernel responsibility:
+Many Tenant
+```
 
-- isolate tenant
-- resolve business context
-- manage permission
-- manage metadata
-- provide foundation for all engines
 
+---
 
-Application logic should NOT directly access database.
+## Dedicated Database Mode
 
-All requests must pass kernel context.
 
+Enterprise customer:
 
 
-Request Flow:
+```
+1 Tenant
 
+1 Database
+```
 
-Client Request
 
-      |
+---
 
-API Gateway
+## Hybrid Mode
 
-      |
 
-Authentication
+Untuk:
 
-      |
+- SaaS
 
-Tenant Resolver
+- Enterprise
 
-      |
+- Factory
 
-Organization Resolver
+- Government
 
-      |
 
-Business Context Resolver
-(domainCode)
+---
 
-      |
+# 11. Context Resolver
 
-Permission Engine
 
-      |
+Setiap request REDI-OS membawa context:
 
-Engine Execution
 
-      |
-
-Database
-
-
-
-============================================================
-
-
-# 4. TENANT ENGINE
-
-
-Tenant Engine controls SaaS isolation.
-
-
-Supported strategy:
-
-
-1. Shared Database
-
-Suitable for:
-
-- POS
-- small business
-- high tenant volume
-
-
-Example:
-
-
-database:
-
-redios
-
-
-tables:
-
-transactions
-
-tenantId
-domainCode
-
-
-
-------------------------------------------------------------
-
-
-2. Dedicated Database
-
-
-Suitable for:
-
-- corporate ERP
-- enterprise customer
-- customer requiring backup ownership
-
-
-Example:
-
-
-Customer A
-
-database_a
-
-
-Customer B
-
-database_b
-
-
-
-------------------------------------------------------------
-
-
-3. Hybrid Mode
-
-
-RediOS must support both.
-
-
-Decision is metadata driven.
-
-
-Example:
-
-
-{
-    "tenant": "CUSTOMER_A",
-
-    "databaseMode": "dedicated"
-}
-
-
-{
-    "tenant": "SMALL_POS",
-
-    "databaseMode": "shared"
-}
-
-
-DO NOT hardcode database selection.
-
-
-
-============================================================
-
-
-# 5. ORGANIZATION ENGINE
-
-
-A tenant can own multiple organizations.
-
-
-Example:
-
-
-Holding Company
-
-
-        |
-
-        + Company A
-
-        + Company B
-
-        + Company C
-
-
-
-Organization Engine handles:
-
-- legal entity
-- company hierarchy
-- ownership
-- consolidation
-- reporting scope
-
-
-A user may access:
-
-- one company
-- multiple companies
-- group level
-
-
-
-============================================================
-
-
-# 6. BUSINESS CONTEXT RESOLVER
-
-
-Partner of domainCode.
-
-
-Developers should NOT manually add:
-
-
-where {
-
-    domainCode:"xxx"
-
-}
-
-
-everywhere.
-
-
-
-Instead:
-
-
+```
 Request
 
-    |
+   |
 
-JWT Context
+JWT
 
-    |
+   |
 
 Context Resolver
 
-    |
-
-Automatic Query Injection
-
-
-
-Example:
-
-
-User:
-
-John
-
-
-Context:
-
-
-{
- tenant:"T001",
-
- organization:"COMPANY_A",
-
- domainCode:"RETAIL"
-
-}
-
-
-Query Engine automatically adds:
-
-tenant filter
-
-domain filter
-
-permission filter
-
-
-
-Goal:
-
-prevent data leakage.
-
-
-
-============================================================
-
-
-# 7. MODULE MANAGEMENT ENGINE
-
-
-IMPORTANT:
-
-
-RediOS does NOT have fixed applications.
-
-
-Avoid:
-
-
-apps/
-
-   erp/
-
-   pos/
-
-   clinic/
-
-
-
-
-Because future applications are unknown.
-
-
-
-Use capability modules.
-
-
-
-Example:
-
-
-modules/
-
-
-    sales/
-
-    inventory/
-
-    finance/
-
-    document/
-
-    workflow/
-
-    payment/
-
-    asset/
-
-    customer/
-
-    custom/
-
-
-
-
-Application is only composition.
-
-
-
-Example:
-
-
-POS System:
-
-
-modules:
-
-- sales
-
-- inventory
-
-- payment
-
-
-
-ERP System:
-
-
-modules:
-
-- sales
-
-- purchase
-
-- finance
-
-- workflow
-
-
-
-Rental System:
-
-
-modules:
-
-- asset
-
-- contract
-
-- billing
-
-
-
-
-============================================================
-
-
-# 8. MODULE MANIFEST
-
-
-Every module should describe itself.
-
-
-Example:
-
-
-module.json
-
-
-{
-
-
-"name":"inventory",
-
-
-"version":"1.0",
-
-
-"dependencies":[
-
-    "product"
-
-],
-
-
-"provides":[
-
-    "forms",
-
-    "reports",
-
-    "workflow",
-
-    "api",
-
-    "events"
-
-]
-
-
-}
-
-
-
-Module installation should register:
-
-
-- menu
-- permission
-- form
-- workflow
-- report
-- API endpoint
-
-
-
-============================================================
-
-
-# 9. MENU MANAGEMENT ENGINE
-
-
-Menu is NOT hardcoded frontend.
-
-
-Menu comes from metadata.
-
-
-Example:
-
-
-{
-
-"name":"Inventory",
-
-"module":"inventory",
-
-"route":"/inventory",
-
-"permission":"inventory.read"
-
-}
-
-
-
-Menu visibility depends on:
-
-
-- tenant package
-- installed module
-- user role
-- permission
-- workflow state
-
-
-
-Frontend only renders menu definition.
-
-
-
-============================================================
-
-
-# END PART 2
-============================================================
-
-# 10. DYNAMIC FORM ENGINE
-
-
-IMPORTANT:
-
-Frontend must NOT contain business rules.
-
-
-Frontend responsibility:
-
-- render component
-- collect input
-- display result
-
-
-Business definition comes from metadata.
-
-
-
-Form Engine controls:
-
-
-- form layout
-- component type
-- field visibility
-- field permission
-- readonly state
-- validation rule
-- default value
-- calculated field
-- workflow state behavior
-
-
-
-============================================================
-
-
-## Form Definition Example
-
-
-Example:
-
-
-{
-    "form":"purchase_order",
-
-    "fields":[
-
-        {
-
-        "name":"supplier",
-
-        "component":"lookup",
-
-        "required":true
-
-        },
-
-
-        {
-
-        "name":"amount",
-
-        "component":"currency",
-
-        "validation":[
-
-            "minimum:0"
-
-        ]
-
-        }
-
-    ]
-
-}
-
-
-
-Frontend only renders this definition.
-
-
-
-============================================================
-
-
-# 11. UI SECURITY POLICY ENGINE
-
-
-Security is NOT only API security.
-
-
-Every field can have policy.
-
-
-
-Example:
-
-
-Staff:
-
-
-{
- field:"purchase_price",
-
- visible:false
-}
-
-
-
-Manager:
-
-
-{
- field:"purchase_price",
-
- visible:true,
-
- readonly:false
-}
-
-
-
-After workflow approved:
-
-
-{
- field:"amount",
-
- readonly:true
-}
-
-
-
-Policy depends on:
-
-
-- user
-- role
-- permission
-- domainCode
-- workflow state
-- organization
-
-
-
-NEVER hardcode:
-
-
-if(user.role==="admin")
-
-
-inside frontend.
-
-
-
-============================================================
-
-
-# 12. DYNAMIC DATA MODEL ENGINE
-
-
-Avoid creating new database model for every business case.
-
-
-
-Traditional:
-
-
-PurchaseModel
-
-SalesModel
-
-CustomerModel
-
-
-
-Problem:
-
-Every customer customization requires code changes.
-
-
-
-RediOS way:
-
-
-Metadata defines object.
-
-
-
-Example:
-
-
-Object Definition:
-
-
-{
- "object":"purchase_order",
-
- "fields":[
-
-    {
-
-     "name":"supplier",
-
-     "type":"relation"
-
-    },
-
-
-    {
-
-     "name":"total",
-
-     "type":"currency"
-
-    }
-
- ]
-
-}
-
-
-
-Runtime Data:
-
-
-{
- "object":"purchase_order",
-
- "tenant":"T001",
-
- "domainCode":"RETAIL",
-
-
- "data":{
-
-    "supplier":"ABC",
-
-    "total":100000
-
- }
-
-}
-
-
-
-Customer can add fields without deployment.
-
-
-
-============================================================
-
-
-# 13. DYNAMIC API ENGINE
-
-
-Avoid:
-
-
-/api/purchase/create
-
-
-/api/customer/update
-
-
-
-Because every new module creates new endpoint.
-
-
-
-Preferred:
-
-
-Universal Object API:
-
-
-
-POST
-
-
-/api/v1/object/:objectName
-
-
-
-Example:
-
-
-/api/v1/object/purchase_order
-
-
-
-Flow:
-
-
-API Gateway
-
-      |
-
-Permission Engine
-
-      |
-
-Metadata Engine
-
-      |
-
-Validation Engine
-
-      |
-
-Workflow Engine
-
-      |
-
-Database Engine
-
-
-
-API behavior comes from metadata.
-
-
-
-============================================================
-
-
-# 14. DOMAIN QUERY ENGINE
-
-
-Existing domainCode concept evolves here.
-
-
-
-Reports and queries must understand:
-
-
-- tenant
-- organization
-- domainCode
-- branch
-- permission
-
-
-
-Example:
-
-
-User asks:
-
-
-"Show sales this month"
-
-
-
-Engine automatically resolves:
-
-
-WHO is asking?
-
-WHAT business?
-
-WHICH branch?
-
-WHAT permission?
-
-
-
-Then generate safe query.
-
-
-
-============================================================
-
-
-# 15. DYNAMIC REPORT BUILDER
-
-
-DO NOT create:
-
-
-salesReport()
-
-stockReport()
-
-profitReport()
-
-
-
-Reports must be metadata.
-
-
-
-Example:
-
-
-{
-
-
-"name":"Monthly Sales",
-
-
-"source":"sales_transaction",
-
-
-"groupBy":[
-
-    "customer"
-
-],
-
-
-"metrics":[
-
-    {
-
-    "field":"amount",
-
-    "operation":"SUM"
-
-    }
-
-]
-
-}
-
-
-
-Same report engine can generate:
-
-
-- API response
-- dashboard
-- PDF
-- Excel
-- analytics
-
-
-
-============================================================
-
-
-# 16. DASHBOARD ENGINE
-
-
-Dashboard is NOT hardcoded.
-
-
-
-Dashboard consists of widgets.
-
-
-
-Widget Example:
-
-
-{
-
-
-"type":"chart",
-
-
-"source":"sales",
-
-
-"metric":"monthly_growth"
-
-
-}
-
-
-
-Dashboard visibility depends on:
-
-
-- role
-- domainCode
-- module
-- permission
-
-
-
-CEO:
-
-shows:
-
-- profit
-- revenue
-- company overview
-
-
-
-Branch:
-
-shows:
-
-- branch performance
-
-
-
-Staff:
-
-shows:
-
-- operational task
-
-
-
-============================================================
-
-
-# END PART 3
-============================================================
-
-# 17. RULE ENGINE
-
-
-IMPORTANT:
-
-Business rules must NOT be hardcoded inside services.
-
-
-
-Avoid:
-
-
-if(customer.type === "VIP") {
-
-    discount = 20
-
-}
-
-
-
-Because every business has different rules.
-
-
-
-RediOS Rule Engine controls:
-
-
-- pricing
-- discount
-- promotion
-- tax
-- commission
-- approval condition
-- validation rule
-- SLA rule
-- business policy
-
-
-
-============================================================
-
-
-## Dynamic Pricing Engine
-
-
-Existing:
-
-cron based price calculation.
-
-
-Future:
-
-Pricing Rule Engine.
-
-
-
-Example:
-
-
-{
-
-
-"name":"Happy Hour Pricing",
-
-
-"condition":{
-
-
-"time":{
-
-    "from":"18:00",
-
-    "to":"21:00"
-
-},
-
-
-"domainCode":"RETAIL"
-
-
-},
-
-
-
-"action":{
-
-
-"discount":"20%"
-
-
-}
-
-
-}
-
-
-
-Engine decides price dynamically.
-
-
-
-Use cases:
-
-
-Retail:
-
-- happy hour discount
-- member pricing
-- bundle pricing
-
-
-
-ERP:
-
-- customer contract price
-- volume discount
-- project pricing
-
-
-
-Service:
-
-- SLA based pricing
-- subscription pricing
-
-
-
-============================================================
-
-
-# 18. SCHEDULER ENGINE
-
-
-DO NOT directly depend on operating system cron.
-
-
-
-Current cron jobs should evolve into:
-
-Scheduler Engine.
-
-
-
-Responsibilities:
-
-
-- recurring task
-- delayed execution
-- background process
-- automatic calculation
-- notification
-- synchronization
-
-
-
-Example:
-
-
-{
-
-
-"job":"recalculate_price",
-
-
-"schedule":"every 1 hour",
-
-
-"context":{
-
-    "tenant":"T001",
-
-    "domainCode":"RETAIL"
-
-}
-
-}
-
-
-
-Scheduler must understand:
-
-
-- tenant
-- domainCode
-- timezone
-- permission
-
-
-
-============================================================
-
-
-# 19. EVENT ENGINE
-
-
-Avoid direct service dependency.
-
-
-
-Avoid:
-
-
-Purchase Service
-
-      |
-
-Inventory Service
-
-      |
-
-Accounting Service
-
-
-
-Because modules become tightly coupled.
-
-
-
-Use Event Driven Architecture.
-
-
-
-Example:
-
-
-purchase.approved
-
-
-          |
-
-       Event Bus
-
-
-          |
-
-
-+---------+---------+
-
-Inventory Module
-
-Finance Module
-
-Notification Module
-
-
-
-============================================================
-
-
-Events Example:
-
-
-
-Transaction:
-
-
-sales.created
-
-
-purchase.approved
-
-
-stock.updated
-
-
-
-System:
-
-
-user.created
-
-
-module.installed
-
-
-workflow.completed
-
-
-
-AI:
-
-
-ai.analysis.requested
-
-
-ai.action.executed
-
-
-
-============================================================
-
-
-# 20. INTEGRATION ENGINE
-
-
-RediOS must support external systems.
-
-
-
-Examples:
-
-
-- payment gateway
-- marketplace
-- bank
-- government API
-- third party software
-- IoT devices
-- external AI service
-
-
-
-Integration should NOT access database directly.
-
-
-
-Flow:
-
-
-
-External System
-
-
-       |
-
-API Gateway
-
-
-       |
-
-Security
-
-
-       |
-
-Business Context
-
-
-       |
-
-Engine
-
-
-
-============================================================
-
-
-# 21. API GATEWAY ENGINE
-
-
-API Gateway is the single entry point.
-
-
-
-Used by:
-
-
-- Web Application
-- Mobile Application
-- POS Client
-- External Partner
-- Corporate Integration
-- AI Agent
-
-
-
-Responsibilities:
-
-
-Authentication
-
-
-Authorization
-
-
-Rate Limit
-
-
-Tenant Resolver
-
-
-Domain Resolver
-
-
-API Versioning
-
-
-Request Validation
-
-
-Audit Logging
-
-
-
-============================================================
-
-
-Example Flow:
-
-
-POS Terminal
-
-
-      |
-
-API Gateway
-
-
-      |
+   |
 
 Tenant Context
 
+   |
 
-      |
+Business Context
 
-domainCode Context
+   |
 
+Permission Context
 
-      |
+   |
 
-Permission
-
-
-      |
-
-Sales Module
+Runtime Execution
+```
 
 
-
-============================================================
-
-
-# 22. AUDIT ENGINE
+Resolver menentukan:
 
 
-Enterprise customers require traceability.
+- siapa user
+
+- tenant mana
+
+- module apa
+
+- permission apa
+
+- workflow apa
 
 
+---
 
-Every action creates audit.
+# END PART 1
+---
 
+# 12. Security Engine
+
+
+Security REDI-OS tidak dibuat per module.
+
+Security adalah capability platform.
+
+
+Security Layer:
+
+
+```
+User
+
+ |
+
+Role
+
+ |
+
+Policy
+
+ |
+
+Context
+
+ |
+
+Runtime Permission
+```
+
+
+Support:
+
+
+## RBAC
+
+Role Based Access Control
 
 
 Example:
 
 
+```
+Maintenance Manager
 
+    |
+
+Approve Work Order
+```
+
+
+---
+
+
+## ABAC
+
+Attribute Based Access Control
+
+
+Example:
+
+
+```
+IF
+
+user.site == document.site
+
+ALLOW ACCESS
+```
+
+
+---
+
+
+## Field Level Security
+
+
+Example:
+
+
+Finance Data:
+
+
+```
+amount
+
+cost
+
+margin
+```
+
+
+hanya muncul berdasarkan permission.
+
+
+---
+
+# 13. Metadata Engine
+
+
+Metadata Engine adalah core pembeda REDI-OS.
+
+
+Tujuan:
+
+
+```
+Application Behavior
+
+        |
+
+Controlled By Metadata
+
+        |
+
+Not Hardcoded Code
+```
+
+
+---
+
+
+Metadata Components:
+
+
+```
+Metadata Engine
+
+
+├── Object Metadata
+
+
+├── Field Metadata
+
+
+├── Form Metadata
+
+
+├── Menu Metadata
+
+
+├── Workflow Metadata
+
+
+├── Rule Metadata
+
+
+└── Report Metadata
+```
+
+
+---
+
+## Object Metadata
+
+
+Example:
+
+
+```json
 {
+ "objectCode": "asset",
 
+ "name": "Machine Asset",
 
-"user":"john",
+ "module": "cmms",
 
-
-"action":"UPDATE_PRICE",
-
-
-"before":10000,
-
-
-"after":12000,
-
-
-"time":"2026-01-01",
-
-
-"context":{
-
-
-"tenant":"T001",
-
-"domainCode":"RETAIL"
-
-
+ "fields": []
 }
+```
 
 
+Runtime menghasilkan:
+
+
+```
+Asset Management Application
+```
+
+
+tanpa membuat aplikasi baru.
+
+
+---
+
+## Field Metadata
+
+
+Example:
+
+
+```json
+{
+ "fieldName": "machineTemperature",
+
+ "type": "number",
+
+ "validation": {
+
+    "required": true
+ }
 }
+```
 
 
+---
 
-Audit applies to:
-
-
-- user action
-- workflow
-- API
-- AI execution
-- scheduler execution
+## Form Metadata
 
 
-
-============================================================
-
-
-# END PART 4
-============================================================
-
-# 23. AI ORCHESTRATION ENGINE
+Dynamic UI rendering.
 
 
-IMPORTANT:
-
-AI is NOT only chatbot.
-
-AI is an intelligent operator running on top of RediOS Kernel.
+Example:
 
 
+```
+Metadata
 
-AI must understand:
+    |
 
+Experience Engine
 
-- tenant
-- organization
-- domainCode
-- installed modules
-- user permission
-- workflow
-- business rules
-- available actions
+    |
 
+Web / Mobile
+```
 
 
-AI must NEVER access database directly.
+---
 
+# 14. Runtime Engine
+
+
+Runtime Engine menjalankan metadata.
+
+
+Flow:
+
+
+```
+Request
+
+   |
+
+Context Resolver
+
+   |
+
+Load Metadata
+
+   |
+
+Apply Security
+
+   |
+
+Execute Workflow
+
+   |
+
+Response
+```
+
+
+Runtime bertanggung jawab:
+
+
+- Load configuration
+
+- Validate rule
+
+- Execute action
+
+- Trigger event
+
+- Generate experience
+
+
+---
+
+# 15. Business Rule Engine
+
+
+Business rule tidak boleh hardcoded.
 
 
 Wrong:
 
 
-AI Agent
+```javascript
+if(amount > 10000000){
 
-      |
+ approveManager()
 
-Database
-
+}
+```
 
 
 Correct:
 
 
+```
+Rule Metadata:
+
+
+WHEN
+
+amount > 10000000
+
+
+THEN
+
+Need Manager Approval
+```
+
+
+---
+
+# 16. Event Engine
+
+
+REDI-OS menggunakan Event Driven Architecture.
+
+
+Module tidak saling panggil langsung.
+
+
+Wrong:
+
+
+```
+Production
+
+    |
+
+call
+
+    |
+
+Inventory
+```
+
+
+---
+
+
+Correct:
+
+
+```
+PRODUCTION_COMPLETED
+
+
+        |
+
+    Event Engine
+
+
+        |
+
++---------------+
+
+|               |
+
+Inventory     Finance
+```
+
+
+---
+
+# 17. Module Architecture
+
+
+REDI-OS tidak menggunakan konsep aplikasi terpisah.
+
+
+Module adalah:
+
+
+```
+Business Capability Package
+```
+
+
+Module hanya menyediakan:
+
+
+```
+module/
+
+
+├── metadata
+
+
+├── workflow
+
+
+├── rules
+
+
+├── templates
+
+
+├── integration
+
+
+└── seed
+```
+
+
+---
+
+# 18. Module Manifest
+
+
+Setiap module memiliki definisi.
+
+
+Example:
+
+
+```json
+{
+
+ "module": "engineering-cmms",
+
+
+ "version": "1.0",
+
+
+ "requires": [
+
+    "asset",
+
+    "inventory"
+
+ ],
+
+
+ "provides": [
+
+    "work-order",
+
+    "maintenance"
+
+ ]
+
+}
+```
+
+
+Module Engine membaca manifest.
+
+
+Kemudian melakukan:
+
+
+- Register capability
+
+- Register menu
+
+- Register workflow
+
+- Register permission
+
+
+---
+
+# 19. Business Capability Modules
+
+
+Target REDI-OS:
+
+
+```
+modules/
+
+
+├── master-data
+
+
+├── finance
+
+
+├── procurement
+
+
+├── inventory-wms
+
+
+├── production-mes
+
+
+├── quality-qms
+
+
+├── engineering-cmms
+
+
+├── itsm
+
+
+├── tunasnoc
+
+
+├── hr-ga
+
+
+├── project
+
+
+├── isp-operation
+
+
+└── integration
+```
+
+
+---
+
+# 20. Solution Template Engine
+
+
+REDI-OS menyediakan template implementasi.
+
+
+Bukan install aplikasi.
+
+
+Tetapi:
+
+
+```
+Install Business Template
+
+          |
+
+Enable Modules
+
+          |
+
+Load Metadata
+
+          |
+
+Activate Workflow
+```
+
+
+---
+
+# Example Template
+
+
+## Manufacturing Template
+
+
+Enable:
+
+
+```
+Master Data
+
+Inventory WMS
+
+Production MES
+
+Quality QMS
+
+Engineering CMMS
+
+TunasIoT
+```
+
+
+---
+
+
+## ISP Operation Template
+
+
+Enable:
+
+
+```
+Customer
+
+Ticket
+
+Work Order
+
+Asset
+
+ISP-Kita
+
+TunasNOC
+```
+
+
+---
+
+
+## Corporate Template
+
+
+Enable:
+
+
+```
+Finance
+
+HR-GA
+
+Procurement
+
+Approval
+
+Office365
+```
+
+
+---
+
+# 21. Experience Engine
+
+
+Satu metadata dapat berjalan di banyak interface.
+
+
+```
+Object Metadata
+
+
+       |
+
+Experience Engine
+
+
+       |
+
++------+-------+
+
+
+Web
+
+Mobile
+
+Tablet
+
+Industrial Panel
+```
+
+
+Support:
+
+
+- Responsive UI
+
+- Mobile Workforce
+
+- Offline Data
+
+- Sync Engine
+
+
+---
+
+# END PART 2
+---
+
+# 22. TunasFlow Engine
+
+
+TunasFlow adalah Universal Workflow & Automation Engine REDI-OS.
+
+
+TunasFlow bukan module.
+
+
+TunasFlow adalah platform capability.
+
+
+Inspired by:
+
+
+- ServiceNow Workflow
+
+- Freshworks Ticket Flow
+
+- n8n Automation
+
+- BPM Engine
+
+
+---
+
+
+# 23. Workflow Runtime Concept
+
+
+Traditional:
+
+
+```
+Ticket Status:
+
+OPEN
+
+PROCESS
+
+DONE
+```
+
+
+Hardcoded di aplikasi.
+
+
+---
+
+
+REDI-OS:
+
+
+```
+Business Document
+
+
+        |
+
+Workflow Definition
+
+
+        |
+
+Runtime Execution
+```
+
+
+Workflow terdiri dari:
+
+
+```
+Workflow
+
+
+├── State
+
+
+├── Transition
+
+
+├── Condition
+
+
+├── Action
+
+
+├── Approval
+
+
+├── SLA
+
+
+└── Event Trigger
+```
+
+
+---
+
+
+Example:
+
+
+```yaml
+workflow:
+
+ name: Maintenance Approval
+
+
+states:
+
+
+ - request
+
+
+ - approval
+
+
+ - execution
+
+
+ - verification
+
+
+ - closed
+
+
+transition:
+
+
+ request -> approval
+
+
+ condition:
+
+
+    assetCriticality: HIGH
+
+
+ action:
+
+
+    notify: manager
+```
+
+
+---
+
+
+# 24. Human Task Engine
+
+
+Untuk pekerjaan manusia.
+
+
+Example:
+
+
+Engineering:
+
+
+```
+Machine Breakdown
+
+
+        |
+
+Create Task
+
+
+        |
+
+Assign Technician
+
+
+        |
+
+Work Execution
+
+
+        |
+
+Supervisor Review
+
+
+        |
+
+Close
+```
+
+
+---
+
+
+HR-GA:
+
+
+```
+Vehicle Request
+
+
+        |
+
+GA Approval
+
+
+        |
+
+Schedule Vehicle
+
+
+        |
+
+Return Confirmation
+```
+
+
+---
+
+# 25. System Task Engine
+
+
+Untuk automation.
+
+
+Example:
+
+
+```
+IoT Sensor Alert
+
+
+        |
+
+Condition Check
+
+
+        |
+
+Create Work Order
+
+
+        |
+
+Notify Engineer
+```
+
+
+---
+
+
+Integration:
+
+
+```
+ERP Transaction
+
+
+        |
+
+Webhook
+
+
+        |
+
+TunasFlow
+
+
+        |
+
+Approval
+
+
+        |
+
+SAP Update
+```
+
+
+---
+
+# 26. IT Service Management Module
+
+
+ITSM adalah template di atas TunasFlow.
+
+
+Inspired:
+
+
+- ServiceNow
+
+- GLPI
+
+- PC24
+
+
+Capability:
+
+
+## Incident Management
+
+
+```
+Monitoring Alert
+
+      |
+
+Incident Ticket
+
+      |
+
+Assignment
+
+      |
+
+Resolution
+```
+
+
+---
+
+
+## Request Management
+
+
+Example:
+
+
+- New Laptop Request
+
+- Account Request
+
+- Access Request
+
+
+---
+
+
+## Change Management
+
+
+Flow:
+
+
+```
+Change Request
+
+
+      |
+
+Impact Analysis
+
+
+      |
+
+Approval
+
+
+      |
+
+Execution
+
+
+      |
+
+Review
+```
+
+
+---
+
+
+## IT Asset Management
+
+
+Manage:
+
+
+- Laptop
+
+- Server
+
+- Network Device
+
+- Software License
+
+- Endpoint
+
+
+Integration:
+
+
+```
+TunasNOC
+```
+
+
+---
+
+# 27. TunasNOC Platform
+
+
+Monitoring foundation.
+
+
+Used by:
+
+
+- ITSM
+
+- Engineering
+
+- Infrastructure
+
+
+Capability:
+
+
+- Server Monitoring
+
+- Network Monitoring
+
+- Endpoint Monitoring
+
+- IoT Monitoring
+
+
+Flow:
+
+
+```
+Monitoring
+
+
+     |
+
+Event
+
+
+     |
+
+TunasFlow
+
+
+     |
+
+Ticket / Work Order
+```
+
+
+---
+
+# 28. Engineering CMMS Module
+
+
+Computerized Maintenance Management System.
+
+
+Purpose:
+
+
+Manage asset lifecycle.
+
+
+Capability:
+
+
+## Asset Management
+
+
+- Machine
+
+- Equipment
+
+- Facility
+
+- Tools
+
+
+---
+
+
+## Preventive Maintenance
+
+
+Flow:
+
+
+```
+Schedule
+
+
+   |
+
+Generate PM Work Order
+
+
+   |
+
+Technician
+
+
+   |
+
+Completion
+
+
+   |
+
+History
+```
+
+
+---
+
+
+## Corrective Maintenance
+
+
+Flow:
+
+
+```
+Failure
+
+
+ |
+
+WO
+
+
+ |
+
+Repair
+
+
+ |
+
+Root Cause
+
+
+ |
+
+Close
+```
+
+
+---
+
+
+## Predictive Maintenance
+
+
+Powered by:
+
+
+```
+TunasIoT
+
++
+
 AI Agent
-
-      |
-
-AI Gateway
-
-      |
-
-Permission Engine
-
-      |
-
-Business Context Engine
-(domainCode)
-
-      |
-
-Metadata Engine
-
-      |
-
-Workflow / Report / Data Engine
-
-
-
-============================================================
-
-
-# 24. AI CAPABILITY
-
-
-AI can execute:
-
-
-------------------------------------------------------------
-
-1. Transaction Assistant
+```
 
 
 Example:
 
 
-User:
-
-"Create purchase order for low stock items"
-
+```
+Temperature Rising
 
 
-AI Process:
+       |
+
+Prediction
 
 
-Understand intent
+       |
+
+Maintenance Recommendation
+```
+
+
+---
+
+# 29. Sparepart Integration
+
+
+CMMS terhubung dengan Inventory.
+
+
+Flow:
+
+
+```
+Work Order
+
+
+    |
+
+Need Sparepart
+
+
+    |
+
+Inventory Request
+
+
+    |
+
+Warehouse Issue
+
+
+    |
+
+Cost Calculation
+```
+
+
+Tidak ada duplicate sparepart database.
+
+
+---
+
+# 30. Production MES Module
+
+
+Manufacturing Execution System.
+
+
+Purpose:
+
+
+Control shop floor execution.
+
+
+Flow:
+
+
+```
+Material Released
+
 
         |
 
-Check Permission
+Production Order
+
 
         |
 
-Read Inventory Metadata
+Machine Execution
+
 
         |
 
-Generate Purchase Request
+Operator Confirmation
+
 
         |
 
-Execute Workflow
+Supervisor Release
+```
 
 
+---
 
-------------------------------------------------------------
+
+Integration:
 
 
-2. Dynamic Report Analysis
+```
+TunasIoT
 
+
+collect:
+
+
+- Machine Status
+
+- Counter
+
+- Runtime
+
+- Downtime
+
+- Parameter
+```
+
+
+---
+
+# 31. Quality QMS Module
+
+
+Quality Management System.
+
+
+Support standard:
+
+
+- GMP
+
+- CPOB
+
+- CPMB
+
+- ISO
+
+
+---
+
+
+# QC Release Flow
+
+
+```
+Incoming Material
+
+
+        |
+
+QC Inspection
+
+
+        |
+
+Material Release
+
+
+        |
+
+Production
+
+
+        |
+
+Production Complete
+
+
+        |
+
+QA Review
+
+
+        |
+
+Product Release
+```
+
+
+---
+
+
+# IoT Evidence
+
+
+Quality menggunakan data:
+
+
+```
+TunasIoT
+
+
+- Temperature
+
+- Humidity
+
+- Machine Parameter
+
+- Process Evidence
+```
+
+
+Untuk:
+
+
+- Traceability
+
+- Audit Trail
+
+- Compliance
+
+
+---
+
+# 32. Production + Quality Integration
+
+
+Full lifecycle:
+
+
+```
+Raw Material
+
+
+      |
+
+Warehouse
+
+
+      |
+
+QC Release
+
+
+      |
+
+Production
+
+
+      |
+
+IoT Capture
+
+
+      |
+
+Supervisor Release
+
+
+      |
+
+QA Release
+
+
+      |
+
+Finished Goods
+```
+
+
+---
+
+# 33. Industrial Traceability
+
+
+REDI-OS menyimpan:
+
+
+```
+Material
+
+
+ |
+
+Process
+
+
+ |
+
+Machine
+
+
+ |
+
+Operator
+
+
+ |
+
+Quality
+
+
+ |
+
+Customer
+```
+
+
+End-to-End Traceability.
+
+
+---
+
+# END PART 3
+---
+
+# 34. Inventory & WMS Module
+
+
+Warehouse Management System.
+
+
+Purpose:
+
+
+Mengatur seluruh lifecycle material dan barang.
+
+
+Capability:
+
+
+- Material Management
+
+- Sparepart Management
+
+- Finished Goods
+
+- Location Management
+
+- Stock Movement
+
+- Traceability
+
+- Stock Opname
+
+
+---
+
+
+# Inventory Flow
+
+
+```
+Purchase Receive
+
+
+        |
+
+Incoming Inspection
+
+
+        |
+
+QC Release
+
+
+        |
+
+Available Stock
+
+
+        |
+
+Production Usage
+
+
+        |
+
+Finished Goods
+
+
+        |
+
+Delivery
+```
+
+
+---
+
+
+# Sparepart Flow
+
+
+Integration with Engineering CMMS:
+
+
+```
+Maintenance WO
+
+
+       |
+
+Request Sparepart
+
+
+       |
+
+Warehouse Issue
+
+
+       |
+
+Maintenance Cost
+
+
+       |
+
+Asset History
+```
+
+
+---
+
+# 35. Finance & Costing Module
+
+
+Finance tidak berdiri sendiri.
+
+
+Finance menerima event dari semua module.
 
 
 Example:
 
 
-User:
-
-"Why profit decreased this month?"
-
+```
+Inventory Movement
 
 
-AI Process:
+        |
+
+Event Engine
 
 
-Resolve:
+        |
 
-- tenant
-- domainCode
-- allowed data
+Cost Calculation
 
+
+        |
+
+Accounting Entry
+```
+
+
+---
+
+
+Capability:
+
+
+- General Ledger
+
+- Account Payable
+
+- Account Receivable
+
+- Budget
+
+- Cost Center
+
+- Asset Costing
+
+- Production Costing
+
+
+---
+
+# 36. Finance Approval Flow
+
+
+Powered by:
+
+
+```
+TunasFlow Engine
+```
+
+
+Example:
+
+
+```
+Payment Request
+
+
+       |
+
+Department Approval
+
+
+       |
+
+Finance Verification
+
+
+       |
+
+Director Approval
+
+
+       |
+
+Payment Release
+```
+
+
+Approval bukan hardcoded.
+
+
+---
+
+# 37. HR & GA Module
+
+
+Human Resource & General Affair.
+
+
+Capability:
+
+
+## HR
+
+
+- Employee
+
+- Organization
+
+- Attendance
+
+- Leave
+
+- Approval
+
+
+---
+
+
+## GA
+
+
+Facility management.
+
+
+Example:
+
+
+Vehicle Request:
+
+
+```
+Employee Request
+
+
+       |
+
+GA Approval
+
+
+       |
+
+Vehicle Booking
+
+
+       |
+
+Usage
+
+
+       |
+
+Return
+```
+
+
+---
+
+# 38. ISP Operation Module
+
+
+Integration:
+
+
+```
+ISP-Kita Platform
+```
+
+
+Purpose:
+
+
+ISP Business Operation.
+
+
+Capability:
+
+
+- Customer Management
+
+- Installation Order
+
+- Trouble Ticket
+
+- Field Engineer
+
+- Network Asset
+
+- SLA
+
+
+---
+
+
+Flow:
+
+
+```
+Customer Problem
+
+
+        |
+
+Ticket
+
+
+        |
+
+TunasFlow
+
+
+        |
+
+Engineer WO
+
+
+        |
+
+Resolution
+
+
+        |
+
+Customer Notification
+```
+
+
+---
+
+# 39. REDI Integration Hub
+
+
+Semua integrasi external melalui satu layer.
+
+
+Tidak ada module direct integration.
+
+
+Architecture:
+
+
+```
+Business Module
+
+
+       |
+
+Event
+
+
+       |
+
+Integration Hub
+
+
+       |
+
+External System
+```
+
+
+---
+
+# Supported Connector
+
+
+## Enterprise
+
+
+- SAP
+
+- Odoo
+
+- Office365
+
+- ERP System
+
+
+---
+
+
+## Industrial
+
+
+- MQTT
+
+- OPC-UA
+
+- PLC
+
+- SCADA
+
+- IoT Gateway
+
+
+---
+
+
+## Internal Platform
+
+
+- TunasIoT
+
+- ISP-Kita
+
+- TunasNOC
+
+
+---
+
+# 40. Data Platform
+
+
+REDI-OS Data Architecture:
+
+
+```
+Transaction
+
+
+     |
+
+Event Stream
+
+
+     |
+
+Operational Store
+
+
+     |
+
+Analytics
+
+
+     |
+
+AI Engine
+```
+
+
+Purpose:
+
+
+- Dashboard
+
+- KPI
+
+- Prediction
+
+- Optimization
+
+
+---
+
+# 41. REDI Intelligence
+
+
+AI Layer REDI-OS.
+
+
+AI bukan mengganti user.
+
+
+AI membantu:
+
+
+- Analyze
+
+- Recommend
+
+- Automate
+
+- Predict
+
+
+---
+
+# AI Agent
+
+
+## Production Agent
 
 
 Analyze:
 
-- sales
-- cost
-- discount
-- expense
+
+- Production Efficiency
+
+- Downtime
+
+- Bottleneck
 
 
-
-Generate:
-
-- explanation
-- recommendation
+---
 
 
+## Quality Agent
 
-------------------------------------------------------------
+
+Analyze:
 
 
-3. Application Builder
+- Quality Risk
 
+- Batch History
+
+- Process Deviation
+
+
+---
+
+
+## Maintenance Agent
+
+
+Analyze:
+
+
+- Machine Condition
+
+- Failure Pattern
+
+- Maintenance Prediction
+
+
+---
+
+
+## Finance Agent
+
+
+Analyze:
+
+
+- Cost
+
+- Budget
+
+- Anomaly
+
+
+---
+
+
+## IT/NOC Agent
+
+
+Analyze:
+
+
+- Incident
+
+- Network
+
+- Infrastructure
+
+
+---
+
+# 42. Deployment Model
+
+
+REDI-OS support:
+
+
+## SaaS Mode
+
+
+```
+Multi Tenant
+
+Shared Platform
+```
+
+
+For:
+
+
+- SME
+
+- Public Customer
+
+
+---
+
+
+## Enterprise Mode
+
+
+```
+Dedicated Instance
+```
+
+
+For:
+
+
+- Corporate
+
+- Factory
+
+
+---
+
+
+## Hybrid Industrial Mode
+
+
+```
+Factory Edge
+
++
+
+Cloud Intelligence
+```
+
+
+For:
+
+
+- IoT
+
+- Machine Integration
+
+- AI Processing
+
+
+---
+
+# 43. Repository Evolution Strategy
+
+
+Existing code:
+
+
+```
+DO NOT REWRITE
+```
+
+
+Evolution:
+
+
+```
+Existing Feature
+
+
+        |
+
+Analyze
+
+
+        |
+
+Extract Capability
+
+
+        |
+
+Move To Platform Engine
+```
+
+
+---
 
 
 Example:
 
 
-User:
+```
+Old:
 
-"Create rental management system"
 
+Inventory Process Logic
 
 
-AI generates:
+New:
 
 
-- module composition
-- data model
-- forms
-- workflow
-- reports
-- dashboard
+Inventory Capability
 
++
 
+Workflow Template
 
-NO manual coding required.
-
-
-
-============================================================
-
-
-# 25. AI SECURITY RULE
-
-
-AI must follow same security as human.
-
-
-
-AI cannot:
-
-
-- bypass permission
-- read hidden field
-- access another domainCode
-- execute forbidden workflow
-
-
-
-Example:
-
-
-Staff asks:
-
-
-"Show company profit"
-
-
-
-If permission denied:
-
-
-AI Response:
-
-Access denied.
-
-
-
-============================================================
-
-
-# 26. TARGET SOURCE STRUCTURE
-
-
-Future structure:
-
-
-src/
-
-
-kernel/
-
-
-    tenant/
-
-    organization/
-
-    context/
-
-    security/
-
-    permission/
-
-    metadata/
-
-    event/
-
-
-
-
-engines/
-
-
-    app-engine/
-
-    workflow-engine/
-
-    module-engine/
-
-    form-engine/
-
-    data-engine/
-
-    report-engine/
-
-    rule-engine/
-
-    scheduler-engine/
-
-    ai-engine/
-
-
-
-
-modules/
-
-
-    sales/
-
-    inventory/
-
-    finance/
-
-    customer/
-
-    document/
-
-    workflow/
-
-    custom/
-
-
-
-
-gateway/
-
-
-    api/
-
-    integration/
-
-    ai/
-
-
-
-============================================================
-
-
-# 27. MIGRATION ROADMAP V1 TO V2
-
-
-IMPORTANT:
-
-
-DO NOT REWRITE EVERYTHING.
-
-
-
-Current RediERP already contains early kernel concepts.
-
-
-
-Migration means:
-
-extract engine
-
-NOT rebuild.
-
-
-
-============================================================
-
-
-PHASE 1:
-
-Create kernel foundation.
-
-
-
-Add:
-
-
-src/kernel/
-
-
-Implement:
-
-
-- Context Resolver
-- Tenant Resolver
-- Permission Engine
-- Event Bus
-
-
-
-Keep existing controllers.
-
-
-
-============================================================
-
-
-PHASE 2:
-
-Promote existing concepts.
-
-
-
-Move:
-
-
-appProcess
-
-
-        ->
-
-
-Application Metadata Engine
-
-
-
-
-Move:
-
-
-appRouting
-
-
-        ->
-
-
-Workflow Engine
-
-
-
-
-Move:
-
-
-domainCode
-
-
-        ->
-
-
-Business Context Engine
-
-
-
-
-Move:
-
-
-reportControl
-
-
-        ->
-
-
-Report Engine
-
-
-
-
-============================================================
-
-
-PHASE 3:
-
-Create Dynamic Runtime Engine.
-
-
-
-Implement:
-
-
-- Dynamic Object API
-- Dynamic Form Renderer
-- Rule Engine
-- Module Installer
-
-
-
-============================================================
-
-
-PHASE 4:
-
-AI Integration.
-
-
-
-AI reads:
-
++
 
 Metadata
+```
 
-Workflow
 
-Report
+---
 
-Permission
+# 44. Development Phase Roadmap
 
-Domain Context
 
+## Phase 0
 
+Architecture Stabilization
 
-AI executes through:
 
-RediOS Kernel only.
+Goals:
 
 
+- Repository Audit
 
-============================================================
+- Existing Code Mapping
 
+- Remove Duplicate Logic
 
-# 28. GOLDEN RULES FOR AI CODING AGENT
+- Define Boundary
 
 
-Before editing code:
+NO NEW FEATURE.
 
 
-READ THIS FILE.
+---
 
+## Phase 1
 
 
-Rules:
+REDI Kernel
 
 
-1.
+Deliver:
 
-Never convert RediOS into normal CRUD.
 
+- Identity Engine
 
+- Metadata Engine
 
-2.
+- Runtime Engine
 
-Never hardcode business process.
+- Security Engine
 
 
+---
 
-3.
+## Phase 2
 
-Never remove:
 
+TunasFlow Engine
 
-- appProcess concept
 
-- appRouting concept
+Deliver:
 
-- domainCode concept
 
+- Workflow Runtime
 
+- Event Engine
 
-4.
+- Rule Engine
 
-Configuration is preferred over code.
+- Automation Engine
 
 
+---
 
-5.
+## Phase 3
 
-Metadata controls behavior.
 
+REDI Studio
 
 
-6.
+Deliver:
 
-Every request must know:
 
+- Object Designer
 
-tenant
+- Form Designer
 
-organization
+- Workflow Designer
 
-domainCode
+- Template Designer
 
-permission
 
+---
 
+## Phase 4
 
-7.
 
-Modules are capabilities,
-not applications.
+Industrial Core
 
 
+Deliver:
 
-8.
 
-AI must operate through Kernel.
+- WMS
 
+- MES
 
+- QMS
 
-============================================================
+- CMMS
 
+- ITSM
 
-# FINAL ARCHITECTURE SUMMARY
+- TunasNOC
 
 
+---
 
-             AI ENGINE
+## Phase 5
 
 
-                 |
+Enterprise ERP
 
 
-           API GATEWAY
+Deliver:
 
 
-                 |
+- Finance
 
+- Procurement
 
-              KERNEL
+- Costing
 
+- HR-GA
 
- Tenant
 
- Organization
+---
 
- domainCode
+## Phase 6
 
- Permission
 
- Metadata
+Integration Ecosystem
 
- Event
 
+Deliver:
 
 
-                 |
+- SAP Connector
 
+- Odoo Connector
 
-             ENGINES
+- Office365
 
+- Industrial Connector
 
- App Engine
 
- Workflow Engine
+---
 
- Form Engine
+## Phase 7
 
- Data Engine
 
- Report Engine
+Industrial AI
 
- Rule Engine
 
- Scheduler Engine
+Deliver:
 
 
+- AI Agent
 
-                 |
+- Prediction Engine
 
+- Optimization Engine
 
-             MODULES
 
+---
 
- Dynamic Business Capability
+# 45. AI / Cursor Development Rule
 
 
+Before coding:
 
-============================================================
 
+AI MUST READ:
 
-RediOS Vision:
 
+```
+README.md
 
-Build business software without rebuilding software.
+        |
 
+.cursorrules
 
-END.
+        |
 
+docs/README.md
+
+        |
+
+REDIOS_PLATFORM_BLUEPRINT_v3.md
+```
+
+
+---
+
+# AI Must
+
+
+✔ Understand existing architecture
+
+
+✔ Preserve existing business logic
+
+
+✔ Extend platform capability
+
+
+✔ Use Metadata
+
+
+✔ Use Workflow
+
+
+✔ Use Event
+
+
+---
+
+
+# AI Must NOT
+
+
+❌ Create isolated module
+
+
+❌ Duplicate kernel function
+
+
+❌ Hardcode business flow
+
+
+❌ Remove existing logic without analysis
+
+
+---
+
+# Final REDI-OS Vision
+
+
+```
+ONE PLATFORM
+
+
+ONE DATA MODEL
+
+
+ONE WORKFLOW ENGINE
+
+
+ONE INTEGRATION LAYER
+
+
+ONE INDUSTRIAL INTELLIGENCE
+```
+
+
+REDI-OS is built for:
+
+
+```
+Enterprise 5.0
+
++
+
+Industrial 5.0
+
++
+
+AI Native Operation
+```
+
+
+---
+
+# END DOCUMENT
