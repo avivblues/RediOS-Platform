@@ -343,54 +343,76 @@ AI Agent targets:
 # DEVELOPMENT PHASE PRIORITY
 # ==========================================================
 
+# ==========================================================
+# PHASE LOCKING RULE
+# ==========================================================
 
-Follow roadmap order:
+Before coding ALWAYS read:
 
+1. docs/phase/PHASE_0_REPOSITORY_AUDIT.md
+2. docs/phase/PHASE_DEVELOPMENT_ROADMAP.md
+3. Current active PHASE_x document
 
-PHASE 0:
-Architecture stabilization
+Development MUST follow phase order.
 
+Never implement future phase early.
 
-PHASE 1:
-REDI Kernel
+Example:
 
+During PHASE 1:
 
-PHASE 2:
-TunasFlow Engine
+ALLOW:
 
-
-PHASE 3:
-REDI Studio
-
-
-PHASE 4:
-Core Modules
-
-priority:
-
-1 Master Data
-2 Asset
-3 Inventory WMS
-4 Engineering CMMS
-5 ITSM
-6 Production MES
-7 QMS
+- Metadata Registry
+- Metadata Compiler
+- Runtime Executor
+- Event Foundation
+- Security Runtime
 
 
-PHASE 5:
-ERP Expansion
+DO NOT BUILD:
+
+- REDI Studio
+- ERP Template
+- MES/QMS/CMMS
+- UI Builder
+- Integration Connector
 
 
-PHASE 6:
-Industrial Integration
+During PHASE 2:
+
+ALLOW:
+
+- Persona Engine
+- Workspace Engine
+- Universal Inbox
+- Action Center
 
 
-PHASE 7:
-AI Industrial Layer
+DO NOT BUILD:
+
+- Business Modules
 
 
-Never skip foundation phase.
+Business capability starts only after:
 
+PHASE 5 Package Engine
++
+PHASE 7 Industrial Template
+
+
+# AI EXECUTION RULE
+
+When asked to code:
+
+1. Identify current phase
+2. Read phase document
+3. Modify only allowed scope
+4. Preserve existing architecture
+
+If requirement conflicts:
+
+PHASE DOCUMENT WINS
 
 # ==========================================================
 # CODING STANDARD
@@ -440,3 +462,4 @@ One Data Model
 One Integration Layer
 
 Industrial 5.0 Ready.
+
