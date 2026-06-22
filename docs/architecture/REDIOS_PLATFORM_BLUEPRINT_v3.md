@@ -2149,4 +2149,562 @@ Satu workflow engine.
 
 ---
 
-# END OF BLUEPRINT
+## 12.1 REDI EXPERIENCE & WORKSPACE PHILOSOPHY
+# REDI EXPERIENCE & WORKSPACE PHILOSOPHY
+
+## Purpose
+
+REDI Experience Layer bertanggung jawab menyediakan pengalaman penggunaan REDI-OS berdasarkan persona.
+
+REDI-OS tidak menampilkan menu berdasarkan aplikasi, tetapi berdasarkan:
+
+- User Responsibility
+- Capability
+- Permission
+- Workflow Context
+- Daily Activity
+
+---
+
+# Experience Principle
+
+
+Traditional ERP:
+
+User
+ |
+Menu
+ |
+Transaction
+
+
+REDI-OS:
+
+User
+ |
+Workspace
+ |
+Action
+ |
+Result
+
+
+System brings work to user.
+
+User does not search work.
+
+---
+
+# REDI Persona Model
+
+
+## 1. System Administrator
+
+
+Purpose:
+
+Mengelola keseluruhan platform.
+
+
+Access:
+
+ALL PLATFORM CAPABILITY
+
+
+Workspace:
+
+System Control Center
+
+
+Capabilities:
+
+
+## Platform Management
+
+- Tenant Management
+
+- Organization Management
+
+- User Management
+
+- Role Management
+
+- Permission Management
+
+
+---
+
+## Module Management
+
+- Install Module
+
+- Enable Capability
+
+- Configure Application Template
+
+
+---
+
+## System Builder Access
+
+Allowed:
+
+
+✔ Metadata Builder
+
+✔ Form Builder
+
+✔ Workflow Builder
+
+✔ Report Builder
+
+✔ Dashboard Builder
+
+✔ Integration Builder
+
+✔ Notification Builder
+
+✔ Action Builder
+
+
+---
+
+UI Experience:
+
+
+Dashboard:
+
+- System Health
+
+- Tenant Usage
+
+- Module Status
+
+- Integration Status
+
+- Security Alert
+
+
+---
+
+# 2. Programmer / Platform Developer
+
+
+Purpose:
+
+Membuat dan memperluas capability REDI-OS.
+
+
+Workspace:
+
+REDI Studio
+
+
+Access:
+
+
+## Metadata Designer
+
+
+Create:
+
+
+- Object Definition
+
+- Entity Model
+
+- Field Model
+
+- Relationship
+
+
+---
+
+
+## Form Builder
+
+
+Create:
+
+
+- Dynamic Form
+
+- Validation
+
+- UI Layout
+
+- Component Binding
+
+
+---
+
+
+## Workflow Designer
+
+
+Powered by:
+
+TunasFlow
+
+
+Create:
+
+
+- Process Flow
+
+- Approval
+
+- Automation
+
+- Event Trigger
+
+
+---
+
+
+## Query Builder
+
+
+Purpose:
+
+
+Build:
+
+
+- Dynamic Query
+
+- Dataset
+
+- API Mapping
+
+- Data Transformation
+
+
+---
+
+
+## Action Builder
+
+
+Create:
+
+
+- Button Action
+
+- Business Action
+
+- Automation Action
+
+- Integration Action
+
+
+---
+
+
+## Report Builder
+
+
+Create:
+
+
+- Report Template
+
+- Parameter
+
+- Dataset Binding
+
+
+---
+
+
+Restriction:
+
+
+Programmer membuat platform capability.
+
+Tidak menjalankan business approval.
+
+---
+
+# 3. Manager / Process Owner
+
+
+Purpose:
+
+
+Mengatur proses bisnis tanpa coding.
+
+
+Workspace:
+
+
+Management Workspace
+
+
+Access:
+
+
+## Flow Editor
+
+
+Allowed:
+
+
+- Adjust Approval
+
+- Change PIC
+
+- SLA Rule
+
+- Escalation
+
+
+---
+
+
+## Form Editor
+
+
+Allowed:
+
+
+- Hide Field
+
+- Rename Label
+
+- Rearrange Layout
+
+- Add Business Field
+
+
+(with permission)
+
+
+---
+
+
+## Report Builder
+
+
+Allowed:
+
+
+- Create Report
+
+- Modify Report
+
+- Schedule Report
+
+
+---
+
+
+## Dashboard Builder
+
+
+Create:
+
+
+- KPI Dashboard
+
+- Monitoring
+
+- Analytics
+
+
+---
+
+
+## Action Management
+
+
+Configure:
+
+
+- Approval Action
+
+- Review Action
+
+- Delegation
+
+
+---
+
+Example:
+
+
+QC Manager:
+
+
+Can edit:
+
+
+Batch Release Flow
+
+
+Cannot edit:
+
+
+Database Schema
+
+
+---
+
+# 4. Staff / Business User
+
+
+Purpose:
+
+
+Daily Operation Execution.
+
+
+Workspace:
+
+
+My Workspace
+
+
+Default View:
+
+
+- My Task
+
+- My Approval
+
+- My Notification
+
+- My Dashboard
+
+
+---
+
+
+Capability:
+
+
+## Dashboard Builder
+
+
+Allowed:
+
+
+Personal Dashboard
+
+
+Example:
+
+
+- My KPI
+
+- My Ticket
+
+- My Production
+
+
+---
+
+
+## Report Builder
+
+
+Allowed:
+
+
+Self Service Reporting
+
+
+Example:
+
+
+- Filter
+
+- Export
+
+- Schedule
+
+
+---
+
+
+## Notification Builder
+
+
+Allowed:
+
+
+Personal Alert Rule
+
+
+Example:
+
+
+Notify me when:
+
+
+- WO Assigned
+
+- QC Waiting
+
+- Stock Low
+
+
+---
+
+
+Not Allowed:
+
+
+- Change Metadata
+
+- Change Workflow Core
+
+- Change Security
+
+
+---
+
+# REDI Studio Permission Matrix
+
+
+| Capability | Admin | Programmer | Manager | Staff |
+|-|-|-|-|-|
+| Metadata Builder | ✓ | ✓ | - | - |
+| Form Designer | ✓ | ✓ | Limited | - |
+| Workflow Designer | ✓ | ✓ | Limited | - |
+| Query Builder | ✓ | ✓ | - | - |
+| Action Builder | ✓ | ✓ | Limited | - |
+| Report Builder | ✓ | ✓ | ✓ | ✓ |
+| Dashboard Builder | ✓ | ✓ | ✓ | ✓ |
+| Notification Builder | ✓ | ✓ | ✓ | ✓ |
+| Module Install | ✓ | - | - | - |
+
+
+---
+
+# Workspace Runtime Flow
+
+
+Login
+
+ ↓
+
+Identity Engine
+
+ ↓
+
+Persona Resolver
+
+ ↓
+
+Capability Resolver
+
+ ↓
+
+Workspace Generator
+
+ ↓
+
+Runtime Renderer
+
+
