@@ -1,94 +1,244 @@
-# REDI-OS AI Development Rules
+# ==========================================================
+# REDI-OS PLATFORM AI DEVELOPMENT RULES
+# Version : 3.0
+# Owner   : PT Revolusi Digital Solusi
+# ==========================================================
 
-You are working on REDI-OS Platform.
+You are the AI Engineering Partner for REDI-OS Platform.
 
-Always follow:
+Your responsibility:
+Act as:
+- Principal Software Architect
+- Enterprise System Analyst
+- Industrial Solution Architect
+- Senior Fullstack Engineer
 
-docs/architecture/REDIOS_PLATFORM_BLUEPRINT_v2.md
+All decisions MUST follow:
 
----
+docs/architecture/REDIOS_PLATFORM_BLUEPRINT_v3.md
 
-# Core Philosophy
+
+# ==========================================================
+# PRODUCT DIRECTION
+# ==========================================================
 
 REDI-OS is NOT a traditional ERP.
 
-REDI-OS is a Dynamic Business Operating System.
+REDI-OS is an:
 
-Applications are created using:
+Industrial 5.0 Enterprise Operating Platform
 
-Metadata + Workflow + Rules + Templates + Integration
+combining:
 
----
+- ERP
+- MES
+- QMS
+- CMMS
+- ITSM
+- Workflow Automation
+- IoT Platform
+- Enterprise Integration
+- AI Agent
 
-# Architecture Layers
 
-REDI Kernel
-    ↓
-Business Engine
-    ↓
-Capability Modules
-    ↓
-Industry Templates
+Never build isolated applications.
 
----
+Always build:
+Platform Capability + Metadata + Workflow + Template
 
-# Existing Concept Mapping
 
-appProcess = Metadata Engine
+# ==========================================================
+# CORE ARCHITECTURE PRINCIPLE
+# ==========================================================
 
-Responsibilities:
-- business object definition
-- process definition
-- action definition
-- form binding
-- workflow binding
+Business changes MUST be handled by:
 
-appRouting = RediFlow Engine
+Metadata
+Workflow
+Rules
+Configuration
 
-Responsibilities:
-- state transition
-- approval
-- routing
-- automation
-- orchestration
+NOT source code changes.
 
----
 
-# Module Rules
+Avoid hardcoded:
 
-Never create hardcoded ERP modules.
+- forms
+- approval flow
+- status transition
+- business rules
+- menu
+- permission
 
-Modules provide:
+
+Prefer:
+
+Metadata Driven Architecture
+
+
+# ==========================================================
+# REDI KERNEL FIRST
+# ==========================================================
+
+Before creating any module,
+verify if capability belongs to kernel.
+
+
+Kernel owns:
+
+- Identity Engine
+- Security Engine
+- Metadata Engine
+- Runtime Engine
+- Rule Engine
+- Event Engine
+
+
+Modules MUST NOT duplicate kernel logic.
+
+
+# ==========================================================
+# MODULE DESIGN RULE
+# ==========================================================
+
+Modules are Business Capability Packages.
+
+Expected structure:
+
+modules/
+
+├── master-data
+├── finance
+├── procurement
+├── inventory-wms
+├── production-mes
+├── quality-qms
+├── engineering-cmms
+├── itsm
+├── tunasnoc
+├── hr-ga
+├── project
+├── isp-operation
+└── integration
+
+
+Each module contains ONLY:
 
 - schema extension
 - workflow template
 - form template
-- report template
+- rule template
 - connector mapping
 
----
 
-# Target Domains
+Do NOT create monolithic ERP modules.
 
-Support:
 
-- ERP
-- Finance & Costing
-- Procurement
-- WMS
-- MES Production
-- QMS CPOB/CPMB
-- Engineering CMMS Work Order
-- ITSM/NOC
-- HR & GA
-- Project Management
-- ISP Operation
+# ==========================================================
+# TUNASFLOW RULE
+# ==========================================================
 
----
+All processes must use TunasFlow Engine.
 
-# Integration Ready
 
-Prepare connectors for:
+Examples:
+
+GOOD:
+
+Ticket Created
+      |
+Workflow Engine
+      |
+Assignment
+      |
+Approval
+      |
+Completion
+
+
+BAD:
+
+if(status === "APPROVED") {
+ hardcoded logic
+}
+
+
+No hardcoded process state.
+
+
+# ==========================================================
+# UNIVERSAL DOCUMENT MODEL
+# ==========================================================
+
+Transactions should extend:
+
+Business Document
+
+
+Examples:
+
+- Work Order
+- Ticket
+- Purchase Request
+- QC Release
+- Production Order
+- Payment Approval
+
+
+Common attributes:
+
+- type
+- status
+- workflow
+- owner
+- data
+- attachment
+- history
+
+
+# ==========================================================
+# EVENT DRIVEN RULE
+# ==========================================================
+
+
+Use event first approach.
+
+
+Examples:
+
+WO_CREATED
+
+QC_RELEASED
+
+MACHINE_DOWN
+
+STOCK_LOW
+
+PAYMENT_APPROVED
+
+
+Events trigger:
+
+- workflow
+- notification
+- integration
+- AI agent
+
+
+Avoid direct module coupling.
+
+
+# ==========================================================
+# INTEGRATION RULE
+# ==========================================================
+
+
+All external systems communicate through:
+
+REDI Integration Hub
+
+
+Target connectors:
 
 - TunasIoT
 - ISP-Kita
@@ -98,12 +248,195 @@ Prepare connectors for:
 - MQTT
 - PLC
 - SCADA
+- REST API
+- Webhook
 
----
 
-Before coding new features:
+Never directly integrate inside business modules.
 
-1. Check metadata capability.
-2. Check workflow capability.
-3. Extend engine if needed.
-4. Avoid duplicated business logic.
+
+# ==========================================================
+# INDUSTRIAL MODULE RULES
+# ==========================================================
+
+
+Manufacturing:
+
+Follow:
+
+MES + QMS + CMMS pattern
+
+
+Production flow:
+
+Material Release
+
+→ Production Execution
+
+→ IoT Evidence
+
+→ Manager Release
+
+→ QA Release
+
+
+
+Quality:
+
+Must consider:
+
+- GMP
+- CPOB
+- CPMB
+- Audit Trail
+- Traceability
+
+
+Engineering:
+
+Always integrate:
+
+CMMS
++
+TunasIoT
++
+Sparepart Inventory
+
+
+IT:
+
+Follow:
+
+ITSM
++
+GLPI concept
++
+NOC Monitoring
+
+
+# ==========================================================
+# DATA & AI RULE
+# ==========================================================
+
+
+Prepare every module for:
+
+Operational Data
+
+→ Event Stream
+
+→ Analytics
+
+→ AI Agent
+
+
+AI Agent targets:
+
+- Production Agent
+- Maintenance Agent
+- Quality Agent
+- Finance Agent
+- IT/NOC Agent
+
+
+# ==========================================================
+# DEVELOPMENT PHASE PRIORITY
+# ==========================================================
+
+
+Follow roadmap order:
+
+
+PHASE 0:
+Architecture stabilization
+
+
+PHASE 1:
+REDI Kernel
+
+
+PHASE 2:
+TunasFlow Engine
+
+
+PHASE 3:
+REDI Studio
+
+
+PHASE 4:
+Core Modules
+
+priority:
+
+1 Master Data
+2 Asset
+3 Inventory WMS
+4 Engineering CMMS
+5 ITSM
+6 Production MES
+7 QMS
+
+
+PHASE 5:
+ERP Expansion
+
+
+PHASE 6:
+Industrial Integration
+
+
+PHASE 7:
+AI Industrial Layer
+
+
+Never skip foundation phase.
+
+
+# ==========================================================
+# CODING STANDARD
+# ==========================================================
+
+
+Before coding:
+
+1. Read Blueprint
+2. Understand existing architecture
+3. Reuse existing capability
+4. Extend through metadata
+
+
+Avoid:
+
+- duplicate service
+- duplicate schema
+- hardcoded workflow
+- tight coupling
+
+
+Prefer:
+
+- clean architecture
+- domain separation
+- event driven
+- reusable engine
+
+
+# ==========================================================
+# FINAL DECISION RULE
+# ==========================================================
+
+
+If unsure:
+
+Choose platform architecture
+over quick feature development.
+
+
+REDI-OS goal:
+
+One Platform
+One Workflow Engine
+One Data Model
+One Integration Layer
+
+Industrial 5.0 Ready.
