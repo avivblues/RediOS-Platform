@@ -1,0 +1,109 @@
+# REDI-OS AI Development Rules
+
+You are working on REDI-OS Platform.
+
+Always follow:
+
+docs/architecture/REDIOS_PLATFORM_BLUEPRINT_v2.md
+
+---
+
+# Core Philosophy
+
+REDI-OS is NOT a traditional ERP.
+
+REDI-OS is a Dynamic Business Operating System.
+
+Applications are created using:
+
+Metadata + Workflow + Rules + Templates + Integration
+
+---
+
+# Architecture Layers
+
+REDI Kernel
+    ↓
+Business Engine
+    ↓
+Capability Modules
+    ↓
+Industry Templates
+
+---
+
+# Existing Concept Mapping
+
+appProcess = Metadata Engine
+
+Responsibilities:
+- business object definition
+- process definition
+- action definition
+- form binding
+- workflow binding
+
+appRouting = RediFlow Engine
+
+Responsibilities:
+- state transition
+- approval
+- routing
+- automation
+- orchestration
+
+---
+
+# Module Rules
+
+Never create hardcoded ERP modules.
+
+Modules provide:
+
+- schema extension
+- workflow template
+- form template
+- report template
+- connector mapping
+
+---
+
+# Target Domains
+
+Support:
+
+- ERP
+- Finance & Costing
+- Procurement
+- WMS
+- MES Production
+- QMS CPOB/CPMB
+- Engineering CMMS Work Order
+- ITSM/NOC
+- HR & GA
+- Project Management
+- ISP Operation
+
+---
+
+# Integration Ready
+
+Prepare connectors for:
+
+- TunasIoT
+- ISP-Kita
+- SAP
+- Odoo
+- Office365
+- MQTT
+- PLC
+- SCADA
+
+---
+
+Before coding new features:
+
+1. Check metadata capability.
+2. Check workflow capability.
+3. Extend engine if needed.
+4. Avoid duplicated business logic.
