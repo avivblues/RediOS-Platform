@@ -1,165 +1,470 @@
 # 🌱 REDI-OS Platform
 
-## Industrial 5.0 Enterprise Operating Platform
+## Dynamic Industrial Business Operating System
 
-Version: 3.0  
-Owner: PT Revolusi Digital Solusi
+Version : 3.0  
+Owner   : PT Revolusi Digital Solusi
 
 ---
 
 # 1. Introduction
 
-REDI-OS adalah **Enterprise & Industrial Operating Platform**.
+REDI-OS adalah **Industrial 5.0 Enterprise Operating Platform**.
 
-REDI-OS bukan ERP tradisional.
+REDI-OS bukan aplikasi ERP biasa.
 
-REDI-OS adalah platform untuk membangun, menjalankan, mengintegrasikan, dan mengotomasi seluruh proses bisnis perusahaan berbasis:
+REDI-OS adalah sebuah platform foundation untuk membangun:
+
+- Enterprise Application
+- Industrial Application
+- Business Automation
+- Digital Operation Platform
+
+berbasis:
 
 ```
 Metadata
 +
-Workflow
+Workflow Engine
 +
-Integration
+Event Driven Architecture
 +
-IoT
+Integration Platform
 +
-AI
+Artificial Intelligence
 ```
 
-Satu platform untuk banyak kebutuhan bisnis.
+
+Tujuan REDI-OS:
+
+Membuat bisnis berubah melalui konfigurasi, bukan perubahan source code.
+
 
 ---
 
-# 2. Vision
+# 2. What REDI-OS Is
 
-Tujuan utama REDI-OS:
+
+REDI-OS adalah gabungan konsep dari:
+
+
+## Enterprise Resource Platform
+
+Mengakomodir:
+
+- ERP
+- Finance
+- Procurement
+- Inventory
+- Warehouse
+- Costing
+
+
+---
+
+## Manufacturing Platform
+
+
+Mengakomodir:
+
+
+MES
+
+Manufacturing Execution System
+
+
+QMS
+
+Quality Management System
+
+
+CMMS
+
+Computerized Maintenance Management System
+
+
+Dengan support:
+
+- IoT Machine Data
+- Automation
+- Traceability
+- Compliance
+
+
+---
+
+## Service Management Platform
+
+
+Inspired by:
+
+- ServiceNow
+- Freshworks
+- GLPI
+- PC24
+
+
+Untuk:
+
+
+- IT Service Management
+- Work Order
+- Helpdesk
+- Asset Management
+- Field Service
+
+
+---
+
+## Automation Platform
+
+
+Inspired by:
+
+
+- n8n
+- BPM Engine
+- Workflow Automation
+
+
+Untuk:
+
+
+- Approval Flow
+- Integration Flow
+- Human Task
+- System Task
+
+
+---
+
+# 3. What REDI-OS Is NOT
+
+
+REDI-OS bukan:
+
+
+❌ Traditional ERP
+
+
+❌ Hardcoded Business Application
+
+
+❌ Single Purpose Application
+
+
+❌ Simple CRUD Generator
+
+
+
+REDI-OS adalah:
+
+
+✔ Platform
+
+
+✔ Runtime Engine
+
+
+✔ Business Capability Framework
+
+
+✔ Industrial Digital Foundation
+
+
+---
+
+# 4. Core Architecture Principle
+
+
+Traditional Application:
+
 
 ```
-Business Change
+Business Requirement Change
 
-      |
+        |
 
-Configuration Change
+Developer Modify Code
 
-      |
+        |
+
+Testing
+
+        |
+
+Deployment
+```
+
+
+REDI-OS Approach:
+
+
+```
+Business Requirement Change
+
+        |
+
+Metadata Update
+
+        |
+
+Workflow Update
+
+        |
 
 Runtime Execution
 ```
 
 
-bukan:
+---
 
+# 5. Metadata Driven Architecture
+
+
+REDI-OS existing concept:
 
 ```
-Business Change
-
-      |
-
-Source Code Change
-
-      |
-
-Application Redeploy
+appProcess
 ```
 
 
-REDI-OS memungkinkan perusahaan berkembang tanpa selalu melakukan rewrite aplikasi.
+berevolusi menjadi:
+
+
+```
+Metadata Engine
+```
+
+
+Metadata mengatur:
+
+
+- Application Definition
+
+- Module Definition
+
+- Object Definition
+
+- Field Definition
+
+- Form Definition
+
+- Menu Definition
+
+- Action Definition
+
+- Report Definition
+
+
+Example:
+
+
+Bukan membuat:
+
+
+```
+Customer Table
+
+Vendor Table
+
+Asset Table
+```
+
+
+hardcoded.
+
+
+Tetapi:
+
+
+```
+Object Definition
+
+        |
+
+Runtime Object
+
+        |
+
+Business Data
+```
+
 
 ---
 
-# 3. REDI-OS Positioning
+# 6. Dynamic Business Context Engine
 
 
-REDI-OS menggabungkan konsep:
+Existing concept:
 
 
-## Enterprise Platform
-
-- ERP
-- Supply Chain
-- Finance
-- Procurement
+```
+domainCode
+```
 
 
-## Manufacturing Platform
-
-- MES
-- WMS
-- QMS
-- CMMS
+berevolusi menjadi:
 
 
-## Service Platform
+```
+Business Context Engine
+```
 
-- ITSM
-- Helpdesk
+
+Tujuan:
+
+
+Satu engine dapat menjalankan banyak konteks bisnis.
+
+
+Example:
+
+
+```
+Document Engine
+
+
+     + Customer Complaint
+
+
+     + Purchase Request
+
+
+     + Work Order
+
+
+     + QC Release
+
+
+     + Ticket
+```
+
+
+Tanpa membuat aplikasi baru.
+
+
+---
+
+# 7. Universal Document Engine
+
+
+REDI-OS menggunakan konsep:
+
+
+```
+Everything is Business Document
+```
+
+
+Common Model:
+
+
+```json
+{
+    "documentType": "",
+    "status": "",
+    "workflow": "",
+    "owner": "",
+    "data": {},
+    "attachment": [],
+    "history": []
+}
+```
+
+
+Digunakan oleh:
+
+
+- Ticket
+
 - Work Order
-- Field Service
+
+- Purchase Request
+
+- Sales Order
+
+- Production Order
+
+- QC Release
+
+- Payment Approval
 
 
-## Automation Platform
-
-- Workflow Engine
-- Business Rule
-- Event Automation
+Benefit:
 
 
-## Industrial Platform
+- Single lifecycle
 
-- IoT Integration
-- Machine Data
-- Predictive Maintenance
+- Single workflow
 
+- Single approval engine
 
-## Intelligence Platform
-
-- Analytics
-- AI Agent
-- Decision Support
+- Single audit trail
 
 
 ---
 
-# 4. Platform Architecture
+# 8. Platform Layer Overview
+
+
+High Level Architecture:
 
 
 ```
-                 AI Agent Layer
+                    AI Agent Layer
 
-                       |
 
-              REDI Intelligence
+                          |
 
-                       |
 
-                 REDI Studio
+                  REDI Intelligence
 
-                       |
 
-             Experience Engine
+                          |
 
-                       |
 
-              TunasFlow Engine
+                     REDI Studio
 
-                       |
 
-        Universal Document Engine
+                          |
 
-                       |
 
-                 REDI Kernel
+                 Experience Engine
 
-                       |
 
-       Business Capability Modules
+                          |
 
-                       |
 
-          REDI Integration Hub
+                  TunasFlow Engine
 
-                       |
+
+                          |
+
+
+             Universal Document Engine
+
+
+                          |
+
+
+                    REDI Kernel
+
+
+                          |
+
+
+             Business Capability Module
+
+
+                          |
+
+
+              REDI Integration Hub
+
+
+                          |
+
 
               External Ecosystem
 ```
@@ -167,279 +472,656 @@ REDI-OS menggabungkan konsep:
 
 ---
 
-# 5. Core Platform Components
+# 9. REDI Kernel Concept
 
 
-## REDI Kernel
+Kernel adalah jantung REDI-OS.
 
 
-Foundation runtime.
+Kernel bukan business module.
 
 
-Responsibilities:
+Kernel menyediakan capability yang dipakai semua module.
 
 
-### Identity Engine
-
-- Multi Tenant
-- Company
-- Organization
-- User
-- Role
-
-
-### Security Engine
-
-- RBAC
-- ABAC
-- Field Permission
-- Audit Trail
-
-
-### Metadata Engine
-
-Controls:
-
-- Application
-- Object
-- Field
-- Form
-- Menu
-- Action
-- Report
-
-
-### Runtime Engine
-
-Compile metadata into executable application behavior.
-
-
-### Event Engine
-
-Enable asynchronous communication.
-
-
-### Rule Engine
-
-Execute dynamic business decision.
-
-
----
-
-# 6. Universal Document Engine
-
-
-REDI-OS tidak membuat object transaksi terpisah.
-
-Semua transaksi adalah:
+Kernel Components:
 
 
 ```
-Business Document
-```
+REDI Kernel
 
 
-Example:
+├── Identity Engine
 
 
-- Ticket
-- Work Order
-- Purchase Request
-- Production Order
-- QC Release
-- Payment Approval
+├── Security Engine
 
 
-Common capability:
+├── Metadata Engine
 
 
-- Workflow
-- Status
-- Approval
-- Attachment
-- Comment
-- History
-- Audit Trail
+├── Runtime Engine
 
 
----
-
-# 7. TunasFlow Engine
+├── Event Engine
 
 
-Universal Workflow & Automation Platform.
+├── Rule Engine
 
 
-Inspired by:
-
-
-- ServiceNow
-- Freshworks
-- n8n
-- BPM
-
-
-Capability:
-
-
-- Human Task
-- System Task
-- Approval
-- SLA
-- Escalation
-- Automation
-- Integration Flow
-
-
-Example:
-
-
-```
-Machine Alarm
-
-      |
-
-TunasIoT
-
-      |
-
-TunasFlow
-
-      |
-
-Create Work Order
-
-      |
-
-Assign Engineer
-
-      |
-
-Resolve
+└── Workflow Foundation
 ```
 
 
 ---
 
-# 8. REDI Studio
+# 10. Identity Engine
 
 
-Enterprise Low-Code Builder.
-
-
-REDI Studio membuat:
-
-
-- Application Template
-- Data Object
-- Dynamic Form
-- Workflow
-- Rule
-- Dashboard
-
-
-Output:
-
-```
-Metadata Definition
-
-        |
-
-Runtime Engine
-
-        |
-
-Application Experience
-```
-
-
----
-
-# 9. Experience Engine
-
-
-Satu metadata berjalan di banyak interface:
+Existing REDI-OS multi tenant capability diperkuat menjadi:
 
 
 ```
-Metadata
+Tenant
 
+  |
 
-   +---- Web
+Organization
 
-   +---- Mobile
+  |
 
-   +---- Tablet
+Company
 
-   +---- Kiosk
+  |
 
-   +---- Industrial Device
+Site
+
+  |
+
+Department
+
+  |
+
+User
 ```
 
 
 Support:
 
 
-- Offline Mode
-- Sync Engine
-- Mobile Workforce
+## Shared Database Mode
+
+
+Multiple tenant:
+
+```
+1 Database
+
+Many Tenant
+```
 
 
 ---
 
-# 10. Solution Template Concept
+## Dedicated Database Mode
 
 
-REDI-OS bukan membuat aplikasi satu per satu.
-
-
-REDI-OS menggunakan:
+Enterprise customer:
 
 
 ```
-Capability Module
+1 Tenant
 
-        +
-
-Workflow Template
-
-        +
-
-Industry Template
+1 Database
 ```
 
 
-User memilih:
+---
+
+## Hybrid Mode
+
+
+Untuk:
+
+- SaaS
+
+- Enterprise
+
+- Factory
+
+- Government
+
+
+---
+
+# 11. Context Resolver
+
+
+Setiap request REDI-OS membawa context:
+
+
+```
+Request
+
+   |
+
+JWT
+
+   |
+
+Context Resolver
+
+   |
+
+Tenant Context
+
+   |
+
+Business Context
+
+   |
+
+Permission Context
+
+   |
+
+Runtime Execution
+```
+
+
+Resolver menentukan:
+
+
+- siapa user
+
+- tenant mana
+
+- module apa
+
+- permission apa
+
+- workflow apa
+
+
+---
+
+# END PART 1
+---
+
+# 12. Security Engine
+
+
+Security REDI-OS tidak dibuat per module.
+
+Security adalah capability platform.
+
+
+Security Layer:
+
+
+```
+User
+
+ |
+
+Role
+
+ |
+
+Policy
+
+ |
+
+Context
+
+ |
+
+Runtime Permission
+```
+
+
+Support:
+
+
+## RBAC
+
+Role Based Access Control
 
 
 Example:
 
 
 ```
-Install Manufacturing Template
+Maintenance Manager
 
+    |
 
-Automatically Enable:
-
-
-ERP
-
-MES
-
-QMS
-
-CMMS
-
-WMS
+Approve Work Order
 ```
 
 
 ---
 
-# 11. Business Capability Modules
+
+## ABAC
+
+Attribute Based Access Control
 
 
-Repository target:
+Example:
+
+
+```
+IF
+
+user.site == document.site
+
+ALLOW ACCESS
+```
+
+
+---
+
+
+## Field Level Security
+
+
+Example:
+
+
+Finance Data:
+
+
+```
+amount
+
+cost
+
+margin
+```
+
+
+hanya muncul berdasarkan permission.
+
+
+---
+
+# 13. Metadata Engine
+
+
+Metadata Engine adalah core pembeda REDI-OS.
+
+
+Tujuan:
+
+
+```
+Application Behavior
+
+        |
+
+Controlled By Metadata
+
+        |
+
+Not Hardcoded Code
+```
+
+
+---
+
+
+Metadata Components:
+
+
+```
+Metadata Engine
+
+
+├── Object Metadata
+
+
+├── Field Metadata
+
+
+├── Form Metadata
+
+
+├── Menu Metadata
+
+
+├── Workflow Metadata
+
+
+├── Rule Metadata
+
+
+└── Report Metadata
+```
+
+
+---
+
+## Object Metadata
+
+
+Example:
+
+
+```json
+{
+ "objectCode": "asset",
+
+ "name": "Machine Asset",
+
+ "module": "cmms",
+
+ "fields": []
+}
+```
+
+
+Runtime menghasilkan:
+
+
+```
+Asset Management Application
+```
+
+
+tanpa membuat aplikasi baru.
+
+
+---
+
+## Field Metadata
+
+
+Example:
+
+
+```json
+{
+ "fieldName": "machineTemperature",
+
+ "type": "number",
+
+ "validation": {
+
+    "required": true
+ }
+}
+```
+
+
+---
+
+## Form Metadata
+
+
+Dynamic UI rendering.
+
+
+Example:
+
+
+```
+Metadata
+
+    |
+
+Experience Engine
+
+    |
+
+Web / Mobile
+```
+
+
+---
+
+# 14. Runtime Engine
+
+
+Runtime Engine menjalankan metadata.
+
+
+Flow:
+
+
+```
+Request
+
+   |
+
+Context Resolver
+
+   |
+
+Load Metadata
+
+   |
+
+Apply Security
+
+   |
+
+Execute Workflow
+
+   |
+
+Response
+```
+
+
+Runtime bertanggung jawab:
+
+
+- Load configuration
+
+- Validate rule
+
+- Execute action
+
+- Trigger event
+
+- Generate experience
+
+
+---
+
+# 15. Business Rule Engine
+
+
+Business rule tidak boleh hardcoded.
+
+
+Wrong:
+
+
+```javascript
+if(amount > 10000000){
+
+ approveManager()
+
+}
+```
+
+
+Correct:
+
+
+```
+Rule Metadata:
+
+
+WHEN
+
+amount > 10000000
+
+
+THEN
+
+Need Manager Approval
+```
+
+
+---
+
+# 16. Event Engine
+
+
+REDI-OS menggunakan Event Driven Architecture.
+
+
+Module tidak saling panggil langsung.
+
+
+Wrong:
+
+
+```
+Production
+
+    |
+
+call
+
+    |
+
+Inventory
+```
+
+
+---
+
+
+Correct:
+
+
+```
+PRODUCTION_COMPLETED
+
+
+        |
+
+    Event Engine
+
+
+        |
+
++---------------+
+
+|               |
+
+Inventory     Finance
+```
+
+
+---
+
+# 17. Module Architecture
+
+
+REDI-OS tidak menggunakan konsep aplikasi terpisah.
+
+
+Module adalah:
+
+
+```
+Business Capability Package
+```
+
+
+Module hanya menyediakan:
+
+
+```
+module/
+
+
+├── metadata
+
+
+├── workflow
+
+
+├── rules
+
+
+├── templates
+
+
+├── integration
+
+
+└── seed
+```
+
+
+---
+
+# 18. Module Manifest
+
+
+Setiap module memiliki definisi.
+
+
+Example:
+
+
+```json
+{
+
+ "module": "engineering-cmms",
+
+
+ "version": "1.0",
+
+
+ "requires": [
+
+    "asset",
+
+    "inventory"
+
+ ],
+
+
+ "provides": [
+
+    "work-order",
+
+    "maintenance"
+
+ ]
+
+}
+```
+
+
+Module Engine membaca manifest.
+
+
+Kemudian melakukan:
+
+
+- Register capability
+
+- Register menu
+
+- Register workflow
+
+- Register permission
+
+
+---
+
+# 19. Business Capability Modules
+
+
+Target REDI-OS:
 
 
 ```
@@ -448,27 +1130,39 @@ modules/
 
 ├── master-data
 
+
 ├── finance
+
 
 ├── procurement
 
+
 ├── inventory-wms
+
 
 ├── production-mes
 
+
 ├── quality-qms
+
 
 ├── engineering-cmms
 
+
 ├── itsm
+
 
 ├── tunasnoc
 
+
 ├── hr-ga
+
 
 ├── project
 
+
 ├── isp-operation
+
 
 └── integration
 ```
@@ -476,218 +1170,1742 @@ modules/
 
 ---
 
-# 12. Industrial Ecosystem Integration
+# 20. Solution Template Engine
 
 
-## Internal Product
+REDI-OS menyediakan template implementasi.
 
 
-### TunasIoT
+Bukan install aplikasi.
 
 
-Used for:
+Tetapi:
 
 
-- Machine Monitoring
-- Production Data
-- Predictive Maintenance
-- Quality Evidence
+```
+Install Business Template
+
+          |
+
+Enable Modules
+
+          |
+
+Load Metadata
+
+          |
+
+Activate Workflow
+```
+
+
+---
+
+# Example Template
+
+
+## Manufacturing Template
+
+
+Enable:
+
+
+```
+Master Data
+
+Inventory WMS
+
+Production MES
+
+Quality QMS
+
+Engineering CMMS
+
+TunasIoT
+```
 
 
 ---
 
 
-### ISP-Kita
+## ISP Operation Template
 
 
-Used for:
+Enable:
 
 
-- ISP Operation
-- Customer Service
-- Field Work Order
-- Network Monitoring
+```
+Customer
+
+Ticket
+
+Work Order
+
+Asset
+
+ISP-Kita
+
+TunasNOC
+```
 
 
 ---
 
 
-### TunasNOC
+## Corporate Template
 
 
-Used for:
+Enable:
+
+
+```
+Finance
+
+HR-GA
+
+Procurement
+
+Approval
+
+Office365
+```
+
+
+---
+
+# 21. Experience Engine
+
+
+Satu metadata dapat berjalan di banyak interface.
+
+
+```
+Object Metadata
+
+
+       |
+
+Experience Engine
+
+
+       |
+
++------+-------+
+
+
+Web
+
+Mobile
+
+Tablet
+
+Industrial Panel
+```
+
+
+Support:
+
+
+- Responsive UI
+
+- Mobile Workforce
+
+- Offline Data
+
+- Sync Engine
+
+
+---
+
+# END PART 2
+---
+
+# 22. TunasFlow Engine
+
+
+TunasFlow adalah Universal Workflow & Automation Engine REDI-OS.
+
+
+TunasFlow bukan module.
+
+
+TunasFlow adalah platform capability.
+
+
+Inspired by:
+
+
+- ServiceNow Workflow
+
+- Freshworks Ticket Flow
+
+- n8n Automation
+
+- BPM Engine
+
+
+---
+
+
+# 23. Workflow Runtime Concept
+
+
+Traditional:
+
+
+```
+Ticket Status:
+
+OPEN
+
+PROCESS
+
+DONE
+```
+
+
+Hardcoded di aplikasi.
+
+
+---
+
+
+REDI-OS:
+
+
+```
+Business Document
+
+
+        |
+
+Workflow Definition
+
+
+        |
+
+Runtime Execution
+```
+
+
+Workflow terdiri dari:
+
+
+```
+Workflow
+
+
+├── State
+
+
+├── Transition
+
+
+├── Condition
+
+
+├── Action
+
+
+├── Approval
+
+
+├── SLA
+
+
+└── Event Trigger
+```
+
+
+---
+
+
+Example:
+
+
+```yaml
+workflow:
+
+ name: Maintenance Approval
+
+
+states:
+
+
+ - request
+
+
+ - approval
+
+
+ - execution
+
+
+ - verification
+
+
+ - closed
+
+
+transition:
+
+
+ request -> approval
+
+
+ condition:
+
+
+    assetCriticality: HIGH
+
+
+ action:
+
+
+    notify: manager
+```
+
+
+---
+
+
+# 24. Human Task Engine
+
+
+Untuk pekerjaan manusia.
+
+
+Example:
+
+
+Engineering:
+
+
+```
+Machine Breakdown
+
+
+        |
+
+Create Task
+
+
+        |
+
+Assign Technician
+
+
+        |
+
+Work Execution
+
+
+        |
+
+Supervisor Review
+
+
+        |
+
+Close
+```
+
+
+---
+
+
+HR-GA:
+
+
+```
+Vehicle Request
+
+
+        |
+
+GA Approval
+
+
+        |
+
+Schedule Vehicle
+
+
+        |
+
+Return Confirmation
+```
+
+
+---
+
+# 25. System Task Engine
+
+
+Untuk automation.
+
+
+Example:
+
+
+```
+IoT Sensor Alert
+
+
+        |
+
+Condition Check
+
+
+        |
+
+Create Work Order
+
+
+        |
+
+Notify Engineer
+```
+
+
+---
+
+
+Integration:
+
+
+```
+ERP Transaction
+
+
+        |
+
+Webhook
+
+
+        |
+
+TunasFlow
+
+
+        |
+
+Approval
+
+
+        |
+
+SAP Update
+```
+
+
+---
+
+# 26. IT Service Management Module
+
+
+ITSM adalah template di atas TunasFlow.
+
+
+Inspired:
+
+
+- ServiceNow
+
+- GLPI
+
+- PC24
+
+
+Capability:
+
+
+## Incident Management
+
+
+```
+Monitoring Alert
+
+      |
+
+Incident Ticket
+
+      |
+
+Assignment
+
+      |
+
+Resolution
+```
+
+
+---
+
+
+## Request Management
+
+
+Example:
+
+
+- New Laptop Request
+
+- Account Request
+
+- Access Request
+
+
+---
+
+
+## Change Management
+
+
+Flow:
+
+
+```
+Change Request
+
+
+      |
+
+Impact Analysis
+
+
+      |
+
+Approval
+
+
+      |
+
+Execution
+
+
+      |
+
+Review
+```
+
+
+---
+
+
+## IT Asset Management
+
+
+Manage:
+
+
+- Laptop
+
+- Server
+
+- Network Device
+
+- Software License
+
+- Endpoint
+
+
+Integration:
+
+
+```
+TunasNOC
+```
+
+
+---
+
+# 27. TunasNOC Platform
+
+
+Monitoring foundation.
+
+
+Used by:
+
+
+- ITSM
+
+- Engineering
+
+- Infrastructure
+
+
+Capability:
 
 
 - Server Monitoring
+
 - Network Monitoring
+
 - Endpoint Monitoring
-- Industrial Monitoring
+
+- IoT Monitoring
+
+
+Flow:
+
+
+```
+Monitoring
+
+
+     |
+
+Event
+
+
+     |
+
+TunasFlow
+
+
+     |
+
+Ticket / Work Order
+```
 
 
 ---
 
-# 13. External Integration
+# 28. Engineering CMMS Module
 
 
-Through REDI Integration Hub:
+Computerized Maintenance Management System.
 
 
-Enterprise:
+Purpose:
 
 
-- SAP
-- Odoo
-- Office365
+Manage asset lifecycle.
 
 
-Industrial:
+Capability:
 
 
-- MQTT
-- OPC-UA
-- PLC
-- SCADA
+## Asset Management
 
 
-Developer:
+- Machine
 
+- Equipment
 
-- REST API
-- Webhook
-- Database Connector
+- Facility
+
+- Tools
 
 
 ---
 
-# 14. Data Platform
+
+## Preventive Maintenance
+
+
+Flow:
+
+
+```
+Schedule
+
+
+   |
+
+Generate PM Work Order
+
+
+   |
+
+Technician
+
+
+   |
+
+Completion
+
+
+   |
+
+History
+```
+
+
+---
+
+
+## Corrective Maintenance
+
+
+Flow:
+
+
+```
+Failure
+
+
+ |
+
+WO
+
+
+ |
+
+Repair
+
+
+ |
+
+Root Cause
+
+
+ |
+
+Close
+```
+
+
+---
+
+
+## Predictive Maintenance
+
+
+Powered by:
+
+
+```
+TunasIoT
+
++
+
+AI Agent
+```
+
+
+Example:
+
+
+```
+Temperature Rising
+
+
+       |
+
+Prediction
+
+
+       |
+
+Maintenance Recommendation
+```
+
+
+---
+
+# 29. Sparepart Integration
+
+
+CMMS terhubung dengan Inventory.
+
+
+Flow:
+
+
+```
+Work Order
+
+
+    |
+
+Need Sparepart
+
+
+    |
+
+Inventory Request
+
+
+    |
+
+Warehouse Issue
+
+
+    |
+
+Cost Calculation
+```
+
+
+Tidak ada duplicate sparepart database.
+
+
+---
+
+# 30. Production MES Module
+
+
+Manufacturing Execution System.
+
+
+Purpose:
+
+
+Control shop floor execution.
+
+
+Flow:
+
+
+```
+Material Released
+
+
+        |
+
+Production Order
+
+
+        |
+
+Machine Execution
+
+
+        |
+
+Operator Confirmation
+
+
+        |
+
+Supervisor Release
+```
+
+
+---
+
+
+Integration:
+
+
+```
+TunasIoT
+
+
+collect:
+
+
+- Machine Status
+
+- Counter
+
+- Runtime
+
+- Downtime
+
+- Parameter
+```
+
+
+---
+
+# 31. Quality QMS Module
+
+
+Quality Management System.
+
+
+Support standard:
+
+
+- GMP
+
+- CPOB
+
+- CPMB
+
+- ISO
+
+
+---
+
+
+# QC Release Flow
+
+
+```
+Incoming Material
+
+
+        |
+
+QC Inspection
+
+
+        |
+
+Material Release
+
+
+        |
+
+Production
+
+
+        |
+
+Production Complete
+
+
+        |
+
+QA Review
+
+
+        |
+
+Product Release
+```
+
+
+---
+
+
+# IoT Evidence
+
+
+Quality menggunakan data:
+
+
+```
+TunasIoT
+
+
+- Temperature
+
+- Humidity
+
+- Machine Parameter
+
+- Process Evidence
+```
+
+
+Untuk:
+
+
+- Traceability
+
+- Audit Trail
+
+- Compliance
+
+
+---
+
+# 32. Production + Quality Integration
+
+
+Full lifecycle:
+
+
+```
+Raw Material
+
+
+      |
+
+Warehouse
+
+
+      |
+
+QC Release
+
+
+      |
+
+Production
+
+
+      |
+
+IoT Capture
+
+
+      |
+
+Supervisor Release
+
+
+      |
+
+QA Release
+
+
+      |
+
+Finished Goods
+```
+
+
+---
+
+# 33. Industrial Traceability
+
+
+REDI-OS menyimpan:
+
+
+```
+Material
+
+
+ |
+
+Process
+
+
+ |
+
+Machine
+
+
+ |
+
+Operator
+
+
+ |
+
+Quality
+
+
+ |
+
+Customer
+```
+
+
+End-to-End Traceability.
+
+
+---
+
+# END PART 3
+---
+
+# 34. Inventory & WMS Module
+
+
+Warehouse Management System.
+
+
+Purpose:
+
+
+Mengatur seluruh lifecycle material dan barang.
+
+
+Capability:
+
+
+- Material Management
+
+- Sparepart Management
+
+- Finished Goods
+
+- Location Management
+
+- Stock Movement
+
+- Traceability
+
+- Stock Opname
+
+
+---
+
+
+# Inventory Flow
+
+
+```
+Purchase Receive
+
+
+        |
+
+Incoming Inspection
+
+
+        |
+
+QC Release
+
+
+        |
+
+Available Stock
+
+
+        |
+
+Production Usage
+
+
+        |
+
+Finished Goods
+
+
+        |
+
+Delivery
+```
+
+
+---
+
+
+# Sparepart Flow
+
+
+Integration with Engineering CMMS:
+
+
+```
+Maintenance WO
+
+
+       |
+
+Request Sparepart
+
+
+       |
+
+Warehouse Issue
+
+
+       |
+
+Maintenance Cost
+
+
+       |
+
+Asset History
+```
+
+
+---
+
+# 35. Finance & Costing Module
+
+
+Finance tidak berdiri sendiri.
+
+
+Finance menerima event dari semua module.
+
+
+Example:
+
+
+```
+Inventory Movement
+
+
+        |
+
+Event Engine
+
+
+        |
+
+Cost Calculation
+
+
+        |
+
+Accounting Entry
+```
+
+
+---
+
+
+Capability:
+
+
+- General Ledger
+
+- Account Payable
+
+- Account Receivable
+
+- Budget
+
+- Cost Center
+
+- Asset Costing
+
+- Production Costing
+
+
+---
+
+# 36. Finance Approval Flow
+
+
+Powered by:
+
+
+```
+TunasFlow Engine
+```
+
+
+Example:
+
+
+```
+Payment Request
+
+
+       |
+
+Department Approval
+
+
+       |
+
+Finance Verification
+
+
+       |
+
+Director Approval
+
+
+       |
+
+Payment Release
+```
+
+
+Approval bukan hardcoded.
+
+
+---
+
+# 37. HR & GA Module
+
+
+Human Resource & General Affair.
+
+
+Capability:
+
+
+## HR
+
+
+- Employee
+
+- Organization
+
+- Attendance
+
+- Leave
+
+- Approval
+
+
+---
+
+
+## GA
+
+
+Facility management.
+
+
+Example:
+
+
+Vehicle Request:
+
+
+```
+Employee Request
+
+
+       |
+
+GA Approval
+
+
+       |
+
+Vehicle Booking
+
+
+       |
+
+Usage
+
+
+       |
+
+Return
+```
+
+
+---
+
+# 38. ISP Operation Module
+
+
+Integration:
+
+
+```
+ISP-Kita Platform
+```
+
+
+Purpose:
+
+
+ISP Business Operation.
+
+
+Capability:
+
+
+- Customer Management
+
+- Installation Order
+
+- Trouble Ticket
+
+- Field Engineer
+
+- Network Asset
+
+- SLA
+
+
+---
+
+
+Flow:
+
+
+```
+Customer Problem
+
+
+        |
+
+Ticket
+
+
+        |
+
+TunasFlow
+
+
+        |
+
+Engineer WO
+
+
+        |
+
+Resolution
+
+
+        |
+
+Customer Notification
+```
+
+
+---
+
+# 39. REDI Integration Hub
+
+
+Semua integrasi external melalui satu layer.
+
+
+Tidak ada module direct integration.
 
 
 Architecture:
 
 
 ```
-Operational Data
+Business Module
+
 
        |
+
+Event
+
+
+       |
+
+Integration Hub
+
+
+       |
+
+External System
+```
+
+
+---
+
+# Supported Connector
+
+
+## Enterprise
+
+
+- SAP
+
+- Odoo
+
+- Office365
+
+- ERP System
+
+
+---
+
+
+## Industrial
+
+
+- MQTT
+
+- OPC-UA
+
+- PLC
+
+- SCADA
+
+- IoT Gateway
+
+
+---
+
+
+## Internal Platform
+
+
+- TunasIoT
+
+- ISP-Kita
+
+- TunasNOC
+
+
+---
+
+# 40. Data Platform
+
+
+REDI-OS Data Architecture:
+
+
+```
+Transaction
+
+
+     |
 
 Event Stream
 
-       |
+
+     |
+
+Operational Store
+
+
+     |
 
 Analytics
 
-       |
+
+     |
 
 AI Engine
 ```
 
 
-Used for:
+Purpose:
 
+
+- Dashboard
 
 - KPI
+
 - Prediction
+
 - Optimization
 
 
 ---
 
-# 15. REDI Intelligence
+# 41. REDI Intelligence
 
 
-AI Agent Framework.
+AI Layer REDI-OS.
 
 
-Agents:
+AI bukan mengganti user.
+
+
+AI membantu:
+
+
+- Analyze
+
+- Recommend
+
+- Automate
+
+- Predict
+
+
+---
+
+# AI Agent
 
 
 ## Production Agent
 
 
-Optimize manufacturing process.
+Analyze:
 
 
-## Maintenance Agent
+- Production Efficiency
+
+- Downtime
+
+- Bottleneck
 
 
-Predict machine failure.
+---
 
 
 ## Quality Agent
 
 
-Analyze quality risk.
+Analyze:
+
+
+- Quality Risk
+
+- Batch History
+
+- Process Deviation
+
+
+---
+
+
+## Maintenance Agent
+
+
+Analyze:
+
+
+- Machine Condition
+
+- Failure Pattern
+
+- Maintenance Prediction
+
+
+---
 
 
 ## Finance Agent
 
 
-Analyze cost and anomaly.
+Analyze:
+
+
+- Cost
+
+- Budget
+
+- Anomaly
+
+
+---
 
 
 ## IT/NOC Agent
 
 
-Analyze infrastructure issue.
+Analyze:
+
+
+- Incident
+
+- Network
+
+- Infrastructure
 
 
 ---
 
-# 16. Deployment Model
+# 42. Deployment Model
 
 
-Supported:
+REDI-OS support:
 
 
-## SaaS Cloud
-
-Multi Tenant Platform.
+## SaaS Mode
 
 
-## Enterprise On Premise
+```
+Multi Tenant
 
-Factory / Corporate Deployment.
+Shared Platform
+```
 
 
-## Hybrid Industrial
+For:
 
-Factory Edge + Cloud AI.
+
+- SME
+
+- Public Customer
 
 
 ---
 
-# 17. Existing Platform Evolution
 
-
-Existing REDI-OS component evolution:
-
-
-```
-appProcess
-
-      |
-
-Metadata Engine
-```
+## Enterprise Mode
 
 
 ```
-appRouting
-
-      |
-
-TunasFlow Engine
+Dedicated Instance
 ```
 
 
-Existing code is evolved.
+For:
 
-Not rewritten.
+
+- Corporate
+
+- Factory
 
 
 ---
 
-# 18. Development Roadmap
+
+## Hybrid Industrial Mode
+
+
+```
+Factory Edge
+
++
+
+Cloud Intelligence
+```
+
+
+For:
+
+
+- IoT
+
+- Machine Integration
+
+- AI Processing
+
+
+---
+
+# 43. Repository Evolution Strategy
+
+
+Existing code:
+
+
+```
+DO NOT REWRITE
+```
+
+
+Evolution:
+
+
+```
+Existing Feature
+
+
+        |
+
+Analyze
+
+
+        |
+
+Extract Capability
+
+
+        |
+
+Move To Platform Engine
+```
+
+
+---
+
+
+Example:
+
+
+```
+Old:
+
+
+Inventory Process Logic
+
+
+New:
+
+
+Inventory Capability
+
++
+
+Workflow Template
+
++
+
+Metadata
+```
+
+
+---
+
+# 44. Development Phase Roadmap
 
 
 ## Phase 0
@@ -695,126 +2913,270 @@ Not rewritten.
 Architecture Stabilization
 
 
+Goals:
+
+
+- Repository Audit
+
+- Existing Code Mapping
+
+- Remove Duplicate Logic
+
+- Define Boundary
+
+
+NO NEW FEATURE.
+
+
+---
+
 ## Phase 1
 
-REDI Kernel Foundation
 
+REDI Kernel
+
+
+Deliver:
+
+
+- Identity Engine
+
+- Metadata Engine
+
+- Runtime Engine
+
+- Security Engine
+
+
+---
 
 ## Phase 2
+
 
 TunasFlow Engine
 
 
+Deliver:
+
+
+- Workflow Runtime
+
+- Event Engine
+
+- Rule Engine
+
+- Automation Engine
+
+
+---
+
 ## Phase 3
+
 
 REDI Studio
 
 
+Deliver:
+
+
+- Object Designer
+
+- Form Designer
+
+- Workflow Designer
+
+- Template Designer
+
+
+---
+
 ## Phase 4
 
-Industrial Core Modules
+
+Industrial Core
 
 
-Priority:
+Deliver:
 
 
-1. Master Data
+- WMS
 
-2. Asset
+- MES
 
-3. Inventory WMS
+- QMS
 
-4. Engineering CMMS
+- CMMS
 
-5. ITSM
+- ITSM
 
-6. Production MES
+- TunasNOC
 
-7. QMS
 
+---
 
 ## Phase 5
 
-ERP Expansion
 
+Enterprise ERP
+
+
+Deliver:
+
+
+- Finance
+
+- Procurement
+
+- Costing
+
+- HR-GA
+
+
+---
 
 ## Phase 6
+
 
 Integration Ecosystem
 
 
-## Phase 7
+Deliver:
 
-AI Industrial Layer
+
+- SAP Connector
+
+- Odoo Connector
+
+- Office365
+
+- Industrial Connector
 
 
 ---
 
-# 19. Developer & AI Agent Instruction
+## Phase 7
 
 
-Before development:
+Industrial AI
 
 
-Read:
+Deliver:
+
+
+- AI Agent
+
+- Prediction Engine
+
+- Optimization Engine
+
+
+---
+
+# 45. AI / Cursor Development Rule
+
+
+Before coding:
+
+
+AI MUST READ:
 
 
 ```
+README.md
+
+        |
+
 .cursorrules
+
+        |
 
 docs/README.md
 
-docs/architecture/REDIOS_PLATFORM_BLUEPRINT_v3.md
+        |
+
+REDIOS_PLATFORM_BLUEPRINT_v3.md
 ```
-
-
-Rules:
-
-
-DO:
-
-
-✓ Extend platform capability
-
-✓ Use metadata
-
-✓ Use workflow
-
-✓ Use event
-
-
-DON'T:
-
-
-✗ Hardcode business process
-
-✗ Duplicate kernel service
-
-✗ Create isolated application
 
 
 ---
 
-# Final Vision
+# AI Must
 
 
-REDI-OS:
+✔ Understand existing architecture
+
+
+✔ Preserve existing business logic
+
+
+✔ Extend platform capability
+
+
+✔ Use Metadata
+
+
+✔ Use Workflow
+
+
+✔ Use Event
+
+
+---
+
+
+# AI Must NOT
+
+
+❌ Create isolated module
+
+
+❌ Duplicate kernel function
+
+
+❌ Hardcode business flow
+
+
+❌ Remove existing logic without analysis
+
+
+---
+
+# Final REDI-OS Vision
 
 
 ```
 ONE PLATFORM
 
+
 ONE DATA MODEL
 
+
 ONE WORKFLOW ENGINE
+
 
 ONE INTEGRATION LAYER
 
 
-Industrial 5.0 Ready
+ONE INDUSTRIAL INTELLIGENCE
+```
+
+
+REDI-OS is built for:
+
+
+```
+Enterprise 5.0
+
++
+
+Industrial 5.0
+
++
+
+AI Native Operation
 ```
 
 
 ---
 
-# End
+# END DOCUMENT
