@@ -1,57 +1,923 @@
-# REDI-OS Documentation Entry Point
+# REDI-OS Documentation Center
 
-## Purpose
+## Industrial 5.0 Platform Engineering Guide
 
-This file is the starting point for developers and AI coding agents.
-
-REDI-OS is an Industrial 5.0 Business Operating System.
-
-Do not treat REDI-OS as a traditional ERP application.
+Version: 3.0  
+Owner: PT Revolusi Digital Solusi
 
 ---
 
-# Mandatory Reading Order
+# 1. Purpose
 
-1. architecture/REDIOS_PLATFORM_BLUEPRINT_v2.md
+Folder ini adalah pusat dokumentasi teknis REDI-OS.
 
-2. KERNEL Architecture documents
+Semua keputusan development harus mengikuti:
 
-3. RediFlow / Workflow Engine specifications
+```
+Architecture First
 
-4. Module Architecture documents
+Platform First
 
-5. Development roadmap
+Metadata First
 
----
+Workflow First
+```
 
-# Architecture Direction
+Dokumentasi ini menjadi panduan untuk:
 
-REDI-OS uses:
-
-Kernel
- ↓
-Engine
- ↓
-Business Capability Module
- ↓
-Industry Template
+- Developer
+- Solution Architect
+- System Analyst
+- AI Coding Agent
 
 ---
 
-# Important Rules
+# 2. Documentation Hierarchy
 
-- Do not create hardcoded business applications.
-- Business processes must run from metadata.
-- appProcess evolves into Metadata Engine.
-- appRouting evolves into RediFlow Engine.
-- Modules provide capability, not standalone applications.
+
+Urutan membaca:
+
+
+```
+Repository Opened
+
+        |
+
+README.md
+
+        |
+
+.cursorrules
+
+        |
+
+docs/README.md
+
+        |
+
+architecture/
+REDIOS_PLATFORM_BLUEPRINT_v3.md
+
+        |
+
+Source Code Analysis
+```
+
+
+Blueprint adalah sumber kebenaran utama.
+
 
 ---
 
-# Legacy Documents
+# 3. Main Architecture Reference
 
-Older phase documents are historical references only.
 
-When conflict exists, follow:
+Primary Document:
 
-architecture/REDIOS_PLATFORM_BLUEPRINT_v2.md
+
+```
+docs/
+
+└── architecture/
+
+    └── REDIOS_PLATFORM_BLUEPRINT_v3.md
+```
+
+
+Contains:
+
+
+- Platform Vision
+- Kernel Architecture
+- Metadata Architecture
+- Workflow Architecture
+- Module Strategy
+- Integration Strategy
+- Industrial Roadmap
+
+
+---
+
+# 4. Development Philosophy
+
+
+REDI-OS tidak membangun aplikasi.
+
+REDI-OS membangun:
+
+```
+Capability
+
++
+
+Metadata
+
++
+
+Workflow
+
++
+
+Template
+```
+
+
+Example:
+
+
+Wrong:
+
+```
+Create Purchase Approval Module
+```
+
+
+Correct:
+
+```
+Create:
+
+Approval Capability
+
+       +
+
+Workflow Template
+
+       +
+
+Purchase Configuration
+```
+
+
+---
+
+# 5. Architecture Layers
+
+
+REDI-OS Layer:
+
+
+```
+Application Experience
+
+
+        |
+
+
+REDI Studio
+
+
+        |
+
+
+TunasFlow Engine
+
+
+        |
+
+
+Universal Document Engine
+
+
+        |
+
+
+REDI Kernel
+
+
+        |
+
+
+Capability Modules
+
+
+        |
+
+
+Integration Hub
+```
+
+
+---
+
+# 6. REDI Kernel Boundary
+
+
+Kernel adalah platform core.
+
+
+Kernel owns:
+
+
+## Identity
+
+- Tenant
+- Company
+- User
+- Role
+- Permission
+
+
+## Metadata
+
+- Object Definition
+- Field Definition
+- Form Definition
+- Menu Definition
+
+
+## Runtime
+
+- Metadata Compiler
+- Execution Engine
+- Cache
+
+
+## Workflow
+
+- State
+- Transition
+- Approval
+
+
+## Event
+
+- Publish
+- Subscribe
+
+
+## Rule
+
+- Condition
+- Decision
+
+
+---
+
+# 7. Module Development Contract
+
+
+Module TIDAK boleh membuat engine sendiri.
+
+
+Module hanya menyediakan:
+
+
+```
+module/
+
+├── schema-extension
+
+├── workflow-template
+
+├── form-template
+
+├── rule-template
+
+├── integration-map
+
+└── seed-data
+```
+
+
+Module bergantung kepada Kernel.
+
+
+---
+
+# 8. Business Capability Modules
+
+
+Target:
+
+
+```
+modules/
+
+
+├── master-data
+
+
+├── finance
+
+
+├── procurement
+
+
+├── inventory-wms
+
+
+├── production-mes
+
+
+├── quality-qms
+
+
+├── engineering-cmms
+
+
+├── itsm
+
+
+├── tunasnoc
+
+
+├── hr-ga
+
+
+├── project
+
+
+├── isp-operation
+
+
+└── integration
+```
+
+
+---
+
+# 9. Universal Document Rule
+
+
+Semua transaksi extend:
+
+
+```
+BusinessDocument
+```
+
+
+Examples:
+
+
+- Ticket
+- Work Order
+- Purchase Request
+- Sales Order
+- QC Release
+- Production Batch
+
+
+Base:
+
+
+```
+{
+ id,
+
+ type,
+
+ status,
+
+ workflow,
+
+ owner,
+
+ data,
+
+ attachment,
+
+ history
+}
+```
+
+
+Tidak membuat lifecycle sendiri.
+
+
+---
+
+# 10. Workflow Rule
+
+
+Semua proses menggunakan:
+
+
+```
+TunasFlow Engine
+```
+
+
+Avoid:
+
+
+```
+if(status == APPROVED)
+```
+
+
+Use:
+
+
+```
+State
+
+ |
+
+Transition
+
+ |
+
+Action
+
+ |
+
+Event
+```
+
+
+---
+
+# 11. Event Driven Rule
+
+
+Communication:
+
+
+Wrong:
+
+
+```
+Inventory Service
+
+        |
+
+calls
+
+        |
+
+Finance Service
+```
+
+
+Correct:
+
+
+```
+STOCK_MOVED Event
+
+
+        |
+
+
+Event Bus
+
+
+        |
+
+
+Finance Subscriber
+```
+
+
+---
+
+# 12. Integration Rule
+
+
+External system masuk melalui:
+
+
+```
+REDI Integration Hub
+```
+
+
+Connector:
+
+
+Enterprise:
+
+- SAP
+- Odoo
+- Office365
+
+
+Industrial:
+
+- MQTT
+- PLC
+- SCADA
+- OPC-UA
+
+
+Internal:
+
+- TunasIoT
+- ISP-Kita
+- TunasNOC
+
+
+---
+
+# 13. Industrial Flow Standard
+
+
+## Manufacturing
+
+
+Flow:
+
+
+```
+Material Release
+
+       |
+
+Production Execution
+
+       |
+
+IoT Capture
+
+       |
+
+Supervisor Release
+
+       |
+
+QA Release
+```
+
+
+---
+
+## Engineering
+
+
+Flow:
+
+
+```
+IoT Alert
+
+   |
+
+Work Order
+
+   |
+
+Sparepart
+
+   |
+
+Maintenance
+
+   |
+
+History
+```
+
+
+---
+
+## ITSM
+
+
+Flow:
+
+
+```
+Monitoring Alert
+
+      |
+
+Incident
+
+      |
+
+Assignment
+
+      |
+
+Resolution
+```
+
+
+---
+
+# 14. Existing Code Evolution
+
+
+Jangan rewrite total.
+
+
+Transform existing:
+
+
+## appProcess
+
+
+From:
+
+
+```
+Business Process Config
+```
+
+
+To:
+
+
+```
+Metadata Engine
+```
+
+
+---
+
+
+## appRouting
+
+
+From:
+
+
+```
+Static Routing
+```
+
+
+To:
+
+
+```
+TunasFlow Runtime
+```
+
+
+---
+
+
+Existing modules:
+
+
+```
+inventory
+
+finance
+
+production
+```
+
+
+become:
+
+
+```
+Capability Package
+```
+
+
+---
+
+# 15. AI Agent Development Rules
+
+
+AI Agent wajib:
+
+
+1. Read blueprint first
+
+
+2. Analyze existing implementation
+
+
+3. Identify reusable code
+
+
+4. Refactor gradually
+
+
+5. Preserve business knowledge
+
+
+Never:
+
+
+- Delete without analysis
+
+- Duplicate engine
+
+- Create hardcoded process
+
+
+---
+
+# 16. Development Phase Gate
+
+
+## PHASE 0
+
+Architecture Stabilization
+
+
+Goals:
+
+
+- Repository audit
+
+- Remove duplicate logic
+
+- Define boundaries
+
+- Map existing code
+
+
+NO NEW FEATURE.
+
+
+---
+
+## PHASE 1
+
+REDI Kernel
+
+
+Deliver:
+
+
+- Identity Engine
+
+- Metadata Engine
+
+- Security Engine
+
+- Runtime Engine
+
+
+---
+
+## PHASE 2
+
+TunasFlow
+
+
+Deliver:
+
+
+- Workflow Runtime
+
+- Rule Engine
+
+- Event Engine
+
+
+---
+
+## PHASE 3
+
+REDI Studio
+
+
+Deliver:
+
+
+- Object Designer
+
+- Form Designer
+
+- Workflow Designer
+
+
+---
+
+## PHASE 4
+
+Core Industrial Module
+
+
+Priority:
+
+
+1. Master Data
+
+2. Asset
+
+3. Inventory WMS
+
+4. Engineering CMMS
+
+5. ITSM
+
+6. MES
+
+7. QMS
+
+
+---
+
+## PHASE 5
+
+Enterprise Module
+
+
+- Finance
+
+- Procurement
+
+- Costing
+
+- Supply Chain
+
+
+---
+
+## PHASE 6
+
+Integration
+
+
+- IoT
+
+- ERP Connector
+
+- Industrial Connector
+
+
+---
+
+## PHASE 7
+
+AI Layer
+
+
+- Agent Framework
+
+- Prediction
+
+- Optimization
+
+
+---
+
+# 17. Code Decision Tree
+
+
+Before creating code ask:
+
+
+```
+Is this reusable?
+
+
+YES
+
+ |
+Kernel Capability
+
+
+NO
+
+ |
+Module Template
+```
+
+
+Before creating field:
+
+
+```
+Can metadata solve it?
+
+
+YES
+
+ |
+Metadata Definition
+
+
+NO
+
+ |
+Extend Engine
+```
+
+
+---
+
+# 18. Final Architecture Rule
+
+
+Always choose:
+
+
+Platform > Feature
+
+
+Configuration > Hardcode
+
+
+Event > Dependency
+
+
+Workflow > Status
+
+
+Metadata > Migration
+
+
+---
+
+# END DOCUMENT
