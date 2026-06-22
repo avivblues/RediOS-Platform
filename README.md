@@ -644,8 +644,6 @@ Resolver menentukan:
 
 
 ---
-
-# END PART 1
 ---
 
 # 12. Security Engine
@@ -1317,7 +1315,6 @@ Support:
 
 ---
 
-# END PART 2
 ---
 
 # 22. TunasFlow Engine
@@ -2194,8 +2191,6 @@ End-to-End Traceability.
 
 
 ---
-
-# END PART 3
 ---
 
 # 34. Inventory & WMS Module
