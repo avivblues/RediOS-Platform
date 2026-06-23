@@ -1,4 +1,5 @@
 import type { RuntimeContext } from '../core/renderer/runtime-types';
+import { clearAuthSession, writeAuthSession } from '../auth/session';
 import { loadRuntimeRecords, saveRuntimeRecords, upsertRuntimeRecord, type RuntimeRecord } from '../runtime/runtime-record-store';
 
 export const REDIOS_ADMIN_APP_CODE = 'REDIOS_ADMIN';
@@ -13,8 +14,12 @@ export interface IdentitySession {
   userId: string;
   email: string;
   displayName: string;
+  tenantId: string;
+  domainCode: string;
+  applicationCode: string;
   permissions: string[];
   roles: string[];
+  accessToken?: string;
   createdAt: string;
 }
 
@@ -29,18 +34,22 @@ export class PasswordProvider {
 }
 
 export class SessionEngine {
-  createSession(user: RuntimeRecord): IdentitySession {
+  createSession(user: RuntimeRecord, runtime?: Partial<IdentitySession>): IdentitySession {
     const session: IdentitySession = {
       id: `session_${Date.now()}`,
       userId: String(user.id),
       email: String(user.email ?? ''),
       displayName: String(user.displayName ?? user.username ?? user.email ?? 'Runtime User'),
-      permissions: ['*'],
-      roles: ['ADMIN'],
+      tenantId: runtime?.tenantId ?? 'demo',
+      domainCode: runtime?.domainCode ?? 'DEFAULT',
+      applicationCode: runtime?.applicationCode ?? 'ASSET_MAINTENANCE',
+      permissions: runtime?.permissions ?? ['*'],
+      roles: runtime?.roles ?? ['ADMIN'],
+      accessToken: runtime?.accessToken,
       createdAt: new Date().toISOString(),
     };
 
-    window.localStorage.setItem(SESSION_KEY, JSON.stringify(session));
+    writeAuthSession(session);
     return session;
   }
 
@@ -54,7 +63,7 @@ export class SessionEngine {
   }
 
   clearSession() {
-    window.localStorage.removeItem(SESSION_KEY);
+    clearAuthSession();
   }
 }
 
@@ -86,7 +95,11 @@ export class IdentityEngine {
     });
   }
 
-  login(input: Record<string, unknown>) {
+  createSessionFromApi(user: RuntimeRecord, apiSession: IdentitySession): IdentitySession {
+    return this.sessionEngine.createSession(user, apiSession);
+  }
+
+  loginLocal(input: Record<string, unknown>) {
     this.ensureSeedData();
     const loginId = String(input.email ?? input.username ?? '').trim().toLowerCase();
     const password = String(input.password ?? input.passwordHash ?? '');
@@ -107,8 +120,30 @@ export class IdentityEngine {
     return this.sessionEngine.createSession(user);
   }
 
+  login(input: Record<string, unknown>) {
+    return this.loginLocal(input);
+  }
+
   currentSession() {
     return this.sessionEngine.currentSession();
+  }
+
+  toRuntimeContext(session: IdentitySession = this.sessionEngine.currentSession()!): RuntimeContext {
+    return {
+      userId: session.userId,
+      tenantId: session.tenantId,
+      domainCode: session.domainCode,
+      applicationCode: session.applicationCode,
+      permissions: session.permissions,
+      capabilities: [],
+      roles: session.roles,
+      groups: [],
+      attributes: {
+        email: session.email,
+        displayName: session.displayName,
+      },
+      accessToken: session.accessToken,
+    };
   }
 
   logout() {

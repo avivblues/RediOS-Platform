@@ -1,0 +1,58 @@
+name: redios-prod
+
+services:
+  mongo:
+    image: mongo:7
+    restart: unless-stopped
+    volumes:
+      - redios_mongo_data:/data/db
+    networks:
+      - redios
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.runCommand({ ping: 1 }).ok"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+
+  api:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile.api
+    restart: unless-stopped
+    environment:
+      PORT: 3001
+      MONGODB_URI: mongodb://mongo:27017/redios
+      AUTH_MODE: ${AUTH_MODE:-jwt}
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-8h}
+      REDIOS_DEFAULT_DOMAIN_CODE: ${REDIOS_DEFAULT_DOMAIN_CODE:-DEFAULT}
+      REDIOS_DEFAULT_APPLICATION_CODE: ${REDIOS_DEFAULT_APPLICATION_CODE:-ASSET_MAINTENANCE}
+    depends_on:
+      mongo:
+        condition: service_healthy
+    ports:
+      - "${REDIOS_API_PORT:-3041}:3001"
+    networks:
+      - redios
+
+  web:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile.web
+      args:
+        VITE_REDIOS_API_URL: /api
+    restart: unless-stopped
+    depends_on:
+      - api
+    ports:
+      - "${REDIOS_WEB_PORT:-3040}:80"
+    networks:
+      - redios
+
+volumes:
+  redios_mongo_data:
+
+networks:
+  redios:
+    driver: bridge

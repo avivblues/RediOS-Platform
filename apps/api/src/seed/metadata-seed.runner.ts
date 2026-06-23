@@ -2,6 +2,8 @@ import { Inject, Injectable, Logger } from '@nestjs/common';
 import type { RuntimeContext } from '@redios/shared';
 import { METADATA_PROVIDER, type MetadataProvider } from '../core/metadata/metadata-provider.interface';
 import { metadataSeedRecords } from './metadata-seed.records';
+import { platformPersonaSeedRecords } from './platform-persona-seed.records';
+import { platformWorkspaceSeedRecords } from './platform-workspace-seed.records';
 
 @Injectable()
 export class MetadataSeedRunner {
@@ -19,10 +21,10 @@ export class MetadataSeedRunner {
       capabilities: [],
     };
 
-    for (const record of metadataSeedRecords) {
+    for (const record of [...metadataSeedRecords, ...platformWorkspaceSeedRecords, ...platformPersonaSeedRecords]) {
       await this.metadataProvider.saveMetadata(context, record);
     }
 
-    this.logger.log(`Seeded ${metadataSeedRecords.length} metadata definitions.`);
+    this.logger.log(`Seeded ${metadataSeedRecords.length + platformWorkspaceSeedRecords.length + platformPersonaSeedRecords.length} metadata definitions.`);
   }
 }

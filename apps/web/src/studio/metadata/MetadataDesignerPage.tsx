@@ -5,8 +5,9 @@ import { CustomOrganismDesigner } from './organisms/CustomOrganismDesigner';
 import { ProcessDesigner } from './process/ProcessDesigner';
 import { MenuDesigner } from './menu/MenuDesigner';
 import { SecurityDesigner } from './security/SecurityDesigner';
+import { WorkspaceDesigner } from './workspace/WorkspaceDesigner';
 
-type MetadataDesignerSection = 'overview' | 'data' | 'action' | 'process' | 'menu' | 'security' | 'organisms';
+type MetadataDesignerSection = 'overview' | 'data' | 'action' | 'process' | 'menu' | 'security' | 'organisms' | 'workspace';
 
 const metadataSections: Array<{
   id: Exclude<MetadataDesignerSection, 'overview'>;
@@ -31,6 +32,12 @@ const metadataSections: Array<{
     title: 'Process Designer',
     description: 'Buat routing bisnis dan approval.',
     path: '/studio/metadata/process',
+  },
+  {
+    id: 'workspace',
+    title: 'Workspace Designer',
+    description: 'Edit persona workspace panels, inbox layout, and capability gates.',
+    path: '/studio/metadata/workspace',
   },
   {
     id: 'menu',
@@ -118,6 +125,7 @@ export function MetadataDesignerPage() {
               {activeSection === 'data' ? <DataDesigner /> : null}
               {activeSection === 'action' ? <ActionDesigner /> : null}
               {activeSection === 'process' ? <ProcessDesigner /> : null}
+              {activeSection === 'workspace' ? <WorkspaceDesigner /> : null}
               {activeSection === 'menu' ? <MenuDesigner /> : null}
               {activeSection === 'security' ? <SecurityDesigner /> : null}
               {activeSection === 'organisms' ? <CustomOrganismDesigner /> : null}
@@ -206,6 +214,10 @@ function metadataSectionFromPath(pathname: string): MetadataDesignerSection {
 
   if (pathname.startsWith('/studio/metadata/process')) {
     return 'process';
+  }
+
+  if (pathname.startsWith('/studio/metadata/workspace')) {
+    return 'workspace';
   }
 
   if (pathname.startsWith('/studio/metadata/menu')) {

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useRuntimeContext } from '../../core/context/runtime-context';
-import { REDIOS_ADMIN_APP_CODE } from '../../identity/identity-engine';
+import { getExperienceContext } from '../services/experience.api';
+import { personaRoute, postLoginDestination, resolvePersona } from '../role-routing';
 import { useAuth } from '../context/AuthProvider';
 
 interface LoginErrors {
@@ -25,13 +26,36 @@ export function LoginForm() {
 
     try {
       const session = await auth.login({ email, password });
+
+      try {
+        const experience = await getExperienceContext();
+        updateContext({
+          applicationCode: experience.persona.applicationCode,
+          permissions: session.permissions,
+          roles: session.roles,
+          userId: session.userId,
+          tenantId: session.tenantId,
+          domainCode: session.domainCode,
+          accessToken: session.accessToken,
+        });
+        window.location.href = experience.persona.homeRoute;
+        return;
+      } catch {
+        // Fall back to client-side persona routing when API experience is unavailable.
+      }
+
+      const persona = resolvePersona(session.roles);
+      const route = personaRoute(persona);
       updateContext({
-        applicationCode: REDIOS_ADMIN_APP_CODE,
+        applicationCode: route.applicationCode,
         permissions: session.permissions,
         roles: session.roles,
         userId: session.userId,
+        tenantId: session.tenantId,
+        domainCode: session.domainCode,
+        accessToken: session.accessToken,
       });
-      window.location.href = '/apps/redios-admin';
+      window.location.href = postLoginDestination(session.roles);
     } catch {
       // Error state is managed by AuthProvider.
     }
@@ -69,6 +93,8 @@ export function LoginForm() {
 
       <p className="redios-auth-switch">
         Need account? <a href="/register">Create Account</a>
+        {' · '}
+        <a href="/portal">Choose workspace manually</a>
       </p>
     </form>
   );

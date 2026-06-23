@@ -1,12 +1,13 @@
 import { createContext, useContext, useMemo, useState, type PropsWithChildren } from 'react';
+import { readAuthSession } from '../../auth/session';
 import type { RuntimeContext } from '../renderer/runtime-types';
 
-const identitySession = readIdentitySession();
+const identitySession = readAuthSession();
 
 const defaultContext: RuntimeContext = {
-  tenantId: readSetting('tenantId', import.meta.env.VITE_REDIOS_TENANT_ID, 'demo'),
-  domainCode: readSetting('domainCode', import.meta.env.VITE_REDIOS_DOMAIN_CODE, 'DEFAULT'),
-  applicationCode: readSetting('applicationCode', import.meta.env.VITE_REDIOS_APPLICATION_CODE, 'ASSET_MAINTENANCE'),
+  tenantId: identitySession?.tenantId ?? readSetting('tenantId', import.meta.env.VITE_REDIOS_TENANT_ID, 'demo'),
+  domainCode: identitySession?.domainCode ?? readSetting('domainCode', import.meta.env.VITE_REDIOS_DOMAIN_CODE, 'DEFAULT'),
+  applicationCode: identitySession?.applicationCode ?? readSetting('applicationCode', import.meta.env.VITE_REDIOS_APPLICATION_CODE, 'ASSET_MAINTENANCE'),
   userId: identitySession?.userId ?? readSetting('userId', import.meta.env.VITE_REDIOS_USER_ID, 'admin'),
   permissions: identitySession?.permissions ?? (readSetting(
     'permissions',
@@ -16,12 +17,14 @@ const defaultContext: RuntimeContext = {
     .split(',')
     .map((permission) => permission.trim())
     .filter(Boolean),
+  capabilities: [],
   roles: identitySession?.roles ?? (readSetting('roles', import.meta.env.VITE_REDIOS_ROLES, 'TECHNICIAN') ?? '')
     .split(',')
     .map((role) => role.trim())
     .filter(Boolean),
   groups: [],
   attributes: {},
+  accessToken: identitySession?.accessToken,
 };
 
 export interface RuntimeContextValue {
@@ -57,13 +60,4 @@ export function useRuntimeContext(): RuntimeContextValue {
 function readSetting(key: string, fallback?: string, defaultValue = ''): string {
   const params = new URLSearchParams(window.location.search);
   return params.get(key) ?? window.localStorage.getItem(`redios.${key}`) ?? fallback ?? defaultValue;
-}
-
-function readIdentitySession(): { permissions: string[]; roles: string[]; userId: string } | undefined {
-  try {
-    const rawValue = window.localStorage.getItem('redios:identity:session');
-    return rawValue ? JSON.parse(rawValue) as { permissions: string[]; roles: string[]; userId: string } : undefined;
-  } catch {
-    return undefined;
-  }
 }

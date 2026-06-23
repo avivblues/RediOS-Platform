@@ -7,7 +7,7 @@ import type {
 } from '@redios/shared';
 import { hashPlatformPassword } from '../platform/password.util';
 
-export const DEFAULT_TENANT_ID = 'tenant_default';
+export const DEFAULT_TENANT_ID = 'demo';
 export const DEFAULT_TENANT_CODE = 'DEFAULT';
 export const SYSTEM_ADMIN_USER_ID = 'user_system_admin';
 
@@ -84,6 +84,7 @@ function capability(
   name: string,
   module: CapabilityDefinition['module'],
   description?: string,
+  permissions: string[] = [],
 ): CapabilityDefinition {
   return {
     code,
@@ -94,20 +95,21 @@ function capability(
     description,
     implementationStatus: 'CONTRACT',
     handlerRef: `${module.toLowerCase()}.${code.split('.').slice(1).join('.').toLowerCase()}`,
+    permissions,
   };
 }
 
 export const capabilitySeedRecords: CapabilityDefinition[] = [
   capability('IDENTITY.LOGIN', 'Login', 'IDENTITY', 'Authenticate user session'),
   capability('IDENTITY.LOGOUT', 'Logout', 'IDENTITY', 'Terminate user session'),
-  capability('USER.CREATE', 'Create User', 'IDENTITY', 'Create domain user record'),
-  capability('USER.UPDATE', 'Update User', 'IDENTITY', 'Update domain user record'),
-  capability('TENANT.CREATE', 'Create Tenant', 'TENANT', 'Provision tenant domain record'),
-  capability('TENANT.UPDATE', 'Update Tenant', 'TENANT', 'Update tenant domain record'),
-  capability('METADATA.PUBLISH', 'Publish Metadata', 'METADATA', 'Publish application metadata package'),
-  capability('METADATA.VERSION', 'Metadata Version', 'METADATA', 'Resolve metadata version'),
-  capability('FORM.SAVE', 'Save Form', 'BUILDER', 'Persist form layout metadata'),
-  capability('FORM.PREVIEW', 'Preview Form', 'BUILDER', 'Preview form layout metadata'),
+  capability('USER.CREATE', 'Create User', 'IDENTITY', 'Create domain user record', ['*']),
+  capability('USER.UPDATE', 'Update User', 'IDENTITY', 'Update domain user record', ['*']),
+  capability('TENANT.CREATE', 'Create Tenant', 'TENANT', 'Provision tenant domain record', ['*']),
+  capability('TENANT.UPDATE', 'Update Tenant', 'TENANT', 'Update tenant domain record', ['*']),
+  capability('METADATA.PUBLISH', 'Publish Metadata', 'METADATA', 'Publish application metadata package', ['metadata.*']),
+  capability('METADATA.VERSION', 'Metadata Version', 'METADATA', 'Resolve metadata version', ['metadata.*']),
+  capability('FORM.SAVE', 'Save Form', 'BUILDER', 'Persist form layout metadata', ['builder.*']),
+  capability('FORM.PREVIEW', 'Preview Form', 'BUILDER', 'Preview form layout metadata', ['builder.*']),
   capability('PRODUCT.CREATE', 'Create Product', 'INVENTORY', 'Create inventory product domain record'),
   capability('PRODUCT.UPDATE', 'Update Product', 'INVENTORY', 'Update inventory product domain record'),
   capability('STOCK.RECEIVE', 'Receive Stock', 'INVENTORY', 'Receive stock into warehouse'),

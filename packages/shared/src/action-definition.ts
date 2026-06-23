@@ -13,4 +13,5 @@ export interface ActionDefinition {
   enabled: boolean;
   permissions?: string[];
   behavior: ActionBehaviorDefinition;
+  capabilityCode?: string;
 }

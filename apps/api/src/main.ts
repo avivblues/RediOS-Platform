@@ -18,6 +18,7 @@ async function bootstrap(): Promise<void> {
     .setTitle('RediOS Runtime Kernel')
     .setDescription('Generic metadata-driven runtime API.')
     .setVersion('0.1')
+    .addBearerAuth()
     .addGlobalParameters(
       {
         name: 'x-tenant-id',

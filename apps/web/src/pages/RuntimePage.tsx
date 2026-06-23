@@ -13,6 +13,7 @@ import { RuntimeRenderer } from '../core/renderer/runtime-renderer';
 import { ThemeProvider } from '../core/theme/theme-provider';
 import { useRuntimeContext } from '../core/context/runtime-context';
 import { NavigationRenderer } from '../components/organisms/navigation/NavigationRenderer';
+import { ExperienceRuntimeShell } from '../core/experience/ExperienceRuntimeShell';
 
 interface RuntimePageState {
   page: ResolvedUIPage;
@@ -142,14 +143,16 @@ export function RuntimePage() {
   };
 
   return (
-    <ThemeProvider theme={state.theme}>
-      <div className="runtime-shell" data-navigation={state.navigation.layout}>
-        <NavigationRenderer navigation={state.navigation} />
-        <main className="runtime-main">
-          <RuntimeRenderer page={state.page} context={renderContext} />
-        </main>
-      </div>
-    </ThemeProvider>
+    <ExperienceRuntimeShell>
+      <ThemeProvider theme={state.theme}>
+        <div className="runtime-shell" data-navigation={state.navigation.layout}>
+          <NavigationRenderer navigation={state.navigation} />
+          <main className="runtime-main">
+            <RuntimeRenderer page={state.page} context={renderContext} />
+          </main>
+        </div>
+      </ThemeProvider>
+    </ExperienceRuntimeShell>
   );
 }
 

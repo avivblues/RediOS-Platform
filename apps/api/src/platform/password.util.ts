@@ -7,3 +7,7 @@ function hexEncode(value: string): string {
 export function hashPlatformPassword(password: string): string {
   return `redios-password-v1:${hexEncode(password)}`;
 }
+
+export function verifyPlatformPassword(password: string, passwordHash: string): boolean {
+  return hashPlatformPassword(password) === passwordHash;
+}

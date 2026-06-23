@@ -1,0 +1,38 @@
+FROM node:20-alpine AS builder
+
+WORKDIR /app
+
+COPY package.json package-lock.json tsconfig.base.json ./
+COPY packages packages
+COPY apps/api apps/api
+COPY apps/web/package.json apps/web/package.json
+COPY apps/mobile/package.json apps/mobile/package.json
+
+RUN npm ci \
+  && npm run build --workspace @redios/shared \
+  && npm run build --workspace @redios/api
+
+FROM node:20-alpine AS runner
+
+WORKDIR /app
+
+ENV NODE_ENV=production \
+    PORT=3001
+
+COPY package.json package-lock.json ./
+COPY packages/shared/package.json packages/shared/
+COPY apps/api/package.json apps/api/
+
+RUN npm ci --workspace @redios/shared --workspace @redios/api --omit=dev
+
+COPY --from=builder /app/packages/shared/dist packages/shared/dist
+COPY --from=builder /app/apps/api/dist apps/api/dist
+
+WORKDIR /app/apps/api
+
+EXPOSE 3001
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=40s --retries=3 \
+  CMD node -e "fetch('http://127.0.0.1:3001/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+
+CMD ["node", "dist/apps/api/src/main.js"]

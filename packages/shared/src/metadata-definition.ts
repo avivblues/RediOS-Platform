@@ -22,6 +22,8 @@ export type MetadataType =
   | 'CONFLICT_POLICY'
   | 'REPORT'
   | 'EXPERIENCE'
+  | 'WORKSPACE'
+  | 'PERSONA'
   | 'RULE';
 
 export interface MetadataDefinition<TDefinition = unknown> {

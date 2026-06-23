@@ -1,5 +1,7 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
+import { MetadataCache } from './metadata.cache';
+import { MetadataLoader } from './metadata.loader';
 import { MetadataRegistry } from './metadata-registry.service';
 import { MetadataResolver } from './metadata-resolver.service';
 import { MetadataValidator } from './metadata-validator.service';
@@ -24,10 +26,12 @@ import { METADATA_DEFINITION_MODEL, MetadataDefinitionSchema } from './schemas/m
       useExisting: MongoMetadataProvider,
     },
     MetadataRegistry,
+    MetadataCache,
+    MetadataLoader,
     MetadataValidator,
     MetadataValidatorEngine,
     MetadataResolver,
   ],
-  exports: [MetadataResolver, MetadataRegistry, MetadataValidator, MetadataValidatorEngine, METADATA_PROVIDER],
+  exports: [MetadataResolver, MetadataRegistry, MetadataCache, MetadataLoader, MetadataValidator, MetadataValidatorEngine, METADATA_PROVIDER],
 })
 export class MetadataModule {}

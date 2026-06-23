@@ -158,8 +158,8 @@ export class SimulationEngine {
       return this.finalize(request, context, this.failed(validation, steps, predicted));
     }
 
-    const security = await this.runStep(steps, 'SECURITY', 'Action permission is valid.', () => {
-      this.securityEngine.validateActionAccess(context, action.value);
+    const security = await this.runStep(steps, 'SECURITY', 'Action permission is valid.', async () => {
+      await this.securityEngine.validateActionAccess(context, action.value);
       return {
         allowed: true,
       };

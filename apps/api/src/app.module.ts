@@ -2,6 +2,8 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { databaseConfig } from './config/database.config';
+import { authConfig } from './config/auth.config';
+import { AuthModule } from './auth/auth.module';
 import { ActionModule } from './core/action/action.module';
 import { ApplicationModule } from './core/application/application.module';
 import { BusinessModule } from './core/business/business.module';
@@ -64,7 +66,7 @@ import { UIModule } from './ui/ui.module';
         '.env',
         '../../.env',
       ],
-      load: [databaseConfig],
+      load: [databaseConfig, authConfig],
     }),
     MongooseModule.forRootAsync({
       inject: [ConfigService],
@@ -73,6 +75,7 @@ import { UIModule } from './ui/ui.module';
       }),
     }),
     KernelLoggerModule,
+    AuthModule,
     HealthModule,
     MetadataDebugModule,
     MetadataValidationModule,

@@ -4,6 +4,7 @@ import type { MetadataDefinition, MetadataType, RuntimeContext } from '@redios/s
 import { Model } from 'mongoose';
 import type { MetadataProvider, MetadataQuery } from '../metadata-provider.interface';
 import { METADATA_DEFINITION_MODEL } from '../schemas/metadata-definition.schema';
+import { MetadataCache } from '../metadata.cache';
 
 type MetadataDefinitionRecord = MetadataDefinition & { _id?: unknown };
 
@@ -12,6 +13,7 @@ export class MongoMetadataProvider implements MetadataProvider {
   constructor(
     @InjectModel(METADATA_DEFINITION_MODEL)
     private readonly model: Model<MetadataDefinitionRecord>,
+    private readonly metadataCache: MetadataCache,
   ) {}
 
   findMetadata(context: RuntimeContext, query: MetadataQuery = {}): Promise<MetadataDefinition[]> {
@@ -41,7 +43,9 @@ export class MongoMetadataProvider implements MetadataProvider {
       .lean()
       .exec();
 
-    return this.toDefinition(persisted);
+    const saved = this.toDefinition(persisted);
+    this.metadataCache.set(saved);
+    return saved;
   }
 
   getByCode(context: RuntimeContext, type: MetadataType, code: string): Promise<MetadataDefinition | null> {

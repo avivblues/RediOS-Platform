@@ -1,0 +1,27 @@
+FROM node:20-alpine AS builder
+
+WORKDIR /app
+
+COPY package.json package-lock.json tsconfig.base.json ./
+COPY packages packages
+COPY apps/web apps/web
+COPY apps/api/package.json apps/api/package.json
+COPY apps/mobile/package.json apps/mobile/package.json
+
+ARG VITE_REDIOS_API_URL=/api
+ENV VITE_REDIOS_API_URL=${VITE_REDIOS_API_URL}
+
+RUN npm ci \
+  && npm run build --workspace @redios/shared \
+  && npm run build --workspace @redios/runtime-renderer-core \
+  && npm run build --workspace @redios/web
+
+FROM nginx:1.27-alpine
+
+COPY deploy/nginx.conf /etc/nginx/conf.d/default.conf
+COPY --from=builder /app/apps/web/dist /usr/share/nginx/html
+
+EXPOSE 80
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+  CMD wget -qO- http://127.0.0.1/ || exit 1

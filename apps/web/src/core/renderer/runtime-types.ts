@@ -1,5 +1,6 @@
 import type {
   NavigationDefinition,
+  RuntimeContext as SharedRuntimeContext,
   UIPageDefinition,
   UITemplateDefinition,
   ViewColumnDefinition,
@@ -17,15 +18,11 @@ import type {
   RuntimeFormSection,
 } from '@redios/runtime-renderer-core';
 
-export interface RuntimeContext {
-  tenantId: string;
-  domainCode: string;
-  applicationCode: string;
-  userId: string;
-  permissions: string[];
+export interface RuntimeContext extends Omit<SharedRuntimeContext, 'roles' | 'groups' | 'attributes'> {
   roles: string[];
   groups: string[];
   attributes: Record<string, unknown>;
+  accessToken?: string;
 }
 
 export interface RuntimeTheme {

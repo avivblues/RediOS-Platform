@@ -1,11 +1,13 @@
 import { createContext, useContext, useMemo, useState, type PropsWithChildren } from 'react';
 import { IdentityEngine, type IdentitySession } from '../../identity/identity-engine';
 import type { RuntimeRecord } from '../../runtime/runtime-record-store';
-import { register, type RegisterRequest, type RegisterResponse } from '../services/auth.api';
+import { login as loginApi, register, type RegisterRequest, type RegisterResponse } from '../services/auth.api';
 
 export interface LoginRequest {
   email: string;
   password: string;
+  domainCode?: string;
+  applicationCode?: string;
 }
 
 export interface AuthContextValue {
@@ -31,7 +33,12 @@ export function AuthProvider({ children }: PropsWithChildren) {
       return undefined;
     }
 
-    return identityEngine.getUser(session.userId);
+    return identityEngine.getUser(session.userId) ?? {
+      id: session.userId,
+      email: session.email,
+      displayName: session.displayName,
+      status: 'ACTIVE',
+    };
   }, [identityEngine, session]);
 
   async function login(payload: LoginRequest) {
@@ -39,13 +46,42 @@ export function AuthProvider({ children }: PropsWithChildren) {
     setError(undefined);
 
     try {
-      const session = identityEngine.login({ email: payload.email, password: payload.password });
+      const apiResult = await loginApi(payload);
+      const session = identityEngine.createSessionFromApi(
+        {
+          id: apiResult.user.id,
+          email: apiResult.user.email,
+          displayName: apiResult.user.displayName,
+          status: 'ACTIVE',
+        },
+        {
+          id: `session_${Date.now()}`,
+          userId: apiResult.context.userId,
+          email: apiResult.user.email,
+          displayName: apiResult.user.displayName,
+          tenantId: apiResult.context.tenantId,
+          domainCode: apiResult.context.domainCode,
+          applicationCode: apiResult.context.applicationCode,
+          permissions: apiResult.context.permissions,
+          roles: apiResult.context.roles,
+          accessToken: apiResult.accessToken,
+          createdAt: new Date().toISOString(),
+        },
+      );
       setSession(session);
       return session;
-    } catch (loginError) {
-      const message = loginError instanceof Error ? loginError.message : 'Login failed.';
-      setError(message);
-      throw new Error(message);
+    } catch (apiError) {
+      try {
+        const session = identityEngine.loginLocal({ ...payload });
+        setSession(session);
+        return session;
+      } catch (localError) {
+        const message = apiError instanceof Error
+          ? apiError.message
+          : (localError instanceof Error ? localError.message : 'Login failed.');
+        setError(message);
+        throw new Error(message);
+      }
     } finally {
       setLoading(false);
     }

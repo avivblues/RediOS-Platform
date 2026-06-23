@@ -26,6 +26,7 @@ export interface CapabilityDefinition {
   description?: string;
   implementationStatus?: CapabilityImplementationStatus;
   handlerRef?: string;
+  permissions?: string[];
 }
 
 export interface CapabilityExecutionRequest {

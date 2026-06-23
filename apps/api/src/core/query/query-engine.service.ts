@@ -45,7 +45,7 @@ export class QueryEngine {
   async execute(context: RuntimeContext, entityCode: string, request: QueryRequest = {}): Promise<QueryResult> {
     this.securityEngine.validateContext(context);
     const action = await this.actionEngine.resolve(context, entityCode, 'READ');
-    this.securityEngine.validateActionAccess(context, action);
+    await this.securityEngine.validateActionAccess(context, action);
     await this.securityPolicyEngine.assertActionAllowed(context, 'READ', entityCode);
 
     const viewMetadata = await this.metadataResolver.resolveView(context, entityCode, request.viewCode);

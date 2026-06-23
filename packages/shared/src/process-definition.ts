@@ -1,4 +1,4 @@
-export type ProcessStepType = 'VALIDATION' | 'BUSINESS' | 'EVENT' | 'CUSTOM';
+export type ProcessStepType = 'VALIDATION' | 'BUSINESS' | 'EVENT' | 'CUSTOM' | 'HUMAN_TASK';
 
 export interface ProcessTriggerDefinition {
   actionCode: string;

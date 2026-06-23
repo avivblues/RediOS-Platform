@@ -13,6 +13,7 @@ export const CapabilityDefinitionSchema = new Schema(
     description: { type: String, required: false },
     implementationStatus: { type: String, required: true, default: 'CONTRACT' },
     handlerRef: { type: String, required: false },
+    permissions: { type: [String], required: false, default: [] },
   },
   {
     collection: CAPABILITY_DEFINITION_COLLECTION,

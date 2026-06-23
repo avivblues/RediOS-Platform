@@ -5,6 +5,7 @@ import { BusinessModule } from '../business/business.module';
 import { CompilerModule } from '../compiler/compiler.module';
 import { ConflictModule } from '../conflict/conflict.module';
 import { EventModule } from '../event/event.module';
+import { ExperienceModule as CoreExperienceModule } from '../experience/experience.module';
 import { LedgerModule } from '../ledger/ledger.module';
 import { MetadataModule } from '../metadata/metadata.module';
 import { ProcessModule } from '../process/process.module';
@@ -28,6 +29,7 @@ import { RuntimeExecutor } from './runtime-executor.service';
     ProcessModule,
     BusinessModule,
     EventModule,
+    CoreExperienceModule,
     LedgerModule,
     TraceModule,
     StorageModule,

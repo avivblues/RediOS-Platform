@@ -4,13 +4,18 @@ import { ProfilePage } from './auth/pages/ProfilePage';
 import { RegisterPage } from './auth/pages/RegisterPage';
 import { RuntimeContextProvider } from './core/context/runtime-context';
 import { StudioPage } from './app/studio/StudioPage';
+import { LandingPage } from './pages/LandingPage';
+import { PortalPage } from './pages/PortalPage';
+import { ExperienceWorkspacePage } from './pages/ExperienceWorkspacePage';
+import { NotificationCenterPage } from './pages/NotificationCenterPage';
 import { RuntimePage } from './pages/RuntimePage';
 import { RuntimeAppShell } from './runtime/RuntimeAppShell';
 
 export function App() {
-  const isStudio = window.location.pathname.startsWith('/studio');
-  const authRoute = authRouteFromLocation(window.location.pathname);
-  const generatedApplicationCode = generatedApplicationCodeFromLocation(window.location.pathname);
+  const pathname = window.location.pathname;
+  const isStudio = pathname.startsWith('/studio');
+  const authRoute = authRouteFromLocation(pathname);
+  const generatedApplicationCode = generatedApplicationCodeFromLocation(pathname);
 
   return (
     <RuntimeContextProvider>
@@ -23,12 +28,26 @@ export function App() {
               ? <RegisterPage />
               : authRoute === 'profile'
                 ? <ProfilePage />
-                : generatedApplicationCode
-                  ? <RuntimeAppShell applicationCode={generatedApplicationCode} />
-                  : <RuntimePage />}
+                : authRoute === 'portal'
+                  ? <PortalPage />
+                  : pathname === '/workspace'
+                    ? <ExperienceWorkspacePage />
+                    : pathname === '/notifications'
+                      ? <NotificationCenterPage />
+                      : isLandingRoute(pathname)
+                    ? <LandingPage />
+                    : generatedApplicationCode
+                      ? <RuntimeAppShell applicationCode={generatedApplicationCode} />
+                      : pathname.startsWith('/runtime/')
+                        ? <RuntimePage />
+                        : <LandingPage />}
       </AuthProvider>
     </RuntimeContextProvider>
   );
+}
+
+function isLandingRoute(pathname: string) {
+  return pathname === '/' || pathname === '';
 }
 
 function generatedApplicationCodeFromLocation(pathname: string): string | undefined {
@@ -36,7 +55,7 @@ function generatedApplicationCodeFromLocation(pathname: string): string | undefi
   return route === 'apps' && applicationCode ? applicationCode : undefined;
 }
 
-function authRouteFromLocation(pathname: string): 'login' | 'profile' | 'register' | undefined {
+function authRouteFromLocation(pathname: string): 'login' | 'profile' | 'register' | 'portal' | undefined {
   if (pathname === '/login') {
     return 'login';
   }
@@ -47,6 +66,10 @@ function authRouteFromLocation(pathname: string): 'login' | 'profile' | 'registe
 
   if (pathname === '/profile') {
     return 'profile';
+  }
+
+  if (pathname === '/portal') {
+    return 'portal';
   }
 
   return undefined;

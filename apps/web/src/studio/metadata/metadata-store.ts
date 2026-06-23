@@ -134,6 +134,25 @@ export interface StudioMenuDraft {
   parent?: string;
 }
 
+export interface StudioWorkspacePanelDraft {
+  code: string;
+  label: string;
+  type: 'INBOX' | 'ACTIONS' | 'NAVIGATION' | 'PAGE' | 'METRIC' | 'LINK' | 'NOTIFICATIONS';
+  target?: string;
+  order: number;
+  requiredCapabilities?: string[];
+}
+
+export interface StudioWorkspaceDraft {
+  code: string;
+  persona: 'SYSTEM_ADMIN' | 'PROGRAMMER' | 'MANAGER' | 'STAFF';
+  title: string;
+  subtitle?: string;
+  platform?: 'WEB' | 'MOBILE' | 'ALL';
+  enabled?: boolean;
+  panels: StudioWorkspacePanelDraft[];
+}
+
 export interface StudioScreenDraft {
   code: string;
   label: string;
@@ -195,6 +214,7 @@ const CUSTOM_APIS_KEY = 'redios:studio:metadata:custom-apis';
 const CUSTOM_ORGANISMS_KEY = 'redios:studio:metadata:custom-organisms';
 const PROCESSES_KEY = 'redios:studio:metadata:processes';
 const MENU_KEY = 'redios:studio:metadata:menu';
+const WORKSPACES_KEY = 'redios:studio:metadata:workspaces';
 const SCREENS_KEY = 'redios:studio:metadata:screens';
 const SECURITY_KEY = 'redios:studio:metadata:security';
 const APPLICATIONS_KEY = 'redios:studio:applications';
@@ -395,6 +415,14 @@ export function loadMenu(appCode?: string) {
 
 export function saveMenu(value: StudioMenuDraft[], appCode?: string) {
   writeStoredValue(scopedMetadataKey(MENU_KEY, appCode), value);
+}
+
+export function loadWorkspaces() {
+  return readStoredValue<StudioWorkspaceDraft[]>(WORKSPACES_KEY, []);
+}
+
+export function saveWorkspaces(value: StudioWorkspaceDraft[]) {
+  writeStoredValue(WORKSPACES_KEY, value);
 }
 
 export function loadScreens(appCode?: string) {

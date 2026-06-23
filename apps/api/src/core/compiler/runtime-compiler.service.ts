@@ -16,6 +16,7 @@ import type {
 } from '@redios/shared';
 import { DependencyEngine } from '../dependency/dependency-engine.service';
 import { METADATA_PROVIDER, type MetadataProvider } from '../metadata/metadata-provider.interface';
+import { MetadataRegistry } from '../metadata/metadata-registry.service';
 import { MetadataValidatorEngine } from '../metadata/metadata-validator-engine.service';
 import { NoopRuntimeProjectionProvider } from './runtime-projection-provider.interface';
 
@@ -23,6 +24,7 @@ import { NoopRuntimeProjectionProvider } from './runtime-projection-provider.int
 export class RuntimeCompiler {
   constructor(
     @Inject(METADATA_PROVIDER) private readonly metadataProvider: MetadataProvider,
+    private readonly metadataRegistry: MetadataRegistry,
     private readonly metadataValidatorEngine: MetadataValidatorEngine,
     private readonly dependencyEngine: DependencyEngine,
     private readonly projectionProvider: NoopRuntimeProjectionProvider,
@@ -71,6 +73,7 @@ export class RuntimeCompiler {
       definition,
     })) as MetadataDefinition<RuntimePackageDefinition>;
     await this.projectionProvider.project(saved.definition);
+    await this.metadataRegistry.invalidate(context);
     return saved;
   }
 

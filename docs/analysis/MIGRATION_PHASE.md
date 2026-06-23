@@ -17,10 +17,11 @@ Defines the **development sequence**, **module extraction order**, and **release
 
 | Dimension | Position |
 | --- | --- |
-| Official active phase | Phase 1 — Kernel Completion |
-| Code maturity | Phase 1 ~55%, Phase 4 UI ~40%, Phase 3/6 partial |
+| Official active phase | Phase 2 — Experience Engine (**Sprint 1 in progress**) |
+| Code maturity | Phase 1 kernel complete, Phase 2 foundation started |
 | Phase 0 documentation | **Complete** (this folder) |
-| Production readiness | Not ready — identity/security trust model |
+| Phase 1 validation | `docs/phase/PHASE_1_VALIDATION.md` |
+| Production readiness | Dev-ready kernel; set `AUTH_MODE=jwt` for production |
 
 ---
 
@@ -30,8 +31,8 @@ Per active phase documents (overrides README.md phase numbering):
 
 ```text
 PHASE 0  Repository Audit          ← COMPLETE
-PHASE 1  Kernel Completion          ← NEXT
-PHASE 2  Experience Engine
+PHASE 1  Kernel Completion          ← COMPLETE
+PHASE 2  Experience Engine          ← ACTIVE (Sprint 1)
 PHASE 3  TunasFlow Runtime
 PHASE 4  REDI Studio (kernel integration)
 PHASE 5  Capability Package Engine
@@ -68,12 +69,14 @@ Close kernel gaps without UI redesign or business module implementation.
 Sprint 1:  WP1.3 + WP1.4        (low risk, immediate value)
 Sprint 2:  WP1.1 + WP1.2        (critical security path)
 Sprint 3:  WP1.5 + WP1.6        (event + capability foundation)
-Sprint 4:  WP1.7 + acceptance   (integration test pass)
+Sprint 4:  WP1.7 + acceptance   ← COMPLETE (see PHASE_1_VALIDATION.md)
 ```
 
 ### 4.4 Phase 1 exit criteria
 
-All items from `PHASE_1_KERNEL_COMPLETION.md` §13 acceptance matrix must be ✅ or documented exception with human approval.
+All items from `PHASE_1_KERNEL_COMPLETION.md` §13 acceptance matrix are ✅.  
+Run `npm run acceptance:phase1 --workspace @redios/api` for automated verification.  
+Human **G1** approval required before Phase 2.
 
 ### 4.5 Phase 1 release
 

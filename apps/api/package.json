@@ -9,12 +9,14 @@
     "start:dev": "nest start --watch --entryFile apps/api/src/main",
     "seed:metadata": "nest start --entryFile apps/api/src/seed/main",
     "seed:platform": "nest start --entryFile apps/api/src/seed/platform-main",
+    "acceptance:phase1": "node scripts/phase1-acceptance.mjs",
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {
     "@nestjs/common": "^10.4.15",
     "@nestjs/config": "^3.3.0",
     "@nestjs/core": "^10.4.15",
+    "@nestjs/jwt": "^10.2.0",
     "@nestjs/mongoose": "^10.1.0",
     "@nestjs/platform-express": "^10.4.15",
     "@nestjs/swagger": "^7.4.2",

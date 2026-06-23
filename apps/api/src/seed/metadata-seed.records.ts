@@ -476,7 +476,19 @@ const applications: ApplicationSeed[] = [
             },
             steps: [
               { code: 'VALIDATE', type: 'VALIDATION', order: 1, enabled: true },
-              { code: 'EVENT_ENGINE', type: 'EVENT', order: 2, enabled: true },
+              {
+                code: 'SUPERVISOR_VERIFY',
+                type: 'HUMAN_TASK',
+                order: 2,
+                enabled: true,
+                config: {
+                  title: 'Verify work order start',
+                  assigneeRoles: ['SUPERVISOR', 'MANAGER', 'SYSTEM_ADMIN'],
+                  actionCode: 'APPROVE',
+                  priority: 'NORMAL',
+                },
+              },
+              { code: 'EVENT_ENGINE', type: 'EVENT', order: 3, enabled: true },
             ],
             enabled: true,
           },

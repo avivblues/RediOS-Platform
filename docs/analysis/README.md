@@ -1,6 +1,6 @@
 # REDI-OS Analysis Documents
 
-Status: **Phase 0 Complete**  
+Status: **Phase 0 Complete** · Phase 1 implementation complete (G1 pending)  
 Generated: 2026-06-16  
 Authority: `docs/phase/PHASE_0_REPOSITORY_AUDIT.md`
 
@@ -22,6 +22,7 @@ Dokumen ini mendeskripsikan kondisi kode **sebagaimana adanya** pada saat audit.
 | [GAP_ANALYSIS.md](./GAP_ANALYSIS.md) | Perbandingan current state vs Blueprint v3 & phase roadmap |
 | [REFACTOR_PLAN.md](./REFACTOR_PLAN.md) | Prioritas refactor, strategi migrasi, risiko, dampak |
 | [MIGRATION_PHASE.md](./MIGRATION_PHASE.md) | Urutan development, module extraction, release planning |
+| [../phase/PHASE_1_VALIDATION.md](../phase/PHASE_1_VALIDATION.md) | Phase 1 acceptance cases + sign-off checklist |
 
 ---
 
@@ -38,7 +39,9 @@ REFACTOR_PLAN.md
         ↓
 MIGRATION_PHASE.md
         ↓
-PHASE_1_KERNEL_COMPLETION.md  (next phase)
+PHASE_1_VALIDATION.md   (Phase 1 sign-off)
+        ↓
+PHASE_2_EXPERIENCE.md   (locked until G1)
 ```
 
 ---

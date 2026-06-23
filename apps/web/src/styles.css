@@ -424,6 +424,465 @@ a:focus-visible {
   text-decoration: none;
 }
 
+.redios-landing {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: #f8fafc;
+  color: #0f172a;
+}
+
+.redios-landing-dark {
+  background:
+    radial-gradient(circle at 12% 18%, rgb(37 99 235 / 28%), transparent 28%),
+    radial-gradient(circle at 88% 10%, rgb(124 58 237 / 20%), transparent 24%),
+    linear-gradient(135deg, #0f172a 0%, #172554 100%);
+  color: #ffffff;
+}
+
+.redios-landing-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.25rem clamp(1.25rem, 4vw, 3rem);
+}
+
+.redios-landing-topbar nav {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.redios-landing-link {
+  color: #e2e8f0;
+  text-decoration: none;
+  font-weight: 700;
+}
+
+.redios-landing-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  padding: 0.75rem 1.1rem;
+}
+
+.redios-landing-hero {
+  display: grid;
+  gap: 1.25rem;
+  align-content: center;
+  max-width: 760px;
+  padding: clamp(2rem, 6vw, 4rem) clamp(1.25rem, 4vw, 3rem) clamp(3rem, 8vw, 5rem);
+}
+
+.redios-landing-eyebrow {
+  color: rgb(191 219 254 / 92%);
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.redios-landing-hero h1 {
+  margin: 0;
+  font-size: clamp(2.2rem, 5vw, 3.6rem);
+  line-height: 1.08;
+  letter-spacing: -0.03em;
+  color: #ffffff;
+}
+
+.redios-landing-hero p {
+  margin: 0;
+  max-width: 58ch;
+  color: rgb(226 232 240 / 96%);
+  font-size: 1.05rem;
+  line-height: 1.7;
+}
+
+.redios-landing-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.85rem;
+  margin-top: 0.5rem;
+}
+
+.redios-landing-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem 1.1rem;
+  border-radius: 0.85rem;
+  border: 1px solid rgb(255 255 255 / 28%);
+  color: #ffffff;
+  text-decoration: none;
+  font-weight: 700;
+  background: rgb(255 255 255 / 8%);
+}
+
+.redios-landing-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+  padding: clamp(2rem, 5vw, 3rem) clamp(1.25rem, 4vw, 3rem);
+  background: #f8fafc;
+}
+
+.redios-landing-card {
+  background: #ffffff;
+  border: 1px solid rgb(148 163 184 / 24%);
+  border-radius: 1rem;
+  padding: 1.25rem;
+  box-shadow: 0 18px 40px rgb(15 23 42 / 8%);
+}
+
+.redios-landing-card h2 {
+  margin: 0 0 0.5rem;
+  font-size: 1.1rem;
+  color: #0f172a;
+}
+
+.redios-landing-card p {
+  margin: 0;
+  color: #64748b;
+  line-height: 1.6;
+}
+
+.redios-landing-session {
+  display: grid;
+  gap: 0.65rem;
+  justify-items: start;
+  margin: 0 clamp(1.25rem, 4vw, 3rem) 2rem;
+  padding: 1rem 1.2rem;
+  border-radius: 1rem;
+  background: #eff6ff;
+  border: 1px solid rgb(37 99 235 / 18%);
+  color: #0f172a;
+}
+
+.redios-landing-footer {
+  margin-top: auto;
+  padding: 1rem clamp(1.25rem, 4vw, 3rem) 1.5rem;
+  color: #64748b;
+  font-size: 0.85rem;
+  background: #f8fafc;
+}
+
+.redios-portal {
+  display: grid;
+  gap: 1rem;
+}
+
+.redios-portal-heading {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.redios-portal-heading span {
+  color: #64748b;
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.redios-portal-heading h2,
+.redios-portal-heading p {
+  margin: 0;
+}
+
+.redios-portal-grid {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.redios-portal-card {
+  display: grid;
+  gap: 0.45rem;
+  text-align: left;
+  border: 1px solid rgb(148 163 184 / 28%);
+  border-radius: 1rem;
+  padding: 1rem;
+  background: #ffffff;
+  cursor: pointer;
+}
+
+.redios-portal-card.is-recommended {
+  border-color: rgb(37 99 235 / 42%);
+  background: linear-gradient(180deg, #eff6ff 0%, #ffffff 100%);
+  box-shadow: 0 16px 34px rgb(37 99 235 / 12%);
+}
+
+.redios-portal-card small {
+  color: #2563eb;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.redios-portal-card strong {
+  font-size: 1.05rem;
+}
+
+.redios-portal-card p {
+  margin: 0;
+  color: #64748b;
+  line-height: 1.55;
+}
+
+.redios-portal-card span:last-child {
+  color: #2563eb;
+  font-weight: 800;
+}
+
+.redios-portal-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+@media (max-width: 900px) {
+  .redios-landing-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .redios-workspace-panels {
+    grid-template-columns: 1fr;
+  }
+}
+
+.redios-workspace-page {
+  min-height: 100vh;
+  background: #f8fafc;
+  color: #0f172a;
+  padding: clamp(1rem, 4vw, 2rem);
+}
+
+.redios-workspace-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: flex-start;
+  margin-bottom: 1.5rem;
+}
+
+.redios-workspace-eyebrow {
+  color: #2563eb;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.redios-workspace-header h1 {
+  margin: 0.35rem 0;
+  font-size: clamp(1.8rem, 4vw, 2.6rem);
+}
+
+.redios-workspace-header p {
+  margin: 0;
+  color: #64748b;
+  max-width: 60ch;
+}
+
+.redios-workspace-header-actions {
+  display: flex;
+  gap: 0.65rem;
+}
+
+.redios-workspace-header-actions button {
+  border: 1px solid rgb(148 163 184 / 35%);
+  background: #ffffff;
+  border-radius: 0.75rem;
+  padding: 0.65rem 0.9rem;
+  cursor: pointer;
+}
+
+.redios-workspace-panels {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.redios-workspace-panel {
+  background: #ffffff;
+  border: 1px solid rgb(148 163 184 / 24%);
+  border-radius: 1rem;
+  padding: 1rem;
+  box-shadow: 0 12px 30px rgb(15 23 42 / 6%);
+}
+
+.redios-workspace-panel-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.85rem;
+}
+
+.redios-workspace-panel-head small {
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.68rem;
+}
+
+.redios-workspace-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.65rem;
+}
+
+.redios-workspace-list li {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  align-items: center;
+  padding: 0.65rem 0.75rem;
+  border-radius: 0.75rem;
+  background: #f8fafc;
+}
+
+.redios-workspace-list small {
+  display: block;
+  color: #64748b;
+}
+
+.redios-workspace-list a,
+.redios-workspace-link {
+  color: #2563eb;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.redios-workspace-list-actions {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.redios-workspace-list-actions button {
+  border: 1px solid #cbd5e1;
+  background: #fff;
+  border-radius: 0.5rem;
+  padding: 0.35rem 0.65rem;
+  cursor: pointer;
+}
+
+.redos-metadata-status {
+  margin: 0.75rem 0;
+  color: #2563eb;
+  font-weight: 600;
+}
+
+.redios-experience-runtime-shell {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.redios-experience-runtime-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem 1rem;
+  background: #0f172a;
+  color: #f8fafc;
+}
+
+.redios-experience-runtime-back,
+.redios-experience-runtime-nav a {
+  color: #93c5fd;
+  text-decoration: none;
+  font-weight: 700;
+}
+
+.redios-experience-runtime-nav {
+  display: flex;
+  gap: 1rem;
+}
+
+.redios-experience-runtime-body {
+  flex: 1;
+}
+
+.redios-workspace-empty,
+.redios-workspace-loading,
+.redios-workspace-error {
+  color: #64748b;
+}
+
+.redios-workspace-error {
+  color: #dc2626;
+}
+
+.redios-workspace-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.65rem;
+}
+
+.redios-workspace-metric {
+  display: grid;
+  gap: 0.25rem;
+  padding: 0.75rem;
+  border-radius: 0.75rem;
+  background: #eff6ff;
+}
+
+.redios-workspace-metric span {
+  color: #64748b;
+  font-size: 0.78rem;
+}
+
+.redios-workspace-metric strong {
+  font-size: 1.4rem;
+}
+
+.redios-notification-list {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.redios-notification-item {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: flex-start;
+  padding: 1rem;
+  border-radius: 1rem;
+  background: #ffffff;
+  border: 1px solid rgb(148 163 184 / 24%);
+}
+
+.redios-notification-item.is-read {
+  opacity: 0.72;
+}
+
+.redios-notification-item p {
+  margin: 0.35rem 0;
+  color: #475569;
+}
+
+.redios-notification-item small {
+  color: #94a3b8;
+}
+
+.redios-notification-item button {
+  border: 1px solid rgb(37 99 235 / 24%);
+  background: #eff6ff;
+  color: #2563eb;
+  border-radius: 0.65rem;
+  padding: 0.45rem 0.75rem;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.redios-workspace-notifications {
+  display: grid;
+  gap: 0.75rem;
+}
+
 .redios-auth-todo {
   margin: 0;
   border: 1px dashed rgb(37 99 235 / 30%);

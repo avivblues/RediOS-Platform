@@ -6,15 +6,18 @@ import type {
   RuntimeContext,
   RuntimeDocument,
 } from '@redios/shared';
-import { IntegrationEngine } from '../integration/integration-engine.service';
 import { MetadataResolver } from '../metadata/metadata-resolver.service';
+import { EventBus } from './event.bus';
+import type { EventHandlerResult } from './event.types';
 
 export interface RuntimeEventState extends EventTriggerDefinition {}
 
 export interface RuntimeEventHandlerPlan {
   code: string;
   type: EventHandlerType;
-  status: 'READY';
+  status: 'EXECUTED' | 'READY' | 'FAILED';
+  subscriber?: string;
+  message?: string;
 }
 
 export interface RuntimeEventPlan {
@@ -33,7 +36,7 @@ export interface RuntimeEventPublishResult {
 export class EventEngine {
   constructor(
     private readonly metadataResolver: MetadataResolver,
-    private readonly integrationEngine: IntegrationEngine,
+    private readonly eventBus: EventBus,
   ) {}
 
   async publish(
@@ -44,37 +47,62 @@ export class EventEngine {
   ): Promise<RuntimeEventPublishResult> {
     const events = await this.metadataResolver.resolveEvents(context, entityCode, runtimeState);
     const integrations: IntegrationExecutionResult[] = [];
+    const plans: RuntimeEventPlan[] = [];
 
     for (const event of events) {
-      integrations.push(
-        ...(await this.integrationEngine.execute(context, {
-          code: event.definition.code,
-          type: 'EVENT',
-          sourceCode: event.definition.code,
-          payload: {
-            entityCode,
-            document,
-            runtimeState,
-            event: event.definition,
-          },
-        })),
-      );
+      const busResult = await this.eventBus.publish({
+        eventCode: event.definition.code,
+        context,
+        entityCode,
+        depth: 0,
+        payload: {
+          entityCode,
+          document,
+          runtimeState,
+          event: event.definition,
+        },
+      });
+
+      for (const handler of busResult.handlers) {
+        if (handler.subscriber === 'INTEGRATION' && Array.isArray(handler.output)) {
+          integrations.push(...(handler.output as IntegrationExecutionResult[]));
+        }
+      }
+
+      plans.push({
+        eventCode: event.definition.code,
+        handlers: this.mergeHandlerPlans(event.definition.handlers, busResult.handlers),
+      });
     }
 
     return {
       status: 'EVENT_PUBLISHED',
-      events: events.map((event) => ({
-        eventCode: event.definition.code,
-        handlers: event.definition.handlers
-          .filter((handler) => handler.enabled)
-          .map((handler) => ({
-            code: handler.code,
-            type: handler.type,
-            status: 'READY',
-          })),
-      })),
+      events: plans,
       integrations,
       next: 'LEDGER_ENGINE',
     };
+  }
+
+  private mergeHandlerPlans(
+    metadataHandlers: Array<{ code: string; type: EventHandlerType; enabled: boolean }>,
+    busHandlers: EventHandlerResult[],
+  ): RuntimeEventHandlerPlan[] {
+    return metadataHandlers
+      .filter((handler) => handler.enabled)
+      .map((handler) => {
+        const subscriberName = handler.type === 'WORKFLOW'
+          ? 'WORKFLOW'
+          : handler.type === 'NOTIFICATION'
+            ? 'NOTIFICATION'
+            : 'INTEGRATION';
+        const executed = busHandlers.find((result) => result.subscriber === subscriberName);
+        return {
+          code: handler.code,
+          type: handler.type,
+          status: executed?.status === 'EXECUTED' ? 'EXECUTED' : executed?.status === 'FAILED' ? 'FAILED' : 'READY',
+          subscriber: executed?.subscriber,
+          message: executed?.message,
+        };
+      });
   }
 }

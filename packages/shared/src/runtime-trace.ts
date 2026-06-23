@@ -6,6 +6,7 @@ export type RuntimeTraceStepEngine =
   | 'SECURITY_POLICY'
   | 'WORKFLOW'
   | 'PROCESS'
+  | 'HUMAN_TASK'
   | 'BUSINESS'
   | 'EVENT'
   | 'INTEGRATION'

@@ -1,4 +1,4 @@
-export type EventHandlerType = 'NOTIFICATION' | 'WEBHOOK' | 'AUDIT_LOG' | 'QUEUE';
+export type EventHandlerType = 'NOTIFICATION' | 'WEBHOOK' | 'AUDIT_LOG' | 'QUEUE' | 'WORKFLOW' | 'HUMAN_TASK';
 
 export interface EventTriggerDefinition {
   actionCode?: string;

@@ -1,4 +1,5 @@
 import type { RuntimeContext } from '../renderer/runtime-types';
+import { buildAuthHeaders } from '../../auth/session';
 
 const API_BASE_URL = import.meta.env.VITE_REDIOS_API_URL ?? '/api';
 
@@ -21,14 +22,7 @@ export class ApiClient {
       ...init,
       headers: {
         'content-type': 'application/json',
-        'x-tenant-id': this.context.tenantId,
-        'x-domain-code': this.context.domainCode,
-        'x-application-code': this.context.applicationCode,
-        'x-user-id': this.context.userId,
-        'x-permissions': this.context.permissions.join(','),
-        'x-roles': this.context.roles.join(','),
-        'x-groups': this.context.groups.join(','),
-        'x-attributes': JSON.stringify(this.context.attributes),
+        ...buildAuthHeaders(),
         ...init.headers,
       },
     });
