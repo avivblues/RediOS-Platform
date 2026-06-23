@@ -623,6 +623,149 @@ const applications: ApplicationSeed[] = [
         ],
       },
       {
+        code: 'PURCHASE_REQUEST',
+        name: 'Purchase Request',
+        type: 'DOCUMENT',
+        fields: [
+          { code: 'title', required: true },
+          { code: 'amount', dataType: 'number', required: true },
+          { code: 'requester' },
+          { code: 'description' },
+        ],
+        actions: ['CREATE', 'READ', 'UPDATE', 'SUBMIT', 'APPROVE', 'REJECT', 'DELETE'],
+        workflow: {
+          code: 'PR_LIFECYCLE',
+          entityCode: 'PURCHASE_REQUEST',
+          states: [
+            { code: 'DRAFT', label: 'Draft', initial: true },
+            { code: 'SUBMITTED', label: 'Submitted' },
+            { code: 'APPROVED', label: 'Approved', final: true },
+            { code: 'REJECTED', label: 'Rejected', final: true },
+          ],
+          transitions: [
+            { code: 'SUBMIT', from: 'DRAFT', to: 'SUBMITTED', actionCode: 'SUBMIT' },
+            { code: 'APPROVE', from: 'SUBMITTED', to: 'APPROVED', actionCode: 'APPROVE' },
+            { code: 'REJECT', from: 'SUBMITTED', to: 'REJECTED', actionCode: 'REJECT' },
+          ],
+          enabled: true,
+        },
+        processes: [
+          {
+            code: 'PR_SUBMIT_PROCESS',
+            entityCode: 'PURCHASE_REQUEST',
+            trigger: {
+              actionCode: 'SUBMIT',
+              workflowState: 'SUBMITTED',
+            },
+            steps: [
+              { code: 'VALIDATE', type: 'VALIDATION', order: 1, enabled: true },
+              {
+                code: 'MULTI_LEVEL_APPROVAL',
+                type: 'HUMAN_TASK',
+                order: 2,
+                enabled: true,
+                config: {
+                  title: 'Purchase Request Approval',
+                  actionCode: 'APPROVE',
+                  approvalMode: 'SEQUENTIAL',
+                  amountField: 'amount',
+                  slaHours: 24,
+                  approvalLevels: [
+                    { role: 'SUPERVISOR', minAmount: 0, label: 'Supervisor' },
+                    { role: 'MANAGER', minAmount: 1000000, label: 'Manager' },
+                    { role: 'SYSTEM_ADMIN', minAmount: 10000000, label: 'Director' },
+                  ],
+                },
+              },
+              {
+                code: 'FINANCE_PARALLEL',
+                type: 'HUMAN_TASK',
+                order: 3,
+                enabled: true,
+                config: {
+                  title: 'Finance Review',
+                  actionCode: 'APPROVE',
+                  approvalMode: 'PARALLEL',
+                  condition: 'amount >= 5000000',
+                  amountField: 'amount',
+                  slaHours: 48,
+                  approvalLevels: [
+                    { role: 'MANAGER', minAmount: 5000000, label: 'Finance Manager' },
+                    { role: 'SYSTEM_ADMIN', minAmount: 5000000, label: 'Finance Director' },
+                  ],
+                },
+              },
+              { code: 'NOTIFY_SUBMIT', type: 'EVENT', order: 4, enabled: true },
+            ],
+            enabled: true,
+          },
+        ],
+        businesses: [
+          {
+            code: 'PR_VALIDATE',
+            entityCode: 'PURCHASE_REQUEST',
+            trigger: {
+              processCode: 'PR_SUBMIT_PROCESS',
+              stepCode: 'VALIDATE',
+            },
+            rules: [
+              {
+                code: 'REQUIRE_TITLE',
+                type: 'VALIDATE_REQUIRED_FIELD',
+                enabled: true,
+                config: { field: 'title' },
+              },
+              {
+                code: 'REQUIRE_AMOUNT',
+                type: 'VALIDATE_REQUIRED_FIELD',
+                enabled: true,
+                config: { field: 'amount' },
+              },
+            ],
+            enabled: true,
+          },
+        ],
+        events: [
+          {
+            code: 'PR_SUBMITTED_EVENT',
+            entityCode: 'PURCHASE_REQUEST',
+            trigger: {
+              actionCode: 'SUBMIT',
+              workflowState: 'SUBMITTED',
+              processCode: 'PR_SUBMIT_PROCESS',
+            },
+            handlers: [
+              {
+                code: 'NOTIFY_SUPERVISOR',
+                type: 'NOTIFICATION',
+                enabled: true,
+                config: {
+                  targetRole: 'SUPERVISOR',
+                  message: 'New purchase request submitted',
+                },
+              },
+            ],
+            enabled: true,
+          },
+        ],
+        views: [
+          {
+            code: 'PR_LIST',
+            entityCode: 'PURCHASE_REQUEST',
+            type: 'TABLE',
+            columns: [
+              { field: 'title', label: 'Title', visible: true, sortable: true, filterable: true },
+              { field: 'amount', label: 'Amount', visible: true, sortable: true, filterable: false },
+              { field: 'requester', label: 'Requester', visible: true, sortable: true, filterable: true },
+              { field: 'status', label: 'Status', visible: true, sortable: true, filterable: true },
+            ],
+            filters: [{ field: 'status', operator: 'EQ' }],
+            sorting: { field: 'title', direction: 'ASC' },
+            enabled: true,
+          },
+        ],
+      },
+      {
         code: 'STOCK_BALANCE',
         name: 'Stock Balance',
         type: 'MASTER',

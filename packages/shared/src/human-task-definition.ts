@@ -10,12 +10,16 @@ export interface HumanTaskDefinition {
   documentId?: string;
   actionCode?: string;
   processCode?: string;
+  stepCode?: string;
   assigneeUserId?: string;
   assigneeRoles: string[];
   status: HumanTaskStatus;
   priority: 'LOW' | 'NORMAL' | 'HIGH';
   source: HumanTaskSource;
   dueAt?: string;
+  approvalMode?: 'SINGLE' | 'SEQUENTIAL' | 'PARALLEL';
+  approvalLevel?: number;
+  approvalGroupId?: string;
   createdAt: string;
 }
 
@@ -26,9 +30,13 @@ export interface CreateHumanTaskInput {
   documentId?: string;
   actionCode?: string;
   processCode?: string;
+  stepCode?: string;
   assigneeUserId?: string;
   assigneeRoles?: string[];
   priority?: 'LOW' | 'NORMAL' | 'HIGH';
   source?: HumanTaskSource;
   dueAt?: string;
+  approvalMode?: 'SINGLE' | 'SEQUENTIAL' | 'PARALLEL';
+  approvalLevel?: number;
+  approvalGroupId?: string;
 }

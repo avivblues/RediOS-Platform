@@ -3,10 +3,12 @@ import type { ProcessStepType, RuntimeContext, RuntimeDocument } from '@redios/s
 import { MetadataResolver } from '../metadata/metadata-resolver.service';
 import type { WorkflowTransitionResult } from '../workflow/workflow-engine.service';
 
+export type ProcessStepStatus = 'READY' | 'EXECUTED' | 'FAILED' | 'SKIPPED';
+
 export interface ProcessStepPlan {
   code: string;
   type: ProcessStepType;
-  status: 'READY';
+  status: ProcessStepStatus;
 }
 
 export interface ProcessExecutionPlan {

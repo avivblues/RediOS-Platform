@@ -28,34 +28,8 @@ export class BusinessEngine {
     const executedRules: BusinessRuleExecutionResult[] = [];
 
     for (const step of this.getBusinessSteps(processPlan)) {
-      const business = await this.metadataResolver.resolveBusiness(context, entityCode, processPlan.processCode!, step.code);
-
-      if (!business) {
-        continue;
-      }
-
-      for (const rule of business.definition.rules.filter((candidate) => candidate.enabled)) {
-        if (rule.type === 'VALIDATE_REQUIRED_FIELD') {
-          const field = this.getConfigString(rule.config, 'field', rule.code);
-          const value = document.data[field];
-
-          if (value === undefined || value === null || value === '') {
-            throw new BadRequestException(`Required field is missing: ${field}`);
-          }
-
-          executedRules.push({ code: rule.code, type: rule.type, status: 'EXECUTED' });
-          continue;
-        }
-
-        if (rule.type === 'SET_FIELD_VALUE') {
-          const field = this.getConfigString(rule.config, 'field', rule.code);
-          document.data[field] = rule.config?.value;
-          executedRules.push({ code: rule.code, type: rule.type, status: 'EXECUTED' });
-          continue;
-        }
-
-        executedRules.push({ code: rule.code, type: rule.type, status: 'READY' });
-      }
+      const rules = await this.executeRulesForStep(context, entityCode, document, processPlan.processCode!, step.code);
+      executedRules.push(...rules);
     }
 
     return {
@@ -65,12 +39,53 @@ export class BusinessEngine {
     };
   }
 
+  async executeRulesForStep(
+    context: RuntimeContext,
+    entityCode: string,
+    document: RuntimeDocument,
+    processCode: string,
+    stepCode: string,
+  ): Promise<BusinessRuleExecutionResult[]> {
+    const business = await this.metadataResolver.resolveBusiness(context, entityCode, processCode, stepCode);
+
+    if (!business) {
+      return [];
+    }
+
+    const executedRules: BusinessRuleExecutionResult[] = [];
+
+    for (const rule of business.definition.rules.filter((candidate) => candidate.enabled)) {
+      if (rule.type === 'VALIDATE_REQUIRED_FIELD') {
+        const field = this.getConfigString(rule.config, 'field', rule.code);
+        const value = document.data[field];
+
+        if (value === undefined || value === null || value === '') {
+          throw new BadRequestException(`Required field is missing: ${field}`);
+        }
+
+        executedRules.push({ code: rule.code, type: rule.type, status: 'EXECUTED' });
+        continue;
+      }
+
+      if (rule.type === 'SET_FIELD_VALUE') {
+        const field = this.getConfigString(rule.config, 'field', rule.code);
+        document.data[field] = rule.config?.value;
+        executedRules.push({ code: rule.code, type: rule.type, status: 'EXECUTED' });
+        continue;
+      }
+
+      executedRules.push({ code: rule.code, type: rule.type, status: 'READY' });
+    }
+
+    return executedRules;
+  }
+
   private getBusinessSteps(processPlan: ProcessExecutionPlan): ProcessStepPlan[] {
     if (!processPlan.processCode) {
       return [];
     }
 
-    return processPlan.steps.filter((step) => step.type === 'BUSINESS');
+    return processPlan.steps.filter((step) => step.type === 'BUSINESS' && step.status !== 'SKIPPED');
   }
 
   private getConfigString(config: Record<string, unknown> | undefined, key: string, ruleCode: string): string {

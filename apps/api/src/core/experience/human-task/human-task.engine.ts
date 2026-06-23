@@ -22,15 +22,24 @@ export class HumanTaskEngine {
       documentId: input.documentId,
       actionCode: input.actionCode,
       processCode: input.processCode,
+      stepCode: input.stepCode,
       assigneeUserId: input.assigneeUserId,
       assigneeRoles: input.assigneeRoles ?? [],
       status: 'WAITING',
       priority: input.priority ?? 'NORMAL',
       source: input.source ?? 'PROCESS',
       dueAt: input.dueAt ? new Date(input.dueAt) : undefined,
+      approvalMode: input.approvalMode,
+      approvalLevel: input.approvalLevel,
+      approvalGroupId: input.approvalGroupId,
     });
 
     return this.toDefinition(saved.toObject());
+  }
+
+  async findOne(context: RuntimeContext, taskId: string): Promise<HumanTaskDefinition | null> {
+    const record = await this.model.findOne({ _id: taskId, tenantId: context.tenantId }).lean().exec();
+    return record ? this.toDefinition(record) : null;
   }
 
   async complete(context: RuntimeContext, taskId: string): Promise<HumanTaskDefinition | null> {
@@ -79,12 +88,16 @@ export class HumanTaskEngine {
       documentId: record.documentId,
       actionCode: record.actionCode,
       processCode: record.processCode,
+      stepCode: record.stepCode,
       assigneeUserId: record.assigneeUserId,
       assigneeRoles: record.assigneeRoles ?? [],
       status: record.status,
       priority: record.priority,
       source: record.source,
       dueAt: record.dueAt ? new Date(record.dueAt).toISOString() : undefined,
+      approvalMode: record.approvalMode,
+      approvalLevel: record.approvalLevel,
+      approvalGroupId: record.approvalGroupId,
       createdAt: record.createdAt ? new Date(record.createdAt).toISOString() : new Date().toISOString(),
     };
   }

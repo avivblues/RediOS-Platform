@@ -15,15 +15,17 @@ import { ApplicationEngine } from '../application/application-engine.service';
 import { BusinessEngine, type BusinessExecutionResult } from '../business/business-engine.service';
 import { RuntimePackageProvider } from '../compiler/runtime-package-provider.service';
 import { ConflictEngine } from '../conflict/conflict-engine.service';
-import { HumanTaskProcessService } from '../experience/human-task/human-task-process.service';
 import { EventEngine, type RuntimeEventPublishResult } from '../event/event-engine.service';
 import { LedgerEngine, type LedgerExecutionResult } from '../ledger/ledger-engine.service';
 import { MetadataResolver } from '../metadata/metadata-resolver.service';
-import { ProcessEngine, type ProcessExecutionPlan } from '../process/process-engine.service';
+import type { ProcessExecutionPlan } from '../process/process-engine.service';
 import { SecurityEngine } from '../security/security-engine.service';
 import { SecurityPolicyEngine } from '../security-policy/security-policy-engine.service';
 import { StorageEngine } from '../storage/storage.engine';
 import { TraceEngine } from '../trace/trace-engine.service';
+import type { FlowExecutionResult } from '../tunasflow/flow.definition';
+import { StateEngine } from '../tunasflow/state/state.engine';
+import { TunasFlowEngine } from '../tunasflow/tunasflow.engine';
 import { WorkflowEngine, type WorkflowTransitionResult } from '../workflow/workflow-engine.service';
 
 export interface RuntimeExecutionInput {
@@ -71,6 +73,7 @@ export interface RuntimeActionResult {
   actionCode: string;
   workflow: WorkflowTransitionResult;
   process: ProcessExecutionPlan;
+  flow: FlowExecutionResult;
   business: BusinessExecutionResult;
   events: RuntimeEventPublishResult;
   ledger: LedgerExecutionResult;
@@ -86,7 +89,6 @@ export class RuntimeExecutor {
     private readonly securityEngine: SecurityEngine,
     private readonly actionEngine: ActionEngine,
     private readonly workflowEngine: WorkflowEngine,
-    private readonly processEngine: ProcessEngine,
     private readonly businessEngine: BusinessEngine,
     private readonly eventEngine: EventEngine,
     private readonly ledgerEngine: LedgerEngine,
@@ -95,7 +97,8 @@ export class RuntimeExecutor {
     private readonly securityPolicyEngine: SecurityPolicyEngine,
     private readonly conflictEngine: ConflictEngine,
     private readonly runtimePackageProvider: RuntimePackageProvider,
-    private readonly humanTaskProcessService: HumanTaskProcessService,
+    private readonly tunasFlowEngine: TunasFlowEngine,
+    private readonly stateEngine: StateEngine,
   ) {}
 
   async create(input: RuntimeExecutionInput): Promise<RuntimeExecutionResult> {
@@ -225,6 +228,15 @@ export class RuntimeExecutor {
             (await this.storageEngine.update(context, entityCode, id, {
               status: transition.to,
             })) ?? document;
+
+          await this.stateEngine.recordTransition(context, {
+            entityCode,
+            documentId: id,
+            fromStatus: transition.from,
+            toStatus: transition.to,
+            actionCode,
+            traceId: trace.id,
+          });
         }
 
         return transition;
@@ -240,13 +252,10 @@ export class RuntimeExecutor {
         };
       }
 
-      const process = await this.traceEngine.recordStep(trace.id!, 'PROCESS', () =>
-        this.processEngine.execute(context, entityCode, actionCode, workflow, workflowDocument),
+      const flow = await this.traceEngine.recordStep(trace.id!, 'TUNASFLOW', () =>
+        this.tunasFlowEngine.execute(context, entityCode, actionCode, workflow, workflowDocument),
       );
-
-      await this.traceEngine.recordStep(trace.id!, 'HUMAN_TASK', async () =>
-        this.humanTaskProcessService.execute(context, entityCode, workflowDocument, process),
-      );
+      const process = this.tunasFlowEngine.toProcessPlan(flow);
 
       const business = await this.traceEngine.recordStep(trace.id!, 'BUSINESS', async () => {
         const businessResult = await this.businessEngine.execute(context, entityCode, workflowDocument, process);
@@ -299,6 +308,7 @@ export class RuntimeExecutor {
         actionCode,
         workflow,
         process,
+        flow,
         business,
         events,
         ledger,

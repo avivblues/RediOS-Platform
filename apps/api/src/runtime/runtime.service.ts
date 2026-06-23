@@ -6,6 +6,7 @@ import {
   type RuntimeActionResult,
   type RuntimeExecutionResult,
 } from '../core/runtime/runtime-executor.service';
+import { StateEngine } from '../core/tunasflow/state/state.engine';
 import { RuntimeCreateDto } from './dto/runtime-create.dto';
 import { RuntimeUpdateDto } from './dto/runtime-update.dto';
 
@@ -14,6 +15,7 @@ export class RuntimeService {
   constructor(
     private readonly contextEngine: ContextEngine,
     private readonly runtimeExecutor: RuntimeExecutor,
+    private readonly stateEngine: StateEngine,
   ) {}
 
   create(headers: RuntimeHeaders, entityCode: string, payload: RuntimeCreateDto): Promise<RuntimeExecutionResult> {
@@ -101,6 +103,11 @@ export class RuntimeService {
       serverVersion: actionPayload.serverVersion,
       clientData: actionPayload.clientData,
     });
+  }
+
+  getStateHistory(headers: RuntimeHeaders, entityCode: string, documentId: string) {
+    const context = this.contextEngine.resolve(headers);
+    return this.stateEngine.findByDocument(context, entityCode, documentId);
   }
 
   private actionPayload(payload: unknown): {

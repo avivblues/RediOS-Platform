@@ -7,6 +7,8 @@ import type {
   RuntimeContext,
   WorkspaceDefinition,
 } from '@redios/shared';
+import { ApprovalEngine } from '../tunasflow/approval/approval.engine';
+import { HumanTaskEngine } from './human-task/human-task.engine';
 import { ActionQueueService } from './action-center/action.queue';
 import { InboxEngine } from './inbox/inbox.engine';
 import { NotificationCenterService } from './notification/notification-center.service';
@@ -23,6 +25,8 @@ export class ExperienceRuntimeService {
     private readonly actionQueue: ActionQueueService,
     private readonly notificationCenter: NotificationCenterService,
     private readonly workspaceMetadata: WorkspaceMetadataService,
+    private readonly humanTaskEngine: HumanTaskEngine,
+    private readonly approvalEngine: ApprovalEngine,
   ) {}
 
   resolvePersona(context: RuntimeContext): Promise<ResolvedPersona> {
@@ -45,8 +49,16 @@ export class ExperienceRuntimeService {
     return this.workspaceMetadata.save(context, definition);
   }
 
-  completeInboxItem(context: RuntimeContext, inboxItemId: string) {
-    return this.inboxEngine.completeHumanTask(context, inboxItemId);
+  async completeInboxItem(context: RuntimeContext, inboxItemId: string) {
+    const taskId = inboxItemId.startsWith('human_') ? inboxItemId.slice('human_'.length) : inboxItemId;
+    const taskBeforeComplete = await this.humanTaskEngine.findOne(context, taskId);
+    const completed = await this.inboxEngine.completeHumanTask(context, inboxItemId);
+
+    if (completed && taskBeforeComplete) {
+      await this.approvalEngine.onTaskCompleted(context, taskBeforeComplete);
+    }
+
+    return completed;
   }
 
   async resolveContext(context: RuntimeContext, platform: ExperiencePlatform = 'WEB'): Promise<ExperienceContext> {

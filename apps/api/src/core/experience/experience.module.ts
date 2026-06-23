@@ -1,7 +1,8 @@
-import { Module, OnModuleInit } from '@nestjs/common';
+import { Module, OnModuleInit, forwardRef } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { MetadataModule } from '../metadata/metadata.module';
 import { StorageModule } from '../storage/storage.module';
+import { TunasflowModule } from '../tunasflow/tunasflow.module';
 import { ActionQueueService } from './action-center/action.queue';
 import { ExperienceEngine } from './experience-engine.service';
 import { ExperienceRuntimeService } from './experience-runtime.service';
@@ -28,6 +29,7 @@ import { WorkspaceMetadataService } from './workspace/workspace-metadata.service
   imports: [
     MetadataModule,
     StorageModule,
+    forwardRef(() => TunasflowModule),
     MongooseModule.forFeature([
       {
         name: EXPERIENCE_NOTIFICATION_MODEL,

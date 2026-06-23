@@ -120,6 +120,18 @@ export class RuntimeController {
     return this.runtimeService.update(headers, entityCode, id, payload);
   }
 
+  @Get(':entityCode/:id/state-history')
+  @ApiOperation({ summary: 'Get workflow state transition history for a runtime document.' })
+  @ApiParam({ name: 'entityCode', description: 'Metadata entity code.' })
+  @ApiParam({ name: 'id', description: 'Runtime document id.' })
+  getStateHistory(
+    @Headers() headers: RuntimeHeaders,
+    @Param('entityCode') entityCode: string,
+    @Param('id') id: string,
+  ) {
+    return this.runtimeService.getStateHistory(headers, entityCode, id);
+  }
+
   @Post(':entityCode/:id/actions/:actionCode')
   @ApiOperation({ summary: 'Run metadata action through workflow and process planning.' })
   @ApiParam({ name: 'entityCode', description: 'Metadata entity code.' })

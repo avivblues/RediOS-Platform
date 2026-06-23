@@ -1,465 +1,1990 @@
-# ==========================================================
-# REDI-OS PLATFORM AI DEVELOPMENT RULES
-# Version : 3.0
-# Owner   : PT Revolusi Digital Solusi
-# ==========================================================
+# 🌱 REDI-OS Cursor Development Rules
 
-You are the AI Engineering Partner for REDI-OS Platform.
+## Industrial Intelligence Operating System
 
-Your responsibility:
-Act as:
-- Principal Software Architect
-- Enterprise System Analyst
-- Industrial Solution Architect
-- Senior Fullstack Engineer
-
-All decisions MUST follow:
-
-docs/architecture/REDIOS_PLATFORM_BLUEPRINT_v3.md
+Version: 4.0
 
 
-# ==========================================================
-# PRODUCT DIRECTION
-# ==========================================================
+---
 
-REDI-OS is NOT a traditional ERP.
-
-REDI-OS is an:
-
-Industrial 5.0 Enterprise Operating Platform
-
-combining:
-
-- ERP
-- MES
-- QMS
-- CMMS
-- ITSM
-- Workflow Automation
-- IoT Platform
-- Enterprise Integration
-- AI Agent
+# 1. REDI NORTH STAR
 
 
-Never build isolated applications.
-
-Always build:
-Platform Capability + Metadata + Workflow + Template
+REDI-OS is NOT a traditional software application.
 
 
-# ==========================================================
-# CORE ARCHITECTURE PRINCIPLE
-# ==========================================================
+REDI is:
 
-Business changes MUST be handled by:
+Industrial Intelligence Operating System
+
+
+The purpose:
+
+Transform:
+
+Industrial Knowledge
+
+into:
+
+Executable Operating Model
+
+that can be understood,
+executed,
+and assisted by AI.
+
+
+---
+
+# 2. Core Architecture Principle
+
+
+NEVER start development from:
+
+
+Database
+
+Table
+
+CRUD
+
+Screen
+
+API Endpoint
+
+
+ALWAYS start from:
+
+
+Industrial Concept
+
+        ↓
+
+Ontology
+
+        ↓
 
 Metadata
+
+        ↓
+
+Runtime Behavior
+
+        ↓
+
+Experience
+
+        ↓
+
+AI Context
+
+
+---
+
+
+# 3. REDI Is Not
+
+
+Do NOT build REDI as:
+
+
+❌ ERP System
+
+❌ CRUD Application
+
+❌ Admin Dashboard
+
+❌ Low Code Form Builder
+
+❌ Hardcoded SaaS
+
+
+Avoid thinking:
+
+
+"We need a production module"
+
+
+Think:
+
+
+"What industrial capability,
+object,
+relationship,
+and behavior
+needs to exist?"
+
+
+---
+
+# 4. REDI Development Flow
+
+
+Correct:
+
+
+```
+Business Requirement
+
+
+        ↓
+
+
+Industrial Object
+
+
+        ↓
+
+
+Relationship Model
+
+
+        ↓
+
+
+Ontology Definition
+
+
+        ↓
+
+
+Metadata Schema
+
+
+        ↓
+
+
+Runtime Engine
+
+
+        ↓
+
+
+Experience Layer
+```
+
+
+Wrong:
+
+
+```
+Requirement
+
+ ↓
+
+Create Table
+
+ ↓
+
+Create Controller
+
+ ↓
+
+Create Page
+```
+
+
+---
+
+# 5. Source Code Responsibility
+
+
+REDI source code creates:
+
+
+✔ Kernel
+
+✔ Runtime
+
+✔ Engine
+
+✔ Builder
+
+✔ Compiler
+
+✔ Infrastructure
+
+
+REDI source code does NOT create:
+
+
+❌ Fixed business process
+
+❌ Tenant specific feature
+
+❌ ERP module logic
+
+
+Business capability must live in:
+
+
+```
+Capability Package
+```
+
+
+---
+
+# 6. Architecture Boundary
+
+
+Before creating any code ask:
+
+
+## Is this industrial meaning?
+
+
+Create:
+
+
+```
+Ontology
+```
+
+
+---
+
+
+## Is this structure?
+
+
+Create:
+
+
+```
+Metadata
+```
+
+
+---
+
+
+## Is this process?
+
+
+Create:
+
+
+```
 Workflow
-Rules
+```
+
+
+---
+
+
+## Is this action?
+
+
+Create:
+
+
+```
+Runtime Command
+```
+
+
+---
+
+
+## Is this tenant variation?
+
+
+Create:
+
+
+```
 Configuration
+```
 
-NOT source code changes.
 
+Never hardcode tenant logic.
 
-Avoid hardcoded:
 
-- forms
-- approval flow
-- status transition
-- business rules
-- menu
-- permission
+---
 
+# 7. Metadata Principle
 
-Prefer:
 
-Metadata Driven Architecture
+Metadata is the foundation runtime model.
 
 
-# ==========================================================
-# REDI KERNEL FIRST
-# ==========================================================
+Metadata defines:
 
-Before creating any module,
-verify if capability belongs to kernel.
 
+- Object Structure
 
-Kernel owns:
+- Field
 
-- Identity Engine
-- Security Engine
-- Metadata Engine
-- Runtime Engine
-- Rule Engine
-- Event Engine
+- Validation
 
+- Permission
 
-Modules MUST NOT duplicate kernel logic.
+- UI Schema
 
+- Runtime Behavior
 
-# ==========================================================
-# MODULE DESIGN RULE
-# ==========================================================
 
-Modules are Business Capability Packages.
+Metadata must always be:
 
-Expected structure:
 
-modules/
+Ontology Ready
 
-├── master-data
-├── finance
-├── procurement
-├── inventory-wms
-├── production-mes
-├── quality-qms
-├── engineering-cmms
-├── itsm
-├── tunasnoc
-├── hr-ga
-├── project
-├── isp-operation
-└── integration
+AI Ready
 
+Multi Tenant Ready
 
-Each module contains ONLY:
 
-- schema extension
-- workflow template
-- form template
-- rule template
-- connector mapping
+---
 
 
-Do NOT create monolithic ERP modules.
+# 8. Ontology Principle
 
 
-# ==========================================================
-# TUNASFLOW RULE
-# ==========================================================
+Ontology does NOT replace metadata.
 
-All processes must use TunasFlow Engine.
 
+Ontology extends metadata.
 
-Examples:
 
-GOOD:
+Relationship:
 
-Ticket Created
-      |
-Workflow Engine
-      |
-Assignment
-      |
-Approval
-      |
-Completion
 
+```
+Ontology
 
-BAD:
+    |
 
-if(status === "APPROVED") {
- hardcoded logic
-}
+Semantic Metadata
 
+    |
 
-No hardcoded process state.
+Metadata
 
+    |
 
-# ==========================================================
-# UNIVERSAL DOCUMENT MODEL
-# ==========================================================
+Runtime
 
-Transactions should extend:
+```
 
-Business Document
 
+Ontology defines:
 
-Examples:
 
-- Work Order
-- Ticket
-- Purchase Request
-- QC Release
-- Production Order
-- Payment Approval
+"What it means"
 
 
-Common attributes:
+Metadata defines:
 
-- type
-- status
-- workflow
-- owner
-- data
-- attachment
-- history
 
+"What exists"
 
-# ==========================================================
-# EVENT DRIVEN RULE
-# ==========================================================
 
+Runtime defines:
 
-Use event first approach.
 
+"What happens"
 
-Examples:
 
-WO_CREATED
+---
 
-QC_RELEASED
+# 9. Ontology Model Requirement
 
-MACHINE_DOWN
 
-STOCK_LOW
+Every future object should support:
 
-PAYMENT_APPROVED
 
+```
+Object
 
-Events trigger:
 
-- workflow
-- notification
-- integration
-- AI agent
+├── Fields
 
 
-Avoid direct module coupling.
+├── Relationships
 
 
-# ==========================================================
-# INTEGRATION RULE
-# ==========================================================
+├── Behavior
 
 
-All external systems communicate through:
+├── Events
 
-REDI Integration Hub
 
+├── Policy
 
-Target connectors:
 
-- TunasIoT
-- ISP-Kita
-- SAP
-- Odoo
-- Office365
-- MQTT
-- PLC
-- SCADA
-- REST API
-- Webhook
+└── Semantic Context
+```
 
-
-Never directly integrate inside business modules.
-
-
-# ==========================================================
-# INDUSTRIAL MODULE RULES
-# ==========================================================
-
-
-Manufacturing:
-
-Follow:
-
-MES + QMS + CMMS pattern
-
-
-Production flow:
-
-Material Release
-
-→ Production Execution
-
-→ IoT Evidence
-
-→ Manager Release
-
-→ QA Release
-
-
-
-Quality:
-
-Must consider:
-
-- GMP
-- CPOB
-- CPMB
-- Audit Trail
-- Traceability
-
-
-Engineering:
-
-Always integrate:
-
-CMMS
-+
-TunasIoT
-+
-Sparepart Inventory
-
-
-IT:
-
-Follow:
-
-ITSM
-+
-GLPI concept
-+
-NOC Monitoring
-
-
-# ==========================================================
-# DATA & AI RULE
-# ==========================================================
-
-
-Prepare every module for:
-
-Operational Data
-
-→ Event Stream
-
-→ Analytics
-
-→ AI Agent
-
-
-AI Agent targets:
-
-- Production Agent
-- Maintenance Agent
-- Quality Agent
-- Finance Agent
-- IT/NOC Agent
-
-
-# ==========================================================
-# DEVELOPMENT PHASE PRIORITY
-# ==========================================================
-
-# ==========================================================
-# PHASE LOCKING RULE
-# ==========================================================
-
-Before coding ALWAYS read:
-
-1. docs/phase/PHASE_0_REPOSITORY_AUDIT.md
-2. docs/phase/PHASE_DEVELOPMENT_ROADMAP.md
-3. Current active PHASE_x document
-
-Development MUST follow phase order.
-
-Never implement future phase early.
 
 Example:
 
-During PHASE 1:
 
-ALLOW:
-
-- Metadata Registry
-- Metadata Compiler
-- Runtime Executor
-- Event Foundation
-- Security Runtime
+Machine is not only:
 
 
-DO NOT BUILD:
-
-- REDI Studio
-- ERP Template
-- MES/QMS/CMMS
-- UI Builder
-- Integration Connector
+```
+{
+ status:"DOWN"
+}
+```
 
 
-During PHASE 2:
-
-ALLOW:
-
-- Persona Engine
-- Workspace Engine
-- Universal Inbox
-- Action Center
+Machine means:
 
 
-DO NOT BUILD:
+```
+Machine
 
-- Business Modules
+ |
+affects
 
+Production
 
-Business capability starts only after:
+ |
+impacts
 
-PHASE 5 Package Engine
-+
-PHASE 7 Industrial Template
+Customer Order
+```
 
+---
 
-# AI EXECUTION RULE
-
-When asked to code:
-
-1. Identify current phase
-2. Read phase document
-3. Modify only allowed scope
-4. Preserve existing architecture
-
-If requirement conflicts:
-
-PHASE DOCUMENT WINS
-
-# ==========================================================
-# CODING STANDARD
-# ==========================================================
+# 10. Backend Architecture Principle
 
 
-Before coding:
+REDI backend is not an application backend.
 
-1. Read Blueprint
-2. Understand existing architecture
-3. Reuse existing capability
-4. Extend through metadata
+
+REDI backend is:
+
+
+```
+Industrial Runtime Platform
+```
+
+
+The backend must expose engines,
+not fixed business features.
+
+
+---
+
+# 11. Technology Decision
+
+
+Current REDI technology choices are intentional.
+
+
+Do NOT rewrite technology without architecture reason.
+
+
+Backend:
+
+
+```
+Node.js
+
+Express.js
+
+TypeScript
+```
+
+
+Purpose:
+
+
+- API Runtime
+
+- Metadata Execution
+
+- Workflow Runtime
+
+- Integration Layer
+
+
+Other technologies may exist:
+
+
+Python:
+
+```
+AI
+
+Machine Learning
+
+Industrial Analytics
+
+TunasIoT Processing
+```
+
+
+Golang:
+
+```
+High Performance Runtime
+
+Edge Processing
+
+Infrastructure Service
+```
+
+
+Do not migrate because of trend.
+
+
+Architecture first.
+
+Technology second.
+
+
+---
+
+# 12. Backend Folder Responsibility
+
+
+Code must follow responsibility boundary.
+
+
+Recommended:
+
+
+```
+src/
+
+
+core/
+
+ ├── kernel/
+
+ ├── identity/
+
+ ├── security/
+
+ ├── runtime/
+
+ ├── metadata/
+
+ ├── ontology/
+
+ ├── event/
+
+
+modules/
+
+ └── platform capability only
+
+
+integrations/
+
+ ├── tunasiot/
+
+ ├── external/
+
+
+infrastructure/
+
+ ├── database/
+
+ ├── cache/
+
+ ├── queue/
+
+
+shared/
+
+ ├── utils/
+
+ ├── types/
+
+```
 
 
 Avoid:
 
-- duplicate service
-- duplicate schema
-- hardcoded workflow
-- tight coupling
+
+```
+modules/
+
+
+ production/
+
+ inventory/
+
+ finance/
+```
+
+
+Those are capability packages,
+
+not kernel source code.
+
+
+---
+
+# 13. API Design Rule
+
+
+API represents platform capability.
+
+
+Avoid:
+
+
+```
+POST /production/create-order
+
+POST /inventory/item
+```
 
 
 Prefer:
 
-- clean architecture
-- domain separation
-- event driven
-- reusable engine
+
+```
+POST /runtime/action
 
 
-# ==========================================================
-# FINAL DECISION RULE
-# ==========================================================
+POST /metadata/object
 
 
-If unsure:
-
-Choose platform architecture
-over quick feature development.
+POST /workflow/execute
 
 
-REDI-OS goal:
+POST /capability/install
+```
 
-One Platform
-One Workflow Engine
-One Data Model
-One Integration Layer
 
-Industrial 5.0 Ready.
+Business behavior comes from runtime.
 
+
+Not controller.
+
+
+---
+
+# 14. Controller Rule
+
+
+Controller responsibility:
+
+
+ONLY:
+
+
+- Receive Request
+
+- Validate Input
+
+- Check Context
+
+- Call Runtime
+
+
+Controller must NOT contain:
+
+
+- Business Process
+
+- Tenant Logic
+
+- Workflow Decision
+
+- Permission Logic
+
+
+Wrong:
+
+
+```ts
+if(user.role==="manager"){
+
+ approve()
+
+}
+```
+
+
+Correct:
+
+
+```ts
+policy.evaluate({
+
+ subject,
+
+ action,
+
+ resource,
+
+ context
+
+})
+```
+
+
+---
+
+# 15. Service Layer Rule
+
+
+Service should implement engine capability.
+
+
+Example:
+
+
+Good:
+
+
+```
+MetadataService
+
+RuntimeService
+
+PolicyService
+
+WorkflowService
+
+OntologyService
+```
+
+
+Avoid:
+
+
+```
+ProductionService
+
+SalesService
+
+InventoryService
+```
+
+
+Unless inside capability package.
+
+
+---
+
+# 16. Database Principle
+
+
+Database is persistence.
+
+
+Database is NOT the business model.
+
+
+Never expose database structure as REDI architecture.
+
+
+Wrong:
+
+
+```
+Table
+
+ ↓
+
+Model
+
+ ↓
+
+API
+
+ ↓
+
+Screen
+```
+
+
+Correct:
+
+
+```
+Ontology
+
+ ↓
+
+Metadata
+
+ ↓
+
+Runtime Object
+
+ ↓
+
+Persistence Adapter
+```
+
+
+Database can change.
+
+
+Industrial model remains.
+
+
+---
+
+# 17. Multi Tenant Principle
+
+
+REDI is multi tenant by design.
+
+
+Every operation requires context:
+
+
+```
+Tenant
+
+Organization
+
+User
+
+Role
+
+Policy
+
+Environment
+```
+
+
+Never query without tenant boundary.
+
+
+Wrong:
+
+
+```ts
+Model.find()
+```
+
+
+Correct:
+
+
+```ts
+runtime.query({
+
+ tenant,
+
+ context,
+
+ object
+
+})
+```
+
+
+---
+
+# 18. Security Model
+
+
+REDI does not use simple RBAC only.
+
+
+Security model:
+
+
+```
+Identity
+
+    |
+
+Policy
+
+    |
+
+Context
+
+    |
+
+Permission
+
+    |
+
+Action
+
+```
+
+
+Authorization must consider:
+
+
+- Who
+
+- Does What
+
+- On Which Resource
+
+- Under What Context
+
+
+---
+
+# 19. Event Driven Rule
+
+
+Business changes produce events.
+
+
+Wrong:
+
+
+```
+Save Data
+
+Finish
+```
+
+
+Correct:
+
+
+```
+Command
+
+   |
+
+Runtime
+
+   |
+
+State Change
+
+   |
+
+Event
+
+   |
+
+Workflow
+
+   |
+
+Notification
+
+   |
+
+AI Context
+
+```
+
+
+Examples:
+
+
+```
+ObjectCreated
+
+WorkflowApproved
+
+MachineStopped
+
+QualityRejected
+
+OrderCompleted
+```
+
+
+---
+
+# 20. TunasFlow Rule
+
+
+TunasFlow is REDI behavior engine.
+
+
+Never hardcode:
+
+
+- Approval
+
+- Business Process
+
+- Automation
+
+
+Use:
+
+
+```
+Event
+
+ |
+
+TunasFlow
+
+ |
+
+Action Runtime
+
+```
+
+
+Business process changes should modify flow.
+
+
+Not source code.
+
+
+---
+
+# 21. Integration Rule
+
+
+External systems communicate through Integration Hub.
+
+
+Avoid:
+
+
+```
+Module
+
+ |
+
+External API
+```
+
+
+Use:
+
+
+```
+Capability
+
+ |
+
+Integration Hub
+
+ |
+
+Connector
+
+ |
+
+External System
+```
+
+
+Supported:
+
+
+- API
+
+- IoT
+
+- ERP
+
+- Database
+
+- Message Queue
+
+
+---
+
+# 22. Error And Audit Principle
+
+
+Enterprise system requires traceability.
+
+
+Every runtime execution should provide:
+
+
+- Request ID
+
+- Tenant ID
+
+- Actor
+
+- Action
+
+- Timestamp
+
+- Result
+
+- Audit Trail
+
+
+No silent operation.
+
+
+---
+
+# 23. Testing Philosophy
+
+
+Test the platform behavior.
+
+
+Focus:
+
+
+- Kernel
+
+- Runtime
+
+- Metadata Compiler
+
+- Policy
+
+- Workflow
+
+- Security Boundary
+
+
+Avoid only testing CRUD.
+
+
+---
+
+# 24. Development Decision Rule
+
+
+Before adding feature ask:
+
+
+1. Is this reusable?
+
+
+2. Does this belong to kernel?
+
+
+3. Is this tenant specific?
+
+
+4. Should this become capability?
+
+
+5. Should this become metadata?
+
+
+6. Should this become workflow?
+
+
+7. Will AI need this context later?
+
+
+If uncertain:
+
+choose abstraction.
+
+---
+
+# 25. REDI Experience Principle
+
+
+REDI is workspace driven.
+
+Do NOT create traditional ERP navigation.
+
+
+Avoid:
+
+
+```
+Menu
+
+ |
+
+Module
+
+ |
+
+Form
+
+ |
+
+Transaction
+```
+
+
+Create:
+
+
+```
+User Context
+
+      |
+
+Workspace
+
+      |
+
+Recommended Action
+
+      |
+
+Business Outcome
+```
+
+
+UI must adapt to:
+
+- Persona
+- Responsibility
+- Permission
+- Workflow
+- Business Context
+
+
+---
+
+# 26. User Persona Boundary
+
+
+REDI has different operating experiences.
+
+
+================================================
+
+
+## System Administrator
+
+
+Full platform control.
+
+
+Allowed:
+
+
+- Tenant Management
+
+- Identity Management
+
+- Security Policy
+
+- Capability Management
+
+- Platform Configuration
+
+- Monitoring
+
+
+View:
+
+
+```
+Complete System Workspace
+```
+
+
+---
+
+
+## REDI Programmer / Solution Builder
+
+
+Builder creates industrial capability.
+
+
+NOT application source code.
+
+
+Allowed tools:
+
+
+```
+Ontology Designer
+
+Metadata Builder
+
+Form Builder
+
+Report Builder
+
+Query Builder
+
+Action Builder
+
+Flow Designer
+
+Integration Builder
+```
+
+
+Output:
+
+
+```
+Capability Package
+```
+
+
+Never:
+
+
+```
+Custom ERP Module
+```
+
+
+---
+
+
+## Manager
+
+
+Manager optimizes operation.
+
+
+Allowed:
+
+
+- Dashboard Builder
+
+- Report Builder
+
+- Workflow Adjustment
+
+- Approval Flow
+
+- Notification Rule
+
+- Business Rule Configuration
+
+
+Experience:
+
+
+```
+Insight
+
+ |
+
+Decision
+
+ |
+
+Action
+```
+
+
+---
+
+
+## Staff / Operator
+
+
+Staff executes work.
+
+
+Show only:
+
+
+- My Task
+
+- My Workflow
+
+- My Dashboard
+
+- Notification
+
+- Required Action
+
+
+Avoid complex configuration.
+
+
+---
+
+# 27. Capability Package Rule
+
+
+Business applications live as capability packages.
+
+
+Structure:
+
+
+```
+Capability
+
+
+├── Ontology
+
+├── Metadata
+
+├── Workflow
+
+├── UI Experience
+
+├── Report
+
+├── Dashboard
+
+├── Security Policy
+
+├── Event
+
+└── AI Context
+```
+
+
+Capability extends REDI.
+
+
+Capability must NOT modify REDI Kernel.
+
+
+---
+
+# 28. Industrial Knowledge Repository
+
+
+Industrial knowledge is REDI's core asset.
+
+
+Knowledge comes from:
+
+
+- Industrial Blueprint
+
+- Business Process
+
+- Implementation Experience
+
+- Domain Expertise
+
+
+Store knowledge as:
+
+
+```
+industrial-knowledge/
+
+
+manufacturing/
+
+
+ ├── ontology.yaml
+
+ ├── objects.yaml
+
+ ├── relationships.yaml
+
+ ├── process.yaml
+
+ ├── kpi.yaml
+
+ └── rules.yaml
+
+```
+
+
+This knowledge generates:
+
+
+```
+Ontology
+
+ |
+
+Metadata
+
+ |
+
+Workflow
+
+ |
+
+Application
+
+ |
+
+AI Context
+```
+
+
+Knowledge is more valuable than source code.
+
+
+---
+
+# 29. AI Composer Rule
+
+
+REDI does NOT create general AI model.
+
+
+REDI creates:
+
+
+```
+Industrial Intelligence Orchestrator
+```
+
+
+AI flow:
+
+
+```
+User Request
+
+      |
+
+AI Composer
+
+      |
+
+Industrial Context Engine
+
+      |
+
+Ontology
+
+      |
+
+Runtime
+
+      |
+
+Action
+```
+
+
+AI Providers:
+
+
+- OpenAI
+
+- Claude
+
+- Gemini
+
+- Local Models
+
+
+are replaceable.
+
+
+REDI owns industrial context.
+
+
+---
+
+# 30. AI Safety Boundary
+
+
+AI must NEVER:
+
+
+```
+AI
+
+ |
+
+Database
+```
+
+
+AI must use:
+
+
+```
+AI
+
+ |
+
+Context Engine
+
+ |
+
+Policy
+
+ |
+
+Runtime
+
+ |
+
+Action
+```
+
+
+Every AI action requires:
+
+
+- Tenant Context
+
+- Permission
+
+- Policy Check
+
+- Audit Trail
+
+- Human Governance
+
+
+---
+
+# 31. Industrial Agent Rule
+
+
+Agent is not chatbot.
+
+
+Agent is:
+
+
+```
+Digital Industrial Worker
+```
+
+
+Agent contains:
+
+
+```
+Knowledge
+
+Context
+
+Skill
+
+Workflow
+
+Policy
+
+Action
+```
+
+
+Examples:
+
+
+Production Agent:
+
+
+```
+Production Context
+
+      |
+
+Analyze
+
+      |
+
+Recommendation
+
+      |
+
+Workflow
+```
+
+
+Maintenance Agent:
+
+
+```
+IoT Event
+
+      |
+
+Machine Context
+
+      |
+
+Prediction
+
+      |
+
+Action
+```
+
+
+Agents execute through REDI Runtime.
+
+
+---
+
+# 32. TunasIoT Boundary
+
+
+TunasIoT already exists.
+
+
+Do NOT rebuild IoT inside REDI.
+
+
+TunasIoT owns:
+
+
+```
+Physical Layer
+
+
+Sensor
+
+PLC
+
+Machine
+
+Gateway
+
+Telemetry
+
+Realtime Data
+```
+
+
+REDI owns:
+
+
+```
+Intelligence Layer
+
+
+Ontology
+
+Context
+
+Workflow
+
+Decision
+
+Optimization
+
+AI Agent
+```
+
+
+Integration:
+
+
+```
+Machine
+
+
+ |
+
+TunasIoT
+
+
+ |
+
+Industrial Event
+
+
+ |
+
+REDI Context Engine
+
+
+ |
+
+AI / Workflow
+
+```
+
+
+---
+
+# 33. Learning Engine Rule
+
+
+Do NOT start with Machine Learning.
+
+
+Correct evolution:
+
+
+```
+Industrial Knowledge
+
+        |
+
+Ontology
+
+        |
+
+Context
+
+        |
+
+Decision History
+
+        |
+
+Learning Dataset
+
+        |
+
+Machine Learning
+```
+
+
+Learning requires structured context first.
+
+
+---
+
+# 34. Phase Locking Rule
+
+
+Follow roadmap order.
+
+
+DO NOT implement Phase 8+ before foundation.
+
+
+Current sequence:
+
+
+```
+PHASE 1
+
+Kernel Completion
+
+
+PHASE 2
+
+Experience Engine
+
+
+PHASE 3
+
+TunasFlow Runtime
+
+
+PHASE 4
+
+REDI Studio
+
+
+PHASE 5
+
+Capability Package
+
+
+PHASE 6
+
+Integration Hub
+
+
+PHASE 7
+
+Industrial Template
+```
+
+
+Only after:
+
+
+```
+Stable Runtime
+```
+
+
+continue:
+
+
+```
+PHASE 8
+
+Ontology Engine
+
+
+PHASE 9
+
+AI Composer
+
+
+PHASE 10
+
+Industrial Agent
+
+
+PHASE 11
+
+Autonomous Enterprise OS
+```
+
+
+---
+
+# 35. Documentation Rule
+
+
+Before coding:
+
+
+Read:
+
+
+```
+README.md
+
+docs/README.md
+
+docs/phase/*
+
+docs/architecture/*
+```
+
+
+Ignore:
+
+
+```
+docs/archive/*
+```
+
+
+Archive is history.
+
+Not active architecture.
+
+
+---
+
+# 36. Final Cursor Instruction
+
+
+Before generating any code:
+
+Ask internally:
+
+
+```
+Am I building REDI OS?
+
+
+or
+
+
+Am I accidentally building ERP?
+```
+
+
+If ERP:
+
+
+STOP.
+
+
+Convert into:
+
+
+```
+Ontology
+
+Metadata
+
+Runtime
+
+Capability
+
+Workflow
+
+Context
+```
+
+
+REDI code creates the operating system.
+
+
+Industrial knowledge creates applications.
