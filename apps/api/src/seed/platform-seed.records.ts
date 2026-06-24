@@ -110,6 +110,7 @@ export const capabilitySeedRecords: CapabilityDefinition[] = [
   capability('METADATA.VERSION', 'Metadata Version', 'METADATA', 'Resolve metadata version', ['metadata.*']),
   capability('FORM.SAVE', 'Save Form', 'BUILDER', 'Persist form layout metadata', ['builder.*']),
   capability('FORM.PREVIEW', 'Preview Form', 'BUILDER', 'Preview form layout metadata', ['builder.*']),
+  capability('FORM.PUBLISH', 'Publish Form', 'BUILDER', 'Publish studio metadata to kernel', ['builder.*', 'FORM.PUBLISH']),
   capability('PRODUCT.CREATE', 'Create Product', 'INVENTORY', 'Create inventory product domain record'),
   capability('PRODUCT.UPDATE', 'Update Product', 'INVENTORY', 'Update inventory product domain record'),
   capability('STOCK.RECEIVE', 'Receive Stock', 'INVENTORY', 'Receive stock into warehouse'),

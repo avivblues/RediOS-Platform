@@ -2,7 +2,11 @@
 
 ## Industrial 5.0 Enterprise Operating Platform
 
-Version : 3.0 Consolidated Blueprint  
+> **Vision v4 (2026):** Product north star moved to **Industrial Intelligence Operating System**.  
+> This blueprint remains the **kernel & metadata technical reference**.  
+> For v4 alignment, phase map, and code status → `PLATFORM_VISION_v4.md` + `docs/analysis/ALIGNMENT_v4_STATUS.md`.
+
+Version : 3.0 Consolidated Blueprint (kernel detail)  
 Owner   : PT Revolusi Digital Solusi
 
 ---

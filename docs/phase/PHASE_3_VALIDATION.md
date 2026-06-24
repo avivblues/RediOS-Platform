@@ -1,129 +1,135 @@
 # Phase 3 Validation
 
-Status: **TunasFlow Runtime — Sprint 2**  
-Purpose: Rule engine (conditional step routing), approval engine (multi-level, parallel, SLA), sequential approval chaining  
-Depends on: Sprint 1
+Status: **TunasFlow Runtime — Sprint 3**  
+Purpose: Automation engine, flow versioning, escalation & delegation  
+Depends on: Sprint 2
 
 ---
 
-## Sprint 2 Deliverables
+## Sprint 3 Deliverables
 
 | WP | Deliverable | Status |
 | --- | --- | --- |
-| WP3.6 | `RuleEngine` + `ConditionEvaluator` — skip steps when condition false | ✅ |
-| WP3.7 | `ApprovalEngine` — SINGLE / SEQUENTIAL / PARALLEL approval modes | ✅ |
-| WP3.8 | Amount-based approval levels (`minAmount` thresholds) | ✅ |
-| WP3.9 | SLA — `slaHours` → human task `dueAt` | ✅ |
-| WP3.10 | Sequential approval chain on inbox complete | ✅ |
-| WP3.11 | `PURCHASE_REQUEST` seed — multi-level approval demo | ✅ |
+| WP3.12 | `AutomationEngine` — EVENT / SCHEDULE / API / CONDITION triggers | ✅ |
+| WP3.13 | `AutomationEventSubscriber` — event bus integration | ✅ |
+| WP3.14 | `AutomationScheduler` — scheduled automations + escalation tick | ✅ |
+| WP3.15 | `FlowVersionService` — pin process metadata version on document | ✅ |
+| WP3.16 | `EscalationEngine` — SLA breach → escalate to configured role | ✅ |
+| WP3.17 | Inbox delegation API — `PATCH /experience/inbox/:id/delegate` | ✅ |
+| WP3.18 | Automation API — `POST /api/automation/:code/trigger` | ✅ |
+| WP3.19 | Seed: `WO_START_FOLLOWUP` event automation | ✅ |
 
 ---
 
-## Architecture (Sprint 2 additions)
+## Architecture (Sprint 3 additions)
 
 ```
-FlowExecutor
+Event Bus publish
       │
-      ├── RuleEngine.shouldExecuteStep()
-      │         └── ConditionEvaluator (field ops + expression string)
+      ├── AutomationEventSubscriber → AutomationEngine.runForEvent()
       │
-      └── ApprovalEngine.createApprovalTasks()
-                ├── SINGLE → assigneeRoles (backward compatible)
-                ├── SEQUENTIAL → first level only; chain on complete
-                └── PARALLEL → all qualifying levels at once
+Runtime action complete
+      │
+      └── FlowVersionService.pinProcessVersion() on document.data._tunasflow
 
-Inbox complete → ApprovalEngine.onTaskCompleted() → next sequential level
+AutomationScheduler (60s tick)
+      ├── runScheduled() — SCHEDULE trigger automations
+      └── EscalationEngine.escalateOverdue() — overdue human tasks
+
+Experience
+      └── PATCH inbox/:id/delegate → HumanTaskEngine.delegate()
 ```
 
 **New paths:**
 
-- `apps/api/src/core/tunasflow/rule/`
-- `apps/api/src/core/tunasflow/approval/`
+- `apps/api/src/core/tunasflow/automation/`
+- `apps/api/src/core/tunasflow/flow/flow.version.ts`
+- `apps/api/src/core/tunasflow/approval/escalation.engine.ts`
+- `apps/api/src/automation/`
+- `packages/shared/src/automation-definition.ts`
+- `packages/shared/src/tunasflow-state.ts`
 
 ---
 
 ## API
 
 ```bash
-# Create purchase request
-curl -X POST -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
-  http://localhost:3041/api/runtime/PURCHASE_REQUEST -d \
-  '{"data":{"title":"Laptop procurement","amount":15000000,"requester":"staff@demo.local"}}'
+# List automations
+curl -H "Authorization: Bearer $TOKEN" http://localhost:3041/api/automation
 
-# Submit → triggers sequential approval (Supervisor → Manager → Director for 15M)
+# Manual trigger (API trigger type)
 curl -X POST -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
-  http://localhost:3041/api/runtime/PURCHASE_REQUEST/{id}/actions/SUBMIT -d '{}'
+  http://localhost:3041/api/automation/WO_START_FOLLOWUP/trigger \
+  -d '{"entityCode":"WORK_ORDER","documentId":"<wo-id>"}'
 
-# Complete level 1 → auto-creates level 2 task in inbox
-curl -X PATCH -H "Authorization: Bearer $TOKEN" \
-  http://localhost:3041/api/experience/inbox/human_{taskId}/complete
+# Delegate inbox task
+curl -X PATCH -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
+  http://localhost:3041/api/experience/inbox/human_<taskId>/delegate \
+  -d '{"assigneeRoles":["MANAGER"]}'
+
+# Flow version pinned after first process execution (inspect document)
+curl -H "Authorization: Bearer $TOKEN" \
+  http://localhost:3041/api/runtime/object/PURCHASE_REQUEST/<id>
+# → data._tunasflow.processVersions.PR_SUBMIT_PROCESS = <metadata version>
 ```
 
-### Condition examples (step `config`)
+### Automation action types
 
-| Format | Example |
+| Type | Config keys |
 | --- | --- |
-| Expression string | `"amount >= 5000000"` |
-| Structured | `{ "field": "amount", "operator": "gte", "value": 5000000 }` |
+| `CREATE_HUMAN_TASK` | `title`, `assigneeRoles`, `actionCode`, `processCode`, `priority` |
+| `NOTIFY` | `title`, `body`, `targetRole`, `userId` |
+| `RUNTIME_ACTION` | `entityCode`, `actionCode`, `payload` |
 
-Steps with unmet conditions return `status: "SKIPPED"` in `flow.steps`.
-
-### Approval config (step `config`)
+### Escalation config (step `config`)
 
 ```json
 {
-  "approvalMode": "SEQUENTIAL",
-  "amountField": "amount",
   "slaHours": 24,
-  "approvalLevels": [
-    { "role": "SUPERVISOR", "minAmount": 0, "label": "Supervisor" },
-    { "role": "MANAGER", "minAmount": 1000000, "label": "Manager" },
-    { "role": "SYSTEM_ADMIN", "minAmount": 10000000, "label": "Director" }
-  ]
+  "escalationRole": "SYSTEM_ADMIN",
+  "escalationAfterHours": 0
 }
 ```
 
 ---
 
-## Sprint 1 Deliverables (reference)
+## Sprint 2 Deliverables (reference)
 
-| WP | Deliverable | Status |
-| --- | --- | --- |
-| WP3.1 | `TunasFlowEngine` | ✅ |
-| WP3.2 | `FlowExecutor` step execution | ✅ |
-| WP3.3 | `StateEngine` workflow history | ✅ |
-| WP3.4 | Runtime pipeline integration | ✅ |
-| WP3.5 | `GET /runtime/:entity/:id/state-history` | ✅ |
+See Sprint 2 section in prior revision — rule engine, approval engine, PURCHASE_REQUEST seed.
 
 ---
 
-## Sprint 2 Acceptance
+## Sprint 3 Acceptance
 
 | Criterion | Status |
 | --- | --- |
-| Steps skipped when condition not met | ✅ |
-| Multi-level approval by amount threshold | ✅ |
-| Sequential: one level at a time, chain on complete | ✅ |
-| Parallel: all qualifying levels created together | ✅ |
-| SLA due date on human tasks | ✅ |
-| WORK_ORDER unchanged (SINGLE mode fallback) | ✅ |
+| Event-triggered automation creates human task / notification | ✅ |
+| Scheduled automation runs on interval | ✅ |
+| API manual trigger works | ✅ |
+| Process version pinned on document after first run | ✅ |
+| Pinned version used on subsequent actions | ✅ |
+| Overdue task escalates to `escalationRole` | ✅ |
+| Inbox task delegation updates assignee | ✅ |
 
 ---
 
-## Remaining (Phase 3 Sprint 3+)
+## Phase 3 Complete
 
-| Capability | Sprint |
-| --- | --- |
-| Automation engine (event/schedule triggers) | Sprint 3 |
-| Flow versioning | Sprint 3 |
-| Escalation & delegation | Sprint 3 |
-| Studio Process Designer → kernel publish | Sprint 4 / Phase 4 bridge |
+Sprint 1–3 deliver the TunasFlow foundation track scope:
+
+- Flow runtime + state history
+- Rule + approval engines
+- Automation + versioning + escalation/delegation
+
+**Next:** Phase 4 Studio → kernel publish path.
+
+> **Vision v4:** Ontology (Phase 8) and AI Composer (Phase 9) remain separate tracks.
 
 ---
 
 ## References
 
 - `docs/phase/PHASE_3_TUNASFLOW_RUNTIME.md`
-- `apps/api/src/core/tunasflow/rule/rule.engine.ts`
-- `apps/api/src/core/tunasflow/approval/approval.engine.ts`
-- `apps/api/src/seed/metadata-seed.records.ts` (PURCHASE_REQUEST)
+- `apps/api/src/core/tunasflow/automation/automation.engine.ts`
+- `apps/api/src/core/tunasflow/flow/flow.version.ts`
+- `apps/api/src/core/tunasflow/approval/escalation.engine.ts`

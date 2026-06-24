@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { formatPublishResult, publishActiveApplicationFromStore } from '../../api/studio-publish.api';
 import { HelpTip } from '../../guide/AdminGuide';
 import {
   loadActions,
@@ -31,6 +32,7 @@ export function ApiDesigner() {
   const [queryCode, setQueryCode] = useState('');
   const [objectName, setObjectName] = useState('');
   const [pendingDelete, setPendingDelete] = useState<StudioCustomApiDraft>();
+  const [publishStatus, setPublishStatus] = useState<string | undefined>();
   const selectedApplication = applications.find((application) => application.code === selectedApplicationCode);
   const actions = loadActions(selectedApplicationCode);
   const dataObjects = loadDataObjects(selectedApplicationCode);
@@ -87,12 +89,22 @@ export function ApiDesigner() {
     persist(customApis.filter((api) => api.code !== code));
   }
 
+  async function publishToKernel() {
+    setPublishStatus('Publishing connectors and application metadata to kernel...');
+
+    try {
+      const result = await publishActiveApplicationFromStore(selectedApplication?.target ?? 'web', selectedApplicationCode);
+      setPublishStatus(formatPublishResult(result));
+    } catch (error) {
+      setPublishStatus(error instanceof Error ? error.message : 'Publish failed.');
+    }
+  }
+
   return (
     <section className="redos-metadata-card">
       <div className="redos-panel-heading">
         <span className="redos-kicker">API</span>
-        <h3>API Builder <HelpTip label="API Builder" text="Generated API berasal dari Data Object. External connector tetap dipanggil melalui Action step." /></h3>
-        <p>Kelola generated runtime API dan connector external tanpa membuat controller hardcoded.</p>
+        <h3>API Builder <HelpTip label="API Builder" text="Generated runtime API + external connectors via actions." /></h3>
       </div>
 
       <section className="redos-data-application-context">
@@ -110,7 +122,10 @@ export function ApiDesigner() {
           <strong>{selectedApplication?.name ?? selectedApplicationCode}</strong>
           <small>{queries.length} queries · {customApis.length} API connectors · {actions.length} actions available</small>
         </div>
+        <button className="redos-launch-action" type="button" onClick={() => { void publishToKernel(); }}>Publish to Kernel</button>
       </section>
+
+      {publishStatus ? <p className="redos-metadata-status redos-builder-status">{publishStatus}</p> : null}
 
       <section className="redos-tree-object">
         <header><strong>Generated API From Metadata</strong><span>query/object runtime-owned</span></header>

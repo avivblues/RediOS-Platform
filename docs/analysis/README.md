@@ -1,16 +1,16 @@
 # REDI-OS Analysis Documents
 
-Status: **Phase 0 Complete** · Phase 1 implementation complete (G1 pending)  
-Generated: 2026-06-16  
-Authority: `docs/phase/PHASE_0_REPOSITORY_AUDIT.md`
+Status: **Phase 0 Complete** · Phase 1–2 complete · Phase 3 in progress  
+Generated: 2026-06-16 · Updated for **Vision v4**
+
+> **Current truth for AI agents:** [`ALIGNMENT_v4_STATUS.md`](./ALIGNMENT_v4_STATUS.md)  
+> **Vision bridge:** [`../architecture/PLATFORM_VISION_v4.md`](../architecture/PLATFORM_VISION_v4.md)
 
 ---
 
 ## Purpose
 
-Folder ini berisi output resmi **Phase 0 — Repository Audit & Architecture Mapping**.
-
-Dokumen ini mendeskripsikan kondisi kode **sebagaimana adanya** pada saat audit. Tidak mengubah source code.
+Folder ini berisi audit arsitektur dan analisis gap. Untuk keputusan arah **v4**, prioritaskan dokumen alignment di bawah.
 
 ---
 
@@ -18,30 +18,26 @@ Dokumen ini mendeskripsikan kondisi kode **sebagaimana adanya** pada saat audit.
 
 | Document | Contents |
 | --- | --- |
-| [CURRENT_ARCHITECTURE.md](./CURRENT_ARCHITECTURE.md) | Arsitektur existing, folder map, data flow, dependency map |
-| [GAP_ANALYSIS.md](./GAP_ANALYSIS.md) | Perbandingan current state vs Blueprint v3 & phase roadmap |
-| [REFACTOR_PLAN.md](./REFACTOR_PLAN.md) | Prioritas refactor, strategi migrasi, risiko, dampak |
-| [MIGRATION_PHASE.md](./MIGRATION_PHASE.md) | Urutan development, module extraction, release planning |
-| [../phase/PHASE_1_VALIDATION.md](../phase/PHASE_1_VALIDATION.md) | Phase 1 acceptance cases + sign-off checklist |
+| **[ALIGNMENT_v4_STATUS.md](./ALIGNMENT_v4_STATUS.md)** | **Code vs v4 vision — use this first** |
+| [CURRENT_ARCHITECTURE.md](./CURRENT_ARCHITECTURE.md) | Arsitektur existing, folder map, data flow |
+| [GAP_ANALYSIS.md](./GAP_ANALYSIS.md) | Historical Phase 0 gap vs Blueprint v3 (stale scorecard) |
+| [REFACTOR_PLAN.md](./REFACTOR_PLAN.md) | Prioritas refactor, strategi migrasi |
+| [MIGRATION_PHASE.md](./MIGRATION_PHASE.md) | Urutan development, release planning |
 
 ---
 
-## Reading Order
+## Reading Order (v4)
 
 ```text
-PHASE_0_REPOSITORY_AUDIT.md
+README.md + .cursorrules
         ↓
-CURRENT_ARCHITECTURE.md
+PLATFORM_VISION_v4.md
         ↓
-GAP_ANALYSIS.md
+ALIGNMENT_v4_STATUS.md
         ↓
-REFACTOR_PLAN.md
+PHASE_*_VALIDATION.md
         ↓
-MIGRATION_PHASE.md
-        ↓
-PHASE_1_VALIDATION.md   (Phase 1 sign-off)
-        ↓
-PHASE_2_EXPERIENCE.md   (locked until G1)
+CURRENT_ARCHITECTURE.md / REFACTOR_PLAN.md (detail)
 ```
 
 ---

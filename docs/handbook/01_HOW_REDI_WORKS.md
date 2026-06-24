@@ -247,26 +247,31 @@ UI menyembunyikan panel/tombol jika capability tidak cukup — bukan error, pane
 
 ---
 
-## 10. Yang akan berubah (Phase 3+)
+## 10. Yang akan berubah (roadmap v4)
 
-| Fitur | Status | Dampak ke user |
+| Fitur | Phase | Dampak ke user |
 | --- | --- | --- |
-| TunasFlow penuh | Phase 3 | Approval routing lebih kaya, visual flow |
-| Studio terintegrasi kernel | Phase 4 | Publish tanpa localStorage |
-| Modul industri | Phase 7 | Template CMMS, WMS, ITSM |
-| AI assistant | Phase 8 | Tanya jawab + aksi dari handbook & metadata |
+| TunasFlow penuh (automation, versioning) | 3 | Approval & routing lebih kaya |
+| Studio → kernel publish | 4 | Desain tanpa localStorage |
+| Capability packages | 5–7 | Modul CMMS, WMS, ITSM ter-install |
+| **Industrial Ontology** | **8** | Sistem paham relasi & dampak operasi |
+| **AI Composer + agents** | **9–10** | Asisten kontekstual dari data runtime |
+| Autonomous enterprise (vision) | 11 | AI assist — human tetap governance |
 
-Handbook chapter per persona/page akan ditambah saat fitur tersebut live.
+Ontology dan AI **belum ada di produk** — jangan dijanjikan ke user sampai Phase 8+ live.
 
 ---
 
 ## 11. Checklist: UI vs handbook
 
-Ke depan, konten berikut **pindah dari UI ke handbook** (UI hanya label singkat):
+Standar lengkap: **`docs/design/UI_UX_STANDARDS.md`** dan **`README.md` §15A**.
 
-- [ ] Paragraf penjelasan di Login / Register
-- [ ] Deskripsi panjang di Metadata Designer overview
-- [ ] Help tip multi-kalimat di Studio forms
+Ke depan, konten berikut **pindah dari UI ke handbook** (UI hanya label singkat + HelpTip max 120 karakter):
+
+- [x] Paragraf panjang di Metadata Designer overview (`AdminGuidePanel` removed)
+- [x] Intro paragraphs di Create Application & designer pages
+- [ ] Deskripsi panjang di Metadata Designer overview cards (done — card one-liners only)
+- [ ] Help tip multi-kalimat di Studio forms (ongoing — PropertyPanel)
 - [ ] Eyebrow/subtitle panjang di workspace header
 - [ ] Persona card di landing (bisa link ke handbook)
 

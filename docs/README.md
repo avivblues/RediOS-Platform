@@ -1,9 +1,12 @@
 # REDI-OS Documentation Center
 
-## Industrial 5.0 Platform Engineering Guide
+## Industrial Intelligence Operating System — Engineering Guide
 
-Version: 3.0  
+Version: 4.0  
 Owner: PT Revolusi Digital Solusi
+
+> **Paradigm v4:** REDI bukan sekadar metadata-driven platform — REDI adalah **Industrial Intelligence OS**.  
+> Metadata tetap layer runtime kritikal; ontology + AI context adalah layer di atasnya (Phase 8+).
 
 ---
 
@@ -14,13 +17,17 @@ Folder ini adalah pusat dokumentasi teknis REDI-OS.
 Semua keputusan development harus mengikuti:
 
 ```
-Architecture First
+Industrial Knowledge First
 
-Platform First
+Ontology Ready (Phase 8+)
 
-Metadata First
+Metadata Runtime
 
-Workflow First
+Workflow / TunasFlow
+
+Experience First
+
+AI Context (Phase 9+)
 ```
 
 Dokumentasi ini menjadi panduan untuk:
@@ -34,168 +41,98 @@ Dokumentasi ini menjadi panduan untuk:
 
 # 2. Documentation Hierarchy
 
-
-Urutan membaca:
-
+Urutan membaca (**v4**):
 
 ```
 Repository Opened
-
         |
-
-README.md
-
+README.md                    ← Vision v4, north star
         |
-
-.cursorrules
-
+.cursorrules                 ← AI agent rules v4
         |
-
-docs/README.md
-
+docs/architecture/PLATFORM_VISION_v4.md   ← Alignment bridge
         |
-
-architecture/
-REDIOS_PLATFORM_BLUEPRINT_v3.md
-
+docs/design/UI_UX_STANDARDS.md            ← UI/UX before any page/form work
         |
-
-Source Code Analysis
+docs/analysis/ALIGNMENT_v4_STATUS.md
+        |
+docs/phase/PHASE_*_VALIDATION.md          ← Sprint status per phase
+        |
+docs/architecture/REDIOS_PLATFORM_BLUEPRINT_v3.md  ← Kernel detail (technical)
+        |
+Source Code
 ```
 
-
-Blueprint adalah sumber kebenaran utama.
-
+**Jangan** pakai `docs/archive/` untuk keputusan arsitektur aktif.
 
 ---
 
 # 3. Main Architecture Reference
 
+| Document | Role |
+| --- | --- |
+| `docs/architecture/PLATFORM_VISION_v4.md` | **Vision & alignment** — north star v4, phase map, guardrails |
+| `docs/design/UI_UX_STANDARDS.md` | **UI/UX mandatory** — forms, pages, Studio designers |
+| `docs/architecture/REDIOS_PLATFORM_BLUEPRINT_v3.md` | **Kernel detail** — metadata engine, runtime, module strategy |
+| `docs/analysis/ALIGNMENT_v4_STATUS.md` | **Current code truth** — what exists vs v4 layers |
 
-Primary Document:
-
-
-```
-docs/
-
-└── architecture/
-
-    └── REDIOS_PLATFORM_BLUEPRINT_v3.md
-```
-
-
-Contains:
-
-
-- Platform Vision
-- Kernel Architecture
-- Metadata Architecture
-- Workflow Architecture
-- Module Strategy
-- Integration Strategy
-- Industrial Roadmap
-
+Blueprint v3 tetap valid untuk detail kernel; visi produk mengikuti **README v4 + PLATFORM_VISION_v4**.
 
 ---
 
 # 4. Development Philosophy
 
+REDI-OS tidak membangun aplikasi ERP hardcoded.
 
-REDI-OS tidak membangun aplikasi.
-
-REDI-OS membangun:
+REDI-OS membangun **operating system** yang mengeksekusi:
 
 ```
-Capability
-
-+
-
-Metadata
-
-+
-
-Workflow
-
-+
-
-Template
+Industrial Knowledge
+        +
+Ontology Context (Phase 8+)
+        +
+Metadata Model
+        +
+Workflow / TunasFlow
+        +
+Experience Workspace
+        +
+AI Assistance (Phase 9+)
 ```
 
+Capability bisnis hidup di **Capability Package** + metadata — bukan di source code kernel.
 
 Example:
 
+Wrong: `Create Purchase Approval Module` (hardcoded ERP)
 
-Wrong:
-
-```
-Create Purchase Approval Module
-```
-
-
-Correct:
-
-```
-Create:
-
-Approval Capability
-
-       +
-
-Workflow Template
-
-       +
-
-Purchase Configuration
-```
-
+Correct: `Approval Capability + Workflow Template + Purchase Configuration` (metadata + package)
 
 ---
 
-# 5. Architecture Layers
-
-
-REDI-OS Layer:
-
+# 5. Architecture Layers (v4)
 
 ```
-Application Experience
-
-
+AI Assistant / Composer (Phase 9+)
         |
-
-
-REDI Studio
-
-
+Industrial Ontology (Phase 8+)
         |
-
-
-TunasFlow Engine
-
-
+Application Experience (Phase 2) ✅
         |
-
-
-Universal Document Engine
-
-
+REDI Studio (Phase 4)
         |
-
-
+TunasFlow Engine (Phase 3) 🟡
+        |
+Universal Document / Runtime Engine (Phase 1) ✅
+        |
 REDI Kernel
-
-
         |
-
-
-Capability Modules
-
-
+Capability Modules (Phase 5–7)
         |
-
-
-Integration Hub
+Integration Hub (Phase 6)
 ```
+
+Detail layer → `docs/architecture/PLATFORM_VISION_v4.md`
 
 
 ---

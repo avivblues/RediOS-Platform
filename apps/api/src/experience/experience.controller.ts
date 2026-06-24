@@ -91,6 +91,17 @@ export class ExperienceController {
     return { completed };
   }
 
+  @Patch('inbox/:id/delegate')
+  @ApiOperation({ summary: 'Delegate a human task to another user or role.' })
+  async delegateInboxItem(
+    @Headers() headers: RuntimeHeaders,
+    @Param('id') id: string,
+    @Body() body: { assigneeUserId?: string; assigneeRoles?: string[] },
+  ) {
+    const delegated = await this.experienceRuntime.delegateInboxItem(this.contextEngine.resolve(headers), id, body);
+    return { delegated };
+  }
+
   @Patch('notifications/:id/read')
   @ApiOperation({ summary: 'Mark a notification as read.' })
   markNotificationRead(@Headers() headers: RuntimeHeaders, @Param('id') id: string) {

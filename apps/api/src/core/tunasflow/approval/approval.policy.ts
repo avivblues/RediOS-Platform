@@ -17,6 +17,10 @@ export interface ApprovalStepConfig {
   amountField?: string;
   approvalLevels?: ApprovalLevelDefinition[];
   slaHours?: number;
+  /** Role to reassign when SLA is breached */
+  escalationRole?: string;
+  /** Hours after dueAt before escalation (defaults to 0 = immediate on overdue) */
+  escalationAfterHours?: number;
   condition?: unknown;
   when?: unknown;
 }

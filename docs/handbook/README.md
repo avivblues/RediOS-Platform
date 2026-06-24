@@ -2,7 +2,9 @@
 
 **Audience:** End users, operators, system analysts, admins — and AI assistants that guide users inside the product.
 
-**Purpose:** Semua penjelasan operasional (apa itu RediOS, cara login, cara kerja workspace, dll.) hidup di sini — **bukan** di label form, placeholder, atau paragraf panjang di halaman UI.
+**Purpose:** Penjelasan operasional hidup di sini — **bukan** di label form atau paragraf panjang di UI.
+
+**Visi platform (v4):** Industrial Intelligence Operating System — lihat `docs/architecture/PLATFORM_VISION_v4.md` untuk konteks produk; handbook fokus **cara pakai** fitur yang sudah live.
 
 ---
 
@@ -60,12 +62,12 @@
 
 Saat menjawab pertanyaan pengguna tentang RediOS:
 
-1. Baca `00_REDI_OS_CONCEPT.md` untuk konteks produk
-2. Baca `01_HOW_REDI_WORKS.md` untuk alur operasional
-3. Untuk System Admin: `02_PERSONA_SYSTEM_ADMIN.md` (buat app, workflow)
-4. Jika ada chapter persona/page yang relevan, gunakan itu
-5. Jangan mengarang fitur yang belum ada — cek `docs/phase/PHASE_*_VALIDATION.md` untuk status implementasi
-6. Dokumen teknis arsitektur tetap di `docs/architecture/` dan `docs/phase/` — handbook fokus **cara pakai**
+1. Baca `00_REDI_OS_CONCEPT.md` — visi v4 + apa yang sudah live
+2. Baca `01_HOW_REDI_WORKS.md` — alur operasional
+3. System Admin: `02_PERSONA_SYSTEM_ADMIN.md`
+4. Cek `docs/phase/PHASE_*_VALIDATION.md` — jangan mengarang fitur
+5. Visi & arah: `docs/architecture/PLATFORM_VISION_v4.md` — ontology/AI = Phase 8+, belum UI
+6. Jangan pakai `docs/archive/` atau `GAP_ANALYSIS.md` v1.0 sebagai status terkini — gunakan `ALIGNMENT_v4_STATUS.md`
 
 ---
 
@@ -73,10 +75,13 @@ Saat menjawab pertanyaan pengguna tentang RediOS:
 
 | Folder | Untuk siapa | Isi |
 | --- | --- | --- |
-| `docs/handbook/` | **Pengguna & AI guide** | Konsep, cara operasi, per role/page |
-| `docs/phase/` | Tim engineering | Sprint, acceptance, rencana fase |
-| `docs/architecture/` | Architect / developer | Blueprint, boundary kernel |
-| `docs/analysis/` | Audit & refactor | Gap, arsitektur saat ini |
+| `docs/handbook/` | **Pengguna & AI guide** | Konsep, cara operasi, per role |
+| `docs/design/UI_UX_STANDARDS.md` | Designer / frontend | **Mandatory** UI/UX — forms, pages, Studio |
+| `docs/architecture/PLATFORM_VISION_v4.md` | Architect / AI agent | Visi v4, alignment |
+| `docs/analysis/ALIGNMENT_v4_STATUS.md` | Engineering | Code vs vision (current) |
+| `docs/phase/` | Tim engineering | Sprint, acceptance |
+| `docs/architecture/` | Developer | Blueprint kernel v3 |
+| `/README.md`, `.cursorrules` | Semua | North star v4 |
 
 ---
 

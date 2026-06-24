@@ -1,6 +1,9 @@
 # GAP_ANALYSIS.md
 
-Status: Phase 0 Deliverable  
+> ⚠️ **Scorecard v1.0 usang (Phase 0 snapshot).** Untuk keputusan arah v4, gunakan:  
+> `docs/analysis/ALIGNMENT_v4_STATUS.md` + `docs/architecture/PLATFORM_VISION_v4.md`
+
+Status: Phase 0 Deliverable (historical)  
 Version: 1.0  
 Date: 2026-06-16  
 Compares: **Current repository** vs **REDIOS_PLATFORM_BLUEPRINT_v3** + **Phase Roadmap**

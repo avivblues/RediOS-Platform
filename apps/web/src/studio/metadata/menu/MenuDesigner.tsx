@@ -70,8 +70,7 @@ export function MenuDesigner() {
     <section className="redos-metadata-card">
       <div className="redos-panel-heading">
         <span className="redos-kicker">Menu</span>
-        <h3>Menu Designer <HelpTip label="Menu Designer" text="Menu metadata menentukan navigasi aplikasi yang dihasilkan, termasuk permission guard." /></h3>
-        <p>Bangun header/sidebar/menu runtime dari metadata, bukan hardcoded navigation.</p>
+        <h3>Menu Designer <HelpTip label="Menu Designer" text="Runtime navigation from metadata + permission guard." /></h3>
       </div>
 
       <section className="redos-data-application-context">

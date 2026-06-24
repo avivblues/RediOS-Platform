@@ -20,6 +20,10 @@ export interface HumanTaskDefinition {
   approvalMode?: 'SINGLE' | 'SEQUENTIAL' | 'PARALLEL';
   approvalLevel?: number;
   approvalGroupId?: string;
+  delegatedFromUserId?: string;
+  delegatedToUserId?: string;
+  escalatedFromTaskId?: string;
+  escalatedAt?: string;
   createdAt: string;
 }
 
@@ -39,4 +43,8 @@ export interface CreateHumanTaskInput {
   approvalMode?: 'SINGLE' | 'SEQUENTIAL' | 'PARALLEL';
   approvalLevel?: number;
   approvalGroupId?: string;
+  delegatedFromUserId?: string;
+  delegatedToUserId?: string;
+  escalatedFromTaskId?: string;
+  escalatedAt?: string;
 }

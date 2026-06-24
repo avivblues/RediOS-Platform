@@ -15,28 +15,23 @@ Phase 1 bertujuan menyelesaikan REDI Kernel Foundation.
 
 REDI-OS bukan ERP CRUD.
 
-REDI-OS adalah:
+REDI-OS adalah **Industrial Intelligence Operating System** (v4 vision).
 
-Metadata Driven
+Foundation phases (1–3) membangun:
+
+```
+Metadata Runtime
 +
-Runtime Driven
+Workflow / TunasFlow
 +
-Workflow Driven
-+
-Experience Driven
+Experience Layer
+```
 
-Platform.
+Ontology + AI layers = Phase 8+ (see PLATFORM_VISION_v4.md).
 
+Goal utama Phase 1:
 
-Goal utama:
-
-Mengubah:
-
-Metadata Definition
-
-menjadi:
-
-Executable Enterprise Application Runtime
+Mengubah **Metadata Definition** menjadi **Executable Enterprise Application Runtime**
 
 
 ---

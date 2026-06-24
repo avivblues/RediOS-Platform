@@ -103,8 +103,7 @@ export function ActionDesigner() {
     <section className="redos-metadata-card">
       <div className="redos-panel-heading">
         <span className="redos-kicker">ACTION</span>
-        <h3>Action Designer <HelpTip label="Action Designer" text="Buat alur bisnis untuk tombol dan event. Button memilih Action, bukan endpoint." /></h3>
-        <p>Action adalah langkah kerja bisnis yang dapat berisi validasi, simpan data, notifikasi, atau connector.</p>
+        <h3>Action Designer <HelpTip label="Action Designer" text="Business steps for buttons/events — not API endpoints." /></h3>
       </div>
 
       <section className="redos-data-application-context">

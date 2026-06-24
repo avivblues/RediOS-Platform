@@ -1,78 +1,51 @@
-PHASE 1
-REDI Kernel Completion
+PHASE 1–7 — Foundation Track
+================================
 
-- Metadata Registry
-- Metadata Compiler
-- Runtime Executor
+PHASE 1 — REDI Kernel Completion
+- Metadata Registry, Compiler, Runtime Executor
+- Status: ✅ Acceptance — see PHASE_1_VALIDATION.md
 
+PHASE 2 — Experience Engine
+- Persona Runtime, Workspace Engine, Universal Inbox, Action Center, Notification Center
+- Status: ✅ Complete — see PHASE_2_VALIDATION.md
 
-PHASE 2
-Experience Engine
+PHASE 3 — TunasFlow Runtime
+- Flow Runtime, Approval Runtime, Rule Engine, Automation
+- Status: ✅ Complete (Sprint 3) — see PHASE_3_VALIDATION.md
 
-- Persona Runtime
-- Workspace Engine
-- Universal Inbox
-- Action Center
-- Notification Center
+PHASE 4 — REDI Studio
+- Metadata Designer, Form Builder, Query Builder, Flow Builder, Report/Dashboard Builder
+- Status: 🟡 In progress (Sprint 2) — see PHASE_4_VALIDATION.md
 
+PHASE 5 — Capability Package Engine
+- Module Loader, Installer, Template Engine
 
-PHASE 3
-TunasFlow
+PHASE 6 — Integration Hub
+- TunasIoT bridge, MQTT, REST, Event Bus, Webhook
+- Existing: TunasIoT (Python Platform) — connector only, not duplicate
 
-- Flow Runtime
-- Approval Runtime
-- Automation
-- Action Executor
-
-
-PHASE 4
-REDI Studio
-
-- Metadata Designer
-- Form Builder
-- Query Builder
-- Flow Builder
-- Report Builder
-- Dashboard Builder
+PHASE 7 — Industrial Templates
+- ERP, WMS, MES, QMS, CMMS, ITSM capability packages
 
 
-PHASE 5
-Capability Package Engine
+PHASE 8–11 — Intelligence Track (after stable runtime)
+======================================================
 
-- Module Loader
-- Installer
-- Template Engine
+> Locked until Phase 3–4 publish path stabil. See README v4 §32 and .cursorrules §34.
 
+PHASE 8 — Industrial Ontology Engine
+- Semantic relationships, industrial context, knowledge graph foundation
+- Ontology extends metadata — does NOT replace metadata resolver
 
-PHASE 6
-Integration Hub
+PHASE 9 — AI Composer Platform
+- Model routing, context assembly from ontology + runtime history
+- AI never queries database directly
 
-Existing:
+PHASE 10 — Industrial Agent Runtime
+- Domain agents (maintenance, quality, production) on Composer
 
-TunasIoT (Python Platform)
-
-Connector:
-
-- MQTT
-- REST
-- Event Bus
-- Webhook
+PHASE 11 — Autonomous Enterprise OS
+- Assisted → semi-autonomous operational evolution (vision)
 
 
-PHASE 7
-
-Industrial Template:
-
-- ERP
-- WMS
-- MES
-- QMS
-- CMMS
-- ITSM
-
-
-PHASE 8
-
-Industrial Intelligence:
-
-REDI + TunasIoT + AI
+Vision reference: docs/architecture/PLATFORM_VISION_v4.md

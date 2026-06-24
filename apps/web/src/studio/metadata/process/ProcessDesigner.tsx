@@ -1,6 +1,9 @@
 import { useState } from 'react';
+import { formatPublishResult, publishStudioPackage } from '../../api/studio-publish.api';
+import { buildApplicationPackageFromStore } from '../../api/studio-metadata-publisher';
 import { HelpTip } from '../../guide/AdminGuide';
 import {
+  loadDataObjects,
   loadProcesses,
   loadStudioApplications,
   resolveActiveApplicationCode,
@@ -23,6 +26,7 @@ export function ProcessDesigner() {
   const [approver, setApprover] = useState('Supervisor');
   const [condition, setCondition] = useState('amount > 1000');
   const [pendingDelete, setPendingDelete] = useState<{ kind: 'process'; code: string; label: string } | { kind: 'step'; processCode: string; stepId: string; label: string }>();
+  const [publishStatus, setPublishStatus] = useState<string | undefined>();
   const selectedApplication = applications.find((application) => application.code === selectedApplicationCode);
 
   function persist(nextProcesses: StudioProcessDraft[]) {
@@ -101,12 +105,37 @@ export function ProcessDesigner() {
     setPendingDelete(undefined);
   }
 
+  async function publishProcesses() {
+    setPublishStatus('Publishing...');
+
+    try {
+      const pkg = buildApplicationPackageFromStore(selectedApplicationCode, selectedApplication?.target ?? 'web', {
+        dataObjects: loadDataObjects(selectedApplicationCode),
+        queries: [],
+        actions: [],
+        connectors: [],
+        processes,
+        menu: [],
+        screens: [],
+        security: { roles: [] },
+        customOrganisms: [],
+        theme: { name: 'Studio Theme', tokens: {} },
+        canvas: [],
+        screenCanvases: {},
+      });
+
+      const result = await publishStudioPackage(pkg, selectedApplicationCode);
+      setPublishStatus(formatPublishResult(result));
+    } catch (error) {
+      setPublishStatus(error instanceof Error ? error.message : 'Publish failed.');
+    }
+  }
+
   return (
     <section className="redos-metadata-card">
       <div className="redos-panel-heading">
         <span className="redos-kicker">Process</span>
-        <h3>Process Designer <HelpTip label="Process Designer" text="Business routing dan approval. Ini bukan URL routing." /></h3>
-        <p>Definisikan approval, kondisi, hirarki organisasi, dan delegasi sebagai metadata proses.</p>
+        <h3>Process Designer <HelpTip label="Process Designer" text="Approval routing blueprint — not URL routing." /></h3>
       </div>
 
       <section className="redos-data-application-context">
@@ -136,7 +165,10 @@ export function ProcessDesigner() {
           <textarea value={description} onChange={(event) => setDescription(event.target.value)} />
         </label>
         <button className="redos-primary-action" type="button" onClick={createProcess}>Create Process</button>
+        <button type="button" onClick={() => { void publishProcesses(); }}>Publish to Kernel</button>
       </div>
+
+      {publishStatus ? <p className="redos-metadata-status">{publishStatus}</p> : null}
 
       <div className="redos-inline-form">
         <input value={stepLabel} onChange={(event) => setStepLabel(event.target.value)} placeholder="Approval step" />

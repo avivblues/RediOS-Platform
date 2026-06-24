@@ -48,30 +48,27 @@ export function RegisterForm() {
   if (status === 'success') {
     return (
       <section className="redios-auth-form redios-auth-success">
-        <span>Registration</span>
-        <h2>Account created successfully</h2>
-        <p>Your account request has been accepted with status <strong>PENDING_ACTIVATION</strong>.</p>
-        <button className="redios-auth-primary" type="button" onClick={() => { window.location.href = '/login'; }}>Go to Login</button>
+        <h2>Account created</h2>
+        <p className="redios-auth-tagline">Status: pending activation.</p>
+        <button className="redios-auth-primary" type="button" onClick={() => { window.location.href = '/login'; }}>
+          Sign in
+        </button>
       </section>
     );
   }
 
   return (
-    <form className="redios-auth-form" onSubmit={(event) => {
-      event.preventDefault();
-      void submitRegister();
-    }}
+    <form
+      className="redios-auth-form"
+      onSubmit={(event) => {
+        event.preventDefault();
+        void submitRegister();
+      }}
     >
-      <div className="redios-auth-form-heading">
-        <span>Registration</span>
-        <h2>Create RediOS Account</h2>
-        <p>Start your organization workspace. Activation and metadata identity will be connected in the next phase.</p>
-      </div>
-
       {auth.error ? <div className="redios-auth-error">{auth.error}</div> : null}
 
       <label>
-        <span>Full Name</span>
+        <span>Full name</span>
         <input autoComplete="name" value={displayName} onChange={(event) => setDisplayName(event.target.value)} placeholder="Jane Doe" />
         {errors.displayName ? <small>{errors.displayName}</small> : null}
       </label>
@@ -84,33 +81,29 @@ export function RegisterForm() {
 
       <label>
         <span>Password</span>
-        <input autoComplete="new-password" type="password" value={password} onChange={(event) => setPassword(event.target.value)} placeholder="Minimum 8 characters" />
+        <input autoComplete="new-password" type="password" value={password} onChange={(event) => setPassword(event.target.value)} placeholder="Min. 8 characters" />
         <PasswordStrengthIndicator score={strength.score} label={strength.label} />
         {errors.password ? <small>{errors.password}</small> : null}
       </label>
 
       <label>
-        <span>Confirm Password</span>
+        <span>Confirm password</span>
         <input autoComplete="new-password" type="password" value={confirmPassword} onChange={(event) => setConfirmPassword(event.target.value)} placeholder="Repeat password" />
         {errors.confirmPassword ? <small>{errors.confirmPassword}</small> : null}
       </label>
 
       <label>
-        <span>Company / Organization</span>
+        <span>Organization</span>
         <input value={organizationName} onChange={(event) => setOrganizationName(event.target.value)} placeholder="Acme Operations" />
         {errors.organizationName ? <small>{errors.organizationName}</small> : null}
       </label>
 
       <button className="redios-auth-primary" disabled={auth.loading} type="submit">
-        {auth.loading ? 'Creating account...' : 'Create Account'}
+        {auth.loading ? 'Creating…' : 'Create account'}
       </button>
 
       <p className="redios-auth-switch">
-        Already have account? <a href="/login">Login</a>
-      </p>
-
-      <p className="redios-auth-todo">
-        TODO: Registration eventually maps REGISTER_FORM Metadata {'->'} USER.REGISTER Action {'->'} Identity Runtime {'->'} USER System Object.
+        <a href="/login">Sign in</a>
       </p>
     </form>
   );
@@ -153,7 +146,7 @@ function validateRegister(input: {
   }
 
   if (!input.organizationName.trim()) {
-    errors.organizationName = 'Company or organization is required.';
+    errors.organizationName = 'Organization is required.';
   }
 
   return errors;
@@ -168,12 +161,12 @@ function passwordStrength(password: string) {
   ].filter(Boolean).length;
 
   if (score >= 4) {
-    return { label: 'Strong password', score };
+    return { label: 'Strong', score };
   }
 
   if (score >= 2) {
-    return { label: 'Medium password', score };
+    return { label: 'Medium', score };
   }
 
-  return { label: password ? 'Weak password' : 'Password strength', score };
+  return { label: password ? 'Weak' : 'Strength', score };
 }

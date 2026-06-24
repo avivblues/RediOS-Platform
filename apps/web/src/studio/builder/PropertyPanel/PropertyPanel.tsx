@@ -227,7 +227,7 @@ export function PropertyPanel({
             <>
               <div className="redos-panel-heading">
                 <span className="redos-kicker">Inspector</span>
-                <h3>Properties <HelpTip label="Inspector" text="Panel ini muncul setelah memilih component di canvas. Di sini admin mengatur label, layout, data, dan action." /></h3>
+                <h3>Properties <HelpTip label="Inspector" text="Selected component: label, layout, data binding, actions." /></h3>
               </div>
               <p className="redos-muted">Pilih component di canvas untuk mengatur tampilannya.</p>
             </>
@@ -273,7 +273,7 @@ export function PropertyPanel({
               </label>
               {showPlaceholder ? (
                 <label>
-                  Placeholder <HelpTip label="Placeholder" text="Contoh teks bantuan di dalam input sebelum user mengisi data. Kosongkan jika tidak ingin menampilkan placeholder." />
+                  Placeholder <HelpTip label="Placeholder" text="Example text inside input. Leave empty to hide." />
                   <input value={selected.placeholder ?? ''} onChange={(event) => onChange({ placeholder: event.target.value })} />
                 </label>
               ) : null}
@@ -332,7 +332,7 @@ export function PropertyPanel({
 
             {showTemplateMetadata ? (
               <section>
-                <h4>Template Metadata <HelpTip label="Template Metadata" text="Hubungkan komponen template ke Data Object, Query, Field mapping, Action, dan Permission. Template tetap UI metadata, bukan logic hardcoded." /></h4>
+                <h4>Template Metadata <HelpTip label="Template Metadata" text="Bind template to data object, query, action, permission." /></h4>
                 <label>
                   Data Object
                   <select
@@ -467,7 +467,7 @@ export function PropertyPanel({
             ) : null}
 
             <section>
-              <h4>Events <HelpTip label="Events" text="Event menentukan kapan Action berjalan, misalnya saat button diklik, value berubah, form submit, atau screen load." /></h4>
+              <h4>Events <HelpTip label="Events" text="When to run action: click, change, submit, load." /></h4>
               {eventKeys.map((eventKey) => (
                 <label key={eventKey}>
                   {eventLabels[eventKey]}
@@ -484,7 +484,7 @@ export function PropertyPanel({
 
             {supportsConfirmation(selected.type) ? (
               <section>
-                <h4>Confirmation <HelpTip label="Confirmation" text="Untuk tombol penting, tampilkan confirm modal sebelum Action dijalankan. Confirm tetap memilih Action Metadata, bukan API langsung." /></h4>
+                <h4>Confirmation <HelpTip label="Confirmation" text="Confirm modal before action runs (delete, approve)." /></h4>
                 <label className="redos-confirm-toggle-row">
                   <input
                     checked={Boolean(selected.confirmation?.enabled)}
@@ -553,7 +553,7 @@ export function PropertyPanel({
             ) : null}
 
             <section className="redos-danger-zone">
-              <h4>Delete <HelpTip label="Delete" text="Menghapus component dari screen. Data dan Action yang sudah dibuat tetap ada di Advanced Mode." /></h4>
+              <h4>Delete <HelpTip label="Delete" text="Remove from screen. Metadata in Advanced Mode is kept." /></h4>
               <p className="redos-muted">Remove this component from the screen. Saved backend metadata will be updated when metadata sync is connected.</p>
               <button type="button" onClick={onDelete}>
                 Delete selected component

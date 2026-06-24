@@ -24,11 +24,12 @@ import {
   toApplicationSlug,
   toMetadataCode,
   type StudioActionDraft,
+  type StudioApplicationMetadataPackage,
   type StudioDataAttribute,
   type StudioDataObject,
   type StudioScreenDraft,
 } from '../metadata/metadata-store';
-import { AdminGuidePanel } from '../guide/AdminGuide';
+import { formatPublishResult, publishStudioPackage } from '../api/studio-publish.api';
 import { tailAdminPageTemplates } from '../templates/tailadmin-template-registry';
 import type {
   BuilderComponentDefinition,
@@ -535,7 +536,7 @@ export function BuilderShell({ target }: { target: StudioTarget }) {
     setStatusMessage(nextPreviewing ? 'Runtime preview mode active. Toolbar auto-hidden.' : 'Builder canvas mode active');
   }
 
-  function publishExperience() {
+  async function publishExperience() {
     const savedAt = new Date().toISOString();
     const appSlug = resolvePublishedApplicationSlug(target, applicationCode);
     const productionPath = `/apps/${appSlug}`;
@@ -549,7 +550,8 @@ export function BuilderShell({ target }: { target: StudioTarget }) {
     setMetadataVersion((current) => current + 1);
     window.localStorage.setItem(builderDraftKey(target, applicationCode, screenCode), JSON.stringify({ components: syncedMetadata.components, device, selectedId, savedAt, theme }));
     saveScreens(screens, applicationCode);
-    publishApplicationPackage({
+
+    const pkg: StudioApplicationMetadataPackage = {
       appCode: applicationCode,
       appSlug,
       appName: applicationNameFromCode(applicationCode),
@@ -577,8 +579,22 @@ export function BuilderShell({ target }: { target: StudioTarget }) {
         tokens: collectBuilderThemeTokens(),
       },
       publishedAt: savedAt,
-    });
-    setStatusMessage(`Published draft opened at ${productionPath}`);
+    };
+
+    setStatusMessage('Publishing to kernel...');
+
+    try {
+      const result = await publishStudioPackage(pkg, applicationCode);
+      setStatusMessage(`${formatPublishResult(result)} Opening ${productionPath}`);
+    } catch (error) {
+      publishApplicationPackage(pkg);
+      setStatusMessage(
+        error instanceof Error
+          ? `Local draft saved. Kernel publish: ${error.message}`
+          : 'Local draft saved. Kernel publish failed.',
+      );
+    }
+
     window.open(productionPath, '_blank', 'noopener,noreferrer');
   }
 
@@ -588,7 +604,6 @@ export function BuilderShell({ target }: { target: StudioTarget }) {
         <div>
           <span className="redos-kicker">RediOS Builder</span>
           <h1>{target === 'android' ? 'Android Experience Builder' : 'Visual Application Builder'}</h1>
-          <p>Bangun screen dulu. Data dan Action dipasang setelah experience terasa benar.</p>
         </div>
         <div className="redos-actions">
           <select

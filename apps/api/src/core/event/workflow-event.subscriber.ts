@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import type { EventDefinition, RuntimeDocument } from '@redios/shared';
 import { StorageEngine } from '../storage/storage.engine';
-import { HumanTaskBridgeService } from '../experience/human-task/human-task-bridge.service';
 import { WorkflowEngine } from '../workflow/workflow-engine.service';
 import type { EventBusMessage, EventHandlerResult, EventSubscriber } from './event.types';
 
@@ -12,7 +11,6 @@ export class WorkflowEventSubscriber implements EventSubscriber {
   constructor(
     private readonly workflowEngine: WorkflowEngine,
     private readonly storageEngine: StorageEngine,
-    private readonly humanTaskBridge: HumanTaskBridgeService,
   ) {}
 
   supports(message: EventBusMessage): boolean {
@@ -62,14 +60,6 @@ export class WorkflowEventSubscriber implements EventSubscriber {
           await this.storageEngine.update(message.context, message.entityCode, document.id, {
             status: transition.to,
           });
-
-          await this.humanTaskBridge.onWorkflowTransition(
-            message.context,
-            message.entityCode,
-            document,
-            transition.to,
-            actionCode,
-          );
         }
 
         results.push({

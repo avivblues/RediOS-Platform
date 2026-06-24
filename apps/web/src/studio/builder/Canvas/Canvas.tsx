@@ -546,7 +546,6 @@ function ModalPreview({ title }: { title: string }) {
       <div className="redos-modal-preview-card">
         <span className="redos-kicker">Modal</span>
         <strong>{title}</strong>
-        <p>Gunakan untuk flow detail, create, edit, atau informasi penting tanpa pindah screen.</p>
         <label>
           Notes
           <textarea placeholder="Write details..." />
@@ -566,7 +565,7 @@ function ConfirmModalPreview({ title }: { title: string }) {
       <div className="redos-modal-preview-card">
         <span className="redos-kicker">Confirm</span>
         <strong>{title}</strong>
-        <p>Pastikan user menyetujui action penting seperti delete, approve, atau submit.</p>
+        <p className="redos-muted-line">Confirm before proceeding.</p>
         <div className="redos-modal-actions">
           <button type="button">Cancel</button>
           <button type="button">Confirm</button>

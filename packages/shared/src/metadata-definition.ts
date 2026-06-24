@@ -24,7 +24,8 @@ export type MetadataType =
   | 'EXPERIENCE'
   | 'WORKSPACE'
   | 'PERSONA'
-  | 'RULE';
+  | 'RULE'
+  | 'AUTOMATION';
 
 export interface MetadataDefinition<TDefinition = unknown> {
   id?: string;

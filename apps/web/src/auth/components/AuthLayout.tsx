@@ -2,14 +2,12 @@ import type { ReactNode } from 'react';
 
 export function AuthLayout({
   children,
-  eyebrow,
-  subtitle,
   title,
+  tagline,
 }: {
   children: ReactNode;
-  eyebrow: string;
-  subtitle: string;
   title: string;
+  tagline?: string;
 }) {
   return (
     <main className="redios-auth-page">
@@ -19,15 +17,9 @@ export function AuthLayout({
           <strong>RediOS</strong>
         </div>
         <div>
-          <span className="redios-auth-eyebrow">{eyebrow}</span>
           <h1>{title}</h1>
-          <p>{subtitle}</p>
+          {tagline ? <p className="redios-auth-tagline">{tagline}</p> : null}
         </div>
-        <ul>
-          <li>Metadata-first application platform</li>
-          <li>Runtime identity foundation ready</li>
-          <li>Enterprise SaaS experience</li>
-        </ul>
       </section>
       <section className="redios-auth-panel">
         {children}

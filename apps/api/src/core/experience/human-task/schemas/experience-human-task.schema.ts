@@ -21,6 +21,10 @@ export interface ExperienceHumanTaskRecord {
   approvalMode?: 'SINGLE' | 'SEQUENTIAL' | 'PARALLEL';
   approvalLevel?: number;
   approvalGroupId?: string;
+  delegatedFromUserId?: string;
+  delegatedToUserId?: string;
+  escalatedFromTaskId?: string;
+  escalatedAt?: Date;
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -43,6 +47,10 @@ export const ExperienceHumanTaskSchema = new Schema(
     approvalMode: { type: String, required: false },
     approvalLevel: { type: Number, required: false },
     approvalGroupId: { type: String, required: false, index: true },
+    delegatedFromUserId: { type: String, required: false },
+    delegatedToUserId: { type: String, required: false, index: true },
+    escalatedFromTaskId: { type: String, required: false },
+    escalatedAt: { type: Date, required: false },
   },
   {
     collection: EXPERIENCE_HUMAN_TASK_COLLECTION,

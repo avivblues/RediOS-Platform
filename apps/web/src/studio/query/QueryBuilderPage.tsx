@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { formatPublishResult, publishActiveApplicationFromStore } from '../api/studio-publish.api';
 import { HelpTip } from '../guide/AdminGuide';
 import {
   loadDataObjects,
@@ -40,6 +41,7 @@ export function QueryBuilderPage() {
   const [sqlInput, setSqlInput] = useState('');
   const [mode, setMode] = useState<StudioQueryDraft['mode']>('list');
   const [pendingDelete, setPendingDelete] = useState<StudioQueryDraft>();
+  const [publishStatus, setPublishStatus] = useState<string | undefined>();
   const selectedObjects = dataObjects.filter((object) => sourceObjects.includes(object.name));
   const normalizedSearch = search.trim().toLowerCase();
   const filteredObjects = dataObjects.filter((object) => {
@@ -186,20 +188,33 @@ export function QueryBuilderPage() {
     saveQueries(nextQueries, selectedApplicationCode);
   }
 
+  async function publishToKernel() {
+    setPublishStatus('Publishing queries and application metadata to kernel...');
+
+    try {
+      const result = await publishActiveApplicationFromStore(selectedApplication?.target ?? 'web', selectedApplicationCode);
+      setPublishStatus(formatPublishResult(result));
+    } catch (error) {
+      setPublishStatus(error instanceof Error ? error.message : 'Publish failed.');
+    }
+  }
+
   return (
     <main className="redos-builder-page">
       <header className="redos-builder-header">
         <div>
           <span className="redos-kicker">Query Builder</span>
-          <h1>Query Capability Builder <HelpTip label="Query Builder" text="Buat reusable datasource untuk table, lookup, report, dashboard, dan list view." /></h1>
-          <p>Query adalah capability data. Builder UI hanya memilih query yang sudah tersedia, bukan membuat filter hardcoded.</p>
+          <h1>Query Capability Builder <HelpTip label="Query Builder" text="Reusable datasource for tables, lookups, reports." /></h1>
         </div>
         <div className="redos-actions">
+          <button className="redos-launch-action" type="button" onClick={() => { void publishToKernel(); }}>Publish to Kernel</button>
           <button type="button" onClick={() => { window.location.href = '/studio'; }}>Back to Builder</button>
           <button type="button" onClick={() => { window.location.href = '/studio/metadata'; }}>Metadata</button>
           <button type="button" onClick={() => { window.location.href = '/studio/api'; }}>API Builder</button>
         </div>
       </header>
+
+      {publishStatus ? <p className="redos-metadata-status redos-builder-status">{publishStatus}</p> : null}
 
       <section className="redos-query-builder-shell">
         <aside className="redos-query-browser" aria-label="Metadata database browser">

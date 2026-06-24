@@ -429,6 +429,35 @@ export function loadScreens(appCode?: string) {
   return readStoredValue(scopedMetadataKey(SCREENS_KEY, appCode), isRediosAdminApplication(appCode) ? rediosAdminSeedMetadata.screens : defaultScreens);
 }
 
+export function loadScreenCanvases(
+  appCode: string,
+  screens: StudioScreenDraft[] = loadScreens(appCode),
+): Record<string, CanvasComponent[]> {
+  const targets: StudioTarget[] = ['web', 'android'];
+  const canvases: Record<string, CanvasComponent[]> = {};
+
+  for (const screen of screens) {
+    for (const target of targets) {
+      try {
+        const rawDraft = window.localStorage.getItem(`redios:studio:${appCode}:${screen.code}:${target}:draft`);
+        if (!rawDraft) {
+          continue;
+        }
+
+        const draft = JSON.parse(rawDraft) as { components?: CanvasComponent[] };
+        if (Array.isArray(draft.components) && draft.components.length > 0) {
+          canvases[screen.code] = draft.components;
+          break;
+        }
+      } catch {
+        // Ignore invalid builder drafts.
+      }
+    }
+  }
+
+  return canvases;
+}
+
 export function saveScreens(value: StudioScreenDraft[], appCode?: string) {
   writeStoredValue(scopedMetadataKey(SCREENS_KEY, appCode), value);
 }

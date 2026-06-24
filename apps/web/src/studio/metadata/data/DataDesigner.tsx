@@ -371,8 +371,7 @@ export function DataDesigner() {
     <section className="redos-metadata-card">
       <div className="redos-panel-heading">
         <span className="redos-kicker">DATA</span>
-        <h3>Data Designer <HelpTip label="Data Designer" text="Buat Object dan Attribute yang nanti muncul sebagai pilihan Data Binding di builder." /></h3>
-        <p>Gunakan saat admin perlu data baru untuk screen atau form.</p>
+        <h3>Data Designer <HelpTip label="Data Designer" text="Data objects for builder binding. Start here before screens." /></h3>
       </div>
 
       <section className="redos-data-application-context">

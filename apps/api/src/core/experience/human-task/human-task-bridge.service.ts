@@ -1,42 +1,15 @@
 import { Injectable, Logger } from '@nestjs/common';
-import type { RuntimeContext, RuntimeDocument } from '@redios/shared';
+import type { RuntimeContext } from '@redios/shared';
 import { HumanTaskEngine } from './human-task.engine';
 
-const SUPERVISOR_ROLES = ['SUPERVISOR', 'MANAGER', 'POWER_USER', 'PLANT_MANAGER'];
-
+/**
+ * Demo seed only — production human tasks are created by TunasFlow (ApprovalEngine / process HUMAN_TASK steps).
+ */
 @Injectable()
 export class HumanTaskBridgeService {
   private readonly logger = new Logger(HumanTaskBridgeService.name);
 
   constructor(private readonly humanTaskEngine: HumanTaskEngine) {}
-
-  async onWorkflowTransition(
-    context: RuntimeContext,
-    entityCode: string,
-    document: RuntimeDocument,
-    toStatus: string | undefined,
-    actionCode: string,
-  ): Promise<void> {
-    if (!document.id || !toStatus) {
-      return;
-    }
-
-    if (entityCode === 'WORK_ORDER' && toStatus === 'IN_PROGRESS' && actionCode === 'START') {
-      await this.humanTaskEngine.create({
-        tenantId: context.tenantId,
-        title: `Verify work order: ${String(document.data?.title ?? document.id)}`,
-        entityCode,
-        documentId: document.id,
-        actionCode: 'COMPLETE',
-        processCode: 'WORK_ORDER_START_PROCESS',
-        assigneeRoles: SUPERVISOR_ROLES,
-        priority: String(document.data?.priority ?? '').toUpperCase() === 'HIGH' ? 'HIGH' : 'NORMAL',
-        source: 'WORKFLOW',
-      });
-
-      this.logger.debug(`Created human task for ${entityCode}:${document.id} after ${actionCode}`);
-    }
-  }
 
   async seedDemoTasks(context: RuntimeContext): Promise<number> {
     const adminPersona = {
@@ -60,7 +33,6 @@ export class HumanTaskBridgeService {
       await this.humanTaskEngine.create({
         tenantId: context.tenantId,
         title: 'Platform Approval Queue',
-        entityCode: 'WORK_ORDER',
         actionCode: 'APPROVE',
         processCode: 'PLATFORM_APPROVAL',
         assigneeRoles: ['SYSTEM_ADMIN'],
@@ -84,7 +56,7 @@ export class HumanTaskBridgeService {
     await this.humanTaskEngine.create({
       tenantId: context.tenantId,
       title: 'Purchase Request Review',
-      entityCode: 'WORK_ORDER',
+      entityCode: 'PURCHASE_REQUEST',
       actionCode: 'APPROVE',
       processCode: 'PURCHASE_APPROVAL',
       assigneeRoles: ['MANAGER', 'POWER_USER'],
@@ -92,6 +64,7 @@ export class HumanTaskBridgeService {
       source: 'MANUAL',
     });
 
+    this.logger.debug(`Seeded ${existing === 0 ? 2 : 1} demo human tasks for tenant ${context.tenantId}`);
     return 2;
   }
 }

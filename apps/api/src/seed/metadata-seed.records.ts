@@ -2,6 +2,7 @@ import type {
   ActionDefinition,
   ActionType,
   ApplicationDefinition,
+  AutomationDefinition,
   BusinessDefinition,
   ConflictPolicyDefinition,
   ConnectorDefinition,
@@ -65,6 +66,7 @@ type ApplicationSeed = {
   conflictPolicies?: ConflictPolicyDefinition[];
   connectors?: ConnectorDefinition[];
   integrations?: IntegrationDefinition[];
+  automations?: AutomationDefinition[];
 };
 
 const commonThemeDefinitions: ThemeDefinition[] = [
@@ -670,6 +672,8 @@ const applications: ApplicationSeed[] = [
                   approvalMode: 'SEQUENTIAL',
                   amountField: 'amount',
                   slaHours: 24,
+                  escalationRole: 'SYSTEM_ADMIN',
+                  escalationAfterHours: 0,
                   approvalLevels: [
                     { role: 'SUPERVISOR', minAmount: 0, label: 'Supervisor' },
                     { role: 'MANAGER', minAmount: 1000000, label: 'Manager' },
@@ -1134,6 +1138,48 @@ const applications: ApplicationSeed[] = [
         enabled: true,
       },
     ],
+    automations: [
+      {
+        code: 'WO_START_FOLLOWUP',
+        entityCode: 'WORK_ORDER',
+        enabled: true,
+        trigger: {
+          type: 'EVENT',
+          eventCode: 'WORK_ORDER_STARTED_EVENT',
+        },
+        actions: [
+          {
+            type: 'CREATE_HUMAN_TASK',
+            config: {
+              title: 'Supervisor follow-up',
+              assigneeRoles: ['SUPERVISOR'],
+              actionCode: 'COMPLETE',
+              processCode: 'WORK_ORDER_START_PROCESS',
+              priority: 'NORMAL',
+            },
+          },
+        ],
+      },
+      {
+        code: 'OVERDUE_TASK_SCAN',
+        entityCode: 'WORK_ORDER',
+        enabled: true,
+        trigger: {
+          type: 'SCHEDULE',
+          intervalMinutes: 5,
+        },
+        actions: [
+          {
+            type: 'NOTIFY',
+            config: {
+              title: 'Overdue task scan',
+              body: 'Scheduled automation tick executed.',
+              targetRole: 'SYSTEM_ADMIN',
+            },
+          },
+        ],
+      },
+    ],
   },
   {
     code: 'CRM',
@@ -1559,6 +1605,7 @@ export const metadataSeedRecords: MetadataDefinition[] = applications.flatMap((a
   ...(application.conflictPolicies ?? []).map((conflictPolicy) => createConflictPolicyRecord(application, conflictPolicy)),
   ...(application.connectors ?? []).map((connector) => createConnectorRecord(application, connector)),
   ...(application.integrations ?? []).map((integration) => createIntegrationRecord(application, integration)),
+  ...(application.automations ?? []).map((automation) => createAutomationRecord(application, automation)),
   ...[...commonUIDefinitions, ...(application.uis ?? [])].map((ui) => createUIRecord(application, ui)),
 ]);
 
@@ -1947,6 +1994,23 @@ function createIntegrationRecord(
     version: integration.version,
     enabled: integration.enabled,
     definition: integration,
+  };
+}
+
+function createAutomationRecord(
+  application: ApplicationSeed,
+  automation: AutomationDefinition,
+): MetadataDefinition<AutomationDefinition> {
+  return {
+    tenantId,
+    domainCode,
+    applicationCode: application.code,
+    type: 'AUTOMATION',
+    code: automation.code,
+    name: toLabel(automation.code),
+    version: 1,
+    enabled: automation.enabled,
+    definition: automation,
   };
 }
 

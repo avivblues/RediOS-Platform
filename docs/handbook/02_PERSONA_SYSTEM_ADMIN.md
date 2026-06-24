@@ -470,9 +470,9 @@ Setelah ubah role user, minta user **login ulang** agar JWT & persona refresh.
 | --- | --- | --- |
 | Studio draft | localStorage | Ganti browser = draft hilang |
 | Designer publish API | Ada, integrasi Studio partial | Production butuh langkah publish eksplisit |
-| TunasFlow visual | Phase 3 | Process designer Studio = blueprint, bukan engine penuh |
-| Modul industri (ERP/WMS) | Phase 7 | Pakai template demo + extend metadata |
-| AI assistant | Phase 8 | Pakai handbook + support manual |
+| TunasFlow visual | Phase 3 | Process designer Studio = blueprint; full engine in TunasFlow |
+| Ontology / AI Composer | Phase 8–9 | Belum ada di produk — lihat `PLATFORM_VISION_v4.md` |
+| Modul industri (ERP/WMS) | Phase 7 | Pakai template demo + capability package |
 
 ---
 

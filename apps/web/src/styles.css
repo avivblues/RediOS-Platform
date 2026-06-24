@@ -263,7 +263,6 @@ a:focus-visible {
 }
 
 .redios-auth-eyebrow,
-.redios-auth-form-heading span,
 .redios-auth-success > span {
   color: #2563eb;
   font-size: 0.76rem;
@@ -277,45 +276,23 @@ a:focus-visible {
 }
 
 .redios-auth-hero h1 {
-  max-width: 720px;
-  margin: 0.6rem 0 1rem;
-  font-size: clamp(2.4rem, 5vw, 5rem);
-  line-height: 0.96;
-  letter-spacing: -0.055em;
-}
-
-.redios-auth-hero p {
-  max-width: 620px;
-  margin: 0;
-  color: rgb(219 234 254 / 86%);
-  font-size: clamp(1rem, 1.5vw, 1.22rem);
-  line-height: 1.75;
-}
-
-.redios-auth-hero ul {
-  display: grid;
-  gap: 0.8rem;
   max-width: 520px;
-  margin: 0;
-  padding: 0;
-  list-style: none;
+  margin: 0.35rem 0 0;
+  font-size: clamp(2rem, 4vw, 3.25rem);
+  line-height: 1.05;
+  letter-spacing: -0.04em;
 }
 
-.redios-auth-hero li {
-  display: flex;
-  gap: 0.75rem;
-  align-items: center;
-  color: #e0f2fe;
-  font-weight: 750;
+.redios-auth-tagline {
+  max-width: 420px;
+  margin: 0.75rem 0 0;
+  color: rgb(219 234 254 / 86%);
+  font-size: clamp(0.95rem, 1.2vw, 1.05rem);
+  line-height: 1.55;
 }
 
-.redios-auth-hero li::before {
-  width: 0.65rem;
-  height: 0.65rem;
-  border-radius: 999px;
-  background: #38bdf8;
-  box-shadow: 0 0 0 0.35rem rgb(56 189 248 / 16%);
-  content: "";
+.redios-auth-success .redios-auth-tagline {
+  color: #64748b;
 }
 
 .redios-auth-panel {
@@ -337,22 +314,15 @@ a:focus-visible {
   backdrop-filter: blur(18px);
 }
 
-.redios-auth-form-heading {
-  display: grid;
-  gap: 0.4rem;
-  margin-bottom: 0.35rem;
-}
-
 .redios-auth-form h2,
 .redios-auth-success h2 {
   margin: 0;
   color: #0f172a;
-  font-size: clamp(1.75rem, 3vw, 2.35rem);
-  letter-spacing: -0.04em;
+  font-size: 1.35rem;
+  letter-spacing: -0.03em;
 }
 
-.redios-auth-form-heading p,
-.redios-auth-success p {
+.redios-auth-success p:not(.redios-auth-tagline) {
   margin: 0;
   color: #64748b;
   line-height: 1.65;
@@ -883,16 +853,6 @@ a:focus-visible {
   gap: 0.75rem;
 }
 
-.redios-auth-todo {
-  margin: 0;
-  border: 1px dashed rgb(37 99 235 / 30%);
-  border-radius: 0.9rem;
-  padding: 0.8rem;
-  background: #eff6ff;
-  color: #475569;
-  font-size: 0.78rem;
-  line-height: 1.55;
-}
 
 .redios-password-strength {
   display: grid;
@@ -6870,6 +6830,24 @@ a:focus-visible {
   border-radius: 1rem;
   padding: 1rem;
   background: linear-gradient(135deg, #eff6ff, #faf5ff);
+}
+
+.redos-organism-preview-card span {
+  color: var(--redios-color-muted);
+  font-size: var(--redios-font-size-small);
+}
+
+.redos-muted-line {
+  margin: 0;
+  color: var(--redios-color-muted);
+  font-size: var(--redios-font-size-small);
+}
+
+.redos-panel-heading h3 {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-wrap: wrap;
 }
 
 .redos-query-builder-shell {

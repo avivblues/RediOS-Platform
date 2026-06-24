@@ -62,39 +62,46 @@ export function LoginForm() {
   }
 
   return (
-    <form className="redios-auth-form" onSubmit={(event) => {
-      event.preventDefault();
-      void submitLogin();
-    }}
+    <form
+      className="redios-auth-form"
+      onSubmit={(event) => {
+        event.preventDefault();
+        void submitLogin();
+      }}
     >
-      <div className="redios-auth-form-heading">
-        <span>Welcome Back</span>
-        <h2>Login to RediOS</h2>
-        <p>Use your platform account to access generated applications and Studio.</p>
-      </div>
-
       {auth.error ? <div className="redios-auth-error">{auth.error}</div> : null}
 
       <label>
         <span>Email</span>
-        <input autoComplete="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="admin@redios.local" />
+        <input
+          autoComplete="email"
+          value={email}
+          onChange={(event) => setEmail(event.target.value)}
+          placeholder="name@company.com"
+        />
         {errors.email ? <small>{errors.email}</small> : null}
       </label>
 
       <label>
         <span>Password</span>
-        <input autoComplete="current-password" type="password" value={password} onChange={(event) => setPassword(event.target.value)} placeholder="admin123" />
+        <input
+          autoComplete="current-password"
+          type="password"
+          value={password}
+          onChange={(event) => setPassword(event.target.value)}
+          placeholder="••••••••"
+        />
         {errors.password ? <small>{errors.password}</small> : null}
       </label>
 
       <button className="redios-auth-primary" disabled={auth.loading} type="submit">
-        {auth.loading ? 'Signing in...' : 'Login'}
+        {auth.loading ? 'Signing in…' : 'Sign in'}
       </button>
 
       <p className="redios-auth-switch">
-        Need account? <a href="/register">Create Account</a>
+        <a href="/register">Create account</a>
         {' · '}
-        <a href="/portal">Choose workspace manually</a>
+        <a href="/portal">Choose workspace</a>
       </p>
     </form>
   );

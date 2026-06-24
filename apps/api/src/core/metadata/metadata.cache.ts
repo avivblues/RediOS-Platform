@@ -5,8 +5,8 @@ function scopeKey(context: Pick<RuntimeContext, 'tenantId' | 'domainCode' | 'app
   return `${context.tenantId}:${context.domainCode}:${context.applicationCode}`;
 }
 
-function recordKey(definition: Pick<MetadataDefinition, 'tenantId' | 'domainCode' | 'applicationCode' | 'type' | 'code'>): string {
-  return `${definition.tenantId}:${definition.domainCode ?? ''}:${definition.applicationCode}:${definition.type}:${definition.code}`;
+function recordKey(definition: Pick<MetadataDefinition, 'tenantId' | 'domainCode' | 'applicationCode' | 'type' | 'code' | 'version'>): string {
+  return `${definition.tenantId}:${definition.domainCode ?? ''}:${definition.applicationCode}:${definition.type}:${definition.code}:v${definition.version}`;
 }
 
 @Injectable()
@@ -31,7 +31,9 @@ export class MetadataCache {
   }
 
   get(context: RuntimeContext, type: MetadataType, code: string): MetadataDefinition | undefined {
-    return this.records.get(`${scopeKey(context)}:${type}:${code}`);
+    const prefix = `${scopeKey(context)}:${type}:${code}:v`;
+    const matches = Array.from(this.records.values()).filter((record) => recordKey(record).startsWith(prefix));
+    return matches.sort((left, right) => right.version - left.version)[0];
   }
 
   getByType(context: RuntimeContext, type: MetadataType): MetadataDefinition[] {

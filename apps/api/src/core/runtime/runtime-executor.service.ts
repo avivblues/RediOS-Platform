@@ -24,6 +24,7 @@ import { SecurityPolicyEngine } from '../security-policy/security-policy-engine.
 import { StorageEngine } from '../storage/storage.engine';
 import { TraceEngine } from '../trace/trace-engine.service';
 import type { FlowExecutionResult } from '../tunasflow/flow.definition';
+import { FlowVersionService } from '../tunasflow/flow/flow.version';
 import { StateEngine } from '../tunasflow/state/state.engine';
 import { TunasFlowEngine } from '../tunasflow/tunasflow.engine';
 import { WorkflowEngine, type WorkflowTransitionResult } from '../workflow/workflow-engine.service';
@@ -99,6 +100,7 @@ export class RuntimeExecutor {
     private readonly runtimePackageProvider: RuntimePackageProvider,
     private readonly tunasFlowEngine: TunasFlowEngine,
     private readonly stateEngine: StateEngine,
+    private readonly flowVersionService: FlowVersionService,
   ) {}
 
   async create(input: RuntimeExecutionInput): Promise<RuntimeExecutionResult> {
@@ -256,6 +258,27 @@ export class RuntimeExecutor {
         this.tunasFlowEngine.execute(context, entityCode, actionCode, workflow, workflowDocument),
       );
       const process = this.tunasFlowEngine.toProcessPlan(flow);
+
+      if (flow.executed && flow.processCode) {
+        const processMeta = await this.flowVersionService.resolveProcess(
+          context,
+          entityCode,
+          actionCode,
+          workflow.transitioned ? workflow.to : undefined,
+          workflowDocument,
+        );
+
+        if (processMeta) {
+          await this.flowVersionService.pinProcessVersion(
+            context,
+            entityCode,
+            id,
+            flow.processCode,
+            processMeta.version,
+            workflowDocument,
+          );
+        }
+      }
 
       const business = await this.traceEngine.recordStep(trace.id!, 'BUSINESS', async () => {
         const businessResult = await this.businessEngine.execute(context, entityCode, workflowDocument, process);

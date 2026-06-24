@@ -8,27 +8,17 @@ export function ProfilePage() {
 
   if (!session) {
     return (
-      <AuthLayout
-        eyebrow="User Profile"
-        subtitle="Your profile is loaded from the active identity session."
-        title="Sign in required"
-      >
+      <AuthLayout title="Sign in required" tagline="Active session required.">
         <section className="redios-auth-form redios-auth-success">
-          <span>Session</span>
           <h2>No active session</h2>
-          <p>Please login before opening your RediOS profile.</p>
-          <button className="redios-auth-primary" type="button" onClick={() => { window.location.href = '/login'; }}>Go to Login</button>
+          <button className="redios-auth-primary" type="button" onClick={() => { window.location.href = '/login'; }}>Sign in</button>
         </section>
       </AuthLayout>
     );
   }
 
   return (
-    <AuthLayout
-      eyebrow="User Profile"
-      subtitle="Profile data is resolved from the current session and USER system metadata runtime record."
-      title="RediOS User Profile"
-    >
+    <AuthLayout title="Profile">
       <section className="redios-auth-form redios-profile-card">
         <div className="redios-profile-heading">
           <span aria-hidden="true">{initials(session.displayName)}</span>

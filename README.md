@@ -1091,6 +1091,152 @@ Delay Risk +15%
 
 ---
 
+# 15A. UI/UX Design Standards (Mandatory)
+
+
+> **Full spec:** `docs/design/UI_UX_STANDARDS.md`  
+> **Goal:** User-friendly, consistent pages — minimize revision cycles for every designer, form, and screen.
+
+
+Every page, form, and Studio designer **must** follow these rules before merge.
+
+
+## 15A.1 Golden rules
+
+
+| Rule | UI | Not in UI |
+| --- | --- | --- |
+| UI = action | Short labels, clear buttons | Long explanations |
+| Handbook = context | `"Learn more"` link | Tutorial paragraphs on forms |
+| Persona-first | Workspace layout per role | One generic admin menu |
+| One primary action | Single filled CTA per view | Multiple competing primaries |
+| Metadata-bound fields | Data object binding | Hardcoded field names |
+
+
+```
+WRONG:  Form header with 3 paragraphs explaining workflow
+RIGHT:  Title + fields + [Submit] + HelpTip (max 120 chars) → handbook
+```
+
+
+## 15A.2 Page templates
+
+
+### Workspace (`/workspace`)
+
+- Inbox / tasks **first** (priority sort)
+- Max **6 panels** without scroll on desktop
+- Empty state: one sentence + action — not an essay
+
+
+### Runtime (`/runtime/{entity}`)
+
+```
+← Back to workspace          [PRIMARY ACTION]
+Status badge + document title
+Form (max 8 fields above fold per section)
+Secondary actions (outline / ghost)
+```
+
+- Primary action matches workflow state (START, SUBMIT, COMPLETE)
+- Destructive (CANCEL, DELETE): danger color + confirm
+
+
+### Studio designer (`/studio/metadata/*`)
+
+- Overview: **card grid** — title + 1-line description + Open
+- Editor: section nav | main form | HelpTip sidebar
+- Intro text **max 2 lines** on page — detail lives in handbook
+- Save/Publish: sticky footer right
+
+
+### Auth (`/login`)
+
+- Logo + form + one secondary link — no marketing walls of text
+
+
+## 15A.3 Form standards
+
+
+| Item | Standard |
+| --- | --- |
+| Fields per section (fold) | Max **8** |
+| Label | Title Case noun phrase |
+| Placeholder | Example value, not instructions |
+| Field order | Title → status → core fields → references → notes |
+| Primary button | Bottom-right or header-right, one per screen |
+| Validation | On blur + submit; message under field |
+
+
+## 15A.4 Design tokens (use only these)
+
+
+From `apps/web/src/styles.css`:
+
+
+```
+--redios-color-primary / danger / success / muted
+--redios-spacing-md / lg
+--redios-radius-medium
+--redios-font-family
+--redos-builder-button-* (Studio/builder)
+```
+
+
+Do **not** introduce ad-hoc hex colors per page.
+
+
+## 15A.5 Component hierarchy
+
+
+```
+atoms → molecules → organisms → templates
+```
+
+
+New reusable UI → **Custom Organism** metadata before inline page code.
+
+
+## 15A.6 Copy limits
+
+
+| Element | Max |
+| --- | --- |
+| Page title | 4 words |
+| Button | 2 words |
+| HelpTip | 120 characters |
+| Empty state | 1 sentence + optional action |
+
+
+## 15A.7 Designer checklist (required before PR)
+
+
+```
+[ ] Matches page template (workspace / runtime / studio / auth)
+[ ] One primary action visible without scroll
+[ ] No designer intro > 2 lines (handbook holds detail)
+[ ] Fields bound to metadata — not hardcoded
+[ ] HelpTip → handbook, not inline tutorial
+[ ] Design tokens only
+[ ] Loading + empty + error states
+[ ] Tested 375px (mobile) and 1280px (desktop)
+```
+
+
+## 15A.8 Anti-patterns (avoid repeat revisions)
+
+
+❌ Approval page per module → use universal inbox  
+❌ Long help blocks on Metadata Designer overview  
+❌ 15+ fields without sections  
+❌ Custom colors per screen  
+❌ Hardcoded entity UI (e.g. WORK_ORDER-only inbox)  
+❌ Menu-driven CRUD as default landing  
+
+
+---
+
+
 # 16. REDI User Persona Model
 
 

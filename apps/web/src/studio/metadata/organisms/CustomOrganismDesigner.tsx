@@ -66,8 +66,7 @@ export function CustomOrganismDesigner() {
     <section className="redos-metadata-card redos-metadata-card-wide">
       <div className="redos-panel-heading">
         <span className="redos-kicker">Reusable Experience</span>
-        <h3>Custom Organisms <HelpTip label="Custom Organism" text="Reusable block buatan admin, misalnya Approval Card atau Inventory Header, lalu muncul di toolbox builder." /></h3>
-        <p>Buat komposisi component yang bisa dipakai ulang oleh admin lain.</p>
+        <h3>Custom Organisms <HelpTip label="Custom Organism" text="Reusable blocks in builder toolbox." /></h3>
       </div>
 
       <section className="redos-data-application-context">

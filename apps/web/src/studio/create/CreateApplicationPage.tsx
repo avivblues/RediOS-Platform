@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { StudioTarget } from '../builder/types';
-import { AdminGuidePanel, HelpTip } from '../guide/AdminGuide';
+import { HelpTip } from '../guide/AdminGuide';
 import { seedApplicationMetadata, setActiveApplicationCode, toApplicationSlug, toMetadataCode } from '../metadata/metadata-store';
 
 interface StudioApplicationDraft {
@@ -18,17 +18,17 @@ const templates = [
   {
     code: 'BLANK_EXPERIENCE',
     label: 'Blank Experience',
-    description: 'Start with an empty screen and compose everything visually.',
+    description: 'Empty canvas — compose visually.',
   },
   {
     code: 'INVENTORY_EXPERIENCE',
     label: 'Inventory Experience',
-    description: 'Product screen, stock action, inventory data, and starter dashboard.',
+    description: 'Product, stock, dashboard starter.',
   },
   {
     code: 'SERVICE_EXPERIENCE',
     label: 'Service Experience',
-    description: 'Ticket intake, assignment action, status timeline, and mobile-ready field flow.',
+    description: 'Ticket, assignment, field flow.',
   },
 ];
 
@@ -59,41 +59,36 @@ export function CreateApplicationPage() {
       <header className="redos-builder-header">
         <div>
           <span className="redos-kicker">Create Application</span>
-          <h1>Buat Aplikasi dari Experience</h1>
-          <p>Admin cukup memberi nama aplikasi, memilih starter, lalu mendesain layar secara visual.</p>
+          <h1>
+            Create Application
+            {' '}
+            <HelpTip label="Create Application" text="Name + starter template → visual builder. Guide: docs/handbook/02 §4." />
+          </h1>
         </div>
         <div className="redos-actions">
-          <button data-redos-tooltip="Kembali ke canvas builder untuk menyusun layar aplikasi." type="button" onClick={() => { window.location.href = '/studio'; }}>Back to Builder</button>
-          <button data-redos-tooltip="Advanced Mode untuk admin teknis: Data, Action, Process, Menu, Security, dan Organism." type="button" onClick={() => { window.location.href = '/studio/metadata'; }}>Metadata</button>
-          <button data-redos-tooltip="Kelola query/datasource reusable." type="button" onClick={() => { window.location.href = '/studio/query'; }}>Query Builder</button>
-          <button data-redos-tooltip="Kelola generated API dan connector external." type="button" onClick={() => { window.location.href = '/studio/api'; }}>API Builder</button>
+          <button type="button" onClick={() => { window.location.href = '/studio'; }}>Back to Builder</button>
+          <button type="button" onClick={() => { window.location.href = '/studio/metadata'; }}>Metadata</button>
+          <button type="button" onClick={() => { window.location.href = '/studio/query'; }}>Query Builder</button>
+          <button type="button" onClick={() => { window.location.href = '/studio/api'; }}>API Builder</button>
         </div>
       </header>
-
-      <AdminGuidePanel
-        title="Cara tercepat membuat aplikasi"
-        description="Ikuti alur ini tanpa perlu membuat database, endpoint, atau kode manual."
-        steps={[
-          'Tulis nama aplikasi sesuai proses bisnis.',
-          'Pilih target Web atau Android.',
-          'Pilih starter experience atau Blank Experience.',
-          'Klik Create and Open Builder, lalu susun screen dengan drag and drop.',
-        ]}
-      />
 
       <section className="redos-create-flow">
         <div className="redos-metadata-card">
           <div className="redos-panel-heading">
             <span className="redos-kicker">Step 1</span>
-            <h3>Identitas Aplikasi <HelpTip label="Identitas aplikasi" text="Nama ini dipakai agar admin dan user bisnis mudah mengenali aplikasi yang sedang dibuat." /></h3>
-            <p>Mulai dari kebutuhan user, bukan dari struktur database.</p>
+            <h3>
+              Application
+              {' '}
+              <HelpTip label="Application Name" text="Business process name, e.g. Asset Maintenance." />
+            </h3>
           </div>
           <label>
-            Application Name <HelpTip label="Application Name" text="Gunakan nama proses bisnis, misalnya Asset Maintenance atau Inventory Request." />
-            <input value={name} onChange={(event) => setName(event.target.value)} />
+            Application Name
+            <input value={name} onChange={(event) => setName(event.target.value)} placeholder="e.g. Asset Maintenance" />
           </label>
           <label>
-            Runtime Target <HelpTip label="Runtime Target" text="Pilih Web untuk aplikasi browser, Android untuk pengalaman mobile dengan device capability." />
+            Runtime Target
             <select value={target} onChange={(event) => setTarget(event.target.value as StudioTarget)}>
               <option value="web">Web</option>
               <option value="android">Android</option>
@@ -104,8 +99,7 @@ export function CreateApplicationPage() {
         <div className="redos-metadata-card redos-metadata-card-wide">
           <div className="redos-panel-heading">
             <span className="redos-kicker">Step 2</span>
-            <h3>Pilih Starter Experience <HelpTip label="Starter Experience" text="Template membuat screen, data, action, dan connector awal di belakang layar." /></h3>
-            <p>Template membantu admin mulai dari contoh pengalaman kerja yang sudah siap diedit.</p>
+            <h3>Starter Experience</h3>
           </div>
           <div className="redos-template-grid">
             {templates.map((item) => (
@@ -113,7 +107,6 @@ export function CreateApplicationPage() {
                 key={item.code}
                 className={template === item.code ? 'redos-template-card redos-template-card-active' : 'redos-template-card'}
                 type="button"
-                data-redos-tooltip={`Pilih ${item.label}: ${item.description}`}
                 onClick={() => setTemplate(item.code)}
               >
                 <strong>{item.label}</strong>
@@ -126,15 +119,13 @@ export function CreateApplicationPage() {
         <div className="redos-metadata-card">
           <div className="redos-panel-heading">
             <span className="redos-kicker">Step 3</span>
-            <h3>Bangun Secara Visual <HelpTip label="Visual Builder" text="Setelah dibuat, admin tinggal drag component, bind data, dan pilih action." /></h3>
-            <p>{selectedTemplate.label} akan dibuka di {target === 'android' ? 'Android' : 'Web'} builder.</p>
+            <h3>Open Builder</h3>
           </div>
           <div className="redos-organism-preview-card">
             <strong>{name || 'New Application'}</strong>
-            <p>{selectedTemplate.description}</p>
-            <div>Screen → Components → Data Binding → Action → Runtime</div>
+            <span>{selectedTemplate.label} · {target === 'android' ? 'Android' : 'Web'}</span>
           </div>
-          <button className="redos-primary-action" data-redos-tooltip="Buat draft aplikasi dan lanjut ke canvas visual builder." type="button" onClick={createApplication}>
+          <button className="redos-primary-action" type="button" onClick={createApplication}>
             Create and Open Builder
           </button>
         </div>

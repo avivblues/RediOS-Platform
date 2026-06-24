@@ -61,6 +61,15 @@ export class ExperienceRuntimeService {
     return completed;
   }
 
+  async delegateInboxItem(
+    context: RuntimeContext,
+    inboxItemId: string,
+    input: { assigneeUserId?: string; assigneeRoles?: string[] },
+  ) {
+    const taskId = inboxItemId.startsWith('human_') ? inboxItemId.slice('human_'.length) : inboxItemId;
+    return this.humanTaskEngine.delegate(context, taskId, input);
+  }
+
   async resolveContext(context: RuntimeContext, platform: ExperiencePlatform = 'WEB'): Promise<ExperienceContext> {
     const persona = await this.personaResolver.resolve(context);
     const [workspace, inbox, actions, notifications] = await Promise.all([

@@ -116,12 +116,8 @@ export function WorkspaceDesigner() {
         <h3>
           Workspace Designer
           {' '}
-          <HelpTip
-            label="Workspace Designer"
-            text="Edit persona workspace panels. Publish saves WORKSPACE metadata to the platform kernel."
-          />
+          <HelpTip label="Workspace Designer" text="Persona panels — publish saves WORKSPACE metadata." />
         </h3>
-        <p>Configure inbox, actions, links, and metrics per persona workspace — no hardcoded shell layout.</p>
       </div>
 
       <section className="redos-data-application-context">

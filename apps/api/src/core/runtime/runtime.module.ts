@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { ActionModule } from '../action/action.module';
 import { ApplicationModule } from '../application/application.module';
 import { BusinessModule } from '../business/business.module';
@@ -25,7 +25,7 @@ import { RuntimeExecutor } from './runtime-executor.service';
     SecurityPolicyModule,
     ActionModule,
     WorkflowModule,
-    TunasflowModule,
+    forwardRef(() => TunasflowModule),
     BusinessModule,
     EventModule,
     LedgerModule,

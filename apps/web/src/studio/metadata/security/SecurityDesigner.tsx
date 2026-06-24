@@ -63,8 +63,7 @@ export function SecurityDesigner() {
     <section className="redos-metadata-card">
       <div className="redos-panel-heading">
         <span className="redos-kicker">Security</span>
-        <h3>Security Designer <HelpTip label="Security Designer" text="Atur Role, Permission, Field Access, Action Access, dan Power User boundary." /></h3>
-        <p>Security metadata menjaga power user tetap bisa konfigurasi tanpa merusak core system metadata atau API contract.</p>
+        <h3>Security Designer <HelpTip label="Security Designer" text="Roles, permissions, field & action access." /></h3>
       </div>
 
       <section className="redos-data-application-context">

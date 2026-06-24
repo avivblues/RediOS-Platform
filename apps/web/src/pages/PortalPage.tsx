@@ -53,16 +53,10 @@ export function PortalPage() {
   }
 
   return (
-    <AuthLayout
-      eyebrow="Workspace Portal"
-      subtitle="Choose how you want to work today. RediOS recommends a workspace based on your platform role."
-      title="Welcome back. Where should we take you?"
-    >
+    <AuthLayout title="Choose workspace" tagline={`Signed in as ${session.displayName}`}>
       <section className="redios-portal">
         <div className="redios-portal-heading">
-          <span>Signed in as {session.displayName}</span>
-          <h2>Select your workspace</h2>
-          <p>Roles: {session.roles.join(', ') || 'Staff'}</p>
+          <h2>Select workspace</h2>
         </div>
 
         <div className="redios-portal-grid">

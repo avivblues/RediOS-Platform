@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import type { ProcessStepType, RuntimeContext, RuntimeDocument } from '@redios/shared';
+import { FlowVersionService } from '../tunasflow/flow/flow.version';
 import { MetadataResolver } from '../metadata/metadata-resolver.service';
 import type { WorkflowTransitionResult } from '../workflow/workflow-engine.service';
 
@@ -20,17 +21,22 @@ export interface ProcessExecutionPlan {
 
 @Injectable()
 export class ProcessEngine {
-  constructor(private readonly metadataResolver: MetadataResolver) {}
+  constructor(
+    private readonly metadataResolver: MetadataResolver,
+    private readonly flowVersionService: FlowVersionService,
+  ) {}
 
   async execute(
     context: RuntimeContext,
     entityCode: string,
     actionCode: string,
     workflowResult: WorkflowTransitionResult,
-    _document: RuntimeDocument,
+    document: RuntimeDocument,
   ): Promise<ProcessExecutionPlan> {
     const workflowState = workflowResult.transitioned ? workflowResult.to : undefined;
-    const process = await this.metadataResolver.resolveProcess(context, entityCode, actionCode, workflowState);
+    const process =
+      (await this.flowVersionService.resolveProcess(context, entityCode, actionCode, workflowState, document)) ??
+      (await this.metadataResolver.resolveProcess(context, entityCode, actionCode, workflowState));
 
     if (!process) {
       return {

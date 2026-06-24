@@ -10,6 +10,7 @@ import { BusinessEngine } from '../business/business-engine.service';
 import { ApprovalEngine } from './approval/approval.engine';
 import type { ProcessExecutionPlan } from '../process/process-engine.service';
 import { MetadataRegistry } from '../metadata/metadata-registry.service';
+import { FlowVersionService } from './flow/flow.version';
 import { RuleEngine } from './rule/rule.engine';
 import type { FlowExecutionResult, FlowStepResult } from './flow.definition';
 
@@ -20,6 +21,7 @@ export class FlowExecutor {
     private readonly businessEngine: BusinessEngine,
     private readonly ruleEngine: RuleEngine,
     private readonly approvalEngine: ApprovalEngine,
+    private readonly flowVersionService: FlowVersionService,
   ) {}
 
   async execute(
@@ -36,7 +38,7 @@ export class FlowExecutor {
       };
     }
 
-    const process = await this.resolveProcess(context, plan.processCode);
+    const process = await this.resolveProcess(context, entityCode, plan.processCode, document);
     if (!process) {
       return {
         executed: plan.executed,
@@ -136,9 +138,30 @@ export class FlowExecutor {
     return process.steps.filter((step) => step.enabled).sort((left, right) => left.order - right.order);
   }
 
-  private async resolveProcess(context: RuntimeContext, processCode: string) {
+  private async resolveProcess(
+    context: RuntimeContext,
+    entityCode: string,
+    processCode: string,
+    document: RuntimeDocument,
+  ) {
     const definitions = await this.metadataRegistry.findByType(context, 'PROCESS');
-    return definitions.find((candidate) => (candidate.definition as ProcessDefinition).code === processCode) as
+    const candidates = definitions.filter(
+      (candidate) => (candidate.definition as ProcessDefinition).code === processCode,
+    );
+
+    if (candidates.length === 0) {
+      return undefined;
+    }
+
+    const pinnedVersion = this.flowVersionService.getPinnedVersion(document, processCode);
+    if (pinnedVersion !== undefined) {
+      const pinned = candidates.find((candidate) => candidate.version === pinnedVersion);
+      if (pinned) {
+        return pinned as MetadataDefinition<ProcessDefinition>;
+      }
+    }
+
+    return candidates.sort((left, right) => right.version - left.version)[0] as
       | MetadataDefinition<ProcessDefinition>
       | undefined;
   }
